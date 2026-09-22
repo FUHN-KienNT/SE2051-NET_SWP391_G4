@@ -14,7 +14,7 @@ Hệ thống Quản lý Học tập Trực tuyến (**LearnHub LMS**) được t
 Dự án tuân thủ chặt chẽ kiến trúc MVC phân lớp (Layered Architecture) theo chuẩn cấu trúc package được quy định:
 
 ```
-com.fpt.lms
+com.learnhub
 ├── controller              # Các Jakarta Servlets điều hướng Request/Response
 │   ├── AuthServlet.java
 │   ├── CourseServlet.java

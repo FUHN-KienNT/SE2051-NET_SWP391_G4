@@ -15,3 +15,4 @@ scripts/
 gen_*.py
 fix_*.py
 *.tmp
+*.zip

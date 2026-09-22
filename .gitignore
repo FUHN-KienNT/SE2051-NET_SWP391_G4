@@ -1,0 +1,17 @@
+﻿target/
+*.war
+*.class
+*.log
+.idea/
+.vscode/
+*.iml
+.nb-gradle/
+nbproject/private/
+*.pyc
+__pycache__/
+doc_images/
+sds_dump.txt
+scripts/
+gen_*.py
+fix_*.py
+*.tmp

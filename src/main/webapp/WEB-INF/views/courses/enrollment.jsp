@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -24,31 +24,9 @@
         <form action="${pageContext.request.contextPath}/enrollment" method="post" class="space-y-6">
             <input type="hidden" name="courseId" value="${course.id}">
             
-            <c:choose>
-                <c:when test="${course.price > 0}">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-3">Phương thức thanh toán</label>
-                        <div class="border border-blue-500 bg-blue-50/50 rounded-xl p-4 flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <input type="radio" name="paymentMethod" value="vnpay" checked class="text-blue-600 focus:ring-blue-500">
-                                <div>
-                                    <span class="font-bold text-slate-800 text-sm">Cổng thanh toán VNPay</span>
-                                    <p class="text-xs text-slate-500">Hỗ trợ ATM nội địa, Thẻ quốc tế Visa/Master, VNPay-QR</p>
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold text-blue-700 bg-white border border-blue-200 px-2 py-1 rounded">VNPay</span>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full py-3.5 px-4 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition">
-                        Tiến Hành Thanh Toán VNPay
-                    </button>
-                </c:when>
-                <c:otherwise>
-                    <button type="submit" class="w-full py-3.5 px-4 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition">
-                        Xác Nhận Tham Gia Miễn Phí
-                    </button>
-                </c:otherwise>
-            </c:choose>
+            <button type="submit" class="w-full py-3.5 px-4 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition">
+                Xác Nhận Đăng Ký Khóa Học
+            </button>
         </form>
     </div>
 </main>

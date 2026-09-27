@@ -4,7 +4,6 @@ import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dao.SettingDAO;
 import com.learnhub.dto.CourseDTO;
-import com.learnhub.dto.PageResult;
 import com.learnhub.dto.RegistrationDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Registration;
@@ -42,13 +41,12 @@ public class CourseService {
         this.settingDAO = settingDAO;
     }
 
-    public PageResult<CourseDTO> searchPublicCourses(String search, UUID categoryId, int page, int pageSize) {
+    public List<CourseDTO> searchPublicCourses(String search, UUID categoryId, int page, int pageSize) {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 9;
         int offset = (page - 1) * pageSize;
 
         List<Course> courses = courseDAO.findPublishedCourses(search, categoryId, offset, pageSize);
-        int total = courseDAO.countPublishedCourses(search, categoryId);
 
         List<CourseDTO> dtos = new ArrayList<>();
         for (Course c : courses) {
@@ -61,7 +59,7 @@ public class CourseService {
             dto.setLessonCount(c.getLessonCount());
             dtos.add(dto);
         }
-        return new PageResult<>(dtos, page, pageSize, total);
+        return dtos;
     }
 
     public Course getCourseDetailWithCurriculum(UUID courseId) {
@@ -93,13 +91,12 @@ public class CourseService {
         return null;
     }
 
-    public PageResult<RegistrationDTO> searchRegistrations(String search, String status, int page, int pageSize) {
+    public List<RegistrationDTO> searchRegistrations(String search, String status, int page, int pageSize) {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
         int offset = (page - 1) * pageSize;
 
         List<Registration> list = registrationDAO.findRegistrations(search, status, offset, pageSize);
-        int total = registrationDAO.countRegistrations(search, status);
 
         List<RegistrationDTO> dtos = new ArrayList<>();
         for (Registration r : list) {
@@ -119,7 +116,7 @@ public class CourseService {
             dto.setTransactionId(r.getTransactionId());
             dtos.add(dto);
         }
-        return new PageResult<>(dtos, page, pageSize, total);
+        return dtos;
     }
 
     public Registration getRegistrationDetailById(UUID id) {

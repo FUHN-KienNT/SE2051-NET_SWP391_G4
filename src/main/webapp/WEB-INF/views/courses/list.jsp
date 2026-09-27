@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -36,8 +36,8 @@
     <!-- Courses Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <c:choose>
-            <c:when test="${not empty pageResult.items}">
-                <c:forEach var="c" items="${pageResult.items}">
+            <c:when test="${not empty courses}">
+                <c:forEach var="c" items="${courses}">
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col group">
                         <div class="relative h-48 bg-slate-100 overflow-hidden">
                             <img src="${not empty c.thumbnail ? c.thumbnail : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'}" alt="${c.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
@@ -75,16 +75,5 @@
             </c:otherwise>
         </c:choose>
     </div>
-
-    <!-- Pagination -->
-    <c:if test="${pageResult.totalPages > 1}">
-        <div class="mt-10 flex justify-center space-x-2">
-            <c:forEach begin="1" end="${pageResult.totalPages}" var="i">
-                <a href="${pageContext.request.contextPath}/courses?page=${i}&search=${search}&categoryId=${categoryId}" class="px-4 py-2 text-sm font-semibold rounded-xl border ${pageResult.page == i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}">
-                    ${i}
-                </a>
-            </c:forEach>
-        </div>
-    </c:if>
 </main>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

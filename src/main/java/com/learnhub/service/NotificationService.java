@@ -24,15 +24,6 @@ public class NotificationService {
         EmailUtil.sendEnrollmentSuccess("student@learnhub.edu.vn", "Hoc Vien", courseTitle);
     }
 
-    public void notifyContentReviewResult(UUID expertId, String lessonTitle, boolean approved, String reason) {
-        Notification n = new Notification();
-        n.setId(UUID.randomUUID());
-        n.setUserId(expertId);
-        n.setContent("Ket qua kiem duyet bai hoc '" + lessonTitle + "': " + (approved ? "Da duoc phe duyet!" : "Bi tu choi: " + reason));
-        n.setStatus("unread");
-        notificationDAO.insert(n);
-    }
-
     public List<Notification> getUserNotifications(UUID userId) {
         return notificationDAO.findByUserId(userId);
     }

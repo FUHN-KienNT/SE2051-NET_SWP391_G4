@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -53,7 +53,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-                <c:forEach var="u" items="${pageResult.items}">
+                <c:forEach var="u" items="${users}">
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 font-semibold text-slate-900">${u.username}</td>
                         <td class="px-6 py-4">${u.email}</td>
@@ -71,16 +71,5 @@
             </tbody>
         </table>
     </div>
-
-    <!-- Pagination -->
-    <c:if test="${pageResult.totalPages > 1}">
-        <div class="mt-8 flex justify-center space-x-2">
-            <c:forEach begin="1" end="${pageResult.totalPages}" var="i">
-                <a href="${pageContext.request.contextPath}/admin/users?page=${i}&search=${search}&roleId=${roleId}" class="px-4 py-2 text-sm font-semibold rounded-xl border ${pageResult.page == i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}">
-                    ${i}
-                </a>
-            </c:forEach>
-        </div>
-    </c:if>
 </main>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

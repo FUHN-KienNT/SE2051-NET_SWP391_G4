@@ -29,7 +29,6 @@
                         </button>
                         <div class="absolute left-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 hidden group-hover:block transition-all">
                             <a href="${pageContext.request.contextPath}/admin/users" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Quản lý người dùng</a>
-                            <a href="${pageContext.request.contextPath}/content-review" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Duyệt nội dung</a>
                         </div>
                     </div>
                 </c:if>

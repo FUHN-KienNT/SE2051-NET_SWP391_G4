@@ -83,6 +83,13 @@ public class SettingDAO {
         return null;
     }
 
+    /**
+     * Find all role settings (merged from RoleDAO).
+     */
+    public List<Setting> findAllRoles() {
+        return findByType("role");
+    }
+
     public List<Setting> findAll() {
         List<Setting> list = new ArrayList<>();
         String sql = "SELECT id, type, code, name, description, status, sort_order, created_at, updated_at " +

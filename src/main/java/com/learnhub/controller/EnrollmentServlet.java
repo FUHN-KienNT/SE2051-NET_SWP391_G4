@@ -55,7 +55,7 @@ public class EnrollmentServlet extends HttpServlet {
                 UUID courseId = UUID.fromString(courseIdStr);
                 Registration reg = enrollmentService.createEnrollment(user.getId(), courseId);
                 if (reg != null) {
-                    resp.sendRedirect(req.getContextPath() + "/checkout?registrationId=" + reg.getId());
+                    resp.sendRedirect(req.getContextPath() + "/my-enrollments");
                     return;
                 }
             } catch (Exception ignored) {

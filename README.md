@@ -1,4 +1,4 @@
-﻿# LearnHub - Online Learning Platform (LMS)
+# LearnHub - Online Learning Platform (LMS)
 
 [![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Jakarta EE 10](https://img.shields.io/badge/Jakarta%20EE-10-blue.svg)](https://jakarta.ee/)
@@ -15,43 +15,36 @@ Dự án tuân thủ chặt chẽ kiến trúc MVC phân lớp (Layered Architec
 
 ```
 com.learnhub
-├── controller              # Các Jakarta Servlets điều hướng Request/Response
+├── controller              # 8 Jakarta Servlets điều hướng Request/Response
 │   ├── AuthServlet.java
 │   ├── CourseServlet.java
 │   ├── EnrollmentServlet.java
 │   ├── HomeServlet.java
 │   ├── LearningProcessServlet.java
 │   ├── LessonServlet.java
-│   ├── PaymentServlet.java
 │   ├── QuizServlet.java
-│   ├── UserServlet.java
-│   └── ContentReviewServlet.java
-├── dao                     # Data Access Objects tương tác trực tiếp với PostgreSQL
-│   ├── SettingDAO.java
-│   ├── RoleDAO.java
+│   └── UserServlet.java
+├── dao                     # 12 Data Access Objects tương tác trực tiếp với PostgreSQL
+│   ├── SettingDAO.java     # Đã gộp RoleDAO vào SettingDAO
 │   ├── UserDAO.java
 │   ├── CourseDAO.java
 │   ├── RegistrationDAO.java
 │   ├── EnrollmentDAO.java
-│   ├── PaymentDAO.java
 │   ├── LessonDAO.java
 │   ├── LearningProcessDAO.java
 │   ├── QuizDAO.java
 │   ├── QuestionDAO.java
 │   ├── AnswerDAO.java
 │   ├── QuizAttemptDAO.java
-│   ├── ContentReviewDAO.java
 │   └── NotificationDAO.java
-├── dto                     # Data Transfer Objects trao đổi dữ liệu giữa các tầng
+├── dto                     # 6 Data Transfer Objects trao đổi dữ liệu giữa các tầng
 │   ├── CourseDTO.java
 │   ├── LearningProcessDTO.java
 │   ├── LessonDTO.java
-│   ├── PageResult.java
-│   ├── PaymentRequestDTO.java
 │   ├── QuizAttemptDTO.java
 │   ├── RegistrationDTO.java
 │   └── UserDTO.java
-├── entity                  # Model Entities ánh xạ trực tiếp 1-1 với Database Schema
+├── entity                  # 15 Model Entities ánh xạ trực tiếp với Database Schema
 │   ├── Setting.java
 │   ├── User.java
 │   ├── Course.java
@@ -66,29 +59,24 @@ com.learnhub
 │   ├── QuizSubmission.java
 │   ├── QuizAnswer.java
 │   ├── Notification.java
-│   ├── Payment.java
-│   └── ContentReview.java
+│   └── Payment.java
 ├── filter                  # Bộ lọc xử lý Encoding (UTF-8) và Phân quyền (Authorization)
 │   ├── EncodingFilter.java
 │   └── AuthorizationFilter.java
-├── service                 # Business Logic Services xử lý nghiệp vụ hệ thống
+├── service                 # 8 Business Logic Services xử lý nghiệp vụ hệ thống
 │   ├── UserService.java
 │   ├── CourseService.java
 │   ├── LessonService.java
 │   ├── LearningProcessService.java
 │   ├── EnrollmentService.java
-│   ├── PaymentService.java
 │   ├── ScoringService.java
 │   ├── QuizAttemptService.java
-│   ├── ContentReviewService.java
 │   └── NotificationService.java
-├── util                    # Tiện ích hệ thống (Database, Hash, VNPay, Mail, ...)
+├── util                    # 4 Tiện ích hệ thống (Database, Hash, Media, Mail)
 │   ├── DbConnection.java
 │   ├── PasswordHashUtil.java
-│   ├── VNPayGateway.java
 │   ├── CloudinaryClient.java
-│   ├── EmailUtil.java
-│   └── DateUtil.java
+│   └── EmailUtil.java
 └── HelloServlet.java       # Servlet kiểm thử khởi động hệ thống
 ```
 

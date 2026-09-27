@@ -1,6 +1,5 @@
 package com.learnhub.controller;
 
-import com.learnhub.dto.PageResult;
 import com.learnhub.dto.UserDTO;
 import com.learnhub.entity.Setting;
 import com.learnhub.service.UserService;
@@ -66,10 +65,10 @@ public class UserServlet extends HttpServlet {
             try { page = Integer.parseInt(pageStr); } catch (Exception ignored) {}
         }
 
-        PageResult<UserDTO> pageResult = userService.getUserList(search, roleId, status, page, 10);
+        List<UserDTO> users = userService.getUserList(search, roleId, status, page, 10);
         List<Setting> roles = userService.getAllRoles();
 
-        req.setAttribute("pageResult", pageResult);
+        req.setAttribute("users", users);
         req.setAttribute("roles", roles);
         req.setAttribute("search", search);
         req.setAttribute("selectedRole", roleIdStr);

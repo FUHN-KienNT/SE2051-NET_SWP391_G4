@@ -1,7 +1,6 @@
 package com.learnhub.controller;
 
 import com.learnhub.dto.CourseDTO;
-import com.learnhub.dto.PageResult;
 import com.learnhub.entity.Setting;
 import com.learnhub.service.CourseService;
 import jakarta.servlet.ServletException;
@@ -19,10 +18,10 @@ public class HomeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        PageResult<CourseDTO> featuredCourses = courseService.searchPublicCourses("", null, 1, 6);
+        List<CourseDTO> featuredCourses = courseService.searchPublicCourses("", null, 1, 6);
         List<Setting> categories = courseService.getActiveCategories();
 
-        req.setAttribute("featuredCourses", featuredCourses.getData());
+        req.setAttribute("featuredCourses", featuredCourses);
         req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(req, resp);
     }

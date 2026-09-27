@@ -1,7 +1,6 @@
 package com.learnhub.controller;
 
 import com.learnhub.dto.CourseDTO;
-import com.learnhub.dto.PageResult;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
@@ -67,10 +66,10 @@ public class CourseServlet extends HttpServlet {
             try { page = Integer.parseInt(pageStr); } catch (Exception ignored) {}
         }
 
-        PageResult<CourseDTO> pageResult = courseService.searchPublicCourses(search, categoryId, page, 9);
+        List<CourseDTO> courses = courseService.searchPublicCourses(search, categoryId, page, 9);
         List<Setting> categories = courseService.getActiveCategories();
 
-        req.setAttribute("pageResult", pageResult);
+        req.setAttribute("courses", courses);
         req.setAttribute("categories", categories);
         req.setAttribute("search", search);
         req.setAttribute("selectedCategory", categoryIdStr);
@@ -94,7 +93,7 @@ public class CourseServlet extends HttpServlet {
                 UUID courseId = UUID.fromString(courseIdStr);
                 Registration reg = courseService.processCourseRegistration(currentUser.getId(), courseId, null);
                 if (reg != null) {
-                    resp.sendRedirect(req.getContextPath() + "/checkout?registrationId=" + reg.getId());
+                    resp.sendRedirect(req.getContextPath() + "/my-enrollments");
                     return;
                 }
             } catch (Exception ignored) {

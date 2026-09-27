@@ -1,8 +1,7 @@
 package com.learnhub.service;
 
-import com.learnhub.dao.RoleDAO;
+import com.learnhub.dao.SettingDAO;
 import com.learnhub.dao.UserDAO;
-import com.learnhub.dto.PageResult;
 import com.learnhub.dto.UserDTO;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
@@ -27,31 +26,30 @@ public class UserService {
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
     private final UserDAO userDAO;
-    private final RoleDAO roleDAO;
+    private final SettingDAO settingDAO;
 
     public UserService() {
         this.userDAO = new UserDAO();
-        this.roleDAO = new RoleDAO();
+        this.settingDAO = new SettingDAO();
     }
 
-    public UserService(UserDAO userDAO, RoleDAO roleDAO) {
+    public UserService(UserDAO userDAO, SettingDAO settingDAO) {
         this.userDAO = userDAO;
-        this.roleDAO = roleDAO;
+        this.settingDAO = settingDAO;
     }
 
-    public PageResult<UserDTO> getUserList(String search, UUID roleId, String status, int page, int pageSize) {
+    public List<UserDTO> getUserList(String search, UUID roleId, String status, int page, int pageSize) {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
         int offset = (page - 1) * pageSize;
 
         List<User> users = userDAO.findUsers(search, roleId, status, offset, pageSize);
-        int total = userDAO.countUsers(search, roleId, status);
 
         List<UserDTO> dtos = new ArrayList<>();
         for (User u : users) {
             dtos.add(toDTO(u));
         }
-        return new PageResult<>(dtos, page, pageSize, total);
+        return dtos;
     }
 
     public UserDTO getUserById(UUID id) {
@@ -115,7 +113,7 @@ public class UserService {
         }
 
         Setting studentRole = null;
-        List<Setting> roles = roleDAO.findAllRoles();
+        List<Setting> roles = settingDAO.findAllRoles();
         for (Setting r : roles) {
             if ("ROLE_STUDENT".equalsIgnoreCase(r.getCode())) {
                 studentRole = r;
@@ -139,7 +137,7 @@ public class UserService {
     }
 
     public List<Setting> getAllRoles() {
-        return roleDAO.findAllRoles();
+        return settingDAO.findAllRoles();
     }
 
     private UserDTO toDTO(User u) {

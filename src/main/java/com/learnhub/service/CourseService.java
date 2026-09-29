@@ -17,14 +17,12 @@ import java.util.UUID;
 /**
  * Service handling Course browsing, registration, and curriculum logic.
  * Implements methods specified in SDS Course Browsing Diagram (5.1, 5.2, 5.3):
- * - searchPublicCourses()
- * - getCourseDetailWithCurriculum()
- * - processCourseRegistration()
- * - searchRegistrations()
- * - getRegistrationDetailById()
- * - updateRegistrationStatus()
+ * - searchPublicCourses() - getCourseDetailWithCurriculum() -
+ * processCourseRegistration() - searchRegistrations() -
+ * getRegistrationDetailById() - updateRegistrationStatus()
  */
 public class CourseService {
+
     private final CourseDAO courseDAO;
     private final RegistrationDAO registrationDAO;
     private final SettingDAO settingDAO;
@@ -42,8 +40,12 @@ public class CourseService {
     }
 
     public List<CourseDTO> searchPublicCourses(String search, UUID categoryId, int page, int pageSize) {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 9;
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 9;
+        }
         int offset = (page - 1) * pageSize;
 
         List<Course> courses = courseDAO.findPublishedCourses(search, categoryId, offset, pageSize);
@@ -51,9 +53,9 @@ public class CourseService {
         List<CourseDTO> dtos = new ArrayList<>();
         for (Course c : courses) {
             CourseDTO dto = new CourseDTO(
-                c.getId(), c.getTitle(), c.getDescription(), c.getPrice(),
-                c.getThumbnailUrl(), c.getStatus(), c.getCategoryId(),
-                c.getCategoryName(), c.getExpertName()
+                    c.getId(), c.getTitle(), c.getDescription(), c.getPrice(),
+                    c.getThumbnailUrl(), c.getStatus(), c.getCategoryId(),
+                    c.getCategoryName(), c.getExpertName()
             );
             dto.setModuleCount(c.getModuleCount());
             dto.setLessonCount(c.getLessonCount());
@@ -68,7 +70,9 @@ public class CourseService {
 
     public Registration processCourseRegistration(UUID userId, UUID courseId, UUID paymentMethodId) {
         Course course = courseDAO.findById(courseId);
-        if (course == null) return null;
+        if (course == null) {
+            return null;
+        }
 
         Registration existing = registrationDAO.findByUserAndCourse(userId, courseId);
         if (existing != null) {
@@ -92,8 +96,12 @@ public class CourseService {
     }
 
     public List<RegistrationDTO> searchRegistrations(String search, String status, int page, int pageSize) {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 10;
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 10;
+        }
         int offset = (page - 1) * pageSize;
 
         List<Registration> list = registrationDAO.findRegistrations(search, status, offset, pageSize);
@@ -129,5 +137,20 @@ public class CourseService {
 
     public List<Setting> getActiveCategories() {
         return settingDAO.findActiveCategories();
+    }
+
+    public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize) {
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 10;
+        }
+        int offset = (page - 1) * pageSize;
+        return courseDAO.findByExpertId(expertId, offset, pageSize);
+    }
+
+    public int countAssignedCourses(UUID expertId) {
+        return courseDAO.countByExpertId(expertId);
     }
 }

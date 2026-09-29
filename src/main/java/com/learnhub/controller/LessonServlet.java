@@ -38,7 +38,7 @@ public class LessonServlet extends HttpServlet {
             } catch (Exception ignored) {
             }
         }
-        req.getRequestDispatcher("/WEB-INF/views/learn/lesson-manage.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
 
     @Override

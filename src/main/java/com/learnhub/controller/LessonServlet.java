@@ -58,14 +58,11 @@ public class LessonServlet extends HttpServlet {
             } catch (Exception ignored) {
             }
         }
-        String lessonIdStr = req.getParameter("id");
-        if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
-            try {
-                UUID lessonId = UUID.fromString(lessonIdStr);
-                LessonDTO dto = lessonService.getLesson(lessonId);
-                req.setAttribute("lesson", dto);
-            } catch (Exception ignored) {
-            }
+        String action = req.getParameter("action");
+        if ("create".equalsIgnoreCase(action)) {
+            req.setAttribute("defaultOrderIndex", 1);
+            req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
+            return;
         }
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
@@ -92,18 +89,26 @@ public class LessonServlet extends HttpServlet {
 
         // Save lesson
         String idStr = req.getParameter("id");
+        String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         String title = req.getParameter("title");
         String content = req.getParameter("content");
-
+        String orderIndexStr = req.getParameter("orderIndex");
+        int orderIndex = 1;
+        if (orderIndexStr != null && !orderIndexStr.trim().isEmpty()) {
+            try {
+                orderIndex = Integer.parseInt(orderIndexStr.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
         try {
-            UUID id = idStr != null && !idStr.isEmpty() ? UUID.fromString(idStr) : UUID.randomUUID();
+            UUID id = (idStr != null && !idStr.trim().isEmpty()) ? UUID.fromString(idStr) : UUID.randomUUID();
             UUID moduleId = UUID.fromString(moduleIdStr);
-            LessonDTO dto = new LessonDTO(id, moduleId, title, content, 1);
+            LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
             lessonService.saveLesson(dto);
-            resp.sendRedirect(req.getContextPath() + "/course-detail?id=" + req.getParameter("courseId"));
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/courses");
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
         }
     }
 }

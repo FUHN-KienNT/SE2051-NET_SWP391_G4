@@ -70,10 +70,11 @@ public class UserDAO {
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
-                     "WHERE LOWER(u.email) = LOWER(?)";
+                     "WHERE LOWER(u.email) = LOWER(?) OR LOWER(u.username) = LOWER(?)";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email.trim());
+            ps.setString(2, email.trim());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToUser(rs);

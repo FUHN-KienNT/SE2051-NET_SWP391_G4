@@ -1,5 +1,6 @@
 package com.learnhub.filter;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.entity.User;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
@@ -48,28 +49,28 @@ public class AuthorizationFilter implements Filter {
 
     public boolean isLoggedIn(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
-        return session != null && session.getAttribute("currentUser") != null;
+        return session != null && session.getAttribute(AppConstants.SessionKey.CURRENT_USER) != null;
     }
 
     public boolean hasAdminRole(HttpServletRequest req) {
         User user = getCurrentUser(req);
-        return user != null && ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode()) || "Administrator".equalsIgnoreCase(user.getRoleName()));
+        return user != null && (AppConstants.Role.ADMIN.equalsIgnoreCase(user.getRoleCode()) || "Administrator".equalsIgnoreCase(user.getRoleName()));
     }
 
     public boolean hasExpertRole(HttpServletRequest req) {
         User user = getCurrentUser(req);
-        return user != null && ("ROLE_EXPERT".equalsIgnoreCase(user.getRoleCode()) || hasAdminRole(req));
+        return user != null && (AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode()) || hasAdminRole(req));
     }
 
     public boolean hasStudentRole(HttpServletRequest req) {
         User user = getCurrentUser(req);
-        return user != null && "ROLE_STUDENT".equalsIgnoreCase(user.getRoleCode());
+        return user != null && AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode());
     }
 
     private User getCurrentUser(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session != null) {
-            return (User) session.getAttribute("currentUser");
+            return (User) session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
         }
         return null;
     }

@@ -5,146 +5,164 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
 [![Maven](https://img.shields.io/badge/Maven-3.8+-C71A36.svg)](https://maven.apache.org/)
 
-Hệ thống Quản lý Học tập Trực tuyến (**LearnHub LMS**) được thiết kế và xây dựng theo chuẩn tài liệu đặc tả yêu cầu phần mềm (**SRS**) và đặc tả thiết kế phần mềm (**SDS**) dành cho môn học **SWP391 - Nhóm G4 (SE2051-NET)**.
+**LearnHub** is an enterprise-grade Online Learning Management System (LMS) built with Java Jakarta EE, following a layered MVC architecture and standardized SRS/SDS specifications for course management, video learning, quiz assessments, and role-based access control.
 
 ---
 
-## 🏛️ Cấu Trúc Gói (Package Architecture)
+## 🏛️ Package Architecture
 
-Dự án tuân thủ chặt chẽ kiến trúc MVC phân lớp (Layered Architecture) theo chuẩn cấu trúc package được quy định:
+The project strictly follows a layered MVC pattern under `com.learnhub`:
 
 ```
 com.learnhub
-├── controller              # 8 Jakarta Servlets điều hướng Request/Response
+├── constant        # System-wide constants (Roles, Statuses, Session keys, Pagination)
+│   └── AppConstants.java
+├── controller      # Jakarta Servlets dispatching HTTP requests and routing views
 │   ├── AuthServlet.java
 │   ├── CourseServlet.java
 │   ├── EnrollmentServlet.java
+│   ├── ErrorServlet.java
 │   ├── HomeServlet.java
 │   ├── LearningProcessServlet.java
 │   ├── LessonServlet.java
 │   ├── QuizServlet.java
 │   └── UserServlet.java
-├── dao                     # 12 Data Access Objects tương tác trực tiếp với PostgreSQL
-│   ├── SettingDAO.java     # Đã gộp RoleDAO vào SettingDAO
-│   ├── UserDAO.java
-│   ├── CourseDAO.java
-│   ├── RegistrationDAO.java
-│   ├── EnrollmentDAO.java
-│   ├── LessonDAO.java
-│   ├── LearningProcessDAO.java
-│   ├── QuizDAO.java
-│   ├── QuestionDAO.java
+├── dao             # Data Access Objects executing SQL via JDBC & HikariCP
 │   ├── AnswerDAO.java
+│   ├── CourseDAO.java
+│   ├── LearningProcessDAO.java
+│   ├── LessonDAO.java
+│   ├── ModuleDAO.java
+│   ├── NotificationDAO.java
+│   ├── QuestionDAO.java
 │   ├── QuizAttemptDAO.java
-│   └── NotificationDAO.java
-├── dto                     # 6 Data Transfer Objects trao đổi dữ liệu giữa các tầng
+│   ├── QuizDAO.java
+│   ├── RegistrationDAO.java
+│   ├── SettingDAO.java
+│   └── UserDAO.java
+├── dto             # Data Transfer Objects for cross-layer data exchange
 │   ├── CourseDTO.java
 │   ├── LearningProcessDTO.java
 │   ├── LessonDTO.java
+│   ├── ModuleDTO.java
 │   ├── QuizAttemptDTO.java
 │   ├── RegistrationDTO.java
 │   └── UserDTO.java
-├── entity                  # 15 Model Entities ánh xạ trực tiếp với Database Schema
-│   ├── Setting.java
-│   ├── User.java
+├── entity          # Domain models mapped 1:1 to PostgreSQL tables
 │   ├── Course.java
-│   ├── Registration.java
-│   ├── Module.java
-│   ├── Lesson.java
 │   ├── LearningProcess.java
-│   ├── Quiz.java
+│   ├── Lesson.java
+│   ├── Module.java
+│   ├── Notification.java
+│   ├── Payment.java
 │   ├── Question.java
 │   ├── QuestionOption.java
+│   ├── Quiz.java
+│   ├── QuizAnswer.java
 │   ├── QuizQuestion.java
 │   ├── QuizSubmission.java
-│   ├── QuizAnswer.java
-│   ├── Notification.java
-│   └── Payment.java
-├── filter                  # Bộ lọc xử lý Encoding (UTF-8) và Phân quyền (Authorization)
-│   ├── EncodingFilter.java
-│   └── AuthorizationFilter.java
-├── service                 # 8 Business Logic Services xử lý nghiệp vụ hệ thống
-│   ├── UserService.java
+│   ├── Registration.java
+│   ├── Setting.java
+│   └── User.java
+├── filter          # Web filters for UTF-8 encoding and role-based authorization
+│   ├── AuthorizationFilter.java
+│   └── EncodingFilter.java
+├── service         # Business logic layer orchestrating workflows and transactions
 │   ├── CourseService.java
-│   ├── LessonService.java
 │   ├── LearningProcessService.java
-│   ├── EnrollmentService.java
-│   ├── ScoringService.java
+│   ├── LessonService.java
+│   ├── NotificationService.java
 │   ├── QuizAttemptService.java
-│   └── NotificationService.java
-├── util                    # 4 Tiện ích hệ thống (Database, Hash, Media, Mail)
-│   ├── DbConnection.java
-│   ├── PasswordHashUtil.java
-│   ├── CloudinaryClient.java
-│   └── EmailUtil.java
-└── HelloServlet.java       # Servlet kiểm thử khởi động hệ thống
+│   └── UserService.java
+└── util            # Utility helpers (Database pooling, BCrypt hashing, Cloudinary, Mail)
+    ├── CloudinaryClient.java
+    ├── DbConnection.java
+    ├── EmailUtil.java
+    └── PasswordHashUtil.java
 ```
 
----
+### Layer Responsibilities
 
-## 🚀 Công Nghệ Sử Dụng
-
-- **Ngôn ngữ & Nền tảng:** Java 17 LTS, Jakarta Servlet 6.0, Jakarta Server Pages (JSP) 3.1, JSTL 3.0.
-- **Cơ sở dữ liệu:** PostgreSQL 15+ kết hợp Connection Pooling tốc độ cao với **HikariCP**.
-- **Bảo mật:** Mã hóa mật khẩu an toàn theo thuật toán **jBCrypt**, Session-based Authentication & Role-based Authorization.
-- **Tích hợp bên ngoài:** Cổng thanh toán **VNPay Gateway** (mô phỏng sandbox chuẩn), Cloudinary Media Storage, Jakarta Mail.
-- **Giao diện (Frontend):** JSP views responsive tích hợp **Tailwind CSS**, **FontAwesome 6**, chuẩn UX/UI hiện đại.
-
----
-
-## 🗄️ Cấu Trúc Cơ Sở Dữ Liệu
-
-Tất cả bảng dữ liệu và dữ liệu mẫu được định nghĩa đầy đủ tại tệp [`db/schema.sql`](file:///db/schema.sql) gồm 16 bảng:
-1. `setting`: Quản lý các cấu hình hệ thống (roles, categories, v.v.).
-2. `user`: Quản lý tài khoản (Admin, Manager, Expert, Customer/Student).
-3. `course`: Danh mục khóa học, giá, phân loại và trạng thái kiểm duyệt.
-4. `registration`: Quản lý đơn đăng ký khóa học của học viên.
-5. `module`: Các chương học trong khóa học.
-6. `lesson`: Bài học (Video, bài viết, tài liệu).
-7. `learning_process`: Tiến độ học tập của học viên theo từng bài học.
-8. `quiz`: Bài thi trắc nghiệm đánh giá năng lực.
-9. `question`: Ngân hàng câu hỏi trắc nghiệm.
-10. `question_option`: Các phương án trả lời cho từng câu hỏi.
-11. `quiz_question`: Liên kết giữa bài thi và danh sách câu hỏi.
-12. `quiz_submission`: Lượt nộp bài thi của học viên.
-13. `quiz_answer`: Câu trả lời chi tiết của học viên trong từng lượt thi.
-14. `notification`: Thông báo hệ thống tới người dùng.
-15. `payment`: Giao dịch thanh toán khóa học qua VNPay.
-16. `content_review`: Quy trình kiểm duyệt nội dung của chuyên gia/quản trị.
+| Layer | Package | Description |
+|---|---|---|
+| **Presentation** | `controller`, `filter` | Intercepts HTTP requests, handles session authentication/authorization, and forwards to JSP views. |
+| **Business Logic** | `service` | Executes core business rules, calculations (scoring, progress), and transactional logic. |
+| **Data Access** | `dao` | Performs robust CRUD operations against PostgreSQL using prepared statements and connection pooling. |
+| **Domain Model** | `entity`, `dto` | Encapsulates relational data structures and facilitates safe data transport across application layers. |
+| **Cross-Cutting** | `constant`, `util` | Centralized constants (roles, statuses) and shared utilities (password hashing, connection manager, email). |
 
 ---
 
-## 🛠️ Hướng Dẫn Cài Đặt & Chạy Dự Án
+## 🚀 Tech Stack
 
-### 1. Yêu cầu môi trường
-- JDK 17 trở lên.
-- Apache Maven 3.8+.
-- PostgreSQL 14 trở lên.
-- Apache Tomcat 10.1+ (Hỗ trợ Jakarta EE 10).
+- **Backend:** Java 17 LTS, Jakarta Servlet 6.0, Jakarta Server Pages (JSP) 3.1, JSTL 3.0.
+- **Database:** PostgreSQL 15+ with **HikariCP** high-performance connection pooling.
+- **Security:** **jBCrypt** password hashing, Session-based authentication & Role-based Access Control (RBAC).
+- **Integrations:** Cloudinary Media API, Jakarta Mail.
+- **Frontend:** Responsive JSP views styled with **Tailwind CSS** and **FontAwesome 6**.
+- **Build Tool:** Apache Maven.
 
-### 2. Cài đặt Cơ sở Dữ liệu
-1. Tạo database mới trong PostgreSQL:
-   ```sql
-   CREATE DATABASE learnhub;
-   ```
-2. Thực thi kịch bản DDL & dữ liệu mẫu:
-   ```bash
-   psql -U postgres -d learnhub -f db/schema.sql
-   ```
-3. Cấu hình thông tin kết nối trong `src/main/resources/database.properties` (hoặc biến môi trường `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
+---
 
-### 3. Build Dự Án
+## 🗄️ Database Schema
+
+The database schema and sample data are defined in:
+- [`db/schema.sql`](file:///db/schema.sql): Complete DDL schema defining 14 core tables with foreign keys and indexes.
+- [`db/seed.sql`](file:///db/seed.sql): Initial seed data including system roles, categories, demo users, sample courses, modules, lessons, and quizzes.
+
+### Core Tables
+
+1. `setting`: System-wide settings and category/role lookup tables.
+2. `user`: User accounts with roles (Admin, Manager, Expert, Student).
+3. `course`: Course catalog, pricing, category, and publishing status.
+4. `module`: Course curriculum chapters/sections.
+5. `lesson`: Educational lessons (video, document, article).
+6. `registration`: Course enrollment and registration tracking.
+7. `learning_process`: Student progress tracking per lesson.
+8. `quiz`: Assessments and evaluation tests.
+9. `question`: Question bank for quizzes.
+10. `question_option`: Answer choices for questions.
+11. `quiz_question`: Quiz and question association mapping.
+12. `quiz_submission`: Student quiz attempt records.
+13. `quiz_answer`: Detailed student responses per question.
+14. `notification`: System notifications and alerts.
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+- **JDK 17** or later
+- **Apache Maven 3.8+**
+- **PostgreSQL 14+**
+- **Apache Tomcat 10.1+** (supporting Jakarta EE 10)
+
+### 1. Database Setup
+```bash
+# Create database
+createdb -U postgres learnhub
+
+# Execute schema and seed data
+psql -U postgres -d learnhub -f db/schema.sql
+psql -U postgres -d learnhub -f db/seed.sql
+```
+
+Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
+
+### 2. Build Project
 ```bash
 mvn clean package
 ```
-Tệp `target/learnhub.war` sẽ được tạo ra thành công.
+The output artifact `target/learnhub.war` will be generated.
 
-### 4. Triển khai (Deploy)
-Copy tệp `target/learnhub.war` vào thư mục `webapps/` của Tomcat 10.1+ và khởi động server.
-Truy cập ứng dụng tại: `http://localhost:8080/learnhub`
+### 3. Deploy
+Copy `target/learnhub.war` to the `webapps/` directory of your Apache Tomcat 10.1+ server and start Tomcat.
+
+Access the application at: `http://localhost:8080/learnhub`
 
 ---
 
-## 👥 Nhóm Thực Hiện - SWP391 G4
-- **Dự án:** LearnHub LMS
-- **Học kỳ:** Fall 2026 / Semester 5
+## 👥 Project Team - SWP391 G4
+- **Project:** LearnHub LMS
+- **Class:** SE2051-NET
+- **Semester:** Fall 2026 / Semester 5

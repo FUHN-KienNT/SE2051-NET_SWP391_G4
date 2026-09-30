@@ -49,6 +49,9 @@ public class CourseDTO implements Serializable {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
+    public String getThumbnail() { return thumbnailUrl; }
+    public void setThumbnail(String thumbnail) { this.thumbnailUrl = thumbnail; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 

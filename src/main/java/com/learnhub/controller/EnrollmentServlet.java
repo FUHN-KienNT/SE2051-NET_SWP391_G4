@@ -2,7 +2,7 @@ package com.learnhub.controller;
 
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.User;
-import com.learnhub.service.EnrollmentService;
+import com.learnhub.service.CourseService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,7 +22,7 @@ import java.util.UUID;
  */
 @WebServlet(name = "EnrollmentServlet", urlPatterns = {"/enroll", "/my-enrollments"})
 public class EnrollmentServlet extends HttpServlet {
-    private final EnrollmentService enrollmentService = new EnrollmentService();
+    private final CourseService courseService = new CourseService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -34,7 +34,7 @@ public class EnrollmentServlet extends HttpServlet {
             return;
         }
 
-        List<Registration> myEnrollments = enrollmentService.getMyEnrollments(user.getId());
+        List<Registration> myEnrollments = courseService.getMyEnrollments(user.getId());
         req.setAttribute("enrollments", myEnrollments);
         req.getRequestDispatcher("/WEB-INF/views/learn/dashboard.jsp").forward(req, resp);
     }
@@ -53,7 +53,7 @@ public class EnrollmentServlet extends HttpServlet {
         if (courseIdStr != null) {
             try {
                 UUID courseId = UUID.fromString(courseIdStr);
-                Registration reg = enrollmentService.createEnrollment(user.getId(), courseId);
+                Registration reg = courseService.processCourseRegistration(user.getId(), courseId, null);
                 if (reg != null) {
                     resp.sendRedirect(req.getContextPath() + "/my-enrollments");
                     return;

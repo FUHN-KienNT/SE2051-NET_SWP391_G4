@@ -153,4 +153,8 @@ public class CourseService {
     public int countAssignedCourses(UUID expertId) {
         return courseDAO.countByExpertId(expertId);
     }
+
+    public List<Registration> getMyEnrollments(UUID userId) {
+        return registrationDAO.findByUserId(userId);
+    }
 }

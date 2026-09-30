@@ -12,6 +12,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ *
+ */
 @WebServlet(name = "HomeServlet", urlPatterns = {"", "/home", "/index"})
 public class HomeServlet extends HttpServlet {
     private final CourseService courseService = new CourseService();

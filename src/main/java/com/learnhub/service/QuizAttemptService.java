@@ -24,14 +24,12 @@ public class QuizAttemptService {
     private static final Logger LOGGER = Logger.getLogger(QuizAttemptService.class.getName());
 
     private final QuizAttemptDAO quizAttemptDAO;
-    private final ScoringService scoringService;
     private final AnswerDAO answerDAO;
     private final QuestionDAO questionDAO;
     private final QuizDAO quizDAO;
 
     public QuizAttemptService() {
         this.quizAttemptDAO = new QuizAttemptDAO();
-        this.scoringService = new ScoringService();
         this.answerDAO = new AnswerDAO();
         this.questionDAO = new QuestionDAO();
         this.quizDAO = new QuizDAO();
@@ -53,7 +51,7 @@ public class QuizAttemptService {
         if (attempt == null) return null;
 
         answerDAO.saveAnswers(submissionId, selectedAnswers);
-        BigDecimal score = scoringService.calculateScore(attempt.getQuizId(), selectedAnswers);
+        BigDecimal score = calculateScore(attempt.getQuizId(), selectedAnswers);
         boolean passed = score.compareTo(BigDecimal.valueOf(5.0)) >= 0;
 
         quizAttemptDAO.updateScore(submissionId, score, passed);
@@ -86,5 +84,53 @@ public class QuizAttemptService {
 
     public List<QuizSubmission> getAttemptHistory(UUID userId, UUID quizId) {
         return quizAttemptDAO.findAttemptsByStudent(userId, quizId);
+    }
+
+    public BigDecimal calculateScore(UUID quizId, Map<UUID, List<UUID>> selectedAnswers) {
+        List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
+        if (questions == null || questions.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        int totalQuestions = questions.size();
+        int correctCount = 0;
+
+        for (Question q : questions) {
+            List<UUID> selected = selectedAnswers != null ? selectedAnswers.get(q.getId()) : Collections.emptyList();
+            if (isAllOrNothingCorrect(q.getId(), selected)) {
+                correctCount++;
+            }
+        }
+
+        double scoreVal = ((double) correctCount / totalQuestions) * 10.0;
+        return BigDecimal.valueOf(scoreVal).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    public boolean isAllOrNothingCorrect(UUID questionId, List<UUID> selectedOptionIds) {
+        if (selectedOptionIds == null || selectedOptionIds.isEmpty()) {
+            return false;
+        }
+
+        List<com.learnhub.entity.QuestionOption> options = questionDAO.findOptionsByQuestionId(questionId);
+        Set<UUID> correctOptionIds = new HashSet<>();
+        for (com.learnhub.entity.QuestionOption opt : options) {
+            if (opt.isCorrect()) {
+                correctOptionIds.add(opt.getId());
+            }
+        }
+
+        Set<UUID> userSelected = new HashSet<>(selectedOptionIds);
+        return correctOptionIds.equals(userSelected);
+    }
+
+    public BigDecimal getBestAttemptScore(UUID userId, UUID quizId) {
+        List<QuizSubmission> attempts = quizAttemptDAO.findAttemptsByStudent(userId, quizId);
+        BigDecimal maxScore = BigDecimal.ZERO;
+        for (QuizSubmission a : attempts) {
+            if (a.getScore() != null && a.getScore().compareTo(maxScore) > 0) {
+                maxScore = a.getScore();
+            }
+        }
+        return maxScore;
     }
 }

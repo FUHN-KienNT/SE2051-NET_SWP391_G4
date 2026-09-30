@@ -76,7 +76,7 @@
         <div class="flex gap-3 mb-8 overflow-x-auto pb-2 hide-scrollbar">
             <button class="px-5 py-2 bg-blue-700 text-white rounded-full text-sm font-bold whitespace-nowrap shadow-md">Popular</button>
             <c:forEach var="cat" items="${categories}">
-                <button class="px-5 py-2 bg-white border border-slate-300 text-slate-700 rounded-full text-sm font-semibold hover:bg-slate-50 whitespace-nowrap transition">${cat.value}</button>
+                <button class="px-5 py-2 bg-white border border-slate-300 text-slate-700 rounded-full text-sm font-semibold hover:bg-slate-50 whitespace-nowrap transition">${cat.name}</button>
             </c:forEach>
         </div>
 

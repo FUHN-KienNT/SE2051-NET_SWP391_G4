@@ -44,7 +44,7 @@
                 <div class="relative z-10 max-w-sm">
                     <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-4 leading-tight">Jumpstart your career path</h2>
                     <p class="text-sm md:text-base text-slate-600 mb-8">Discover structured learning modules and gain real-world knowledge.</p>
-                    <a href="${pageContext.request.contextPath}/auth?action=register" class="inline-block bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-700 transition shadow-sm">
+                    <a href="${pageContext.request.contextPath}/register" class="inline-block bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-700 transition shadow-sm">
                         Join for free
                     </a>
                 </div>
@@ -159,7 +159,7 @@
                 <p class="text-slate-600 max-w-xl">Complete courses, take quizzes, and track your learning progress seamlessly with our platform.</p>
             </div>
             <div class="mt-6 md:mt-0">
-                <a href="${pageContext.request.contextPath}/auth?action=register" class="inline-block bg-slate-900 text-white font-bold px-8 py-3 rounded hover:bg-slate-800 transition">
+                <a href="${pageContext.request.contextPath}/register" class="inline-block bg-slate-900 text-white font-bold px-8 py-3 rounded hover:bg-slate-800 transition">
                     Start Learning
                 </a>
             </div>

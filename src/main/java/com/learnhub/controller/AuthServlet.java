@@ -57,14 +57,18 @@ public class AuthServlet extends HttpServlet {
                     resp.sendRedirect(req.getContextPath() + "/home");
                 }
             } else {
+                req.setAttribute("email", email);
                 req.setAttribute("errorMessage", "Email hoặc mật khẩu không chính xác, hoặc tài khoản đã bị khóa.");
                 req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             }
         } else if ("/register".equals(path)) {
-            String name = req.getParameter("name");
+            String username = req.getParameter("username");
             String email = req.getParameter("email");
             String password = req.getParameter("password");
             String confirmPassword = req.getParameter("confirmPassword");
+
+            req.setAttribute("username", username);
+            req.setAttribute("email", email);
 
             if (password == null || !password.equals(confirmPassword)) {
                 req.setAttribute("errorMessage", "Mật khẩu xác nhận không khớp.");
@@ -72,7 +76,7 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
 
-            User registered = userService.register(name, email, password);
+            User registered = userService.register(username, email, password);
             if (registered != null) {
                 resp.sendRedirect(req.getContextPath() + "/login?registered=success");
             } else {

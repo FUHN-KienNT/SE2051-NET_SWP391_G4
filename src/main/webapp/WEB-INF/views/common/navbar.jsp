@@ -59,15 +59,15 @@
                                     <i class="fa-solid fa-book-bookmark mr-2 text-slate-400"></i>Khóa học của tôi
                                 </a>
                                 <div class="border-t border-slate-100 my-1"></div>
-                                <a href="${pageContext.request.contextPath}/auth?action=logout" class="block px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-medium">
+                                <a href="${pageContext.request.contextPath}/logout" class="block px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-medium">
                                     <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Đăng xuất
                                 </a>
                             </div>
                         </div>
                     </c:when>
                     <c:otherwise>
-                        <a href="${pageContext.request.contextPath}/auth?action=login" class="text-sm font-semibold text-slate-700 hover:text-brand-600 transition-colors">Đăng nhập</a>
-                        <a href="${pageContext.request.contextPath}/auth?action=register" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition shadow-sm shadow-brand-500/20">
+                        <a href="${pageContext.request.contextPath}/login" class="text-sm font-semibold text-slate-700 hover:text-brand-600 transition-colors">Đăng nhập</a>
+                        <a href="${pageContext.request.contextPath}/register" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition shadow-sm shadow-brand-500/20">
                             Đăng ký ngay
                         </a>
                     </c:otherwise>

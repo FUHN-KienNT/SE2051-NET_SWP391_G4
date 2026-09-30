@@ -146,11 +146,11 @@
                     <tr>
                         <th class="px-6 py-4 w-12 text-center">#</th>
                         <th class="px-6 py-4">Tên khóa học (Course Title)</th>
-                        <th class="px-6 py-4">Danh mục</th>
-                        <th class="px-6 py-4 text-center">Modules</th>
-                        <th class="px-6 py-4 text-center">Lessons</th>
-                        <th class="px-6 py-4">Trạng thái</th>
-                        <th class="px-6 py-4 text-right">Action</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Danh mục</th>
+                        <th class="px-6 py-4 text-center whitespace-nowrap">Modules</th>
+                        <th class="px-6 py-4 text-center whitespace-nowrap">Lessons</th>
+                        <th class="px-6 py-4 text-center whitespace-nowrap">Trạng thái</th>
+                        <th class="px-6 py-4 text-right whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -165,43 +165,43 @@
                                         <div class="font-bold text-slate-900 course-title">${c.title}</div>
                                         <div class="text-xs text-slate-400 mt-0.5 line-clamp-1">${c.description}</div>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 whitespace-nowrap">
                                             ${c.categoryName != null ? c.categoryName : 'Chuyên ngành'}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-center font-semibold text-slate-800">
-                                        <span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center justify-center px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold whitespace-nowrap min-w-[80px]">
                                             ${c.moduleCount} modules
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-center font-semibold text-slate-800">
-                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center justify-center px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold whitespace-nowrap min-w-[65px]">
                                             ${c.lessonCount} bài
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <c:choose>
                                             <c:when test="${c.status eq 'published'}">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">
                                                     ● Published
                                                 </span>
                                             </c:when>
                                             <c:when test="${c.status eq 'draft'}">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 whitespace-nowrap">
                                                     ● Draft
                                                 </span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap">
                                                     ${c.status}
                                                 </span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td class="px-6 py-4 text-right">
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
                                         <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${c.id}" 
-                                           class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm space-x-1">
+                                           class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm space-x-1 whitespace-nowrap">
                                             <i class="fa-solid fa-pen-to-square text-xs mr-1"></i>
                                             <span>Manage Content</span>
                                         </a>

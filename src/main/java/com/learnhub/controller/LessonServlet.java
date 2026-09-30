@@ -2,6 +2,11 @@ package com.learnhub.controller;
 
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.Lesson;
+import com.learnhub.entity.Course;
+import com.learnhub.entity.Module;
+import com.learnhub.service.CourseService;
+import java.util.ArrayList;
+import java.util.List;
 import com.learnhub.service.LessonService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -26,11 +31,35 @@ import java.util.UUID;
 @MultipartConfig(maxFileSize = 50 * 1024 * 1024)
 public class LessonServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
+    private final CourseService courseService = new CourseService();
 
-    @Override
+     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String courseIdStr = req.getParameter("courseId");
+        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
+            try {
+                UUID courseId = UUID.fromString(courseIdStr);
+                Course course = courseService.getCourseDetailWithCurriculum(courseId);
+                if (course != null) {
+                    req.setAttribute("course", course);
+                    req.setAttribute("modules", course.getModules());
+                    
+                    // Tạo danh sách phẳng tất cả bài học
+                    List<Lesson> allLessons = new ArrayList<>();
+                    if (course.getModules() != null) {
+                        for (Module m : course.getModules()) {
+                            if (m.getLessons() != null) {
+                                allLessons.addAll(m.getLessons());
+                            }
+                        }
+                    }
+                    req.setAttribute("lessons", allLessons);
+                }
+            } catch (Exception ignored) {
+            }
+        }
         String lessonIdStr = req.getParameter("id");
-        if (lessonIdStr != null) {
+        if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
             try {
                 UUID lessonId = UUID.fromString(lessonIdStr);
                 LessonDTO dto = lessonService.getLesson(lessonId);

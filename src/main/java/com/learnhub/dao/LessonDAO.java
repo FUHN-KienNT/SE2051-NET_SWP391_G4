@@ -127,11 +127,18 @@ public class LessonDAO {
     }
 
     public void delete(UUID lessonId) {
+        String deleteProgressSql = "DELETE FROM learning_process WHERE lesson_id = ?";
         String sql = "DELETE FROM lesson WHERE id = ?";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, lessonId);
-            ps.executeUpdate();
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement psProgress = conn.prepareStatement(deleteProgressSql)) {
+                psProgress.setObject(1, lessonId);
+                psProgress.executeUpdate();
+            } catch (SQLException ignored) {
+            }
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, lessonId);
+                ps.executeUpdate();
+            }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in LessonDAO.delete: " + e.getMessage(), e);
         }

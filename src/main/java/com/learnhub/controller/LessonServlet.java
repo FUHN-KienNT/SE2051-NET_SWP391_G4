@@ -64,6 +64,18 @@ public class LessonServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
         }
+        if ("delete".equalsIgnoreCase(action)) {
+            String lessonIdStr = req.getParameter("id");
+            if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
+                try {
+                    UUID lessonId = UUID.fromString(lessonIdStr.trim());
+                    lessonService.deleteLesson(lessonId);
+                } catch (Exception ignored) {
+                }
+            }
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
+            return;
+        }
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
 

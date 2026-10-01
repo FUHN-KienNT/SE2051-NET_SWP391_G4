@@ -16,7 +16,7 @@
                 <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">
                     Courses <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 opacity-60"></i>
                 </a>
-                <c:if test="${not empty sessionScope.user}">
+                <c:if test="${not empty sessionScope.currentUser}">
                     <a href="${pageContext.request.contextPath}/learning-process?action=dashboard" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">Dashboard</a>
                     <a href="${pageContext.request.contextPath}/enrollment?action=my-courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
                 </c:if>
@@ -39,18 +39,18 @@
             <button class="text-slate-400 hover:text-slate-600 hidden sm:block transition-colors"><i class="fa-solid fa-bullhorn"></i></button>
 
             <c:choose>
-                <c:when test="${not empty sessionScope.user}">
-                    <div class="relative group ml-2">
-                        <button class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors">
-                            <span class="text-emerald-800 font-bold text-sm uppercase">
-                                ${fn:substring(sessionScope.user.username, 0, 1)}
-                            </span>
-                        </button>
-                        <div class="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
-                            <div class="px-4 py-3 border-b border-slate-50">
-                                <p class="text-xs text-slate-400 font-medium">Signed in as</p>
-                                <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.user.email}</span></p>
-                            </div>
+                        <c:when test="${not empty sessionScope.currentUser}">
+                            <div class="relative group ml-2">
+                                <button class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors">
+                                    <span class="text-emerald-800 font-bold text-sm uppercase">
+                                        ${fn:substring(sessionScope.currentUser.username, 0, 1)}
+                                    </span>
+                                </button>
+                                <div class="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
+                                    <div class="px-4 py-3 border-b border-slate-50">
+                                        <p class="text-xs text-slate-400 font-medium">Signed in as</p>
+                                        <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.currentUser.email}</span></p>
+                                    </div>
                             <a href="${pageContext.request.contextPath}/admin/users?action=profile" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
                                 <i class="fa-regular fa-user w-5 text-slate-400"></i>Profile
                             </a>

@@ -31,7 +31,7 @@
                     </div>
                     <i class="fa-solid fa-angle-down text-xs text-slate-400 ml-1 transition-transform group-hover:rotate-180"></i>
                 </button>
-                <div class="absolute right-0 mt-1 w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
+                <div class="absolute right-0 mt-1 w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-2 opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200 ease-out z-50 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                     <div class="px-4 py-2 border-b border-slate-100">
                         <p class="text-[11px] uppercase font-bold text-slate-400">Tài khoản</p>
                         <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.currentUser.email}</p>

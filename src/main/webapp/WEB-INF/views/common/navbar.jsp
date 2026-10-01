@@ -14,19 +14,18 @@
             <nav class="hidden md:flex items-center space-x-6">
                 <a href="${pageContext.request.contextPath}/home" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Home</a>
                 <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">
-                    Courses <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 opacity-60"></i>
+                    Courses
                 </a>
                 <c:if test="${not empty sessionScope.currentUser}">
-                    <a href="${pageContext.request.contextPath}/learning-process?action=dashboard" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">Dashboard</a>
-                    <a href="${pageContext.request.contextPath}/enrollment?action=my-courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
+                    <a href="${pageContext.request.contextPath}/dashboard" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors">Dashboard</a>
+                    <a href="${pageContext.request.contextPath}/my-enrollments" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
                 </c:if>
                 <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'manager'}">
                     <div class="relative group">
                         <button class="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center">
                             <span>Admin</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 opacity-60"></i>
                         </button>
-                        <div class="absolute left-0 mt-4 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
+                        <div class="absolute left-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200 ease-out z-50 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                             <a href="${pageContext.request.contextPath}/admin/users" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">Manage Users</a>
                         </div>
                     </div>
@@ -39,18 +38,18 @@
             <button class="text-slate-400 hover:text-slate-600 hidden sm:block transition-colors"><i class="fa-solid fa-bullhorn"></i></button>
 
             <c:choose>
-                        <c:when test="${not empty sessionScope.currentUser}">
-                            <div class="relative group ml-2">
-                                <button class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors">
-                                    <span class="text-emerald-800 font-bold text-sm uppercase">
-                                        ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                                    </span>
-                                </button>
-                                <div class="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
-                                    <div class="px-4 py-3 border-b border-slate-50">
-                                        <p class="text-xs text-slate-400 font-medium">Signed in as</p>
-                                        <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.currentUser.email}</span></p>
-                                    </div>
+                <c:when test="${not empty sessionScope.currentUser}">
+                    <div class="relative ml-2" id="userMenuDropdown">
+                        <button type="button" id="userMenuBtn" class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors cursor-pointer" aria-expanded="false" aria-haspopup="true">
+                            <span class="text-emerald-800 font-bold text-sm uppercase select-none">
+                                ${fn:substring(sessionScope.currentUser.username, 0, 1)}
+                            </span>
+                        </button>
+                        <div id="userMenuPanel" class="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50 transition-all duration-200 ease-out opacity-0 invisible translate-y-1 pointer-events-none before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
+                            <div class="px-4 py-3 border-b border-slate-50">
+                                <p class="text-xs text-slate-400 font-medium">Signed in as</p>
+                                <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.currentUser.email}</p>
+                            </div>
                             <a href="${pageContext.request.contextPath}/admin/users?action=profile" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
                                 <i class="fa-regular fa-user w-5 text-slate-400"></i>Profile
                             </a>
@@ -94,3 +93,56 @@
         </div>
     </div>
 </header>
+
+<script>
+    (function() {
+        const dropdown = document.getElementById('userMenuDropdown');
+        const btn = document.getElementById('userMenuBtn');
+        const panel = document.getElementById('userMenuPanel');
+        if (!dropdown || !btn || !panel) return;
+
+        let closeTimeout = null;
+
+        function openMenu() {
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+                closeTimeout = null;
+            }
+            panel.classList.remove('opacity-0', 'invisible', 'translate-y-1', 'pointer-events-none');
+            panel.classList.add('opacity-100', 'visible', 'translate-y-0', 'pointer-events-auto');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMenu() {
+            panel.classList.remove('opacity-100', 'visible', 'translate-y-0', 'pointer-events-auto');
+            panel.classList.add('opacity-0', 'invisible', 'translate-y-1', 'pointer-events-none');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+
+        function scheduleClose() {
+            if (closeTimeout) clearTimeout(closeTimeout);
+            closeTimeout = setTimeout(function() {
+                closeMenu();
+            }, 300);
+        }
+
+        dropdown.addEventListener('mouseenter', openMenu);
+        dropdown.addEventListener('mouseleave', scheduleClose);
+
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isOpen = panel.classList.contains('opacity-100');
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                closeMenu();
+            }
+        });
+    })();
+</script>

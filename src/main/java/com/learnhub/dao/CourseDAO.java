@@ -176,7 +176,7 @@ public class CourseDAO {
 
     public boolean insert(Course course) {
         String sql = "INSERT INTO course (id, title, description, price, thumbnail_url, status, category_id, created_by, expert_id, created_at, updated_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?::course_status, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, course.getId());
@@ -196,7 +196,7 @@ public class CourseDAO {
     }
 
     public boolean update(Course course) {
-        String sql = "UPDATE course SET title = ?, description = ?, price = ?, thumbnail_url = ?, status = ?, category_id = ?, expert_id = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE course SET title = ?, description = ?, price = ?, thumbnail_url = ?, status = ?::course_status, category_id = ?, expert_id = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, course.getTitle());

@@ -30,7 +30,12 @@ public class AuthorizationFilter implements Filter {
         String uri = req.getRequestURI();
 
         if (!isLoggedIn(req)) {
-            resp.sendRedirect(req.getContextPath() + "/login?error=unauthorized");
+            String redirectUri = req.getRequestURI();
+            if (req.getQueryString() != null) {
+                redirectUri += "?" + req.getQueryString();
+            }
+            String encodedUri = java.net.URLEncoder.encode(redirectUri, "UTF-8");
+            resp.sendRedirect(req.getContextPath() + "/auth/login?error=unauthorized&redirect_uri=" + encodedUri);
             return;
         }
 

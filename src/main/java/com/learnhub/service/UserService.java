@@ -107,8 +107,11 @@ public class UserService {
     }
 
     public User register(String name, String email, String password) {
-        if (email == null || password == null) return null;
+        if (email == null || password == null || name == null) return null;
         if (userDAO.findByEmail(email.trim()) != null) {
+            return null;
+        }
+        if (userDAO.findByEmail(name.trim()) != null) {
             return null;
         }
 

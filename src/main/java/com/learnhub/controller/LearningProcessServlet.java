@@ -33,7 +33,12 @@ public class LearningProcessServlet extends HttpServlet {
         User user = session != null ? (User) session.getAttribute("currentUser") : null;
 
         if (user == null) {
-            resp.sendRedirect(req.getContextPath() + "/login?error=must_login");
+            String redirectUri = req.getRequestURI();
+            if (req.getQueryString() != null) {
+                redirectUri += "?" + req.getQueryString();
+            }
+            String encodedUri = java.net.URLEncoder.encode(redirectUri, "UTF-8");
+            resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login&redirect_uri=" + encodedUri);
             return;
         }
 

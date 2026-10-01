@@ -167,7 +167,7 @@ public class UserDAO {
 
     public boolean insert(User user) {
         String sql = "INSERT INTO \"user\" (id, username, email, password, role_id, status, created_at, updated_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, NOW(), NOW())";
+                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?::user_status, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, user.getId());
@@ -184,7 +184,7 @@ public class UserDAO {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE \"user\" SET username = ?, email = ?, role_id = ?, status = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET username = ?, email = ?, role_id = ?, status = ?::user_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
@@ -200,7 +200,7 @@ public class UserDAO {
     }
 
     public boolean updateStatus(UUID userId, String status) {
-        String sql = "UPDATE \"user\" SET status = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET status = ?::user_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);

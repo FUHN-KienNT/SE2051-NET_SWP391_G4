@@ -52,6 +52,7 @@ public class DbConnection {
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.addDataSourceProperty("stringtype", "unspecified");
 
             dataSource = new HikariDataSource(config);
             LOGGER.info("HikariCP Connection Pool initialized successfully.");

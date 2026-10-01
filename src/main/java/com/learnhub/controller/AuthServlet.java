@@ -11,14 +11,14 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet(name = "AuthServlet", urlPatterns = {"/login", "/register", "/logout"})
+@WebServlet(name = "AuthServlet", urlPatterns = {"/auth/login", "/auth/register", "/auth/logout"})
 public class AuthServlet extends HttpServlet {
     private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
-        if ("/logout".equals(path)) {
+        if ("/auth/logout".equals(path)) {
             HttpSession session = req.getSession(false);
             if (session != null) {
                 session.invalidate();
@@ -27,7 +27,7 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        if ("/register".equals(path)) {
+        if ("/auth/register".equals(path)) {
             req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
             return;
         }
@@ -40,7 +40,7 @@ public class AuthServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
 
-        if ("/login".equals(path)) {
+        if ("/auth/login".equals(path)) {
             String email = req.getParameter("email");
             String password = req.getParameter("password");
             User user = userService.login(email, password);
@@ -51,7 +51,10 @@ public class AuthServlet extends HttpServlet {
                 session.setAttribute("userName", user.getUsername());
                 session.setAttribute("userRole", user.getRoleCode());
 
-                if ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode())) {
+                String redirectUri = req.getParameter("redirect_uri");
+                if (redirectUri != null && !redirectUri.trim().isEmpty()) {
+                    resp.sendRedirect(redirectUri);
+                } else if ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode())) {
                     resp.sendRedirect(req.getContextPath() + "/admin/users");
                 } else {
                     resp.sendRedirect(req.getContextPath() + "/home");
@@ -61,7 +64,7 @@ public class AuthServlet extends HttpServlet {
                 req.setAttribute("errorMessage", "Email hoặc mật khẩu không chính xác, hoặc tài khoản đã bị khóa.");
                 req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             }
-        } else if ("/register".equals(path)) {
+        } else if ("/auth/register".equals(path)) {
             String username = req.getParameter("username");
             String email = req.getParameter("email");
             String password = req.getParameter("password");
@@ -78,7 +81,7 @@ public class AuthServlet extends HttpServlet {
 
             User registered = userService.register(username, email, password);
             if (registered != null) {
-                resp.sendRedirect(req.getContextPath() + "/login?registered=success");
+                resp.sendRedirect(req.getContextPath() + "/auth/login?registered=success");
             } else {
                 req.setAttribute("errorMessage", "Email này đã được sử dụng hoặc có lỗi xảy ra.");
                 req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);

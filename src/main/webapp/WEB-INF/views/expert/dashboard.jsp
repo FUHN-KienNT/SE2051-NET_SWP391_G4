@@ -78,7 +78,7 @@
                             <i class="fa-solid fa-book-open w-5 text-slate-400 mr-2"></i> Quản lý bài học
                         </a>
                         <div class="border-t border-slate-100 my-1"></div>
-                        <a href="${pageContext.request.contextPath}/logout" class="flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition">
+                        <a href="${pageContext.request.contextPath}/auth/logout" class="flex items-center px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition">
                             <i class="fa-solid fa-arrow-right-from-bracket w-5 mr-2"></i> Đăng xuất
                         </a>
                     </div>

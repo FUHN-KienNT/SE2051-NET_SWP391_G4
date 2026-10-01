@@ -49,6 +49,7 @@ public class CourseDTO implements Serializable {
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
 
+    /** Alias để JSP có thể dùng ${c.thumbnail} hoặc ${c.thumbnailUrl} đều được */
     public String getThumbnail() { return thumbnailUrl; }
     public void setThumbnail(String thumbnail) { this.thumbnailUrl = thumbnail; }
 

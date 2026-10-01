@@ -88,6 +88,13 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void handleCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Nếu có action=detail thì chuyển sang trang chi tiết
+        String action = req.getParameter("action");
+        if ("detail".equals(action)) {
+            handleCourseDetail(req, resp);
+            return;
+        }
+
         String search = req.getParameter("search");
         String categoryIdStr = req.getParameter("category");
         String pageStr = req.getParameter("page");
@@ -122,6 +129,19 @@ public class CourseServlet extends HttpServlet {
                 Course course = courseService.getCourseDetailWithCurriculum(courseId);
                 if (course != null) {
                     req.setAttribute("course", course);
+
+                    // Kiểm tra user đã đăng ký khóa học chưa
+                    HttpSession session = req.getSession(false);
+                    User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+                    boolean isEnrolled = false;
+                    if (currentUser != null) {
+                        isEnrolled = courseService.getMyEnrollments(currentUser.getId())
+                                .stream()
+                                .anyMatch(r -> courseId.equals(r.getCourseId()));
+                    }
+                    req.setAttribute("isEnrolled", isEnrolled);
+
+                    req.setAttribute("pageTitle", course.getTitle() + " - LearnHub");
                     req.getRequestDispatcher("/WEB-INF/views/courses/detail.jsp").forward(req, resp);
                     return;
                 }

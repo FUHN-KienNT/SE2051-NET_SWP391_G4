@@ -16,6 +16,10 @@
                 <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">
                     Courses
                 </a>
+                <c:if test="${not empty sessionScope.currentUser}">
+                    <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
+                    <a href="${pageContext.request.contextPath}/my-enrollments" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
+                </c:if>
                 <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'manager'}">
                     <div class="relative group">
                         <button class="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center">

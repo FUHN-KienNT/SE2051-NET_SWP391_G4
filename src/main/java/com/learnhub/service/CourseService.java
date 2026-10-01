@@ -157,4 +157,8 @@ public class CourseService {
     public List<Registration> getMyEnrollments(UUID userId) {
         return registrationDAO.findByUserId(userId);
     }
+
+    public List<Setting> getPaymentMethods() {
+        return settingDAO.findByType("payment_method");
+    }
 }

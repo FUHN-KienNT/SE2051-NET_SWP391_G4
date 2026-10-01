@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
@@ -48,7 +48,7 @@
                 <input type="hidden" name="redirect_uri" value="${param.redirect_uri}">
                 <div>
                     <label for="username" class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
-                    <input id="username" name="username" type="text" required value="${username != null ? username : param.username}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all" placeholder="John Doe">
+                    <input id="username" name="username" type="text" required value="${username != null ? username : param.username}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all" placeholder="hoangntc">
                 </div>
                 
                 <div>
@@ -60,8 +60,8 @@
                     <label for="password" class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
                     <div class="relative">
                         <input id="password" name="password" type="password" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all pr-10" placeholder="Create a password">
-                        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                            <i class="fa-regular fa-eye"></i>
+                        <button type="button" tabindex="-1" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                            <i id="eyeIcon-password" class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                 </div>
@@ -70,8 +70,8 @@
                     <label for="confirmPassword" class="block text-xs font-semibold text-slate-600 mb-1.5">Confirm Password</label>
                     <div class="relative">
                         <input id="confirmPassword" name="confirmPassword" type="password" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all pr-10" placeholder="Confirm your password">
-                        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                            <i class="fa-regular fa-eye"></i>
+                        <button type="button" tabindex="-1" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                            <i id="eyeIcon-confirmPassword" class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                 </div>
@@ -90,21 +90,23 @@
     <!-- Right Section: Graphic -->
     <div class="hidden lg:block lg:w-1/2 bg-[#0a0a0a] rounded-3xl relative overflow-hidden">
         <div class="absolute inset-0 flex items-center justify-center opacity-80">
-            <div class="w-96 h-96 bg-gradient-to-br from-indigo-900/40 via-transparent to-transparent rounded-full blur-3xl absolute -top-20 -left-20"></div>
-            <div class="w-96 h-96 bg-gradient-to-tl from-purple-900/40 via-transparent to-transparent rounded-full blur-3xl absolute -bottom-20 -right-20"></div>
-            
-            <!-- Central shape simulating the particle swirl -->
-            <div class="w-80 h-80 border-[0.5px] border-indigo-900/30 rounded-full flex items-center justify-center relative -rotate-45">
-                <div class="w-64 h-64 border-[0.5px] border-indigo-800/30 rounded-full flex items-center justify-center">
-                    <div class="w-48 h-48 border-[1px] border-indigo-700/30 rounded-full flex items-center justify-center border-dashed">
-                        <div class="w-32 h-32 bg-gradient-to-bl from-indigo-800/40 to-transparent rounded-full blur-md"></div>
-                    </div>
-                </div>
-                <div class="absolute bottom-10 right-20 w-1 h-1 bg-indigo-400 rounded-full opacity-50 blur-[1px]"></div>
-                <div class="absolute top-20 left-10 w-1 h-1 bg-indigo-500 rounded-full opacity-70 blur-[1px]"></div>
-                <div class="absolute bottom-1/2 left-1/4 w-1.5 h-1.5 bg-indigo-300 rounded-full opacity-80 blur-[2px]"></div>
-            </div>
+            <img src="${pageContext.request.contextPath}/assets/images/auth-bg.png" alt="Authentication Graphic" class="w-full h-full object-cover">
         </div>
     </div>
 </div>
 <!-- Note: Intentionally not including footer or navbar for a clean auth page layout -->
+<script>
+    function togglePassword(fieldId) {
+        const passwordInput = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById('eyeIcon-' + fieldId);
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+</script>

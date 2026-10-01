@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <header class="sticky top-4 z-50 w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
@@ -41,11 +41,10 @@
             <c:choose>
                 <c:when test="${not empty sessionScope.user}">
                     <div class="relative group ml-2">
-                        <button class="flex items-center space-x-2 text-sm focus:outline-none bg-slate-50 hover:bg-slate-100 pl-2 pr-3 py-1 rounded-full border border-slate-200 transition-colors">
-                            <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-xs">
+                        <button class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors">
+                            <span class="text-emerald-800 font-bold text-sm uppercase">
                                 ${fn:substring(sessionScope.user.username, 0, 1)}
-                            </div>
-                            <span class="hidden sm:inline font-semibold text-slate-700">${sessionScope.user.username}</span>
+                            </span>
                         </button>
                         <div class="absolute right-0 mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 hidden group-hover:block transition-all z-50">
                             <div class="px-4 py-3 border-b border-slate-50">

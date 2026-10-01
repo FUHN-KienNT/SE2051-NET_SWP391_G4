@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
@@ -57,17 +57,15 @@
                     <input id="email" name="email" type="text" required value="${email != null ? email : param.email}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all" placeholder="me@example.com">
                 </div>
 
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="password" class="block text-xs font-semibold text-slate-600">Password</label>
-                        <a href="#" class="text-xs font-medium text-slate-500 hover:text-slate-700 underline">Forgot Password?</a>
-                    </div>
+                <div class="relative">
+                    <label for="password" class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
                     <div class="relative">
                         <input id="password" name="password" type="password" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all pr-10" placeholder="Enter your password">
-                        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                            <i class="fa-regular fa-eye"></i>
+                        <button type="button" tabindex="-1" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                            <i id="eyeIcon" class="fa-regular fa-eye"></i>
                         </button>
                     </div>
+                    <a href="#" class="absolute top-0 right-0 text-xs font-medium text-slate-500 hover:text-slate-700 underline">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="w-full py-2.5 mt-2 text-sm font-bold text-white bg-[#028446] hover:bg-emerald-800 rounded-lg shadow-sm transition-colors">
@@ -84,21 +82,23 @@
     <!-- Right Section: Graphic -->
     <div class="hidden lg:block lg:w-1/2 bg-[#0a0a0a] rounded-3xl relative overflow-hidden">
         <div class="absolute inset-0 flex items-center justify-center opacity-80">
-            <div class="w-96 h-96 bg-gradient-to-tr from-emerald-900/40 via-transparent to-transparent rounded-full blur-3xl absolute -bottom-20 -left-20"></div>
-            <div class="w-96 h-96 bg-gradient-to-bl from-blue-900/40 via-transparent to-transparent rounded-full blur-3xl absolute -top-20 -right-20"></div>
-            
-            <!-- Central shape simulating the particle swirl -->
-            <div class="w-80 h-80 border-[0.5px] border-emerald-900/30 rounded-full flex items-center justify-center relative rotate-45">
-                <div class="w-64 h-64 border-[0.5px] border-emerald-800/30 rounded-full flex items-center justify-center">
-                    <div class="w-48 h-48 border-[1px] border-emerald-700/30 rounded-full flex items-center justify-center border-dashed">
-                        <div class="w-32 h-32 bg-gradient-to-tr from-emerald-800/40 to-transparent rounded-full blur-md"></div>
-                    </div>
-                </div>
-                <div class="absolute top-10 left-20 w-1 h-1 bg-emerald-400 rounded-full opacity-50 blur-[1px]"></div>
-                <div class="absolute bottom-20 right-10 w-1 h-1 bg-emerald-500 rounded-full opacity-70 blur-[1px]"></div>
-                <div class="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-emerald-300 rounded-full opacity-80 blur-[2px]"></div>
-            </div>
+            <img src="${pageContext.request.contextPath}/assets/images/auth-bg.png" alt="Authentication Graphic" class="w-full h-full object-cover">
         </div>
     </div>
 </div>
 <!-- Note: Intentionally not including footer or navbar for a clean auth page layout -->
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+</script>

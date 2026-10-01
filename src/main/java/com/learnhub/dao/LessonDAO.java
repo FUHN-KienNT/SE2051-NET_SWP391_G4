@@ -112,13 +112,14 @@ public class LessonDAO {
     }
 
     public boolean update(Lesson lesson) {
-        String sql = "UPDATE lesson SET title = ?, content = ?, order_index = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE lesson SET module_id = ?, title = ?, content = ?, order_index = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, lesson.getTitle());
-            ps.setString(2, lesson.getContent());
-            ps.setInt(3, lesson.getOrderIndex());
-            ps.setObject(4, lesson.getId());
+            ps.setObject(1, lesson.getModuleId());
+            ps.setString(2, lesson.getTitle());
+            ps.setString(3, lesson.getContent());
+            ps.setInt(4, lesson.getOrderIndex());
+            ps.setObject(5, lesson.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in LessonDAO.update: " + e.getMessage(), e);

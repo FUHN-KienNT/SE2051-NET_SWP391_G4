@@ -29,11 +29,6 @@
                     <span>Verification code sent. Check your inbox.</span>
                 </div>
             </c:if>
-            <c:if test="${param.wait eq '1'}">
-                <div role="status" class="mb-6 rounded-xl border border-border-default bg-surface-card p-4 text-sm text-text-secondary">
-                    Please wait 60 seconds before requesting another code.
-                </div>
-            </c:if>
 
             <form action="${pageContext.request.contextPath}/auth/verify-email" method="post" class="space-y-4">
                 <div>
@@ -49,10 +44,10 @@
                 </button>
             </form>
 
-            <form action="${pageContext.request.contextPath}/auth/resend-code" method="post" class="mt-6 text-center">
+            <form action="${pageContext.request.contextPath}/auth/resend-code" method="post" class="mt-6 text-center" id="resendForm">
                 <p class="text-sm text-text-secondary">Didn't receive the code?</p>
-                <button type="submit"
-                        class="mt-2 rounded-lg text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                <button type="submit" id="resendButton"
+                        class="mt-2 rounded-lg text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline">
                     Send a new code
                 </button>
             </form>
@@ -67,5 +62,53 @@
              class="h-full w-full object-cover">
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const resendButton = document.getElementById('resendButton');
+        const resendForm = document.getElementById('resendForm');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('sent') || urlParams.has('wait')) {
+            if (urlParams.has('sent') || !localStorage.getItem('resendCodeTimestamp')) {
+                localStorage.setItem('resendCodeTimestamp', Date.now());
+            }
+        }
+
+        const storedTimestamp = localStorage.getItem('resendCodeTimestamp');
+        if (storedTimestamp) {
+            const timestamp = parseInt(storedTimestamp, 10);
+            let intervalId;
+            
+            const updateCountdown = () => {
+                const now = Date.now();
+                const diff = 60000 - (now - timestamp);
+                
+                if (diff > 0) {
+                    const seconds = Math.ceil(diff / 1000);
+                    resendButton.disabled = true;
+                    resendButton.textContent = "Resend in " + seconds + "s";
+                } else {
+                    resendButton.disabled = false;
+                    resendButton.textContent = "Send a new code";
+                    localStorage.removeItem('resendCodeTimestamp');
+                    if (intervalId) clearInterval(intervalId);
+                }
+            };
+            
+            updateCountdown();
+            if (resendButton.disabled) {
+                intervalId = setInterval(updateCountdown, 1000);
+            }
+        }
+        
+        resendForm.addEventListener('submit', function() {
+            if (!resendButton.disabled) {
+                localStorage.setItem('resendCodeTimestamp', Date.now());
+                resendButton.disabled = true;
+                resendButton.textContent = "Sending...";
+            }
+        });
+    });
+</script>
 </body>
 </html>

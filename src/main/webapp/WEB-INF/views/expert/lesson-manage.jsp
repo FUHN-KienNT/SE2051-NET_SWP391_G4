@@ -71,6 +71,11 @@
                     <i class="fa-solid fa-clipboard-question text-slate-400 text-sm"></i>
                     <span>Quiz</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${course.id}"
+                   class="flex items-center space-x-2.5 px-4 py-3.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition border-l-4 border-transparent">
+                    <i class="fa-solid fa-list-check text-slate-400 text-sm"></i>
+                    <span>Question Bank</span>
+                </a>
             </nav>
         </div>
     </aside>

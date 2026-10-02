@@ -25,13 +25,8 @@
                         <button class="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center">
                             <span>Admin</span>
                         </button>
-                        <div class="absolute left-0 mt-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200 ease-out z-50 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
-                            <a href="${pageContext.request.contextPath}/admin/dashboard" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                                <i class="fa-solid fa-gauge-high w-4 text-slate-400"></i>Dashboard
-                            </a>
-                            <a href="${pageContext.request.contextPath}/admin/users" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                                <i class="fa-solid fa-users w-4 text-slate-400"></i>Manage Users
-                            </a>
+                        <div class="absolute left-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 opacity-0 invisible pointer-events-none group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto transition-all duration-200 ease-out z-50 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
+                            <a href="${pageContext.request.contextPath}/admin/users" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">Manage Users</a>
                         </div>
                     </div>
                 </c:if>

@@ -3,6 +3,7 @@ package com.learnhub.service;
 import com.learnhub.dao.LearningProcessDAO;
 import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.RegistrationDAO;
+import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.LearningProcess;
 import com.learnhub.entity.Lesson;
@@ -32,6 +33,10 @@ public class LearningProcessService {
         this.learningProcessDAO = learningProcessDAO;
         this.registrationDAO = registrationDAO;
         this.lessonDAO = lessonDAO;
+    }
+
+    public ContinueLearningDTO getContinueLearning(UUID userId) {
+        return learningProcessDAO.findContinueLearning(userId);
     }
 
     public LessonDTO getLessonForStudent(UUID lessonId, UUID registrationId) {

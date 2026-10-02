@@ -1,5 +1,6 @@
 package com.learnhub.dao;
 
+import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.entity.LearningProcess;
 import com.learnhub.util.DbConnection;
 
@@ -17,6 +18,50 @@ import java.util.logging.Logger;
  */
 public class LearningProcessDAO {
     private static final Logger LOGGER = Logger.getLogger(LearningProcessDAO.class.getName());
+
+    public ContinueLearningDTO findContinueLearning(UUID userId) {
+        if (userId == null) return null;
+        String sql = "SELECT c.id AS course_id, c.title AS course_title, c.thumbnail_url, " +
+                     "s.name AS category_name, r.progress_percent, " +
+                     "(SELECT COUNT(*) FROM module cm WHERE cm.course_id = c.id) AS module_count, " +
+                     "(SELECT COUNT(*) FROM lesson cl JOIN module lm ON cl.module_id = lm.id " +
+                     "WHERE lm.course_id = c.id) AS lesson_count, " +
+                     "l.id AS lesson_id, l.title AS lesson_title, m.title AS module_title " +
+                     "FROM registration r " +
+                     "JOIN course c ON c.id = r.course_id " +
+                     "JOIN module m ON m.course_id = c.id " +
+                     "JOIN lesson l ON l.module_id = m.id " +
+                     "LEFT JOIN learning_process lp ON lp.registration_id = r.id AND lp.lesson_id = l.id " +
+                     "LEFT JOIN setting s ON s.id = c.category_id " +
+                     "WHERE r.user_id = ? AND r.status = 'enrolled' " +
+                     "AND (lp.status IS NULL OR lp.status <> 'completed') " +
+                     "ORDER BY CASE WHEN lp.status = 'in_progress' THEN 0 ELSE 1 END, " +
+                     "lp.created_at DESC NULLS LAST, r.enrolled_at DESC, " +
+                     "m.order_index ASC, l.order_index ASC LIMIT 1";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ContinueLearningDTO course = new ContinueLearningDTO();
+                    course.setCourseId((UUID) rs.getObject("course_id"));
+                    course.setCourseTitle(rs.getString("course_title"));
+                    course.setThumbnailUrl(rs.getString("thumbnail_url"));
+                    course.setCategoryName(rs.getString("category_name"));
+                    course.setModuleCount(rs.getInt("module_count"));
+                    course.setLessonCount(rs.getInt("lesson_count"));
+                    course.setLessonId((UUID) rs.getObject("lesson_id"));
+                    course.setLessonTitle(rs.getString("lesson_title"));
+                    course.setModuleTitle(rs.getString("module_title"));
+                    course.setProgressPercent(rs.getInt("progress_percent"));
+                    return course;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in findContinueLearning: " + e.getMessage(), e);
+        }
+        return null;
+    }
 
     public LearningProcess findByRegistrationAndLesson(UUID registrationId, UUID lessonId) {
         if (registrationId == null || lessonId == null) return null;

@@ -1,45 +1,44 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<footer class="mt-auto bg-slate-900 text-slate-400 border-t border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div class="col-span-1 md:col-span-2">
-                <div class="flex items-center space-x-2 mb-4">
-                    <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white">
-                        <i class="fa-solid fa-graduation-cap text-lg"></i>
-                    </div>
-                    <span class="text-xl font-black text-white">LearnHub</span>
-                </div>
-                <p class="text-sm text-slate-400 max-w-sm mb-4">
-                    Hệ thống quản lý học tập trực tuyến hiện đại (LMS) dành cho sinh viên và chuyên gia, thiết kế theo tiêu chuẩn công nghệ Jakarta EE & PostgreSQL.
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<footer lang="en" class="mt-auto border-t border-border-default bg-surface-footer text-text-primary">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 py-12">
+            <div>
+                <a href="${pageContext.request.contextPath}/home" class="inline-block rounded-lg text-2xl font-bold tracking-tight text-brand-700 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                    LearnHub
+                </a>
+                <p class="mt-4 max-w-sm text-sm leading-relaxed text-slate-600">
+                    Find a course, build practical skills, and learn at your own pace.
                 </p>
-                <div class="flex space-x-4 text-slate-400">
-                    <a href="#" class="hover:text-white"><i class="fa-brands fa-facebook"></i></a>
-                    <a href="#" class="hover:text-white"><i class="fa-brands fa-github"></i></a>
-                    <a href="#" class="hover:text-white"><i class="fa-brands fa-youtube"></i></a>
-                </div>
             </div>
-            <div>
-                <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Danh mục</h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="${pageContext.request.contextPath}/courses" class="hover:text-white">Tất cả khóa học</a></li>
-                    <li><a href="${pageContext.request.contextPath}/courses?category=it" class="hover:text-white">Lập trình & CNTT</a></li>
-                    <li><a href="${pageContext.request.contextPath}/courses?category=business" class="hover:text-white">Kinh doanh</a></li>
-                    <li><a href="${pageContext.request.contextPath}/courses?category=language" class="hover:text-white">Ngoại ngữ</a></li>
+            <nav aria-label="Footer navigation">
+                <ul class="grid grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold sm:flex sm:flex-wrap sm:items-center">
+                    <li><a href="${pageContext.request.contextPath}/home" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Home</a></li>
+                    <li><a href="${pageContext.request.contextPath}/courses" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Courses</a></li>
+                    <c:if test="${sessionScope.currentUser.roleCode eq 'ROLE_STUDENT'}">
+                        <li><a href="${pageContext.request.contextPath}/my-enrollments" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">My courses</a></li>
+                    </c:if>
+                    <c:if test="${sessionScope.currentUser.roleCode eq 'ROLE_EXPERT'}">
+                        <li><a href="${pageContext.request.contextPath}/expert/dashboard" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Dashboard</a></li>
+                    </c:if>
+                    <c:if test="${sessionScope.currentUser.roleCode eq 'ROLE_ADMIN'}">
+                        <li><a href="${pageContext.request.contextPath}/admin/users" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Manage users</a></li>
+                    </c:if>
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.currentUser}">
+                            <li><a href="${pageContext.request.contextPath}/auth/logout" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Sign out</a></li>
+                        </c:when>
+                        <c:otherwise>
+                            <li><a href="${pageContext.request.contextPath}/auth/login" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Sign in</a></li>
+                            <li><a href="${pageContext.request.contextPath}/auth/register" class="rounded text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Join LearnHub</a></li>
+                        </c:otherwise>
+                    </c:choose>
                 </ul>
-            </div>
-            <div>
-                <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-4">Hỗ trợ & Pháp lý</h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-white">Hướng dẫn sử dụng</a></li>
-                    <li><a href="#" class="hover:text-white">Chính sách bảo mật</a></li>
-                    <li><a href="#" class="hover:text-white">Điều khoản dịch vụ</a></li>
-                    <li><a href="#" class="hover:text-white">Thanh toán VNPay</a></li>
-                </ul>
-            </div>
+            </nav>
         </div>
-        <div class="border-t border-slate-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500">
-            <p>&copy; 2026 LearnHub Platform - SWP391 Group 4. Tất cả các quyền được bảo lưu.</p>
-            <p>Developed with Jakarta EE & PostgreSQL</p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-slate-300 py-6 text-xs text-slate-600">
+            <p>&copy; 2026 LearnHub. All rights reserved.</p>
+            <p>Explore. Learn. Grow.</p>
         </div>
     </div>
 </footer>

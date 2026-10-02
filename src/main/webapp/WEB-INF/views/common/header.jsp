@@ -3,7 +3,7 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
-<html lang="vi" class="h-full bg-slate-50">
+<html lang="vi" class="h-full bg-surface">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,14 +16,24 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
+                            50: '#ecfdf3',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#028446',
+                            800: '#026b3a',
+                            900: '#064e3b',
+                        },
+                        surface: '#faf9f6',
+                        'surface-footer': '#E7E2D9',
+                        'surface-card': '#ffffff',
+                        'surface-inverse': '#0a0a0a',
+                        'text-primary': '#0f172a',
+                        'text-secondary': '#64748b',
+                        'border-default': '#e2e8f0',
+                        'status-success': '#15803d',
+                        'status-warning': '#b45309',
+                        'status-danger': '#b91c1c'
                     }
                 }
             }
@@ -39,4 +49,4 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen text-slate-800 antialiased">
+<body class="flex flex-col min-h-screen bg-surface text-text-primary antialiased">

@@ -471,3 +471,20 @@ INSERT INTO notification (id, user_id, type_id, content, status, sent_at) VALUES
     ('90000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000021', 
      'Báo cáo doanh thu tháng đã được tổng hợp xong và sẵn sàng xem trong bảng điều khiển.', 'read', NOW() - INTERVAL '1 days')
 ON CONFLICT (id) DO NOTHING;
+
+
+-- ---------------------------------------------------------------------
+-- AUDIT LOG SEED DATA (phục vụ Admin Dashboard 2.3)
+-- ---------------------------------------------------------------------
+INSERT INTO audit_log (id, actor, action_type, description, status, created_at) VALUES
+    ('a1000000-0000-0000-0000-000000000001', 'admin@learnhub.vn',   'LOGIN_SUCCESS',  'Admin đăng nhập thành công từ IP 192.168.1.100',                      'SUCCESS', NOW() - INTERVAL '2 hours'),
+    ('a1000000-0000-0000-0000-000000000002', 'hacker@example.com',  'LOGIN_FAILED',   'Sai mật khẩu 5 lần liên tiếp – tài khoản tạm khóa',                 'FAILED',  NOW() - INTERVAL '3 hours'),
+    ('a1000000-0000-0000-0000-000000000003', 'admin@learnhub.vn',   'ROLE_UPDATE',    'Cập nhật vai trò người dùng nguyenhoa@gmail.com → Expert',           'SUCCESS', NOW() - INTERVAL '1 day'),
+    ('a1000000-0000-0000-0000-000000000004', 'System',              'JOB_EXEC',       'Cron job: tổng hợp báo cáo doanh thu tháng hoàn thành',              'SUCCESS', NOW() - INTERVAL '1 day 2 hours'),
+    ('a1000000-0000-0000-0000-000000000005', 'manager@learnhub.vn', 'COURSE_PUBLISH', 'Khóa học "Lập trình Java Web chuyên sâu" được phát hành chính thức','SUCCESS', NOW() - INTERVAL '2 days'),
+    ('a1000000-0000-0000-0000-000000000006', 'System',              'LOGIN_FAILED',   'Phát hiện IP 203.0.113.42 thử đăng nhập brute-force',                'WARNING', NOW() - INTERVAL '2 days 4 hours'),
+    ('a1000000-0000-0000-0000-000000000007', 'admin@learnhub.vn',   'USER_BAN',       'Tài khoản spam123@mail.com bị khóa do vi phạm điều khoản',           'SUCCESS', NOW() - INTERVAL '3 days'),
+    ('a1000000-0000-0000-0000-000000000008', 'System',              'JOB_EXEC',       'Gửi email nhắc nhở học viên chưa hoàn thành khóa học',               'SUCCESS', NOW() - INTERVAL '3 days 1 hour'),
+    ('a1000000-0000-0000-0000-000000000009', 'manager@learnhub.vn', 'COURSE_ARCHIVE', 'Khóa học "HTML Cơ Bản 2020" chuyển sang trạng thái archived',        'SUCCESS', NOW() - INTERVAL '5 days'),
+    ('a1000000-0000-0000-0000-000000000010', 'System',              'JOB_EXEC',       'Backup cơ sở dữ liệu hàng tuần thất bại – kiểm tra dung lượng đĩa', 'FAILED',  NOW() - INTERVAL '7 days')
+ON CONFLICT (id) DO NOTHING;

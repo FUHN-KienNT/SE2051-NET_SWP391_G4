@@ -16,6 +16,7 @@
 -- phan nay (se khong bao loi vi dung IF EXISTS).
 -- ---------------------------------------------------------------------
 DROP TABLE IF EXISTS notification CASCADE;
+DROP TABLE IF EXISTS audit_log CASCADE;
 DROP TABLE IF EXISTS quiz_answer CASCADE;
 DROP TABLE IF EXISTS quiz_submission CASCADE;
 DROP TABLE IF EXISTS quiz_question CASCADE;
@@ -299,4 +300,18 @@ CREATE INDEX idx_notification_user_id ON notification (user_id);
 CREATE INDEX idx_notification_type_id ON notification (type_id);
 
 
+-- ---------------------------------------------------------------------
+-- 16. AUDIT_LOG
+-- Ghi lai cac su kien he thong quan trong phuc vu Admin Dashboard
+-- ---------------------------------------------------------------------
+CREATE TABLE audit_log (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor       VARCHAR(255),          -- email hoac username cua nguoi thuc hien
+    action_type VARCHAR(100) NOT NULL, -- vi du: LOGIN_SUCCESS, LOGIN_FAILED, ROLE_UPDATE, JOB_EXEC
+    description TEXT,
+    status      VARCHAR(50)  NOT NULL DEFAULT 'SUCCESS', -- SUCCESS | FAILED | WARNING
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
 
+CREATE INDEX idx_audit_log_created_at ON audit_log (created_at DESC);
+CREATE INDEX idx_audit_log_actor ON audit_log (actor);

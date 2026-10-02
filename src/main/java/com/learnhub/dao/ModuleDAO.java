@@ -160,6 +160,24 @@ public class ModuleDAO {
         return 0;
     }
 
+    public List<Module> findByExpertId(UUID expertId) {
+        List<Module> list = new ArrayList<>();
+        if (expertId == null) return list;
+        String sql = "SELECT m.id,m.course_id,m.title,m.content,m.order_index,m.created_at,m.updated_at " +
+                     "FROM module m JOIN course c ON m.course_id=c.id " +
+                     "WHERE c.expert_id=? ORDER BY c.title ASC,m.order_index ASC";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, expertId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapResultSetToModule(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in ModuleDAO.findByExpertId: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
     private Module mapResultSetToModule(ResultSet rs) throws SQLException {
         Module m = new Module();
         m.setId((UUID) rs.getObject("id"));

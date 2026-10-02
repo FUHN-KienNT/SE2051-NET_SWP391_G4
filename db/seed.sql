@@ -20,11 +20,11 @@ INSERT INTO setting (id, type, code, name, description, status, sort_order) VALU
     ('b0000000-0000-0000-0000-000000000005', 'category', 'devops',      'DevOps & Điện toán Đám mây', 'Docker, Kubernetes, CI/CD Pipeline, AWS, Linux System', TRUE, 5),
     ('b0000000-0000-0000-0000-000000000006', 'category', 'mobile',      'Lập trình Mobile',           'Flutter, React Native, iOS Swift và Android Kotlin', TRUE, 6),
 
-    -- Payment Methods
-    ('b0000000-0000-0000-0000-000000000011', 'payment_method', 'vnpay',       'Cổng thanh toán VNPay',      'Thanh toán qua thẻ ATM, QR Code VNPay sandbox', TRUE, 1),
-    ('b0000000-0000-0000-0000-000000000012', 'payment_method', 'momo',        'Ví điện tử MoMo',            'Thanh toán quét mã MoMo Pay', TRUE, 2),
-    ('b0000000-0000-0000-0000-000000000013', 'payment_method', 'banking',     'Chuyển khoản Ngân hàng (QR)','Chuyển khoản trực tiếp qua mã QR VietQR', TRUE, 3),
-    ('b0000000-0000-0000-0000-000000000014', 'payment_method', 'credit_card', 'Thẻ Quốc tế (Visa/Master)', 'Thanh toán trực tuyến bằng thẻ tín dụng quốc tế', TRUE, 4),
+    -- Payment Methods (Hệ thống hỗ trợ 2 cổng chính: VNPAY và SePay)
+    ('b0000000-0000-0000-0000-000000000011', 'payment_method', 'vnpay',       'Cổng thanh toán VNPay',          'Thanh toán qua thẻ ATM, QR Code VNPay sandbox', TRUE, 1),
+    ('b0000000-0000-0000-0000-000000000013', 'payment_method', 'sepay',       'Cổng thanh toán SePay (VietQR)', 'Chuyển khoản trực tiếp qua mã QR VietQR tự động qua SePay', TRUE, 2),
+    ('b0000000-0000-0000-0000-000000000012', 'payment_method', 'momo',        'Ví điện tử MoMo',                'Thanh toán quét mã MoMo Pay', FALSE, 3),
+    ('b0000000-0000-0000-0000-000000000014', 'payment_method', 'credit_card', 'Thẻ Quốc tế (Visa/Master)',     'Thanh toán trực tuyến bằng thẻ tín dụng quốc tế', FALSE, 4),
 
     -- Notification Types
     ('b0000000-0000-0000-0000-000000000021', 'notification_type', 'system',  'Hệ thống',  'Thông báo nâng cấp hệ thống, điều khoản và an toàn bảo mật', TRUE, 1),

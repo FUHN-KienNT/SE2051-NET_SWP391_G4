@@ -141,19 +141,14 @@
                                                             <div class="flex items-center gap-1.5 text-slate-400 text-base">
                                                                 <c:choose>
                                                                     <c:when test="${pm.code eq 'vnpay'}">
-                                                                        <span class="px-2 py-0.5 text-[11px] font-black rounded bg-blue-100 text-blue-700">VNPAY-QR</span>
-                                                                    </c:when>
-                                                                    <c:when test="${pm.code eq 'momo'}">
-                                                                        <span class="px-2 py-0.5 text-[11px] font-black rounded bg-pink-100 text-pink-700">MOMO</span>
-                                                                    </c:when>
-                                                                    <c:when test="${pm.code eq 'banking'}">
-                                                                        <span class="px-2 py-0.5 text-[11px] font-black rounded bg-emerald-100 text-emerald-700">VIETQR</span>
-                                                                    </c:when>
-                                                                    <c:when test="${pm.code eq 'credit_card'}">
-                                                                        <span class="px-2 py-0.5 text-[11px] font-black rounded bg-purple-100 text-purple-700">VISA / MASTER</span>
+                                                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-100 text-blue-700 flex items-center gap-1">
+                                                                            <i class="fa-solid fa-qrcode"></i> VNPAY-QR
+                                                                        </span>
                                                                     </c:when>
                                                                     <c:otherwise>
-                                                                        <i class="fa-solid fa-credit-card"></i>
+                                                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                                                                            <i class="fa-solid fa-building-columns"></i> SEPAY / VIETQR
+                                                                        </span>
                                                                     </c:otherwise>
                                                                 </c:choose>
                                                             </div>

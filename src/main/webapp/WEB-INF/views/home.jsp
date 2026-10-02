@@ -124,7 +124,7 @@
                                 
                                 <!-- Subtitle (Adapted to DB: modules/lessons instead of reviews) -->
                                 <p class="text-sm text-slate-500 mb-4 line-clamp-2">
-                                    <i class="fa-solid fa-book-open text-slate-400 mr-1"></i> ${c.moduleCount} modules &nbsp;&bull;&nbsp; ${c.lessonCount} lessons
+                                    <i class="fa-solid fa-book-open text-slate-400 mr-1"></i> ${c.moduleCount} chương &nbsp;&bull;&nbsp; ${c.lessonCount} bài học
                                 </p>
                                 
                                 <div class="mt-auto">
@@ -137,7 +137,7 @@
                                         <!-- Price (Adapted to DB) -->
                                         <div class="text-lg font-black text-slate-900">
                                             <c:choose>
-                                                <c:when test="${c.price <= 0}"><span class="text-emerald-600">Free</span></c:when>
+                                                <c:when test="${c.price <= 0}"><span class="text-emerald-600">Miễn phí</span></c:when>
                                                 <c:otherwise><fmt:formatNumber value="${c.price}" type="currency" currencySymbol="₫" maxFractionDigits="0"/></c:otherwise>
                                             </c:choose>
                                         </div>

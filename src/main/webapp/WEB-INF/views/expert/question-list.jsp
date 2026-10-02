@@ -21,10 +21,10 @@
     </div>
 
     <c:if test="${param.saved == 'true'}">
-        <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">Câu hỏi đã được lưu.</div>
+        <div class="mb-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">Question saved successfully.</div>
     </c:if>
     <c:if test="${param.deleted == 'false'}">
-        <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">Không thể xóa. Câu hỏi đã được sử dụng trong Quiz hoặc dữ liệu không hợp lệ.</div>
+        <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">Cannot delete. The question is already used in a Quiz or data is invalid.</div>
     </c:if>
 
     <form method="get" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-3">

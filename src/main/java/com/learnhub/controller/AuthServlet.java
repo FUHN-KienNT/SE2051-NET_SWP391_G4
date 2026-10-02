@@ -21,10 +21,13 @@ import java.util.Locale;
 import org.mindrot.jbcrypt.BCrypt;
 
 @WebServlet(name = "AuthServlet", urlPatterns = {
-        "/auth/login", "/auth/register", "/auth/verify-email", "/auth/resend-code", "/auth/logout"
+        "/auth/login", "/auth/register", "/auth/verify-email", "/auth/resend-code", "/auth/logout",
+        "/auth/forgot-password", "/auth/forgot-password/verify", "/auth/reset-password"
 })
 public class AuthServlet extends HttpServlet {
     private static final String PENDING_REGISTRATION = "auth.pendingRegistration";
+    private static final String PENDING_RESET = "auth.pendingReset";
+    private static final String VERIFIED_RESET_EMAIL = "auth.verifiedResetEmail";
     private static final SecureRandom CODE_RANDOM = new SecureRandom();
     private final UserService userService = new UserService();
 
@@ -61,6 +64,28 @@ public class AuthServlet extends HttpServlet {
             showVerification(req, resp, pending);
             return;
         }
+        if ("/auth/forgot-password".equals(path)) {
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+            return;
+        }
+        if ("/auth/forgot-password/verify".equals(path)) {
+            PendingReset pending = authSession == null ? null : (PendingReset) authSession.getAttribute(PENDING_RESET);
+            if (pending == null) {
+                resp.sendRedirect(req.getContextPath() + "/auth/forgot-password?expired=1");
+                return;
+            }
+            req.setAttribute("pendingEmail", pending.getEmail());
+            req.getRequestDispatcher("/WEB-INF/views/auth/verify-reset.jsp").forward(req, resp);
+            return;
+        }
+        if ("/auth/reset-password".equals(path)) {
+            if (authSession == null || authSession.getAttribute(VERIFIED_RESET_EMAIL) == null) {
+                resp.sendRedirect(req.getContextPath() + "/auth/forgot-password?expired=1");
+                return;
+            }
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+            return;
+        }
         if ("/auth/login".equals(path)) {
             req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             return;
@@ -75,6 +100,9 @@ public class AuthServlet extends HttpServlet {
             case "/auth/register" -> register(req, resp);
             case "/auth/verify-email" -> verify(req, resp);
             case "/auth/resend-code" -> resend(req, resp);
+            case "/auth/forgot-password" -> handleForgotPassword(req, resp);
+            case "/auth/forgot-password/verify" -> handleVerifyReset(req, resp);
+            case "/auth/reset-password" -> handleResetPassword(req, resp);
             default -> resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
@@ -84,7 +112,7 @@ public class AuthServlet extends HttpServlet {
         User user = userService.login(email, req.getParameter("password"));
         if (user == null) {
             req.setAttribute("email", email);
-            req.setAttribute("errorMessage", "Email hoặc mật khẩu không chính xác, hoặc tài khoản đã bị khóa.");
+            req.setAttribute("errorMessage", "Incorrect email or password, or your account is locked.");
             req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             return;
         }
@@ -274,6 +302,157 @@ public class AuthServlet extends HttpServlet {
             codeHash = BCrypt.hashpw(code, BCrypt.gensalt(10));
             sentAt = now;
             failedAttempts = 0;
+        }
+
+        private VerificationResult checkCode(String code, Instant now) {
+            if (!now.isBefore(sentAt.plus(CODE_LIFETIME))) return VerificationResult.EXPIRED;
+            if (failedAttempts >= MAX_ATTEMPTS) return VerificationResult.LOCKED;
+            if (code != null && code.matches("[0-9]{6}") && BCrypt.checkpw(code, codeHash)) {
+                return VerificationResult.VALID;
+            }
+            failedAttempts++;
+            return failedAttempts >= MAX_ATTEMPTS ? VerificationResult.LOCKED : VerificationResult.INVALID;
+        }
+    }
+
+    private void handleForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String email = req.getParameter("email");
+        if (email != null) email = email.trim().toLowerCase(Locale.ROOT);
+
+        if (email == null || !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            req.setAttribute("errorMessage", "Enter a valid email address.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+            return;
+        }
+
+        com.learnhub.dto.UserDTO user = userService.getUserByEmail(email);
+        if (user != null) {
+            HttpSession session = req.getSession(true);
+            synchronized (session) {
+                PendingReset previous = (PendingReset) session.getAttribute(PENDING_RESET);
+                if (previous != null && previous.getEmail().equals(email) && !previous.canResend(Instant.now())) {
+                    resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?wait=1");
+                    return;
+                }
+                
+                String code = newCode();
+                PendingReset pendingReset = new PendingReset(email, code, Instant.now());
+                if (sendResetCode(email, code)) {
+                    session.setAttribute(PENDING_RESET, pendingReset);
+                    session.removeAttribute(VERIFIED_RESET_EMAIL); 
+                }
+            }
+        }
+        resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?sent=1");
+    }
+
+    private void handleVerifyReset(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/forgot-password?expired=1");
+            return;
+        }
+
+        synchronized (session) {
+            PendingReset pending = (PendingReset) session.getAttribute(PENDING_RESET);
+            if (pending == null) {
+                resp.sendRedirect(req.getContextPath() + "/auth/forgot-password?expired=1");
+                return;
+            }
+
+            String code = req.getParameter("code");
+            VerificationResult result = pending.checkCode(code, Instant.now());
+
+            if (result == VerificationResult.VALID) {
+                session.setAttribute(VERIFIED_RESET_EMAIL, pending.getEmail());
+                session.removeAttribute(PENDING_RESET);
+                resp.sendRedirect(req.getContextPath() + "/auth/reset-password");
+                return;
+            } else if (result == VerificationResult.EXPIRED) {
+                req.setAttribute("errorMessage", "This code has expired. Request a new code.");
+            } else if (result == VerificationResult.LOCKED) {
+                req.setAttribute("errorMessage", "Too many incorrect attempts. Request a new code.");
+                session.removeAttribute(PENDING_RESET);
+            } else {
+                req.setAttribute("errorMessage", "Incorrect code. Please try again.");
+            }
+            
+            req.setAttribute("pendingEmail", pending.getEmail());
+            req.getRequestDispatcher("/WEB-INF/views/auth/verify-reset.jsp").forward(req, resp);
+        }
+    }
+
+    private void handleResetPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute(VERIFIED_RESET_EMAIL) == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/forgot-password?expired=1");
+            return;
+        }
+
+        String email = (String) session.getAttribute(VERIFIED_RESET_EMAIL);
+        String newPassword = req.getParameter("password");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 72) {
+            req.setAttribute("errorMessage", "Password must be at least 8 characters and no more than 72 bytes.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+            return;
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            req.setAttribute("errorMessage", "Passwords do not match.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+            return;
+        }
+
+        com.learnhub.dto.UserDTO user = userService.getUserByEmail(email);
+        if (user != null) {
+            boolean success = userService.resetPassword(user.getId(), newPassword);
+            if (success) {
+                session.removeAttribute(VERIFIED_RESET_EMAIL);
+                resp.sendRedirect(req.getContextPath() + "/auth/login?reset=success");
+                return;
+            }
+        }
+
+        req.setAttribute("errorMessage", "Failed to reset password. Please try again or contact support.");
+        req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+    }
+
+    private boolean sendResetCode(String email, String code) {
+        String body = "<p>You requested to reset your password for your LearnHub account.</p>"
+                + "<p>Use the following 6-digit code to reset your password:</p>"
+                + "<p style=\"font-size:24px;font-weight:bold;letter-spacing:4px\">" + code + "</p>"
+                + "<p>This code will expire in 10 minutes. If you did not request a password reset, please ignore this email.</p>";
+        return EmailUtil.sendEmail(email, "LearnHub Password Reset Code", body);
+    }
+
+    private static final class PendingReset implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private static final Duration CODE_LIFETIME = Duration.ofMinutes(10);
+        private static final Duration RESEND_DELAY = Duration.ofSeconds(60);
+        private static final int MAX_ATTEMPTS = 5;
+
+        private final String email;
+        private String codeHash;
+        private Instant sentAt;
+        private int failedAttempts;
+
+        private PendingReset(String email, String code, Instant now) {
+            this.email = email;
+            replaceCode(code, now);
+        }
+
+        private String getEmail() { return email; }
+
+        private boolean canResend(Instant now) {
+            return !now.isBefore(sentAt.plus(RESEND_DELAY));
+        }
+
+        private void replaceCode(String code, Instant now) {
+            this.codeHash = BCrypt.hashpw(code, BCrypt.gensalt(10));
+            this.sentAt = now;
+            this.failedAttempts = 0;
         }
 
         private VerificationResult checkCode(String code, Instant now) {

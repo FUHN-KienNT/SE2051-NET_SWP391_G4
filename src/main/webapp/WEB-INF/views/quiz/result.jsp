@@ -9,7 +9,7 @@
         <div class="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${isPassed ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} text-4xl">
             <i class="fa-solid ${isPassed ? 'fa-check' : 'fa-xmark'}"></i>
         </div>
-        <h1 class="text-2xl font-black text-slate-900 mb-2">${isPassed ? 'Chúc Mừng! Bạn Đã Đạt' : 'Rất Tiếc! Chưa Đạt Yêu Cầu'}</h1>
+        <h1 class="text-2xl font-black text-slate-900 mb-2">${isPassed ? 'Congratulations! You Passed' : 'Sorry! You Did Not Pass'}</h1>
         <p class="text-slate-500 text-sm mb-6">${quiz.name}</p>
 
         <div class="bg-slate-50 rounded-xl p-6 mb-8 grid grid-cols-2 gap-4 border border-slate-200">

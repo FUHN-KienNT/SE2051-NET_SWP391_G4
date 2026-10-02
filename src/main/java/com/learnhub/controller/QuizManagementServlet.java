@@ -111,7 +111,7 @@ public class QuizManagementServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath()+"/quiz/manage?saved=true"+suffix);
         }
         else{
-            req.setAttribute("error","Không thể lưu quiz. Hãy kiểm tra Module, tên quiz, thời gian và Pass Score (0-10).");
+            req.setAttribute("error","Cannot save quiz. Please check Module, quiz title, time limit, and Pass Score (0-10).");
             req.setAttribute("courseId",courseId);
             req.setAttribute("course", courseId == null ? null : new com.learnhub.dao.CourseDAO().findById(courseId));
             req.setAttribute("modules",courseId != null ? moduleDAO.findByCourseId(courseId) : moduleDAO.findByExpertId(user.getId()));

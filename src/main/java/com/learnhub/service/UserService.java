@@ -152,6 +152,12 @@ public class UserService {
         return settingDAO.findAllRoles();
     }
 
+    public UserDTO getUserByEmail(String email) {
+        if (email == null) return null;
+        User u = userDAO.findByEmail(email.trim());
+        return u != null ? toDTO(u) : null;
+    }
+
     private UserDTO toDTO(User u) {
         UserDTO dto = new UserDTO();
         dto.setId(u.getId());

@@ -5,10 +5,10 @@
 <main class="flex-grow flex items-center justify-center py-16 px-4">
     <div class="text-center max-w-md">
         <div class="text-8xl font-black text-amber-500 mb-4">403</div>
-        <h1 class="text-2xl font-bold text-slate-900 mb-2">Truy cập bị từ chối</h1>
-        <p class="text-slate-600 mb-6">${empty errorMessage ? 'Bạn không có quyền truy cập vào tài nguyên hoặc trang này.' : errorMessage}</p>
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">Access Denied</h1>
+        <p class="text-slate-600 mb-6">${empty errorMessage ? 'You do not have permission to access this resource or page.' : errorMessage}</p>
         <a href="${pageContext.request.contextPath}/home" class="inline-flex items-center px-6 py-3 font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 shadow-md transition">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Trở về Trang Chủ
+            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Home
         </a>
     </div>
 </main>

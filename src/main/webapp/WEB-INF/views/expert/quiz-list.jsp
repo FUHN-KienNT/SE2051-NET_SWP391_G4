@@ -66,10 +66,10 @@
             </div>
 
             <c:if test="${param.saved == 'true'}">
-                <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">Quiz đã được lưu.</div>
+                <div class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">Quiz saved successfully.</div>
             </c:if>
             <c:if test="${param.deleted == 'false'}">
-                <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">Không thể xóa Quiz.</div>
+                <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">Cannot delete Quiz.</div>
             </c:if>
 
             <form method="get" action="${pageContext.request.contextPath}/quiz/manage" class="mb-6 flex flex-col sm:flex-row gap-3">

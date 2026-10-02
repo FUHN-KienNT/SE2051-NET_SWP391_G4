@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
@@ -29,11 +29,11 @@
                         <td class="px-6 py-4 font-bold text-slate-900"><fmt:formatNumber value="${sub.score}" maxFractionDigits="1"/></td>
                         <td class="px-6 py-4">
                             <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${sub.status eq 'passed' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
-                                ${sub.status eq 'passed' ? 'Đạt' : 'Không đạt'}
+                                ${sub.status eq 'passed' ? 'Passed' : 'Failed'}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="${pageContext.request.contextPath}/quiz?action=result&submissionId=${sub.id}" class="font-semibold text-blue-600 hover:underline">Xem kết quả</a>
+                            <a href="${pageContext.request.contextPath}/quiz?action=result&submissionId=${sub.id}" class="font-semibold text-blue-600 hover:underline">View Details</a>
                         </td>
                     </tr>
                 </c:forEach>

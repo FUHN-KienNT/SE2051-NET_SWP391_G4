@@ -141,10 +141,10 @@
                         <div class="w-16 h-16 bg-brand-50 text-brand-700 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-text-primary mb-1">Không tìm thấy khóa học nào phù hợp</h3>
-                        <p class="text-sm text-text-secondary max-w-md mx-auto mb-6">Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục khác để xem kết quả.</p>
+                        <h3 class="text-lg font-bold text-text-primary mb-1">No matching courses found</h3>
+                        <p class="text-sm text-text-secondary max-w-md mx-auto mb-6">Try changing your search keywords or select a different category to see results.</p>
                         <a href="${pageContext.request.contextPath}/courses" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-xl transition shadow-sm">
-                            <i class="fa-solid fa-rotate-left"></i> Xem tất cả khóa học
+                            <i class="fa-solid fa-rotate-left"></i> View all courses
                         </a>
                     </div>
                 </c:otherwise>

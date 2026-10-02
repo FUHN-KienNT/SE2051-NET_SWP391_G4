@@ -161,8 +161,13 @@ public class CourseServlet extends HttpServlet {
                     req.setAttribute("pageTitle", course.getTitle() + " - LearnHub");
                     req.getRequestDispatcher("/WEB-INF/views/courses/detail.jsp").forward(req, resp);
                     return;
+                } else {
+                    resp.setContentType("text/plain;charset=UTF-8");
+                    resp.getWriter().write("DEBUG: course is null for courseId=" + courseId);
+                    return;
                 }
-            } catch (IllegalArgumentException ignored) {
+            } catch (Exception e) {
+                throw new ServletException("Error loading course details", e);
             }
         }
         resp.sendRedirect(req.getContextPath() + "/courses");

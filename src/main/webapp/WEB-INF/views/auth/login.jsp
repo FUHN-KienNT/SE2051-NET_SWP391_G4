@@ -41,6 +41,12 @@
                     <span>Your email is verified and your account is ready. Sign in to continue.</span>
                 </div>
             </c:if>
+            <c:if test="${param.reset eq 'success'}">
+                <div role="status" class="mb-6 p-4 rounded-xl bg-brand-50 border border-brand-100 text-status-success text-sm flex items-center">
+                    <i class="fa-solid fa-circle-check mr-3" aria-hidden="true"></i>
+                    <span>Your password has been reset successfully. Sign in with your new password.</span>
+                </div>
+            </c:if>
 
             <c:url var="googleOAuthUrl" value="/auth/oauth/google"><c:if test="${not empty param.redirect_uri}"><c:param name="redirect_uri" value="${param.redirect_uri}" /></c:if></c:url>
             <c:url var="githubOAuthUrl" value="/auth/oauth/github"><c:if test="${not empty param.redirect_uri}"><c:param name="redirect_uri" value="${param.redirect_uri}" /></c:if></c:url>
@@ -73,7 +79,7 @@
                             <i id="eyeIcon" class="fa-regular fa-eye"></i>
                         </button>
                     </div>
-                    <a href="#" class="absolute top-0 right-0 text-xs font-medium text-slate-500 hover:text-slate-700 underline">Forgot Password?</a>
+                    <a href="${pageContext.request.contextPath}/auth/forgot-password" class="absolute top-0 right-0 text-xs font-medium text-slate-500 hover:text-slate-700 underline">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="w-full py-2.5 mt-2 text-sm font-bold text-white bg-[#028446] hover:bg-emerald-800 rounded-lg shadow-sm transition-colors">

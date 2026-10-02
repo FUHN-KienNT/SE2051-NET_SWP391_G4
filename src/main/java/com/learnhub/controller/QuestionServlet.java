@@ -64,7 +64,7 @@ public class QuestionServlet extends HttpServlet {
         );
         if(ok)resp.sendRedirect(req.getContextPath()+"/questions/manage?saved=true");
         else{
-            req.setAttribute("error","Không thể lưu câu hỏi. Với Single choice cần đúng 1 đáp án; Multiple choice cần ít nhất 1 đáp án đúng và tối thiểu 2 lựa chọn.");
+            req.setAttribute("error","Cannot save question. Single choice requires exactly 1 correct answer; Multiple choice requires at least 1 correct answer and a minimum of 2 options.");
             Question q=new Question(questionId,req.getParameter("content"),req.getParameter("type"));
             req.setAttribute("question",q);
             req.getRequestDispatcher("/WEB-INF/views/expert/question-detail.jsp").forward(req,resp);

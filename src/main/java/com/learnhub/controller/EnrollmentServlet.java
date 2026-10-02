@@ -81,8 +81,8 @@ public class EnrollmentServlet extends HttpServlet {
         if (!isStudent) {
             req.setAttribute("course", course);
             req.setAttribute("student", currentUser);
-            req.setAttribute("roleError", "Tài khoản hiện tại của bạn (" + (roleName != null ? roleName : roleCode) + 
-                    ") không phải là Học viên. Vui lòng đăng nhập tài khoản Student để đăng ký khóa học.");
+            req.setAttribute("roleError", "Your current account (" + (roleName != null ? roleName : roleCode) + 
+                    ") is not a Student. Please log in with a Student account to enroll in a course.");
             req.setAttribute("pageTitle", "Thông báo đăng ký - " + course.getTitle());
             req.getRequestDispatcher("/WEB-INF/views/courses/enrollment.jsp").forward(req, resp);
             return;

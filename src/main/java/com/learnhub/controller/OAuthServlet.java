@@ -35,7 +35,7 @@ public class OAuthServlet extends HttpServlet {
         session.setAttribute("oauth.state." + provider.name(), state);
         session.setAttribute("oauth.redirect." + provider.name(), redirect);
         String url = oauth.authorizationUrl(provider, state);
-        if (url == null) { fail(req, resp, "Đăng nhập bằng nhà cung cấp này chưa được cấu hình."); return; }
+        if (url == null) { fail(req, resp, "Login with this provider is not configured."); return; }
         resp.sendRedirect(url);
     }
 
@@ -49,11 +49,11 @@ public class OAuthServlet extends HttpServlet {
             session.removeAttribute("oauth.redirect." + provider.name());
         }
         if (expected == null || actual == null || !MessageDigest.isEqual(expected.getBytes(java.nio.charset.StandardCharsets.UTF_8), actual.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
-            fail(req, resp, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng thử lại."); return;
+            fail(req, resp, "Login session is invalid or expired. Please try again."); return;
         }
-        if (req.getParameter("error") != null) { fail(req, resp, "Bạn đã hủy hoặc không hoàn tất đăng nhập."); return; }
+        if (req.getParameter("error") != null) { fail(req, resp, "You cancelled or did not complete the login."); return; }
         String code = req.getParameter("code");
-        if (code == null || code.isBlank()) { fail(req, resp, "Nhà cung cấp không trả về mã xác thực hợp lệ."); return; }
+        if (code == null || code.isBlank()) { fail(req, resp, "Provider did not return a valid authentication code."); return; }
         try {
             Profile profile = oauth.fetchProfile(provider, code);
             User user = oauth.resolveAccount(provider, profile);
@@ -66,12 +66,12 @@ public class OAuthServlet extends HttpServlet {
             else if ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode())) resp.sendRedirect(req.getContextPath() + "/admin/users");
             else resp.sendRedirect(req.getContextPath() + "/home");
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); fail(req, resp, "Đăng nhập bị gián đoạn. Vui lòng thử lại.");
+            Thread.currentThread().interrupt(); fail(req, resp, "Login was interrupted. Please try again.");
         } catch (IOException e) {
-            fail(req, resp, "Không thể xác minh tài khoản với nhà cung cấp. Hãy dùng email đã xác minh rồi thử lại.");
+            fail(req, resp, "Could not verify account with provider. Please try again with a verified email.");
         } catch (SQLException e) {
-            if ("Account inactive".equals(e.getMessage())) fail(req, resp, "Tài khoản đã bị khóa hoặc vô hiệu hóa.");
-            else { getServletContext().log("OAuth account resolution failed", e); fail(req, resp, "Không thể hoàn tất đăng nhập. Vui lòng thử lại."); }
+            if ("Account inactive".equals(e.getMessage())) fail(req, resp, "Your account has been locked or disabled.");
+            else { getServletContext().log("OAuth account resolution failed", e); fail(req, resp, "Could not complete login. Please try again."); }
         }
     }
 

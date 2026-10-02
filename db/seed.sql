@@ -257,11 +257,11 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------
 -- 6. SEED QUIZ (Bài thi trắc nghiệm)
 -- ---------------------------------------------------------------------
-INSERT INTO quiz (id, module_id, title, time_limit) VALUES
-    ('10000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'Quiz Ôn tập: Vòng đời Servlet & Xử lý HTTP Request', 15),
-    ('10000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'Quiz Đánh giá: JSP, JSTL Core Tags & Mô hình MVC', 20),
-    ('10000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000003', 'Quiz Bảo mật: Session, Cookie & Filter Authorization', 20),
-    ('10000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'Quiz Chuyên gia: Đánh Index & Đọc EXPLAIN PostgreSQL', 25)
+INSERT INTO quiz (id, module_id, title, time_limit, pass_score) VALUES
+    ('10000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'Quiz Ôn tập: Vòng đời Servlet & Xử lý HTTP Request', 15, 5.0),
+    ('10000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'Quiz Đánh giá: JSP, JSTL Core Tags & Mô hình MVC', 20, 6.0),
+    ('10000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000003', 'Quiz Bảo mật: Session, Cookie & Filter Authorization', 20, 7.0),
+    ('10000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'Quiz Chuyên gia: Đánh Index & Đọc EXPLAIN PostgreSQL', 25, 8.0)
 ON CONFLICT (id) DO NOTHING;
 
 

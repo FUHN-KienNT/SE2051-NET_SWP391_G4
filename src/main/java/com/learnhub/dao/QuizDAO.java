@@ -15,7 +15,7 @@ public class QuizDAO {
 
     public Quiz findById(UUID id) {
         if (id == null) return null;
-        String sql = "SELECT q.id, q.module_id, q.title, q.time_limit, q.created_at, q.updated_at, " +
+        String sql = "SELECT q.id, q.module_id, q.title, q.time_limit, q.pass_score, q.created_at, q.updated_at, " +
                      "m.title as module_title, " +
                      "(SELECT COUNT(*) FROM quiz_question qq WHERE qq.quiz_id = q.id) as question_count " +
                      "FROM quiz q " +
@@ -32,6 +32,7 @@ public class QuizDAO {
                     q.setTitle(rs.getString("title"));
                     int tl = rs.getInt("time_limit");
                     q.setTimeLimit(rs.wasNull() ? null : tl);
+                    q.setPassScore(rs.getBigDecimal("pass_score"));
                     q.setCreatedAt(rs.getTimestamp("created_at"));
                     q.setUpdatedAt(rs.getTimestamp("updated_at"));
                     q.setModuleTitle(rs.getString("module_title"));
@@ -47,7 +48,7 @@ public class QuizDAO {
 
     public List<Quiz> findByModuleId(UUID moduleId) {
         List<Quiz> list = new ArrayList<>();
-        String sql = "SELECT q.id, q.module_id, q.title, q.time_limit, q.created_at, q.updated_at, " +
+        String sql = "SELECT q.id, q.module_id, q.title, q.time_limit, q.pass_score, q.created_at, q.updated_at, " +
                      "m.title as module_title, " +
                      "(SELECT COUNT(*) FROM quiz_question qq WHERE qq.quiz_id = q.id) as question_count " +
                      "FROM quiz q " +
@@ -64,6 +65,7 @@ public class QuizDAO {
                     q.setTitle(rs.getString("title"));
                     int tl = rs.getInt("time_limit");
                     q.setTimeLimit(rs.wasNull() ? null : tl);
+                    q.setPassScore(rs.getBigDecimal("pass_score"));
                     q.setCreatedAt(rs.getTimestamp("created_at"));
                     q.setUpdatedAt(rs.getTimestamp("updated_at"));
                     q.setModuleTitle(rs.getString("module_title"));

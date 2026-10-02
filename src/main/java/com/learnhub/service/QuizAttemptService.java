@@ -50,15 +50,17 @@ public class QuizAttemptService {
         QuizSubmission attempt = quizAttemptDAO.findById(submissionId);
         if (attempt == null) return null;
 
+        Quiz quiz = quizDAO.findById(attempt.getQuizId());
+        BigDecimal passScoreThreshold = (quiz != null && quiz.getPassScore() != null) ? quiz.getPassScore() : BigDecimal.valueOf(5.0);
+        
         answerDAO.saveAnswers(submissionId, selectedAnswers);
         BigDecimal score = calculateScore(attempt.getQuizId(), selectedAnswers);
-        boolean passed = score.compareTo(BigDecimal.valueOf(5.0)) >= 0;
+        boolean passed = score.compareTo(passScoreThreshold) >= 0;
 
         quizAttemptDAO.updateScore(submissionId, score, passed);
         quizAttemptDAO.updateBestFlag(submissionId);
 
         List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
-        Quiz quiz = quizDAO.findById(attempt.getQuizId());
 
         QuizAttemptDTO dto = new QuizAttemptDTO();
         dto.setAttemptId(submissionId);

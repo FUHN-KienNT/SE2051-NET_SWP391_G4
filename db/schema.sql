@@ -1,4 +1,4 @@
-﻿-- =====================================================================
+-- =====================================================================
 -- LEARNHUB DATABASE SCHEMA
 -- PostgreSQL DDL Script
 -- =====================================================================
@@ -198,6 +198,7 @@ CREATE TABLE quiz (
     module_id  UUID NOT NULL REFERENCES module (id) ON DELETE CASCADE,
     title      VARCHAR(255) NOT NULL,
     time_limit INTEGER,  -- don vi: phut
+    pass_score NUMERIC(5, 2) NOT NULL DEFAULT 5.0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

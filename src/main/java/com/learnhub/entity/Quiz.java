@@ -13,6 +13,7 @@ public class Quiz implements Serializable {
     private UUID moduleId;
     private String title;
     private Integer timeLimit;
+    private java.math.BigDecimal passScore;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -42,6 +43,9 @@ public class Quiz implements Serializable {
 
     public Integer getTimeLimit() { return timeLimit; }
     public void setTimeLimit(Integer timeLimit) { this.timeLimit = timeLimit; }
+
+    public java.math.BigDecimal getPassScore() { return passScore; }
+    public void setPassScore(java.math.BigDecimal passScore) { this.passScore = passScore; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

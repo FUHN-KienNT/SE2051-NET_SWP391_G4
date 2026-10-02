@@ -9,6 +9,7 @@ import com.learnhub.util.PasswordHashUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -106,12 +107,16 @@ public class UserService {
         return null;
     }
 
-    public User register(String name, String email, String password) {
-        if (email == null || password == null || name == null) return null;
-        if (userDAO.findByEmail(email.trim()) != null) {
+    /** Called only after the email verification code has been accepted. */
+    public User registerVerified(String name, String email, String passwordHash) {
+        if (email == null || passwordHash == null || name == null || !passwordHash.startsWith("$2")) return null;
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+        String normalizedName = name.trim();
+        if (normalizedEmail.isEmpty() || normalizedName.isEmpty()) return null;
+        if (userDAO.findByEmail(normalizedEmail) != null) {
             return null;
         }
-        if (userDAO.findByEmail(name.trim()) != null) {
+        if (userDAO.findByEmail(normalizedName) != null) {
             return null;
         }
 
@@ -127,9 +132,9 @@ public class UserService {
 
         User newUser = new User();
         newUser.setId(UUID.randomUUID());
-        newUser.setUsername(name);
-        newUser.setEmail(email.trim());
-        newUser.setPassword(PasswordHashUtil.hashPassword(password));
+        newUser.setUsername(normalizedName);
+        newUser.setEmail(normalizedEmail);
+        newUser.setPassword(passwordHash);
         newUser.setRoleId(roleId);
         newUser.setStatus("active");
 
@@ -137,6 +142,10 @@ public class UserService {
             return newUser;
         }
         return null;
+    }
+
+    public boolean isRegistrationIdentityTaken(String name, String email) {
+        return userDAO.findByEmail(email) != null || userDAO.findByEmail(name) != null;
     }
 
     public List<Setting> getAllRoles() {

@@ -163,6 +163,19 @@ GITHUB_REDIRECT_URI
 
 Register each redirect URI in its provider's OAuth application settings. For a local deployment at `http://localhost:8080/learnhub`, use `http://localhost:8080/learnhub/auth/oauth/google/callback` and `http://localhost:8080/learnhub/auth/oauth/github/callback`. Google needs the `openid`, `email`, and `profile` scopes; GitHub needs `read:user` and `user:email`. For an existing database, add nullable `google_user_id` and `github_user_id` columns with unique constraints to the `user` table before enabling social sign-in. A new database gets the provider ID columns from `db/schema.sql`.
 
+### Email verification for password sign-up
+
+For Gmail, turn on 2-Step Verification and create a Google App Password for LearnHub. Set these two environment variables **in the Tomcat process** (or its IDE run configuration), then restart Tomcat:
+
+```text
+SMTP_USERNAME=your-gmail-address@gmail.com
+SMTP_PASSWORD=your-google-app-password
+```
+
+The sender defaults to `SMTP_USERNAME` and the server defaults to `smtp.gmail.com:587` with authenticated STARTTLS. `SMTP_HOST`, `SMTP_PORT`, and `SMTP_FROM` are optional overrides for another SMTP provider. Use an App Password, not the regular Google account password. Do not commit credentials. The `smtp.*` placeholders in `src/main/resources/db.properties` are not used by the mail sender; changing that file alone will not enable email. If sending fails, sign-up stays on the form and Tomcat logs the SMTP error.
+
+Password sign-up sends a six-digit code that expires after 10 minutes. After five incorrect attempts, request a new code; resend is available after 60 seconds and invalidates the previous code. The pending registration is stored in the user's server-side HTTP session; a correct code creates the account. A lost session or Tomcat restart requires starting sign-up again. Google and GitHub sign-in use the provider's verified email and do not send a LearnHub code. No database migration is needed for email verification.
+
 ### 2. Build Project
 ```bash
 mvn clean package

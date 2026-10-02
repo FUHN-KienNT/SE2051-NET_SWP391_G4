@@ -18,6 +18,14 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
+        HttpSession authSession = req.getSession(false);
+        if (authSession != null) {
+            Object oauthError = authSession.getAttribute("oauth.error");
+            if (oauthError != null) {
+                req.setAttribute("errorMessage", oauthError);
+                authSession.removeAttribute("oauth.error");
+            }
+        }
         if ("/auth/logout".equals(path)) {
             HttpSession session = req.getSession(false);
             if (session != null) {

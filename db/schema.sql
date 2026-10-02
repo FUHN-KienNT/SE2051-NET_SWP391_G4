@@ -88,8 +88,12 @@ CREATE TABLE "user" (
     password   VARCHAR(255) NOT NULL,
     role_id    UUID NOT NULL REFERENCES setting (id),
     status     user_status NOT NULL DEFAULT 'active',
+    google_user_id VARCHAR(255),
+    github_user_id VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_user_google_user_id UNIQUE (google_user_id),
+    CONSTRAINT uq_user_github_user_id UNIQUE (github_user_id)
 );
 
 CREATE INDEX idx_user_role_id ON "user" (role_id);

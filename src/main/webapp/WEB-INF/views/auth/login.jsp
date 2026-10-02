@@ -26,7 +26,7 @@
             <c:if test="${not empty errorMessage}">
                 <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center">
                     <i class="fa-solid fa-circle-exclamation mr-3 text-rose-500"></i>
-                    <span>${errorMessage}</span>
+                    <span><c:out value="${errorMessage}" /></span>
                 </div>
             </c:if>
             <c:if test="${not empty message}">
@@ -36,14 +36,16 @@
                 </div>
             </c:if>
 
-            <button type="button" class="w-full mb-3 flex items-center justify-center space-x-2 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+            <c:url var="googleOAuthUrl" value="/auth/oauth/google"><c:if test="${not empty param.redirect_uri}"><c:param name="redirect_uri" value="${param.redirect_uri}" /></c:if></c:url>
+            <c:url var="githubOAuthUrl" value="/auth/oauth/github"><c:if test="${not empty param.redirect_uri}"><c:param name="redirect_uri" value="${param.redirect_uri}" /></c:if></c:url>
+            <a href="${googleOAuthUrl}" class="w-full mb-3 flex items-center justify-center space-x-2 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-4 h-4">
                 <span>Continue with Google</span>
-            </button>
-            <button type="button" class="w-full mb-6 flex items-center justify-center space-x-2 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+            </a>
+            <a href="${githubOAuthUrl}" class="w-full mb-6 flex items-center justify-center space-x-2 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 transition-colors">
                 <i class="fa-brands fa-github text-base"></i>
                 <span>Continue with GitHub</span>
-            </button>
+            </a>
 
             <div class="relative flex items-center justify-center mb-6">
                 <div class="absolute inset-x-0 border-t border-slate-200"></div>

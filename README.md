@@ -149,6 +149,20 @@ psql -U postgres -d learnhub -f db/seed.sql
 
 Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
 
+### Social sign-in (Google and GitHub)
+Set the following environment variables in the Tomcat process; never commit provider secrets:
+
+```text
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
+GITHUB_CLIENT_ID
+GITHUB_CLIENT_SECRET
+GITHUB_REDIRECT_URI
+```
+
+Register each redirect URI in its provider's OAuth application settings. For a local deployment at `http://localhost:8080/learnhub`, use `http://localhost:8080/learnhub/auth/oauth/google/callback` and `http://localhost:8080/learnhub/auth/oauth/github/callback`. Google needs the `openid`, `email`, and `profile` scopes; GitHub needs `read:user` and `user:email`. For an existing database, add nullable `google_user_id` and `github_user_id` columns with unique constraints to the `user` table before enabling social sign-in. A new database gets the provider ID columns from `db/schema.sql`.
+
 ### 2. Build Project
 ```bash
 mvn clean package

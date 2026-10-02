@@ -64,6 +64,10 @@ public class CourseService {
         return dtos;
     }
 
+    public int countPublicCourses(String search, UUID categoryId) {
+        return courseDAO.countPublishedCourses(search, categoryId);
+    }
+
     public Course getCourseDetailWithCurriculum(UUID courseId) {
         return courseDAO.findCourseWithModulesAndLessons(courseId);
     }
@@ -159,6 +163,46 @@ public class CourseService {
     }
 
     public List<Setting> getPaymentMethods() {
-        return settingDAO.findByType("payment_method");
+        List<Setting> all = settingDAO.findByType("payment_method");
+        List<Setting> result = new ArrayList<>();
+        Setting vnpay = null;
+        Setting sepay = null;
+
+        for (Setting s : all) {
+            if ("vnpay".equalsIgnoreCase(s.getCode())) {
+                vnpay = s;
+            } else if ("sepay".equalsIgnoreCase(s.getCode()) || "banking".equalsIgnoreCase(s.getCode())) {
+                sepay = s;
+            }
+        }
+
+        if (vnpay != null) {
+            result.add(vnpay);
+        } else {
+            result.add(new Setting(
+                    UUID.fromString("b0000000-0000-0000-0000-000000000011"),
+                    "payment_method", "vnpay", "Cổng thanh toán VNPAY",
+                    "Thanh toán qua quét mã VNPAY-QR, Thẻ ATM nội địa hoặc Internet Banking",
+                    true, 1
+            ));
+        }
+
+        if (sepay != null) {
+            if ("banking".equalsIgnoreCase(sepay.getCode())) {
+                sepay.setCode("sepay");
+                sepay.setName("Cổng thanh toán SePay (VietQR)");
+                sepay.setDescription("Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay");
+            }
+            result.add(sepay);
+        } else {
+            result.add(new Setting(
+                    UUID.fromString("b0000000-0000-0000-0000-000000000013"),
+                    "payment_method", "sepay", "Cổng thanh toán SePay (VietQR)",
+                    "Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay",
+                    true, 2
+            ));
+        }
+
+        return result;
     }
 }

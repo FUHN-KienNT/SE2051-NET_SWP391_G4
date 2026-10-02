@@ -96,28 +96,43 @@ public class CourseServlet extends HttpServlet {
         }
 
         String search = req.getParameter("search");
-        String categoryIdStr = req.getParameter("category");
+        // Hỗ trợ cả 2 tên param categoryId và category
+        String categoryIdStr = req.getParameter("categoryId");
+        if (categoryIdStr == null || categoryIdStr.trim().isEmpty()) {
+            categoryIdStr = req.getParameter("category");
+        }
+
         String pageStr = req.getParameter("page");
         UUID categoryId = null;
         if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
             try {
-                categoryId = UUID.fromString(categoryIdStr);
+                categoryId = UUID.fromString(categoryIdStr.trim());
             } catch (Exception ignored) {
             }
         }
         int page = 1;
+        int pageSize = 9;
         if (pageStr != null) {
             try {
-                page = Integer.parseInt(pageStr);
+                page = Math.max(1, Integer.parseInt(pageStr.trim()));
             } catch (Exception ignored) {
             }
         }
-        List<CourseDTO> courses = courseService.searchPublicCourses(search, categoryId, page, 9);
+
+        List<CourseDTO> courses = courseService.searchPublicCourses(search, categoryId, page, pageSize);
+        int totalCourses = courseService.countPublicCourses(search, categoryId);
+        int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+
         List<Setting> categories = courseService.getActiveCategories();
         req.setAttribute("courses", courses);
         req.setAttribute("categories", categories);
         req.setAttribute("search", search);
+        req.setAttribute("categoryId", categoryIdStr);
         req.setAttribute("selectedCategory", categoryIdStr);
+        req.setAttribute("currentPage", page);
+        req.setAttribute("totalPages", Math.max(1, totalPages));
+        req.setAttribute("totalCourses", totalCourses);
+
         req.getRequestDispatcher("/WEB-INF/views/courses/list.jsp").forward(req, resp);
     }
 
@@ -137,7 +152,9 @@ public class CourseServlet extends HttpServlet {
                     if (currentUser != null) {
                         isEnrolled = courseService.getMyEnrollments(currentUser.getId())
                                 .stream()
-                                .anyMatch(r -> courseId.equals(r.getCourseId()));
+                                .anyMatch(r -> courseId.equals(r.getCourseId()) 
+                                        && ("paid".equalsIgnoreCase(r.getPaymentStatus()) 
+                                            || (course.getPrice() != null && course.getPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)));
                     }
                     req.setAttribute("isEnrolled", isEnrolled);
 

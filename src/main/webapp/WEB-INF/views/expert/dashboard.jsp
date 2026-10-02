@@ -7,8 +7,7 @@
 <header class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16 gap-4">
-            
-            <!-- Phía bên trái: LMS LOGO -->
+
             <div class="flex items-center space-x-3 shrink-0">
                 <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2.5">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
@@ -20,19 +19,6 @@
                     Expert
                 </span>
             </div>
-            <!-- Ở giữa: THANH TÌM KIẾM (SEARCH BAR) -->
-            <div class="flex-1 max-w-md mx-2 sm:mx-6">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                    </div>
-                    <input type="text" 
-                           id="courseSearchInput"
-                           placeholder="Search courses..." 
-                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                </div>
-            </div>
-            <!-- Phía bên phải: USER NAME & AVATAR DROPDOWN -->
             <div class="flex items-center space-x-3 shrink-0">
                 <div class="relative group">
                     <button class="flex items-center space-x-2.5 p-1.5 rounded-xl hover:bg-slate-50 transition focus:outline-none">
@@ -131,14 +117,18 @@
             </div>
         </div>
     </div>
-    <!-- Assigned Courses Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="font-bold text-slate-800 text-lg">Danh Sách Khóa Học (Assigned Courses)</h2>
-            <span class="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-600 rounded-full">
-                Tổng cộng: ${totalCourses} khóa học
-            </span>
-        </div>
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between gap-4">
+                <h2 class="font-bold text-slate-800 text-lg shrink-0">Danh Sách Khóa Học (Assigned Courses)</h2>
+                <div class="relative max-w-xs w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                    <input type="text"
+                           id="courseSearchInput"
+                           placeholder="Search courses..."
+                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                </div>
+            </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-600" id="coursesTable">
                 <thead class="bg-slate-50 text-slate-700 uppercase text-xs font-bold border-b border-slate-200">

@@ -4,53 +4,179 @@ import com.learnhub.dao.QuizDAO;
 import com.learnhub.dao.QuizQuestionDAO;
 import com.learnhub.entity.Quiz;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** Business layer for Expert Quiz List/Detail. */
+/**
+ * Business layer for Expert Quiz List/Detail.
+ */
 public class QuizManagementService {
+
     private final QuizDAO quizDAO = new QuizDAO();
     private final QuizQuestionDAO qqDAO = new QuizQuestionDAO();
 
-    public List<Quiz> findByExpert(UUID expertId, String keyword, UUID moduleId) {
-        return quizDAO.findByExpertId(expertId, keyword, moduleId);
+    // =========================================================
+    // FIND QUIZZES
+    // =========================================================
+
+    public List<Quiz> findByExpert(
+            UUID expertId,
+            String keyword,
+            UUID moduleId) {
+
+        return quizDAO.findByExpertId(
+                expertId,
+                keyword,
+                moduleId
+        );
     }
 
-    public List<Quiz> findByExpert(UUID expertId, String keyword, UUID moduleId, UUID courseId) {
-        return quizDAO.findByExpertId(expertId, keyword, moduleId, courseId);
+    public List<Quiz> findByExpert(
+            UUID expertId,
+            String keyword,
+            UUID moduleId,
+            UUID courseId) {
+
+        return quizDAO.findByExpertId(
+                expertId,
+                keyword,
+                moduleId,
+                courseId
+        );
     }
+
+    // =========================================================
+    // GET QUIZ
+    // =========================================================
 
     public Quiz get(UUID id) {
         return quizDAO.findById(id);
     }
 
+    // =========================================================
+    // GET QUESTION IDS
+    // =========================================================
+
     public List<UUID> getQuestionIds(UUID quizId) {
+
+        if (quizId == null) {
+            return new ArrayList<>();
+        }
+
         return qqDAO.findQuestionIds(quizId);
     }
 
-    public boolean save(UUID expertId, UUID id, UUID moduleId, String title,
-                        Integer timeLimit, java.math.BigDecimal passScore, List<UUID> questionIds) {
-        if (expertId == null || moduleId == null || title == null || title.trim().isEmpty()) return false;
-        if (!quizDAO.moduleBelongsToExpert(moduleId, expertId)) return false;
-        if (timeLimit != null && (timeLimit < 1 || timeLimit > 600)) return false;
-        if (passScore == null || passScore.compareTo(java.math.BigDecimal.ZERO) < 0 || passScore.compareTo(java.math.BigDecimal.TEN) > 0) return false;
+    // =========================================================
+    // SAVE QUIZ
+    // =========================================================
 
-        Quiz q = new Quiz();
-        q.setId(id != null ? id : UUID.randomUUID());
-        q.setModuleId(moduleId);
-        q.setTitle(title.trim());
-        q.setTimeLimit(timeLimit);
-        q.setPassScore(passScore);
+    /**
+     * Creates or updates a Quiz.
+     *
+     * Validation is performed here.
+     * Actual database save is handled by QuizDAO
+     * in a single transaction.
+     */
+    public boolean save(
+            UUID expertId,
+            UUID id,
+            UUID moduleId,
+            String title,
+            Integer timeLimit,
+            BigDecimal passScore,
+            List<UUID> questionIds) {
 
-        boolean ok = id == null
-                ? quizDAO.insert(q)
-                : quizDAO.belongsToExpert(id, expertId) && quizDAO.update(q);
+        // -----------------------------------------------------
+        // Basic validation
+        // -----------------------------------------------------
 
-        if (!ok) return false;
-        return qqDAO.replaceQuestions(q.getId(), questionIds);
+        if (expertId == null) {
+            return false;
+        }
+
+        if (moduleId == null) {
+            return false;
+        }
+
+        if (title == null || title.trim().isEmpty()) {
+            return false;
+        }
+
+        title = title.trim();
+
+        // -----------------------------------------------------
+        // Time Limit
+        // -----------------------------------------------------
+
+        if (timeLimit != null) {
+
+            if (timeLimit < 1 || timeLimit > 600) {
+                return false;
+            }
+        }
+
+        // -----------------------------------------------------
+        // Pass Score
+        // -----------------------------------------------------
+
+        if (passScore == null) {
+            return false;
+        }
+
+        if (passScore.compareTo(BigDecimal.ZERO) < 0
+                || passScore.compareTo(BigDecimal.TEN) > 0) {
+            return false;
+        }
+
+        // -----------------------------------------------------
+        // Normalize Question IDs
+        // -----------------------------------------------------
+
+        List<UUID> safeQuestionIds = new ArrayList<>();
+
+        if (questionIds != null) {
+
+            for (UUID questionId : questionIds) {
+
+                if (questionId != null
+                        && !safeQuestionIds.contains(questionId)) {
+
+                    safeQuestionIds.add(questionId);
+                }
+            }
+        }
+
+        // -----------------------------------------------------
+        // Save everything in one transaction
+        // -----------------------------------------------------
+
+        return quizDAO.saveWithQuestions(
+                expertId,
+                id,
+                moduleId,
+                title,
+                timeLimit,
+                passScore,
+                safeQuestionIds
+        );
     }
 
+    // =========================================================
+    // DELETE QUIZ
+    // =========================================================
+
     public boolean delete(UUID expertId, UUID id) {
-        return id != null && quizDAO.belongsToExpert(id, expertId) && quizDAO.delete(id);
+
+        if (expertId == null || id == null) {
+            return false;
+        }
+
+        if (!quizDAO.belongsToExpert(id, expertId)) {
+            return false;
+        }
+
+        return quizDAO.delete(id);
     }
 }

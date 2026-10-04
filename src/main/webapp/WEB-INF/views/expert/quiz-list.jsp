@@ -3,19 +3,7 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-3">
-    <nav class="flex items-center text-xs text-slate-400 font-medium space-x-2">
-        <a href="${pageContext.request.contextPath}/expert/dashboard" class="hover:text-blue-600 text-blue-600 font-semibold transition">Assigned Courses</a>
-        <c:if test="${not empty course}">
-            <span>&gt;</span>
-            <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${course.id}" class="hover:text-blue-600 text-blue-600 font-semibold transition truncate max-w-sm">${course.title}</a>
-        </c:if>
-        <span>&gt;</span>
-        <span class="text-slate-700 font-bold">Quiz</span>
-    </nav>
-</div>
-
-<div class="w-full px-4 sm:px-6 lg:px-8 pb-16 flex flex-col md:flex-row gap-6">
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-16 flex flex-col md:flex-row gap-6">
     <!-- Sidebar giống Lesson Management -->
     <aside class="w-full md:w-44 shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -43,26 +31,14 @@
 
     <div class="flex-1 min-w-0">
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 mb-6 border-b border-slate-100">
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-black text-slate-900">Quiz List</h1>
-                    <p class="text-sm text-slate-500 mt-1">
-                        Danh sách Quiz của khóa học
-                        <c:if test="${not empty course}"><span class="font-semibold text-slate-700">${course.title}</span></c:if>
-                        </p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a href="${pageContext.request.contextPath}/questions/manage"
-                       class="inline-flex items-center justify-center px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold rounded-xl text-sm transition shadow-sm space-x-2">
-                        <i class="fa-solid fa-list-check text-xs"></i>
-                        <span>Question Bank</span>
-                    </a>
-                    <a href="${pageContext.request.contextPath}/quiz/detail?courseId=${courseId}"
-                       class="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition shadow-sm space-x-2">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>Create Quiz</span>
-                    </a>
-                </div>
+            <div class="flex items-center justify-between mb-6">
+                <a href="${pageContext.request.contextPath}/expert/dashboard"
+                   class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition text-sm font-semibold shadow-sm group">
+                    <i class="fa-solid fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
+                    <span>Quay lại</span>
+                </a>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900">Quiz List</h1>
+                <div class="w-24"></div>
             </div>
 
             <c:if test="${param.saved == 'true'}">
@@ -90,8 +66,8 @@
                     <thead class="bg-slate-50 text-slate-700 text-xs font-bold border-b border-slate-200">
                         <tr>
                             <th class="px-5 py-4 w-14 text-center">#</th>
-                            <th class="px-5 py-4 font-bold text-slate-800">Quiz Title</th>
                             <th class="px-5 py-4 font-bold text-slate-800">Module</th>
+                            <th class="px-5 py-4 font-bold text-slate-800">Quiz Title</th>
                             <th class="px-5 py-4 text-center font-bold text-slate-800">Questions</th>
                             <th class="px-5 py-4 text-center font-bold text-slate-800">Time</th>
                             <th class="px-5 py-4 text-center font-bold text-slate-800">Pass Score</th>
@@ -102,25 +78,32 @@
                         <c:choose>
                             <c:when test="${not empty quizzes}">
                                 <c:forEach var="q" items="${quizzes}" varStatus="st">
-                                    <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-5 py-4 text-center text-slate-400 font-semibold">${st.index + 1}</td>
-                                        <td class="px-5 py-4">
-                                            <div class="font-bold text-slate-800">${q.title}</div>
+                                    <tr class="hover:bg-slate-50/80 transition-colors">
+                                        <td class="px-5 py-4 text-center font-bold text-slate-400 text-xs">${st.index + 1}</td>
+                                        <td class="px-5 py-4 font-semibold text-slate-800 text-xs">${q.moduleTitle}</td>
+                                        <td class="px-5 py-4 font-medium text-slate-900">
+                                            <div class="flex items-center space-x-2.5">
+                                                <i class="fa-regular fa-circle-question text-blue-500 text-sm"></i>
+                                                <span>${q.title}</span>
+                                            </div>
                                         </td>
-                                        <td class="px-5 py-4 text-slate-600">${q.moduleTitle}</td>
-                                        <td class="px-5 py-4 text-center font-bold text-slate-700">${q.questionCount}</td>
+                                        <td class="px-5 py-4 text-center font-semibold text-slate-700">${q.questionCount}</td>
                                         <td class="px-5 py-4 text-center">${empty q.timeLimit ? 'No limit' : q.timeLimit} <c:if test="${not empty q.timeLimit}">min</c:if></td>
-                                        <td class="px-5 py-4 text-center font-bold text-slate-700">${q.passScore}</td>
-                                        <td class="px-5 py-4 text-center whitespace-nowrap">
-                                            <a href="${pageContext.request.contextPath}/quiz/detail?id=${q.id}&courseId=${courseId}" class="text-blue-600 font-bold hover:underline mr-3">Edit</a>
-                                            <a href="${pageContext.request.contextPath}/quiz/manage?action=delete&id=${q.id}&courseId=${courseId}" onclick="return confirm('Xóa quiz này?');" class="text-rose-600 font-bold hover:underline">Delete</a>
+                                        <td class="px-5 py-4 text-center font-semibold text-slate-700">${q.passScore}</td>
+                                        <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
+                                            <a href="${pageContext.request.contextPath}/quiz/detail?id=${q.id}&courseId=${courseId}"
+                                               class="text-blue-600 hover:text-blue-800 hover:underline transition">Edit</a>
+                                            <a href="${pageContext.request.contextPath}/quiz/manage?action=delete&id=${q.id}&courseId=${courseId}"
+                                               class="text-rose-600 hover:text-rose-800 hover:underline transition"
+                                               onclick="return confirm('Bạn có chắc chắn muốn xóa quiz này không?');">Delete</a>
                                         </td>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
                                 <tr>
-                                    <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400 text-sm">
+                                        <i class="fa-regular fa-folder-open text-4xl mb-3 block text-slate-300"></i>
                                         Chưa có Quiz nào trong khóa học này.
                                     </td>
                                 </tr>
@@ -128,6 +111,14 @@
                         </c:choose>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <a href="${pageContext.request.contextPath}/quiz/detail?courseId=${courseId}"
+                   class="inline-flex items-center px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition shadow-sm space-x-2">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Create Quiz</span>
+                </a>
             </div>
         </div>
     </div>

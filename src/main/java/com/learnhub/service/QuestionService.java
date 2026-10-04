@@ -1,42 +1,217 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.learnhub.service;
 
 import com.learnhub.dao.QuestionDAO;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.QuestionOption;
-import java.util.*;
 
-/** Business layer for the shared Question Bank. */
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Business layer for the shared Question Bank.
+ */
 public class QuestionService {
+
     private final QuestionDAO dao = new QuestionDAO();
 
-    public List<Question> search(String keyword, String type) { return dao.search(keyword,type); }
-    public Question get(UUID id) { return dao.findById(id); }
+    public List<Question> search(
+            String keyword,
+            String type) {
 
-    public boolean save(UUID id, String content, String type, String[] optionTexts, String[] correctIndexes) {
-        if(content==null||content.trim().isEmpty()) return false;
-        Question q=new Question();
-        q.setId(id != null ? id : UUID.randomUUID());q.setContent(content.trim());q.setType(type);
-        List<QuestionOption> options=new ArrayList<>();
-        Set<Integer> correct=new HashSet<>();
-        if(correctIndexes!=null) for(String s:correctIndexes) try{correct.add(Integer.parseInt(s));}catch(NumberFormatException ignored){}
-        if(optionTexts!=null){
-            for(int i=0;i<optionTexts.length;i++){
-                if(optionTexts[i]==null||optionTexts[i].trim().isEmpty())continue;
-                QuestionOption o=new QuestionOption();
-                o.setQuestionId(id);o.setOptionText(optionTexts[i].trim());o.setCorrect(correct.contains(i));options.add(o);
+        return dao.search(keyword, type);
+    }
+
+    public Question get(UUID id) {
+        return dao.findById(id);
+    }
+
+    /**
+     * Save question.
+     *
+     * optionIds:
+     * - existing option -> UUID of existing question_option
+     * - new option -> empty/null
+     */
+    public boolean save(
+            UUID id,
+            String content,
+            String type,
+            String[] optionIds,
+            String[] optionTexts,
+            String[] correctIndexes) {
+
+        if (content == null
+                || content.trim().isEmpty()) {
+            return false;
+        }
+
+        if (type == null
+                || type.trim().isEmpty()) {
+            return false;
+        }
+
+        /*
+         * CREATE:
+         * tạo UUID ngay từ Service.
+         *
+         * UPDATE:
+         * sử dụng UUID hiện tại.
+         */
+        UUID questionId =
+                id != null ? id : UUID.randomUUID();
+
+        Question question = new Question();
+
+        question.setId(questionId);
+        question.setContent(content.trim());
+        question.setType(type);
+
+        List<QuestionOption> options =
+                new ArrayList<>();
+
+        Set<Integer> correctIndexesSet =
+                new HashSet<>();
+
+        /*
+         * Đọc index của đáp án đúng.
+         */
+        if (correctIndexes != null) {
+
+            for (String value : correctIndexes) {
+
+                if (value == null || value.isBlank()) {
+                    continue;
+                }
+
+                try {
+                    correctIndexesSet.add(
+                            Integer.parseInt(value)
+                    );
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
-        if("single_choice".equals(type)||"multiple_choice".equals(type)){
-            if(options.size()<2||correct.isEmpty()) return false;
-            if("single_choice".equals(type)&&correct.size()!=1)return false;
-        }
-        return id==null ? dao.insert(q,options) : dao.update(q,options);
-    }
-    public boolean delete(UUID id){ return !dao.isUsedInQuiz(id) && dao.delete(id); }
-    public boolean isUsedInQuiz(UUID id){return dao.isUsedInQuiz(id);}
-}
 
+        /*
+         * Đọc các option.
+         */
+        if (optionTexts != null) {
+
+            for (int i = 0;
+                 i < optionTexts.length;
+                 i++) {
+
+                String text = optionTexts[i];
+
+                if (text == null
+                        || text.trim().isEmpty()) {
+                    continue;
+                }
+
+                QuestionOption option =
+                        new QuestionOption();
+
+                /*
+                 * Nếu là option cũ:
+                 * giữ nguyên ID.
+                 */
+                UUID optionId = null;
+
+                if (optionIds != null
+                        && i < optionIds.length
+                        && optionIds[i] != null
+                        && !optionIds[i].isBlank()) {
+
+                    try {
+                        optionId =
+                                UUID.fromString(
+                                        optionIds[i]
+                                );
+                    } catch (IllegalArgumentException ignored) {
+                        /*
+                         * ID không hợp lệ -> coi như option mới.
+                         */
+                    }
+                }
+
+                option.setId(optionId);
+                option.setQuestionId(questionId);
+                option.setOptionText(text.trim());
+                option.setCorrect(
+                        correctIndexesSet.contains(i)
+                );
+
+                options.add(option);
+            }
+        }
+
+        /*
+         * Validation cho Choice Question.
+         */
+        if ("single_choice".equals(type)
+                || "multiple_choice".equals(type)) {
+
+            /*
+             * Phải có ít nhất 2 lựa chọn.
+             */
+            if (options.size() < 2) {
+                return false;
+            }
+
+            /*
+             * Phải có đáp án đúng.
+             */
+            if (correctIndexesSet.isEmpty()) {
+                return false;
+            }
+
+            /*
+             * Single Choice chỉ được đúng 1 đáp án.
+             */
+            if ("single_choice".equals(type)
+                    && correctIndexesSet.size() != 1) {
+                return false;
+            }
+        }
+
+        /*
+         * Text question:
+         * không cần option.
+         */
+
+        /*
+         * CREATE
+         */
+        if (id == null) {
+            return dao.insert(question, options);
+        }
+
+        /*
+         * UPDATE
+         */
+        return dao.update(question, options);
+    }
+
+    public boolean delete(UUID id) {
+
+        if (id == null) {
+            return false;
+        }
+
+        /*
+         * Không cho xóa Question đang được Quiz sử dụng.
+         */
+        if (dao.isUsedInQuiz(id)) {
+            return false;
+        }
+
+        return dao.delete(id);
+    }
+
+    public boolean isUsedInQuiz(UUID id) {
+        return dao.isUsedInQuiz(id);
+    }
+}

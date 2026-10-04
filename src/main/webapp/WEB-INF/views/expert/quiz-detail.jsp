@@ -43,7 +43,6 @@
                             <option value="${m.id}" ${quiz.moduleId eq m.id ? 'selected' : ''}>${m.title}</option>
                         </c:forEach>
                     </select>
-                    <p class="text-xs text-slate-400 mt-2">DB hiện liên kết Quiz với Module; đây là mapping theo schema hiện tại của project.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -66,7 +65,7 @@
                     <h2 class="text-lg font-black text-slate-900">Select Quiz Questions</h2>
                     <p class="text-xs text-slate-500 mt-1">Chọn câu hỏi từ Question Bank. Thứ tự trong form sẽ là thứ tự hiển thị trong Quiz.</p>
                 </div>
-                <input id="questionSearch" oninput="filterQuestions()" placeholder="Filter question bank..."
+                <input id="questionSearch" oninput="filterQuestions()" placeholder="Search question..."
                        class="w-full md:w-80 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
             </div>
             <div class="p-5 max-h-[560px] overflow-y-auto space-y-3" id="questionList">
@@ -78,7 +77,7 @@
                                class="mt-1 question-check w-4 h-4 accent-blue-600">
                         <div class="min-w-0">
                             <div class="font-semibold text-sm text-slate-800">${q.content}</div>
-                            <div class="text-xs text-slate-400 mt-1">${q.type} · ${q.id}</div>
+                            <div class="text-xs text-slate-400 mt-1">${q.type}</div>
                         </div>
                     </label>
                 </c:forEach>
@@ -104,3 +103,4 @@ function filterQuestions(){
 }
 </script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />
+

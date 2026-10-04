@@ -28,6 +28,7 @@ public class Course implements Serializable {
     private String createdByName;
     private int moduleCount;
     private int lessonCount;
+    private int enrolledCount;
     private List<Module> modules = new ArrayList<>();
 
     public Course() {
@@ -98,8 +99,25 @@ public class Course implements Serializable {
     public int getLessonCount() { return lessonCount; }
     public void setLessonCount(int lessonCount) { this.lessonCount = lessonCount; }
 
+    public int getEnrolledCount() { return enrolledCount; }
+    public void setEnrolledCount(int enrolledCount) { this.enrolledCount = enrolledCount; }
+
     public List<Module> getModules() { return modules; }
     public void setModules(List<Module> modules) { this.modules = modules; }
+
+    public String getCourseCode() {
+        if (id == null) return "CRS-NEW";
+        String s = id.toString();
+        if (s.length() >= 36) {
+            String lastDigits = s.substring(s.lastIndexOf("-") + 1);
+            try {
+                long num = Long.parseLong(lastDigits, 16);
+                return "CRS-" + (100 + (num % 900));
+            } catch (Exception ignored) {
+            }
+        }
+        return "CRS-" + s.substring(0, 4).toUpperCase();
+    }
 
     @Override
     public String toString() {

@@ -33,6 +33,8 @@ public class Setting implements Serializable {
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
+    public String getIdString() { return id != null ? id.toString() : ""; }
+
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 

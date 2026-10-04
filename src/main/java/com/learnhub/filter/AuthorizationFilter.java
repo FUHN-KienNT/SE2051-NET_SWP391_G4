@@ -16,9 +16,15 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Filter handling authentication and RBAC authorization according to SDS 4.1 & Permission Matrix:
+ * - isLoggedIn(req)
+ * - hasExpertRole(req)
+ * - hasStudentRole(req)
+ */
 @WebFilter(filterName = "AuthorizationFilter", urlPatterns = {
         "/admin/*", "/expert/*", "/lessons/*", "/questions/*",
-        "/learn/*", "/quiz/*"
+        "/learn/*", "/quiz/*", "/learning-process/*"
 })
 public class AuthorizationFilter implements Filter {
 
@@ -47,13 +53,26 @@ public class AuthorizationFilter implements Filter {
             return;
         }
 
-        // Only Admin can access administration URLs.
-        if (isUnder(path, "/admin") && !hasAdminRole(req)) {
-            resp.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
-                    "Access denied: Administrator privileges required."
-            );
-            return;
+        // Administration URLs
+        if (isUnder(path, "/admin")) {
+            boolean isCourseManagement = isUnder(path, "/admin/courses")
+                    || isUnder(path, "/admin/course-status")
+                    || isUnder(path, "/admin/course-detail");
+            if (isCourseManagement) {
+                if (!hasAdminRole(req) && !hasExpertRole(req)) {
+                    resp.sendError(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Access denied: Administrator or Expert privileges required."
+                    );
+                    return;
+                }
+            } else if (!hasAdminRole(req)) {
+                resp.sendError(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "Access denied: Administrator privileges required."
+                );
+                return;
+            }
         }
 
         // Only Expert can manage lessons, questions and quizzes.
@@ -83,12 +102,25 @@ public class AuthorizationFilter implements Filter {
     }
 
     public boolean hasAdminRole(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            String role = (String) session.getAttribute("userRole");
+            if (role != null && ("ROLE_ADMIN".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)
+                    || "admin".equalsIgnoreCase(role) || "manager".equalsIgnoreCase(role))) {
+                return true;
+            }
+        }
         User user = getCurrentUser(req);
-
-        return user != null
-                && AppConstants.Role.ADMIN.equalsIgnoreCase(
-                user.getRoleCode()
-        );
+        if (user == null) return false;
+        String code = user.getRoleCode();
+        String name = user.getRoleName();
+        return AppConstants.Role.ADMIN.equalsIgnoreCase(code)
+                || AppConstants.Role.MANAGER.equalsIgnoreCase(code)
+                || "admin".equalsIgnoreCase(code)
+                || "manager".equalsIgnoreCase(code)
+                || "Administrator".equalsIgnoreCase(name)
+                || "Manager".equalsIgnoreCase(name)
+                || "Admin".equalsIgnoreCase(name);
     }
 
     public boolean hasExpertRole(HttpServletRequest req) {

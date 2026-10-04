@@ -106,7 +106,7 @@ public class UserDAO {
             params.add(roleId);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND u.status = ? ");
+            sql.append("AND LOWER(u.status::text) = LOWER(?) ");
             params.add(status.trim());
         }
 
@@ -145,7 +145,7 @@ public class UserDAO {
             params.add(roleId);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND u.status = ? ");
+            sql.append("AND LOWER(u.status::text) = LOWER(?) ");
             params.add(status.trim());
         }
 
@@ -223,6 +223,26 @@ public class UserDAO {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.updatePassword: " + e.getMessage(), e);
             return false;
         }
+    }
+
+    public List<User> findInstructors() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT u.id, u.username, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+                     "s.name as role_name, s.code as role_code " +
+                     "FROM \"user\" u " +
+                     "JOIN setting s ON u.role_id = s.id " +
+                     "WHERE (s.code = 'ROLE_EXPERT' OR s.code = 'ROLE_ADMIN' OR s.code = 'ROLE_MANAGER') AND u.status = 'active' " +
+                     "ORDER BY u.username ASC";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapResultSetToUser(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.findInstructors: " + e.getMessage(), e);
+        }
+        return list;
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

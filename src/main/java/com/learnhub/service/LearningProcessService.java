@@ -78,4 +78,8 @@ public class LearningProcessService {
         if (total <= 0) return 0;
         return (int) Math.round(((double) completed / total) * 100);
     }
+
+    public int countCompletedLessonsByUser(UUID userId) {
+        return learningProcessDAO.countCompletedLessonsByUser(userId);
+    }
 }

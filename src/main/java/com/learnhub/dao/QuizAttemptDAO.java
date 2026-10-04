@@ -144,4 +144,22 @@ public class QuizAttemptDAO {
         }
         return qs;
     }
+
+    public Double getAverageScoreByUser(UUID userId) {
+        if (userId == null) return null;
+        String sql = "SELECT AVG(score) FROM quiz_submission WHERE user_id = ? AND score IS NOT NULL";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal avg = rs.getBigDecimal(1);
+                    return avg != null ? avg.doubleValue() : null;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in getAverageScoreByUser: " + e.getMessage(), e);
+        }
+        return null;
+    }
 }

@@ -53,6 +53,10 @@ public class UserService {
         return dtos;
     }
 
+    public int countUsers(String search, UUID roleId, String status) {
+        return userDAO.countUsers(search, roleId, status);
+    }
+
     public UserDTO getUserById(UUID id) {
         User u = userDAO.findById(id);
         return u != null ? toDTO(u) : null;

@@ -158,4 +158,23 @@ public class LearningProcessDAO {
         }
         return 0;
     }
+
+    public int countCompletedLessonsByUser(UUID userId) {
+        if (userId == null) return 0;
+        String sql = "SELECT COUNT(lp.id) FROM learning_process lp " +
+                     "JOIN registration r ON lp.registration_id = r.id " +
+                     "WHERE r.user_id = ? AND lp.status = 'completed'";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in countCompletedLessonsByUser: " + e.getMessage(), e);
+        }
+        return 0;
+    }
 }

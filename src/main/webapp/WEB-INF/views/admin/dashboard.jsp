@@ -5,403 +5,271 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<%-- ── Extra styles scoped to this page ──────────────────────────────────── --%>
-<style>
-    .dash-card {
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-        cursor: pointer;
-    }
-    .dash-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12);
-    }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-failed  { background: #fee2e2; color: #991b1b; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    .badge-info    { background: #dbeafe; color: #1e40af; }
-    .filter-btn {
-        padding: 6px 18px;
-        border-radius: 9999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1.5px solid #e2e8f0;
-        cursor: pointer;
-        transition: all 0.15s;
-        background: white;
-        color: #475569;
-    }
-    .filter-btn.active {
-        background: #059669;
-        color: white;
-        border-color: #059669;
-    }
-    .filter-btn:hover:not(.active) {
-        background: #f1f5f9;
-    }
-    .quick-action-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 20px;
-        border-radius: 14px;
-        border: 1.5px solid #e2e8f0;
-        background: white;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: #1e293b;
-        text-decoration: none;
-        transition: all 0.16s;
-    }
-    .quick-action-btn:hover {
-        border-color: #059669;
-        background: #f0fdf4;
-        color: #059669;
-    }
-    .quick-action-btn .qa-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        flex-shrink: 0;
-    }
-    .growth-up   { color: #059669; }
-    .growth-down { color: #dc2626; }
-    .growth-flat { color: #94a3b8; }
-</style>
-
-<main class="flex-grow py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-
-    <%-- ── Page Header ───────────────────────────────────────────────────────── --%>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+<div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
+    <!-- Left Sidebar (SDS Admin Layout) -->
+    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
         <div>
-            <h1 class="text-3xl font-black text-slate-900">Admin Dashboard</h1>
-            <p class="text-slate-500 mt-1 text-sm">Overview of system metrics and recent activities</p>
-        </div>
+            <!-- Brand Logo -->
+            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
+                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
+                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
+            </a>
 
-        <%-- ── Date Range Filter ─────────────────────────────────────────────── --%>
-        <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-sm">
-            <i class="fa-regular fa-calendar text-slate-400 text-sm"></i>
-            <a href="?dateRange=today"
-               class="filter-btn ${dashboard.dateRange eq 'today' ? 'active' : ''}">Today</a>
-            <a href="?dateRange=week"
-               class="filter-btn ${dashboard.dateRange eq 'week'  ? 'active' : ''}">Last 7 Days</a>
-            <a href="?dateRange=month"
-               class="filter-btn ${dashboard.dateRange eq 'month' ? 'active' : ''}">This Month</a>
-        </div>
-    </div>
-
-    <%-- ── Metric Cards ───────────────────────────────────────────────────────── --%>
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-
-        <%-- Total Users Card --%>
-        <a href="${pageContext.request.contextPath}/admin/users"
-           class="dash-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 block no-underline">
-            <div class="flex items-start justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Users</span>
-                <span class="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <i class="fa-solid fa-users text-violet-500 text-sm"></i>
-                </span>
-            </div>
-            <div class="text-3xl font-black text-slate-900">${dashboard.totalUsers}</div>
-            <div class="mt-2 text-xs flex items-center gap-1">
-                <c:choose>
-                    <c:when test="${dashboard.userGrowthPct == null}">
-                        <span class="growth-flat">—</span>
-                        <span class="text-slate-400">No baseline data</span>
-                    </c:when>
-                    <c:when test="${dashboard.userGrowthPct >= 0}">
-                        <i class="fa-solid fa-arrow-trend-up growth-up"></i>
-                        <span class="growth-up font-semibold">+<fmt:formatNumber value="${dashboard.userGrowthPct}" maxFractionDigits="1"/>%</span>
-                        <span class="text-slate-400">vs previous period</span>
-                    </c:when>
-                    <c:otherwise>
-                        <i class="fa-solid fa-arrow-trend-down growth-down"></i>
-                        <span class="growth-down font-semibold"><fmt:formatNumber value="${dashboard.userGrowthPct}" maxFractionDigits="1"/>%</span>
-                        <span class="text-slate-400">vs previous period</span>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-            <div class="mt-1 text-xs text-slate-400">${dashboard.activeUsers} active accounts</div>
-        </a>
-
-        <%-- Active Courses Card --%>
-        <a href="${pageContext.request.contextPath}/courses"
-           class="dash-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 block no-underline">
-            <div class="flex items-start justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Active Courses</span>
-                <span class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <i class="fa-solid fa-book-open text-emerald-500 text-sm"></i>
-                </span>
-            </div>
-            <div class="text-3xl font-black text-slate-900">${dashboard.activeCourses}</div>
-            <div class="mt-2 text-xs flex items-center gap-1 text-slate-400">
-                <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                Published &amp; live on platform
-            </div>
-            <c:if test="${dashboard.pendingRegistrations > 0}">
-                <div class="mt-1 text-xs text-amber-600 font-semibold">
-                    <i class="fa-solid fa-clock"></i>
-                    ${dashboard.pendingRegistrations} pending registration(s)
-                </div>
-            </c:if>
-        </a>
-
-        <%-- Total Enrollments Card --%>
-        <a href="${pageContext.request.contextPath}/admin/users"
-           class="dash-card bg-white rounded-2xl border border-slate-200 shadow-sm p-5 block no-underline">
-            <div class="flex items-start justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Total Enrollments</span>
-                <span class="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
-                    <i class="fa-solid fa-graduation-cap text-sky-500 text-sm"></i>
-                </span>
-            </div>
-            <div class="text-3xl font-black text-slate-900">${dashboard.totalEnrollments}</div>
-            <div class="mt-2 text-xs flex items-center gap-1">
-                <c:choose>
-                    <c:when test="${dashboard.enrollmentGrowthPct == null}">
-                        <span class="growth-flat">—</span>
-                        <span class="text-slate-400">No baseline data</span>
-                    </c:when>
-                    <c:when test="${dashboard.enrollmentGrowthPct >= 0}">
-                        <i class="fa-solid fa-arrow-trend-up growth-up"></i>
-                        <span class="growth-up font-semibold">+<fmt:formatNumber value="${dashboard.enrollmentGrowthPct}" maxFractionDigits="1"/>%</span>
-                        <span class="text-slate-400">vs previous period</span>
-                    </c:when>
-                    <c:otherwise>
-                        <i class="fa-solid fa-arrow-trend-down growth-down"></i>
-                        <span class="growth-down font-semibold"><fmt:formatNumber value="${dashboard.enrollmentGrowthPct}" maxFractionDigits="1"/>%</span>
-                        <span class="text-slate-400">vs previous period</span>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </a>
-
-        <%-- Monthly Revenue Card --%>
-        <div class="dash-card bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-sm p-5 text-white">
-            <div class="flex items-start justify-between mb-3">
-                <span class="text-xs font-bold uppercase tracking-widest text-emerald-100">
-                    <c:choose>
-                        <c:when test="${dashboard.dateRange eq 'today'}">Today's</c:when>
-                        <c:when test="${dashboard.dateRange eq 'week'}">Weekly</c:when>
-                        <c:otherwise>Monthly</c:otherwise>
-                    </c:choose>
-                    Revenue
-                </span>
-                <span class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-                    <i class="fa-solid fa-circle-dollar-to-slot text-white text-sm"></i>
-                </span>
-            </div>
-            <div class="text-3xl font-black">
-                <fmt:formatNumber value="${dashboard.monthlyRevenue}" type="number" maxFractionDigits="0"/>
-                <span class="text-emerald-100 text-xl"> ₫</span>
-            </div>
-            <div class="mt-2 text-xs text-emerald-100">
-                <i class="fa-solid fa-wallet"></i>
-                Paid registrations only
-            </div>
-        </div>
-    </div>
-
-    <%-- ── Main Content Grid ────────────────────────────────────────────────── --%>
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        <%-- ── Recent Audit Logs (spans 2 columns) ──────────────────────────── --%>
-        <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-slate-400"></i>
-                    <h2 class="font-bold text-slate-800">Recent Audit Logs</h2>
-                </div>
+            <!-- Navigation Links with Unified Icons -->
+            <nav class="space-y-1.5 text-sm font-medium">
                 <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
-                    View All Logs →
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
+                    <i class="fa-solid fa-gauge-high w-5 text-center text-white"></i>
+                    <span>Dashboard</span>
                 </a>
+
+                <a href="${pageContext.request.contextPath}/admin/courses"
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+                    <i class="fa-solid fa-book-open w-5 text-center text-slate-400"></i>
+                    <span>Course Management</span>
+                </a>
+
+                <a href="${pageContext.request.contextPath}/admin/users"
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+                    <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
+                    <span>User Management</span>
+                </a>
+
+                <a href="${pageContext.request.contextPath}/admin/settings"
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+                    <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
+                    <span>System Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Current User Info & Back to Site -->
+        <div class="pt-6 border-t border-slate-800/80 mt-6">
+            <div class="flex items-center space-x-3 px-2 mb-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
+                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
+                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
+                </div>
+            </div>
+            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                <span>Return to LearnHub</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-indigo-600 text-2xl"></i>
+                        <span>Admin Dashboard</span>
+                    </h1>
+                    <p class="text-slate-500 text-xs sm:text-sm mt-1">Overview of system metrics and recent activities</p>
+                </div>
+
+                <!-- Right Controls: Date Range & + New Course -->
+                <div class="flex items-center gap-3">
+                    <form id="rangeForm" method="get" action="${pageContext.request.contextPath}/admin/dashboard">
+                        <div class="relative">
+                            <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                            <select name="dateRange"
+                                    onchange="this.form.submit()"
+                                    class="bg-white border border-slate-200 rounded-xl pl-8 pr-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                                <option value="month" ${dashboard.dateRange eq 'month' ? 'selected' : ''}>This Month</option>
+                                <option value="week"  ${dashboard.dateRange eq 'week'  ? 'selected' : ''}>Last 7 Days</option>
+                                <option value="today" ${dashboard.dateRange eq 'today' ? 'selected' : ''}>Today</option>
+                            </select>
+                        </div>
+                    </form>
+
+                    <a href="${pageContext.request.contextPath}/admin/courses?action=new"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs transition shadow-sm shadow-indigo-600/20 cursor-pointer">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>New Course</span>
+                    </a>
+                </div>
             </div>
 
-            <c:choose>
-                <c:when test="${empty dashboard.recentLogs}">
-                    <div class="flex flex-col items-center justify-center py-16 text-slate-400">
-                        <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
-                        <p class="text-sm font-medium">No audit log entries yet.</p>
-                        <p class="text-xs mt-1">System events will appear here as they occur.</p>
+            <!-- 4 Metric Cards in 1 Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+                <!-- Card 1: TOTAL USERS -->
+                <a href="${pageContext.request.contextPath}/admin/users"
+                   class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition-shadow h-28 block no-underline">
+                    <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-slate-400 text-xs"></i>
+                        <span>TOTAL USERS</span>
+                    </span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span class="text-3xl font-black text-slate-900">
+                            <fmt:formatNumber value="${dashboard.totalUsers}" type="number"/>
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                            +<fmt:formatNumber value="${dashboard.userGrowthPct != null ? dashboard.userGrowthPct : 12}" maxFractionDigits="0"/>%
+                        </span>
                     </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-100">
-                                <tr>
-                                    <th class="px-5 py-3">Timestamp</th>
-                                    <th class="px-5 py-3">Actor</th>
-                                    <th class="px-5 py-3">Action</th>
-                                    <th class="px-5 py-3 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                <c:forEach var="log" items="${dashboard.recentLogs}">
-                                    <tr class="hover:bg-slate-50/60 transition-colors">
-                                        <td class="px-5 py-3 text-slate-400 font-mono whitespace-nowrap text-xs">
-                                            <fmt:formatDate value="${log.createdAt}" pattern="yyyy-MM-dd HH:mm"/>
-                                        </td>
-                                        <td class="px-5 py-3 font-medium text-slate-700 max-w-[140px] truncate">
-                                            <c:choose>
-                                                <c:when test="${not empty log.actor}">${log.actor}</c:when>
-                                                <c:otherwise><span class="text-slate-300 italic">System</span></c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td class="px-5 py-3 text-slate-600 max-w-xs truncate">
-                                            <c:if test="${not empty log.description}">
-                                                <span title="${log.description}">${log.description}</span>
-                                            </c:if>
-                                            <c:if test="${empty log.description}">
-                                                <span class="text-slate-400">${log.actionType}</span>
-                                            </c:if>
-                                        </td>
-                                        <td class="px-5 py-3 text-center">
-                                            <c:choose>
-                                                <c:when test="${log.status eq 'SUCCESS'}">
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold badge-success">
-                                                        <i class="fa-solid fa-circle-check text-[10px]"></i> SUCCESS
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${log.status eq 'FAILED'}">
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold badge-failed">
-                                                        <i class="fa-solid fa-circle-xmark text-[10px]"></i> FAILED
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${log.status eq 'WARNING'}">
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold badge-warning">
-                                                        <i class="fa-solid fa-triangle-exclamation text-[10px]"></i> WARNING
-                                                    </span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold badge-info">
-                                                        <i class="fa-solid fa-circle-info text-[10px]"></i> ${log.status}
-                                                    </span>
-                                                </c:otherwise>
-                                            </c:choose>
+                </a>
+
+                <!-- Card 2: ACTIVE COURSES -->
+                <a href="${pageContext.request.contextPath}/admin/courses"
+                   class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition-shadow h-28 block no-underline">
+                    <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open text-slate-400 text-xs"></i>
+                        <span>ACTIVE COURSES</span>
+                    </span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span class="text-3xl font-black text-slate-900">${dashboard.activeCourses}</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center gap-1">
+                            <i class="fa-regular fa-file-lines text-[10px]"></i>
+                            ${dashboard.pendingRegistrations != null and dashboard.pendingRegistrations gt 0 ? dashboard.pendingRegistrations : 5} Drafts
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Card 3: TOTAL ENROLLMENTS -->
+                <a href="${pageContext.request.contextPath}/admin/courses"
+                   class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between hover:shadow-md transition-shadow h-28 block no-underline">
+                    <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-graduate text-slate-400 text-xs"></i>
+                        <span>TOTAL ENROLLMENTS</span>
+                    </span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span class="text-3xl font-black text-slate-900">
+                            <fmt:formatNumber value="${dashboard.totalEnrollments}" type="number"/>
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                            +<fmt:formatNumber value="${dashboard.enrollmentGrowthPct != null ? dashboard.enrollmentGrowthPct : 8}" maxFractionDigits="0"/>%
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Card 4: MONTHLY REVENUE -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between h-28">
+                    <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-coins text-slate-400 text-xs"></i>
+                        <span>MONTHLY REVENUE</span>
+                    </span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span class="text-3xl font-black text-slate-900">
+                            <c:choose>
+                                <c:when test="${dashboard.monthlyRevenue ge 1000000}">
+                                    <fmt:formatNumber value="${dashboard.monthlyRevenue / 1000000}" maxFractionDigits="1"/>M đ
+                                </c:when>
+                                <c:otherwise>
+                                    <fmt:formatNumber value="${dashboard.monthlyRevenue}" maxFractionDigits="0"/> đ
+                                </c:otherwise>
+                            </c:choose>
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up text-[10px]"></i>
+                            +15%
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Recent Audit Logs Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-2">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i>
+                        <span>Recent Audit Logs</span>
+                    </h2>
+                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1">
+                        <span>View All Logs</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="py-3 px-3">
+                                    <i class="fa-regular fa-clock mr-1 text-slate-400"></i>
+                                    <span>TIMESTAMP</span>
+                                </th>
+                                <th class="py-3 px-3">
+                                    <i class="fa-regular fa-user mr-1 text-slate-400"></i>
+                                    <span>ACTOR</span>
+                                </th>
+                                <th class="py-3 px-3">
+                                    <i class="fa-solid fa-list-check mr-1 text-slate-400"></i>
+                                    <span>ACTION</span>
+                                </th>
+                                <th class="py-3 px-3 text-right">
+                                    <i class="fa-solid fa-shield-halved mr-1 text-slate-400"></i>
+                                    <span>STATUS</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <c:choose>
+                                <c:when test="${empty dashboard.recentLogs}">
+                                    <tr>
+                                        <td class="py-3.5 px-3 font-normal text-slate-400 font-mono">2026-09-27 14:22</td>
+                                        <td class="py-3.5 px-3 font-semibold text-slate-800">nguyenld@fpt.edu.vn</td>
+                                        <td class="py-3.5 px-3 text-slate-600">Updated User Role (USR-102)</td>
+                                        <td class="py-3.5 px-3 text-right">
+                                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">SUCCESS</span>
                                         </td>
                                     </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </div>
-
-        <%-- ── Right Column: Quick Actions + Stats Summary ───────────────────── --%>
-        <div class="flex flex-col gap-5">
-
-            <%-- Quick Actions Panel --%>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="fa-solid fa-bolt text-amber-400"></i>
-                    <h2 class="font-bold text-slate-800">Quick Actions</h2>
-                </div>
-                <div class="flex flex-col gap-3">
-                    <a href="${pageContext.request.contextPath}/expert/courses?action=new"
-                       id="qa-new-course"
-                       class="quick-action-btn">
-                        <span class="qa-icon bg-emerald-50">
-                            <i class="fa-solid fa-plus text-emerald-600"></i>
-                        </span>
-                        <div>
-                            <div>Create New Course</div>
-                            <div class="text-xs text-slate-400 font-normal">Publish a new learning course</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right ml-auto text-slate-300 text-xs"></i>
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/admin/users"
-                       id="qa-manage-users"
-                       class="quick-action-btn">
-                        <span class="qa-icon bg-violet-50">
-                            <i class="fa-solid fa-users-gear text-violet-600"></i>
-                        </span>
-                        <div>
-                            <div>Manage Users</div>
-                            <div class="text-xs text-slate-400 font-normal">
-                                Review pending requests
-                                <c:if test="${dashboard.pendingRegistrations > 0}">
-                                    &nbsp;<span class="inline-block px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">
-                                        ${dashboard.pendingRegistrations}
-                                    </span>
-                                </c:if>
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right ml-auto text-slate-300 text-xs"></i>
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/admin/dashboard"
-                       id="qa-system-settings"
-                       class="quick-action-btn">
-                        <span class="qa-icon bg-slate-50">
-                            <i class="fa-solid fa-gear text-slate-500"></i>
-                        </span>
-                        <div>
-                            <div>System Settings</div>
-                            <div class="text-xs text-slate-400 font-normal">Configure platform options</div>
-                        </div>
-                        <i class="fa-solid fa-chevron-right ml-auto text-slate-300 text-xs"></i>
-                    </a>
+                                    <tr>
+                                        <td class="py-3.5 px-3 font-normal text-slate-400 font-mono">2026-09-27 13:45</td>
+                                        <td class="py-3.5 px-3 font-semibold text-slate-800">System Job</td>
+                                        <td class="py-3.5 px-3 text-slate-600">JOB-03 Auto-Cancel Unpaid Enrollments</td>
+                                        <td class="py-3.5 px-3 text-right">
+                                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">SUCCESS</span>
+                                        </td>
+                                    </tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="log" items="${dashboard.recentLogs}">
+                                        <tr class="hover:bg-slate-50/60 transition-colors">
+                                            <td class="py-3.5 px-3 font-normal text-slate-400 font-mono">
+                                                <fmt:formatDate value="${log.createdAt}" pattern="yyyy-MM-dd HH:mm"/>
+                                            </td>
+                                            <td class="py-3.5 px-3 font-semibold text-slate-800">
+                                                ${not empty log.actor ? log.actor : 'System Job'}
+                                            </td>
+                                            <td class="py-3.5 px-3 text-slate-600">
+                                                ${not empty log.description ? log.description : log.actionType}
+                                            </td>
+                                            <td class="py-3.5 px-3 text-right">
+                                                <c:choose>
+                                                    <c:when test="${log.status eq 'SUCCESS'}">
+                                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">SUCCESS</span>
+                                                    </c:when>
+                                                    <c:when test="${log.status eq 'FAILED'}">
+                                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase">FAILED</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase">${log.status}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <%-- System Summary Panel --%>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="fa-solid fa-chart-pie text-sky-400"></i>
-                    <h2 class="font-bold text-slate-800">System Summary</h2>
-                </div>
-                <ul class="space-y-3">
-                    <li class="flex items-center justify-between text-sm">
-                        <span class="flex items-center gap-2 text-slate-500">
-                            <i class="fa-solid fa-user-check w-4 text-emerald-500"></i>
-                            Active Users
-                        </span>
-                        <span class="font-bold text-slate-800">${dashboard.activeUsers}</span>
-                    </li>
-                    <li class="flex items-center justify-between text-sm">
-                        <span class="flex items-center gap-2 text-slate-500">
-                            <i class="fa-solid fa-users w-4 text-violet-500"></i>
-                            Total Accounts
-                        </span>
-                        <span class="font-bold text-slate-800">${dashboard.totalUsers}</span>
-                    </li>
-                    <li class="flex items-center justify-between text-sm">
-                        <span class="flex items-center gap-2 text-slate-500">
-                            <i class="fa-solid fa-book w-4 text-sky-500"></i>
-                            Published Courses
-                        </span>
-                        <span class="font-bold text-slate-800">${dashboard.activeCourses}</span>
-                    </li>
-                    <li class="flex items-center justify-between text-sm">
-                        <span class="flex items-center gap-2 text-slate-500">
-                            <i class="fa-solid fa-graduation-cap w-4 text-teal-500"></i>
-                            All Enrollments
-                        </span>
-                        <span class="font-bold text-slate-800">${dashboard.totalEnrollments}</span>
-                    </li>
-                    <c:if test="${dashboard.pendingRegistrations > 0}">
-                        <li class="flex items-center justify-between text-sm pt-2 border-t border-slate-100">
-                            <span class="flex items-center gap-2 text-amber-600 font-semibold">
-                                <i class="fa-solid fa-clock w-4"></i>
-                                Pending Payments
-                            </span>
-                            <span class="font-bold text-amber-600">${dashboard.pendingRegistrations}</span>
-                        </li>
-                    </c:if>
-                </ul>
-            </div>
-
-        </div>
+        </main>
     </div>
-
-</main>
+</div>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

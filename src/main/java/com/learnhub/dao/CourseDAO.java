@@ -232,9 +232,144 @@ public class CourseDAO {
             c.setExpertName(rs.getString("expert_name"));
             c.setModuleCount(rs.getInt("module_count"));
             c.setLessonCount(rs.getInt("lesson_count"));
+            c.setEnrolledCount(rs.getInt("enrolled_count"));
         } catch (SQLException ignored) {
         }
         return c;
+    }
+
+    public List<Course> findAllCoursesForManagement(String search, UUID categoryId, String status, String priceType, String sortBy, String sortOrder, int offset, int limit) {
+        List<Course> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
+                "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
+                "s.name as category_name, u.username as expert_name, " +
+                "(SELECT COUNT(*) FROM registration r WHERE r.course_id = c.id) as enrolled_count, " +
+                "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
+                "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) as lesson_count " +
+                "FROM course c " +
+                "LEFT JOIN setting s ON c.category_id = s.id " +
+                "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
+                "WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(c.title) LIKE ? OR LOWER(COALESCE(u.username, '')) LIKE ? OR CAST(c.id AS TEXT) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+        if (categoryId != null) {
+            sql.append("AND c.category_id = ? ");
+            params.add(categoryId);
+        }
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
+            sql.append("AND c.status = ?::course_status ");
+            params.add(status.trim().toLowerCase());
+        }
+        if (priceType != null && !priceType.trim().isEmpty() && !priceType.equalsIgnoreCase("all")) {
+            if ("free".equalsIgnoreCase(priceType)) {
+                sql.append("AND (c.price = 0 OR c.price IS NULL) ");
+            } else if ("paid".equalsIgnoreCase(priceType)) {
+                sql.append("AND c.price > 0 ");
+            }
+        }
+
+        // Sorting
+        String orderCol = "c.created_at";
+        if ("title".equalsIgnoreCase(sortBy)) {
+            orderCol = "c.title";
+        } else if ("price".equalsIgnoreCase(sortBy)) {
+            orderCol = "c.price";
+        } else if ("enrolled".equalsIgnoreCase(sortBy) || "total_enrolled".equalsIgnoreCase(sortBy)) {
+            orderCol = "enrolled_count";
+        } else if ("date".equalsIgnoreCase(sortBy) || "created_at".equalsIgnoreCase(sortBy)) {
+            orderCol = "c.created_at";
+        }
+
+        String direction = "DESC";
+        if ("asc".equalsIgnoreCase(sortOrder)) {
+            direction = "ASC";
+        }
+
+        sql.append("ORDER BY ").append(orderCol).append(" ").append(direction).append(", c.id DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToCourse(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.findAllCoursesForManagement: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
+    public int countAllCoursesForManagement(String search, UUID categoryId, String status, String priceType) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM course c " +
+                "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
+                "WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(c.title) LIKE ? OR LOWER(COALESCE(u.username, '')) LIKE ? OR CAST(c.id AS TEXT) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+        if (categoryId != null) {
+            sql.append("AND c.category_id = ? ");
+            params.add(categoryId);
+        }
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
+            sql.append("AND c.status = ?::course_status ");
+            params.add(status.trim().toLowerCase());
+        }
+        if (priceType != null && !priceType.trim().isEmpty() && !priceType.equalsIgnoreCase("all")) {
+            if ("free".equalsIgnoreCase(priceType)) {
+                sql.append("AND (c.price = 0 OR c.price IS NULL) ");
+            } else if ("paid".equalsIgnoreCase(priceType)) {
+                sql.append("AND c.price > 0 ");
+            }
+        }
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.countAllCoursesForManagement: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public boolean updateStatus(UUID courseId, String status) {
+        String sql = "UPDATE course SET status = ?::course_status, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.toLowerCase());
+            ps.setObject(2, courseId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.updateStatus: " + e.getMessage(), e);
+            return false;
+        }
     }
     public List<Course> findByExpertId(UUID expertId, int offset, int limit) {
         List<Course> list = new ArrayList<>();

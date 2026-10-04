@@ -55,24 +55,52 @@ public class UserServlet extends HttpServlet {
         String status = req.getParameter("status");
         String pageStr = req.getParameter("page");
 
+        List<Setting> roles = userService.getAllRoles();
         UUID roleId = null;
         if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
-            try { roleId = UUID.fromString(roleIdStr); } catch (Exception ignored) {}
+            try {
+                roleId = UUID.fromString(roleIdStr.trim());
+            } catch (IllegalArgumentException e) {
+                // If roleIdStr is code or name (e.g. ROLE_ADMIN, admin)
+                for (Setting r : roles) {
+                    if (r.getCode().equalsIgnoreCase(roleIdStr.trim()) || r.getName().equalsIgnoreCase(roleIdStr.trim())) {
+                        roleId = r.getId();
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (roleId != null) {
+            roleIdStr = roleId.toString();
+        } else {
+            roleIdStr = "";
+        }
+
+        if (status != null && (status.trim().isEmpty() || status.equalsIgnoreCase("all"))) {
+            status = null;
         }
 
         int page = 1;
-        if (pageStr != null) {
-            try { page = Integer.parseInt(pageStr); } catch (Exception ignored) {}
+        int pageSize = 10;
+        if (pageStr != null && !pageStr.isBlank()) {
+            try { page = Math.max(1, Integer.parseInt(pageStr.trim())); } catch (NumberFormatException ignored) {}
         }
 
-        List<UserDTO> users = userService.getUserList(search, roleId, status, page, 10);
-        List<Setting> roles = userService.getAllRoles();
+        List<UserDTO> users = userService.getUserList(search, roleId, status, page, pageSize);
+        int totalUsers = userService.countUsers(search, roleId, status);
+        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
         req.setAttribute("users", users);
         req.setAttribute("roles", roles);
-        req.setAttribute("search", search);
+        req.setAttribute("search", search != null ? search.trim() : "");
+        req.setAttribute("roleId", roleIdStr);
         req.setAttribute("selectedRole", roleIdStr);
-        req.setAttribute("selectedStatus", status);
+        req.setAttribute("selectedStatus", status != null ? status.trim() : "");
+        req.setAttribute("currentPage", page);
+        req.setAttribute("pageSize", pageSize);
+        req.setAttribute("totalUsers", totalUsers);
+        req.setAttribute("totalPages", Math.max(1, totalPages));
 
         req.getRequestDispatcher("/WEB-INF/views/admin/user-list.jsp").forward(req, resp);
     }

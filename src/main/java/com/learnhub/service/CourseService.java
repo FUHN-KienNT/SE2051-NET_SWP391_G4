@@ -3,11 +3,13 @@ package com.learnhub.service;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dao.SettingDAO;
+import com.learnhub.dao.UserDAO;
 import com.learnhub.dto.CourseDTO;
 import com.learnhub.dto.RegistrationDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
+import com.learnhub.entity.User;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,28 +17,28 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Service handling Course browsing, registration, and curriculum logic.
- * Implements methods specified in SDS Course Browsing Diagram (5.1, 5.2, 5.3):
- * - searchPublicCourses() - getCourseDetailWithCurriculum() -
- * processCourseRegistration() - searchRegistrations() -
- * getRegistrationDetailById() - updateRegistrationStatus()
+ * Service handling Course browsing, registration, curriculum logic,
+ * and Course Management for Administrators & Instructors.
  */
 public class CourseService {
 
     private final CourseDAO courseDAO;
     private final RegistrationDAO registrationDAO;
     private final SettingDAO settingDAO;
+    private final UserDAO userDAO;
 
     public CourseService() {
         this.courseDAO = new CourseDAO();
         this.registrationDAO = new RegistrationDAO();
         this.settingDAO = new SettingDAO();
+        this.userDAO = new UserDAO();
     }
 
-    public CourseService(CourseDAO courseDAO, RegistrationDAO registrationDAO, SettingDAO settingDAO) {
+    public CourseService(CourseDAO courseDAO, RegistrationDAO registrationDAO, SettingDAO settingDAO, UserDAO userDAO) {
         this.courseDAO = courseDAO;
         this.registrationDAO = registrationDAO;
         this.settingDAO = settingDAO;
+        this.userDAO = userDAO;
     }
 
     public List<CourseDTO> searchPublicCourses(String search, UUID categoryId, int page, int pageSize) {
@@ -69,7 +71,14 @@ public class CourseService {
     }
 
     public Course getCourseDetailWithCurriculum(UUID courseId) {
-        return courseDAO.findCourseWithModulesAndLessons(courseId);
+        Course c = courseDAO.findCourseWithModulesAndLessons(courseId);
+        if (c != null && c.getModules() != null) {
+            com.learnhub.dao.QuizDAO quizDAO = new com.learnhub.dao.QuizDAO();
+            for (com.learnhub.entity.Module m : c.getModules()) {
+                m.setQuizzes(quizDAO.findByModuleId(m.getId()));
+            }
+        }
+        return c;
     }
 
     public Registration processCourseRegistration(UUID userId, UUID courseId, UUID paymentMethodId) {
@@ -204,5 +213,45 @@ public class CourseService {
         }
 
         return result;
+    }
+
+    public List<Course> getCoursesForManagement(String search, UUID categoryId, String status, String priceType, String sortBy, String sortOrder, int page, int pageSize) {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        int offset = (page - 1) * pageSize;
+        return courseDAO.findAllCoursesForManagement(search, categoryId, status, priceType, sortBy, sortOrder, offset, pageSize);
+    }
+
+    public int countCoursesForManagement(String search, UUID categoryId, String status, String priceType) {
+        return courseDAO.countAllCoursesForManagement(search, categoryId, status, priceType);
+    }
+
+    public boolean updateCourseStatus(UUID courseId, String status) {
+        if (courseId == null || status == null) return false;
+        return courseDAO.updateStatus(courseId, status);
+    }
+
+    public boolean createCourse(Course course) {
+        if (course == null || course.getTitle() == null || course.getTitle().trim().isEmpty()) {
+            return false;
+        }
+        if (course.getId() == null) {
+            course.setId(UUID.randomUUID());
+        }
+        return courseDAO.insert(course);
+    }
+
+    public boolean updateCourse(Course course) {
+        if (course == null || course.getId() == null) return false;
+        return courseDAO.update(course);
+    }
+
+    public Course getCourseById(UUID courseId) {
+        if (courseId == null) return null;
+        return courseDAO.findById(courseId);
+    }
+
+    public List<User> getAllInstructors() {
+        return userDAO.findInstructors();
     }
 }

@@ -39,8 +39,24 @@ public class AdminDashboardServlet extends HttpServlet {
             return;
         }
 
+        User currentUser = (User) session.getAttribute("currentUser");
         String userRole = (String) session.getAttribute("userRole");
-        if (!"admin".equalsIgnoreCase(userRole) && !"manager".equalsIgnoreCase(userRole)) {
+        String roleCode = currentUser != null ? currentUser.getRoleCode() : userRole;
+        String roleName = currentUser != null ? currentUser.getRoleName() : "";
+
+        boolean isAuthorized = "ROLE_ADMIN".equalsIgnoreCase(userRole)
+                || "ROLE_MANAGER".equalsIgnoreCase(userRole)
+                || "admin".equalsIgnoreCase(userRole)
+                || "manager".equalsIgnoreCase(userRole)
+                || "ROLE_ADMIN".equalsIgnoreCase(roleCode)
+                || "ROLE_MANAGER".equalsIgnoreCase(roleCode)
+                || "admin".equalsIgnoreCase(roleCode)
+                || "manager".equalsIgnoreCase(roleCode)
+                || "Administrator".equalsIgnoreCase(roleName)
+                || "Manager".equalsIgnoreCase(roleName)
+                || "Admin".equalsIgnoreCase(roleName);
+
+        if (!isAuthorized) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }

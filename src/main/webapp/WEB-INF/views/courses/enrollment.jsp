@@ -95,13 +95,22 @@
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label for="studentPhone" class="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">Số điện thoại liên hệ</label>
+                                        <label for="studentPhone" class="block text-xs font-semibold text-text-secondary mb-1.5 uppercase tracking-wider">
+                                            Số điện thoại liên hệ <span class="text-red-500 font-bold">*</span>
+                                        </label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
                                                 <i class="fa-solid fa-phone"></i>
                                             </div>
-                                            <input type="tel" id="studentPhone" name="phone" value="${student.phone}" placeholder="Nhập số điện thoại để nhận thông báo kích hoạt" class="w-full pl-10 pr-4 py-2.5 bg-white border border-border-default rounded-xl text-text-primary text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition outline-none">
+                                            <input type="tel" id="studentPhone" name="phone" value="${student.phone != null ? student.phone : param.phone}" 
+                                                   maxlength="10"
+                                                   placeholder="Nhập số điện thoại 10 chữ số (VD: 0912345678)" 
+                                                   class="w-full pl-10 pr-4 py-2.5 bg-white border <c:choose><c:when test="${not empty phoneError}">border-red-500 ring-1 ring-red-500</c:when><c:otherwise>border-border-default</c:otherwise></c:choose> rounded-xl text-text-primary text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition outline-none">
                                         </div>
+                                        <p id="phoneErrorMsg" class="mt-1.5 text-xs text-red-600 flex items-center gap-1.5 <c:if test="${empty phoneError}">hidden</c:if>">
+                                            <i class="fa-solid fa-circle-exclamation shrink-0"></i>
+                                            <span id="phoneErrorText">${phoneError}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -278,8 +287,8 @@
 </main>
 
 <script>
-    // Highlight thẻ phương thức thanh toán khi được chọn
     document.addEventListener('DOMContentLoaded', function () {
+        // 1. Highlight thẻ phương thức thanh toán khi được chọn
         const radios = document.querySelectorAll('input[name="paymentMethodId"]');
         function updateCardStyles() {
             radios.forEach(function (radio) {
@@ -300,6 +309,82 @@
             radio.addEventListener('change', updateCardStyles);
         });
         updateCardStyles();
+
+        // 2. Validation số điện thoại liên hệ
+        const phoneInput = document.getElementById('studentPhone');
+        const phoneErrorMsg = document.getElementById('phoneErrorMsg');
+        const phoneErrorText = document.getElementById('phoneErrorText');
+        const paymentForm = document.getElementById('paymentForm');
+
+        function showPhoneError(msg) {
+            if (!phoneInput) return;
+            phoneInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+            phoneInput.classList.remove('border-border-default', 'focus:ring-brand-700', 'focus:border-brand-700');
+            if (phoneErrorText) phoneErrorText.textContent = msg;
+            if (phoneErrorMsg) phoneErrorMsg.classList.remove('hidden');
+        }
+
+        function clearPhoneError() {
+            if (!phoneInput) return;
+            phoneInput.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+            phoneInput.classList.add('border-border-default');
+            if (phoneErrorMsg) phoneErrorMsg.classList.add('hidden');
+        }
+
+        function validatePhone(showMsg) {
+            if (!phoneInput) return true;
+            const val = phoneInput.value.trim();
+            // Đầu số Việt Nam hợp lệ: 03, 05, 07, 08, 09 và đủ 10 số
+            const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
+
+            if (val === '') {
+                if (showMsg) showPhoneError('Vui lòng nhập số điện thoại liên hệ.');
+                return false;
+            }
+
+            if (!/^[0-9]+$/.test(val)) {
+                if (showMsg) showPhoneError('Số điện thoại chỉ được chứa các chữ số.');
+                return false;
+            }
+
+            if (val.length !== 10 || !vnPhoneRegex.test(val)) {
+                if (showMsg) showPhoneError('Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).');
+                return false;
+            }
+
+            clearPhoneError();
+            return true;
+        }
+
+        if (phoneInput) {
+            // Tự động chặn và loại bỏ mọi ký tự không phải là số khi người dùng gõ hoặc paste
+            phoneInput.addEventListener('input', function () {
+                const cleaned = this.value.replace(/[^0-9]/g, '');
+                if (this.value !== cleaned) {
+                    this.value = cleaned;
+                }
+                if (phoneErrorMsg && !phoneErrorMsg.classList.contains('hidden')) {
+                    validatePhone(true);
+                }
+            });
+
+            phoneInput.addEventListener('blur', function () {
+                if (this.value.trim() !== '') {
+                    validatePhone(true);
+                }
+            });
+        }
+
+        if (paymentForm) {
+            paymentForm.addEventListener('submit', function (e) {
+                if (!validatePhone(true)) {
+                    e.preventDefault();
+                    if (phoneInput) {
+                        phoneInput.focus();
+                    }
+                }
+            });
+        }
     });
 </script>
 

@@ -88,10 +88,12 @@ public class EnrollmentServlet extends HttpServlet {
             return;
         }
 
-        // BƯỚC 3: Kiểm tra xem học viên này đã đăng ký khóa học này trước đó chưa
+        // BƯỚC 3: Kiểm tra xem học viên này đã thanh toán khóa học này trước đó chưa
         List<Registration> myEnrollments = courseService.getMyEnrollments(currentUser.getId());
         boolean isAlreadyEnrolled = myEnrollments != null && myEnrollments.stream()
-                .anyMatch(r -> courseId.equals(r.getCourseId()));
+                .anyMatch(r -> courseId.equals(r.getCourseId())
+                        && ("paid".equalsIgnoreCase(r.getPaymentStatus())
+                            || (course.getPrice() != null && course.getPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)));
         if (isAlreadyEnrolled) {
             resp.sendRedirect(req.getContextPath() + "/learning-process?courseId=" + courseId);
             return;
@@ -139,29 +141,67 @@ public class EnrollmentServlet extends HttpServlet {
             return;
         }
 
+        String phone = req.getParameter("phone");
         String paymentMethodIdStr = req.getParameter("paymentMethodId");
 
+        UUID courseId = null;
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
             try {
-                UUID courseId = UUID.fromString(courseIdStr.trim());
-                UUID paymentMethodId = null;
-                if (paymentMethodIdStr != null && !paymentMethodIdStr.trim().isEmpty()) {
-                    try {
-                        paymentMethodId = UUID.fromString(paymentMethodIdStr.trim());
-                    } catch (IllegalArgumentException ignored) {
-                    }
-                }
-
-                // Xử lý tạo bản ghi đăng ký khóa học
-                Registration reg = courseService.processCourseRegistration(currentUser.getId(), courseId, paymentMethodId);
-                if (reg != null) {
-                    // Sau này sẽ tích hợp điều hướng sang cổng thanh toán tương ứng (VNPay / MoMo / ...)
-                    resp.sendRedirect(req.getContextPath() + "/my-enrollments?registered=success");
-                    return;
-                }
-            } catch (Exception ignored) {
+                courseId = UUID.fromString(courseIdStr.trim());
+            } catch (IllegalArgumentException ignored) {
             }
         }
+
+        if (courseId == null) {
+            resp.sendRedirect(req.getContextPath() + "/courses");
+            return;
+        }
+
+        Course course = courseService.getCourseDetailWithCurriculum(courseId);
+        if (course == null) {
+            resp.sendRedirect(req.getContextPath() + "/courses");
+            return;
+        }
+
+        // VALIDATION SỐ ĐIỆN THOẠI (Bắt buộc & 10 số, đầu số hợp lệ của các nhà mạng Việt Nam)
+        String phoneRegex = "^(0[35789])[0-9]{8}$";
+        if (phone == null || phone.trim().isEmpty() || !phone.trim().matches(phoneRegex)) {
+            String phoneErrorMsg;
+            if (phone == null || phone.trim().isEmpty()) {
+                phoneErrorMsg = "Vui lòng nhập số điện thoại liên hệ.";
+            } else {
+                phoneErrorMsg = "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).";
+            }
+
+            currentUser.setPhone(phone != null ? phone.trim() : "");
+            req.setAttribute("course", course);
+            req.setAttribute("student", currentUser);
+            req.setAttribute("paymentMethods", courseService.getPaymentMethods());
+            req.setAttribute("phoneError", phoneErrorMsg);
+            req.setAttribute("pageTitle", "Thông tin thanh toán - " + course.getTitle());
+            req.getRequestDispatcher("/WEB-INF/views/courses/enrollment.jsp").forward(req, resp);
+            return;
+        }
+
+        // Cập nhật số điện thoại tạm thời vào session user
+        currentUser.setPhone(phone.trim());
+
+        UUID paymentMethodId = null;
+        if (paymentMethodIdStr != null && !paymentMethodIdStr.trim().isEmpty()) {
+            try {
+                paymentMethodId = UUID.fromString(paymentMethodIdStr.trim());
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        // Xử lý tạo bản ghi đăng ký khóa học
+        Registration reg = courseService.processCourseRegistration(currentUser.getId(), courseId, paymentMethodId);
+        if (reg != null) {
+            // Sau này sẽ tích hợp điều hướng sang cổng thanh toán tương ứng (VNPay / SePay / ...)
+            resp.sendRedirect(req.getContextPath() + "/my-enrollments?registered=success");
+            return;
+        }
+
         resp.sendRedirect(req.getContextPath() + "/courses");
     }
 }

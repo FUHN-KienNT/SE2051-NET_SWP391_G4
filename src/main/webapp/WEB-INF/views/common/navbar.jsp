@@ -46,10 +46,14 @@
 
         <!-- User Auth & CTA -->
         <div class="flex items-center space-x-4">
-            <button class="text-slate-400 hover:text-slate-600 hidden sm:block transition-colors"><i class="fa-solid fa-bullhorn"></i></button>
-
             <c:choose>
                 <c:when test="${not empty sessionScope.currentUser}">
+                    <button type="button" id="notificationButton"
+                            class="relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+                            aria-label="Mở thông báo" aria-expanded="false" aria-controls="notificationPanel">
+                        <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                        <span id="notificationUnreadDot" class="hidden absolute right-1 top-1 h-2 w-2 rounded-full bg-status-success" aria-hidden="true"></span>
+                    </button>
                     <div class="relative ml-2" id="userMenuDropdown">
                         <button type="button" id="userMenuBtn" class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors cursor-pointer" aria-expanded="false" aria-haspopup="true">
                             <span class="text-emerald-800 font-bold text-sm uppercase select-none">
@@ -103,6 +107,29 @@
             </c:choose>
         </div>
     </div>
+    <c:if test="${not empty sessionScope.currentUser}">
+        <section id="notificationPanel" data-notification-url="${pageContext.request.contextPath}/notifications"
+                 class="hidden absolute left-4 right-4 top-full mt-2 overflow-hidden rounded-2xl border border-border-default bg-surface-card shadow-xl sm:left-auto sm:right-20 sm:w-96"
+                 aria-labelledby="notificationHeading" tabindex="-1">
+            <div class="flex items-center justify-between gap-4 border-b border-border-default px-4 py-4">
+                <h2 id="notificationHeading" class="text-base font-semibold text-text-primary">Thông báo</h2>
+                <button type="button" id="notificationReadAll" disabled
+                        class="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                    <i class="fa-solid fa-check-double" aria-hidden="true"></i>
+                    Đọc hết
+                </button>
+            </div>
+            <div class="max-h-96 overflow-y-auto bg-brand-50">
+                <p id="notificationStatus" class="hidden px-4 py-6 text-sm text-text-secondary" role="status" aria-live="polite"></p>
+                <button type="button" id="notificationRetry"
+                        class="hidden mx-4 mb-4 rounded-lg px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                    Thử lại
+                </button>
+                <ul id="notificationList" aria-label="Danh sách thông báo"></ul>
+                <p id="notificationLimitNote" class="hidden border-t border-brand-100 px-4 py-3 text-xs text-text-secondary">Hiển thị 20 thông báo gần nhất.</p>
+            </div>
+        </section>
+    </c:if>
 </header>
 
 <script>
@@ -157,3 +184,6 @@
         });
     })();
 </script>
+<c:if test="${not empty sessionScope.currentUser}">
+    <script src="${pageContext.request.contextPath}/assets/js/notifications.js" defer></script>
+</c:if>

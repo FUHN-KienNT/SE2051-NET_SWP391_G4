@@ -16,17 +16,31 @@
                 <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">
                     Courses
                 </a>
-                <c:if test="${not empty sessionScope.currentUser}">
-                    <c:choose>
-                        <c:when test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_ADMIN' || sessionScope.userRole eq 'ROLE_MANAGER'}">
-                            <a href="${pageContext.request.contextPath}/admin/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
-                        </c:when>
-                        <c:otherwise>
-                            <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
-                        </c:otherwise>
-                    </c:choose>
-                    <a href="${pageContext.request.contextPath}/enrollment?action=my-courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
-                </c:if>
+               <c:if test="${not empty sessionScope.currentUser}">
+                   <c:choose>
+                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_ADMIN'
+                                      || sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
+                           <a href="${pageContext.request.contextPath}/admin/dashboard"
+                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                               Dashboard
+                           </a>
+                       </c:when>
+
+                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_EXPERT'}">
+                           <a href="${pageContext.request.contextPath}/expert/dashboard"
+                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                               Dashboard
+                           </a>
+                       </c:when>
+
+                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_STUDENT'}">
+                           <a href="${pageContext.request.contextPath}/my-enrollments"
+                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                               My Courses
+                           </a>
+                       </c:when>
+                   </c:choose>
+               </c:if>
             </nav>
         </div>
 

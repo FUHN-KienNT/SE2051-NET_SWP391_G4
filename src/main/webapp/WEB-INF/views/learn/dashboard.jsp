@@ -1,199 +1,445 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<main class="flex-grow py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-    <!-- Header with Icon & Actions -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-                <i class="fa-solid fa-gauge-high text-emerald-600"></i>
-                <span>Bảng Điều Khiển Học Tập</span>
-            </h1>
-            <p class="text-slate-500 text-xs sm:text-sm mt-1">Theo dõi tiến độ, hoàn thành bài giảng và thành tích học tập cá nhân</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="${pageContext.request.contextPath}/courses"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs transition shadow-sm shadow-emerald-600/20">
-                <i class="fa-solid fa-compass text-xs"></i>
-                <span>Khám phá khóa học</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/enrollment?action=my-courses"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
-                <i class="fa-solid fa-book-bookmark text-xs"></i>
-                <span>Khóa học của tôi</span>
-            </a>
-        </div>
+<main data-learning-user="${sessionScope.currentUser.id}"
+      data-learning-context="${fn:escapeXml(pageContext.request.contextPath)}"
+      class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="rounded-2xl border border-brand-100 bg-brand-50 p-6 sm:p-8 mb-8">
+        <p class="text-sm font-semibold text-brand-700 mb-2">
+            Không gian học tập
+        </p>
+        <h1 class="text-3xl font-bold text-text-primary">
+            Khóa học của tôi
+        </h1>
+        <p class="mt-3 text-text-secondary">
+            Tiếp tục học và khám phá những khóa học mới phù hợp với bạn.
+        </p>
     </div>
 
-    <!-- Quick Stats Cards with Unified Icons -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <!-- Stat 1: Khóa học tham gia -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
-                <i class="fa-solid fa-book-bookmark"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <i class="fa-solid fa-graduation-cap text-[10px]"></i>
-                    <span>Khóa học tham gia</span>
-                </p>
-                <h3 class="text-2xl font-black text-slate-900 mt-0.5">
-                    ${progressSummary.totalCourses != null ? progressSummary.totalCourses : 0}
-                </h3>
-            </div>
-        </div>
-
-        <!-- Stat 2: Bài học hoàn thành -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <i class="fa-solid fa-list-check text-[10px]"></i>
-                    <span>Bài học đã hoàn thành</span>
-                </p>
-                <h3 class="text-2xl font-black text-slate-900 mt-0.5">
-                    ${progressSummary.completedLessons != null ? progressSummary.completedLessons : 0}
-                </h3>
-            </div>
-        </div>
-
-        <!-- Stat 3: Điểm số trung bình -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
-                <i class="fa-solid fa-trophy"></i>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                    <i class="fa-solid fa-star text-[10px]"></i>
-                    <span>Điểm kiểm tra trung bình</span>
-                </p>
-                <h3 class="text-2xl font-black text-slate-900 mt-0.5">
-                    ${progressSummary.averageScore != null ? progressSummary.averageScore : 'N/A'}
-                </h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- Continue Learning Section -->
-    <c:if test="${not empty continueLearning}">
-        <div class="mb-10 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 rounded-2xl p-6 shadow-xs">
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-md shadow-emerald-600/30 shrink-0">
-                        <i class="fa-solid fa-play"></i>
-                    </div>
-                    <div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-1.5">
-                            <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
-                            <span>Tiếp tục bài học gần nhất</span>
-                        </span>
-                        <h2 class="text-lg font-black text-slate-900">${continueLearning.courseTitle}</h2>
-                        <p class="text-xs text-slate-600 mt-0.5 flex items-center gap-2">
-                            <span><i class="fa-regular fa-folder mr-1 text-slate-400"></i>${continueLearning.moduleTitle}</span>
-                            <span>•</span>
-                            <span><i class="fa-regular fa-circle-play mr-1 text-emerald-600"></i>${continueLearning.lessonTitle}</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="w-full md:w-72 flex flex-col items-end gap-3 shrink-0">
-                    <div class="w-full">
-                        <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                            <span>Tiến độ khóa học</span>
-                            <span class="text-emerald-600 font-extrabold">${continueLearning.progressPercent}%</span>
-                        </div>
-                        <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style="width: ${continueLearning.progressPercent}%"></div>
-                        </div>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/learn/lesson?courseId=${continueLearning.courseId}&lessonId=${continueLearning.lessonId}"
-                       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-md shadow-emerald-600/20">
-                        <i class="fa-solid fa-play text-xs"></i>
-                        <span>Vào học tiếp ngay</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+    <c:if test="${param.notice eq 'no-lessons'}">
+        <p role="status"
+           class="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-status-warning">
+            Khóa học này chưa có bài học. Vui lòng quay lại sau.
+        </p>
     </c:if>
 
-    <!-- Enrolled Courses Grid Section -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between mb-5">
-            <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-book-open-reader text-emerald-600"></i>
-                <span>Khóa Học Đang Theo Học</span>
-            </h2>
-            <a href="${pageContext.request.contextPath}/enrollment?action=my-courses"
-               class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                <span>Xem tất cả</span>
-                <i class="fa-solid fa-chevron-right text-[10px]"></i>
-            </a>
+    <form action="${pageContext.request.contextPath}/my-enrollments"
+          method="get"
+          class="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 rounded-xl border border-border-default bg-surface-card p-5 shadow-sm">
+
+        <div class="sm:col-span-2 lg:col-span-1">
+            <label for="search" class="block text-sm font-semibold mb-2">
+                Tìm khóa học
+            </label>
+            <input id="search"
+                   name="search"
+                   value="${fn:escapeXml(search)}"
+                   placeholder="Nhập tên khóa học"
+                   class="w-full rounded-lg border border-border-default px-3 py-2.5 focus:ring-2 focus:ring-brand-700 focus:outline-none">
         </div>
 
+        <div>
+            <label for="categoryId" class="block text-sm font-semibold mb-2">
+                Danh mục · Khóa học có sẵn
+            </label>
+            <select id="categoryId"
+                    name="categoryId"
+                    class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
+                <option value="">Tất cả danh mục</option>
+
+                <c:forEach items="${categories}" var="category">
+                    <option value="${category.id}"
+                            ${selectedCategory eq category.id.toString() ? 'selected' : ''}>
+                        <c:out value="${category.name}" />
+                    </option>
+                </c:forEach>
+            </select>
+        </div>
+
+        <div>
+            <label for="sort" class="block text-sm font-semibold mb-2">
+                Sắp xếp · Khóa học có sẵn
+            </label>
+            <select id="sort"
+                    name="sort"
+                    class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
+                <option value="newest" ${sort eq 'newest' ? 'selected' : ''}>
+                    Mới nhất
+                </option>
+                <option value="title_asc" ${sort eq 'title_asc' ? 'selected' : ''}>
+                    Tên A–Z
+                </option>
+                <option value="price_asc" ${sort eq 'price_asc' ? 'selected' : ''}>
+                    Giá tăng dần
+                </option>
+                <option value="price_desc" ${sort eq 'price_desc' ? 'selected' : ''}>
+                    Giá giảm dần
+                </option>
+            </select>
+        </div>
+
+        <div class="flex items-end gap-3">
+            <button type="submit"
+                    class="rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                Áp dụng
+            </button>
+
+            <a href="${pageContext.request.contextPath}/my-enrollments"
+               class="rounded-lg border border-border-default px-4 py-2.5 font-medium hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                Đặt lại
+            </a>
+        </div>
+    </form>
+
+    <%-- My Courses --%>
+    <section class="mb-12"
+             data-course-section
+             aria-labelledby="my-heading">
+
+        <h2 id="my-heading" class="text-2xl font-bold mb-5">
+            Khóa học đã đăng ký
+            <span class="text-base font-medium text-text-secondary">
+                (${fn:length(myCourses)})
+            </span>
+        </h2>
+
         <c:choose>
-            <c:when test="${not empty registrations}">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <c:forEach var="reg" items="${registrations}">
-                        <div class="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between">
-                            <div>
-                                <div class="relative h-44 bg-slate-100 overflow-hidden">
-                                    <img src="${not empty reg.courseThumbnail ? reg.courseThumbnail : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800'}"
-                                         alt="${reg.courseTitle}"
-                                         class="w-full h-full object-cover">
-                                    <div class="absolute top-3 right-3">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/90 backdrop-blur-sm text-emerald-700 shadow-xs">
-                                            <i class="fa-solid fa-circle-check text-[10px]"></i>
-                                            <span>${reg.status eq 'enrolled' or reg.status eq 'active' ? 'Đang học' : reg.status}</span>
+            <c:when test="${empty myCourses}">
+                <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
+                    Không có khóa học đã đăng ký phù hợp.
+                    Bạn có thể khám phá khóa học bên dưới.
+                </p>
+            </c:when>
+
+            <c:otherwise>
+                <div id="my-course-list"
+                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <c:forEach items="${myCourses}" var="course">
+                        <article data-course-card
+                                 class="flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
+
+                            <c:choose>
+                                <c:when test="${not empty course.thumbnailUrl}">
+                                    <img src="${fn:escapeXml(course.thumbnailUrl)}"
+                                         alt=""
+                                         loading="lazy"
+                                         class="h-44 w-full object-cover">
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="h-44 bg-brand-50 flex items-center justify-center text-brand-700 text-4xl">
+                                        <i class="fa-solid fa-book-open"
+                                           aria-hidden="true"></i>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <div class="p-5 flex flex-col flex-grow">
+                                <p class="text-xs font-semibold text-brand-700 mb-2">
+                                    <c:out value="${empty course.categoryName ? 'Khóa học' : course.categoryName}" />
+                                </p>
+
+                                <h3 class="text-lg font-bold break-words">
+                                    <c:out value="${course.courseTitle}" />
+                                </h3>
+
+                                <p class="text-sm text-text-secondary mt-2">
+                                    ${course.moduleCount} chương ·
+                                    ${course.lessonCount} bài học
+                                </p>
+
+                                <div class="mt-5 mb-5">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span>Tiến độ</span>
+                                        <span class="font-semibold text-brand-700">
+                                            ${course.progressPercent}%
                                         </span>
                                     </div>
-                                </div>
-                                <div class="p-5">
-                                    <h3 class="font-bold text-sm text-slate-900 line-clamp-2 hover:text-emerald-600 transition-colors">
-                                        ${reg.courseTitle}
-                                    </h3>
-                                    <div class="mt-4">
-                                        <div class="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
-                                            <span>Tiến độ</span>
-                                            <span class="font-bold text-slate-800">${reg.progressPercent != null ? reg.progressPercent : 0}%</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                            <div class="bg-emerald-500 h-2 rounded-full" style="width: ${reg.progressPercent != null ? reg.progressPercent : 0}%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center justify-between">
-                                <a href="${pageContext.request.contextPath}/learning-process?courseId=${reg.courseId}"
-                                   class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-4 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl text-xs transition shadow-xs">
-                                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                                    <span>Vào học tiếp</span>
+                                    <progress value="${course.progressPercent}"
+                                              max="100"
+                                              aria-label="Tiến độ học"
+                                              class="w-full h-2 rounded-full overflow-hidden text-brand-700 bg-slate-200 [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-brand-700 [&::-moz-progress-bar]:bg-brand-700">
+                                    </progress>
+
+                                    <c:if test="${not empty course.lessonTitle}">
+                                        <p data-resume-label
+                                           class="mt-2 text-sm text-text-secondary">
+                                            Bài đầu tiên:
+                                            <c:out value="${course.lessonTitle}" />
+                                        </p>
+                                    </c:if>
+                                </div>
+
+                                <c:url value="/my-enrollments" var="continueUrl">
+                                    <c:param name="action" value="continue" />
+                                    <c:param name="courseId"
+                                             value="${course.courseId}" />
+                                </c:url>
+
+                                <a data-continue-course="${course.courseId}"
+                                   href="${fn:escapeXml(continueUrl)}"
+                                   class="mt-auto text-center rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                    Tiếp tục học
                                 </a>
                             </div>
-                        </div>
+                        </article>
                     </c:forEach>
                 </div>
-            </c:when>
-            <c:otherwise>
-                <div class="text-center py-12 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-                    <i class="fa-solid fa-graduation-cap text-4xl text-slate-300 mb-3 block"></i>
-                    <p class="text-slate-600 font-bold text-sm">Bạn chưa đăng ký khóa học nào</p>
-                    <p class="text-slate-400 text-xs mt-1">Khám phá hàng loạt khóa học chất lượng cao trên LearnHub ngay hôm nay.</p>
-                    <a href="${pageContext.request.contextPath}/courses"
-                       class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
-                        <i class="fa-solid fa-compass text-xs"></i>
-                        <span>Khám phá khóa học ngay</span>
-                    </a>
+
+                <div class="mt-6 flex justify-center gap-3"
+                     data-list-controls
+                     hidden>
+                    <button type="button"
+                            data-more
+                            aria-controls="my-course-list"
+                            class="rounded-lg border border-brand-700 text-brand-700 font-semibold px-5 py-2.5 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                        Xem thêm
+                    </button>
+                    <button type="button"
+                            data-less
+                            aria-controls="my-course-list"
+                            class="rounded-lg border border-border-default font-semibold px-5 py-2.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                        Thu gọn
+                    </button>
                 </div>
             </c:otherwise>
         </c:choose>
-    </div>
+    </section>
+
+    <%-- Available Courses --%>
+    <section data-course-section aria-labelledby="available-heading">
+
+        <h2 id="available-heading" class="text-2xl font-bold mb-5">
+            Khóa học có sẵn
+            <span class="text-base font-medium text-text-secondary">
+                (${fn:length(availableCourses)})
+            </span>
+        </h2>
+
+        <c:choose>
+            <c:when test="${empty availableCourses}">
+                <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
+                    Không có khóa học phù hợp.
+                    Hãy thử từ khóa hoặc danh mục khác.
+                </p>
+            </c:when>
+
+            <c:otherwise>
+                <div id="available-course-list"
+                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <c:forEach items="${availableCourses}" var="course">
+                        <article data-course-card
+                                 class="flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
+
+                            <c:choose>
+                                <c:when test="${not empty course.thumbnailUrl}">
+                                    <img src="${fn:escapeXml(course.thumbnailUrl)}"
+                                         alt=""
+                                         loading="lazy"
+                                         class="h-44 w-full object-cover">
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="h-44 bg-brand-50 flex items-center justify-center text-brand-700 text-4xl">
+                                        <i class="fa-solid fa-graduation-cap"
+                                           aria-hidden="true"></i>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <div class="p-5 flex flex-col flex-grow">
+                                <p class="text-xs font-semibold text-brand-700 mb-2">
+                                    <c:out value="${empty course.categoryName ? 'Khóa học' : course.categoryName}" />
+                                </p>
+
+                                <h3 class="text-lg font-bold break-words">
+                                    <c:out value="${course.title}" />
+                                </h3>
+
+                                <p class="text-sm text-text-secondary mt-2">
+                                    <c:out value="${empty course.expertName ? 'LearnHub' : course.expertName}" />
+                                </p>
+
+                                <p class="text-sm text-text-secondary mt-2">
+                                    ${course.moduleCount} chương ·
+                                    ${course.lessonCount} bài học
+                                </p>
+
+                                <p class="text-lg font-bold text-brand-700 mt-4 mb-5">
+                                    <c:choose>
+                                        <c:when test="${empty course.price or course.price le 0}">
+                                            Miễn phí
+                                        </c:when>
+                                        <c:otherwise>
+                                            <fmt:formatNumber value="${course.price}"
+                                                              pattern="#,##0" /> đ
+                                        </c:otherwise>
+                                    </c:choose>
+                                </p>
+
+                                <c:url value="/course-detail" var="detailUrl">
+                                    <c:param name="id" value="${course.id}" />
+                                </c:url>
+
+                                <a href="${fn:escapeXml(detailUrl)}"
+                                   class="mt-auto text-center rounded-lg border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </article>
+                    </c:forEach>
+                </div>
+
+                <div class="mt-6 flex justify-center gap-3"
+                     data-list-controls
+                     hidden>
+                    <button type="button"
+                            data-more
+                            aria-controls="available-course-list"
+                            class="rounded-lg border border-brand-700 text-brand-700 font-semibold px-5 py-2.5 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                        Xem thêm
+                    </button>
+                    <button type="button"
+                            data-less
+                            aria-controls="available-course-list"
+                            class="rounded-lg border border-border-default font-semibold px-5 py-2.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                        Thu gọn
+                    </button>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </section>
 </main>
+
+<style>
+    [hidden] {
+        display: none !important;
+    }
+
+    progress {
+        accent-color: currentColor;
+    }
+</style>
+
+<script>
+    // Restore the last lesson separately for each user and course.
+    (() => {
+        const root = document.querySelector('[data-learning-user]');
+        if (!root) return;
+
+        const userId = root.dataset.learningUser;
+        const contextPath = root.dataset.learningContext;
+
+        const uuidPattern =
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+        function storageKey(courseId) {
+            return 'learnhub:lastLesson:'
+                    + contextPath + ':'
+                    + userId + ':'
+                    + courseId;
+        }
+
+        function readSaved(courseId) {
+            try {
+                const saved = JSON.parse(
+                        localStorage.getItem(storageKey(courseId))
+                );
+
+                if (saved
+                        && typeof saved.lessonId === 'string'
+                        && uuidPattern.test(saved.lessonId)) {
+                    return saved;
+                }
+            } catch (error) {
+                // Continue uses the first lesson if storage is unavailable.
+            }
+
+            return null;
+        }
+
+        root.querySelectorAll('[data-continue-course]').forEach(link => {
+            const courseId = link.dataset.continueCourse;
+            const defaultUrl = link.href;
+            const saved = readSaved(courseId);
+
+            const label = link.closest('[data-course-card]')
+                    .querySelector('[data-resume-label]');
+
+            if (saved && label) {
+                label.textContent =
+                        typeof saved.lessonTitle === 'string'
+                        && saved.lessonTitle.trim()
+                                ? 'Tiếp tục: ' + saved.lessonTitle
+                                : 'Tiếp tục bài học gần nhất';
+            }
+
+            function updateLink() {
+                const latest = readSaved(courseId);
+                const url = new URL(defaultUrl, window.location.href);
+
+                if (latest) {
+                    url.searchParams.set('lessonId', latest.lessonId);
+                }
+
+                link.href = url.toString();
+            }
+
+            updateLink();
+
+            // Read again when clicked in case another tab saved a new lesson.
+            link.addEventListener('click', updateLink);
+        });
+    })();
+
+    // Each section expands and collapses independently.
+    document.querySelectorAll('[data-course-section]').forEach(section => {
+        const cards = [...section.querySelectorAll('[data-course-card]')];
+        const controls = section.querySelector('[data-list-controls]');
+
+        if (!controls || cards.length <= 3) return;
+
+        const more = controls.querySelector('[data-more]');
+        const less = controls.querySelector('[data-less]');
+
+        let visible = 3;
+
+        function update() {
+            cards.forEach((card, index) => {
+                card.hidden = index >= visible;
+            });
+
+            controls.hidden = false;
+            more.hidden = visible >= cards.length;
+            less.hidden = visible <= 3;
+        }
+
+        more.addEventListener('click', () => {
+            const firstNew = visible;
+
+            visible = Math.min(visible + 3, cards.length);
+            update();
+
+            if (cards[firstNew]) {
+                cards[firstNew].querySelector('a').focus();
+            }
+        });
+
+        less.addEventListener('click', () => {
+            visible = 3;
+            update();
+            more.focus();
+        });
+
+        update();
+    });
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

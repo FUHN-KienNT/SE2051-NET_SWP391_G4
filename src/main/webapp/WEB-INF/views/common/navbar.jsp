@@ -64,7 +64,7 @@
                             <a href="${pageContext.request.contextPath}/admin/users?action=profile" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
                                 <i class="fa-regular fa-user w-5 text-slate-400"></i>Profile
                             </a>
-                            <a href="${pageContext.request.contextPath}/enrollment?action=my-courses" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                            <a href="${pageContext.request.contextPath}/my-enrollments" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
                                 <i class="fa-solid fa-book-bookmark w-5 text-slate-400"></i>My Courses
                             </a>
                             <div class="border-t border-slate-50 my-1"></div>

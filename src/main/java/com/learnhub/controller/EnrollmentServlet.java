@@ -40,9 +40,13 @@ public class EnrollmentServlet extends HttpServlet {
         String path = req.getServletPath();
         String action = req.getParameter("action");
 
-        if ("/my-enrollments".equals(path)
-                || "my-courses".equals(action)) {
+        if ("/my-enrollments".equals(path)) {
             handleMyEnrollments(req, resp);
+            return;
+        }
+
+        if ("my-courses".equals(action)) {
+            resp.sendRedirect(req.getContextPath() + "/my-enrollments");
             return;
         }
 

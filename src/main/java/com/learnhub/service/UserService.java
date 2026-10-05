@@ -7,6 +7,7 @@ import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 import com.learnhub.util.PasswordHashUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +25,8 @@ import java.util.logging.Logger;
  * - resetPassword()
  */
 public class UserService {
+    public enum UsernameUpdateResult { SUCCESS, INVALID, TAKEN, FAILED }
+    public enum PasswordChangeResult { SUCCESS, INVALID_CURRENT, INVALID_NEW, SAME_PASSWORD, FAILED }
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
     private final UserDAO userDAO;
@@ -80,6 +83,40 @@ public class UserService {
             user.setStatus(dto.getStatus());
         }
         return userDAO.update(user);
+    }
+
+    public UsernameUpdateResult updateOwnUsername(UUID userId, String requestedUsername) {
+        if (userId == null || requestedUsername == null) return UsernameUpdateResult.INVALID;
+        String username = requestedUsername.trim();
+        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) return UsernameUpdateResult.INVALID;
+        User user = userDAO.findById(userId);
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return UsernameUpdateResult.FAILED;
+        if (userDAO.isIdentityTakenByOther(userId, username)) return UsernameUpdateResult.TAKEN;
+        return userDAO.updateOwnUsername(userId, username)
+                ? UsernameUpdateResult.SUCCESS : UsernameUpdateResult.FAILED;
+    }
+
+    public PasswordChangeResult changeOwnPassword(UUID userId, String currentPassword,
+                                                   String newPassword) {
+        if (userId == null || currentPassword == null || newPassword == null) {
+            return PasswordChangeResult.INVALID_NEW;
+        }
+        User user = userDAO.findById(userId);
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) {
+            return PasswordChangeResult.FAILED;
+        }
+        if (!PasswordHashUtil.checkPassword(currentPassword, user.getPassword())) {
+            return PasswordChangeResult.INVALID_CURRENT;
+        }
+        if (newPassword.length() < 8 || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
+            return PasswordChangeResult.INVALID_NEW;
+        }
+        if (PasswordHashUtil.checkPassword(newPassword, user.getPassword())) {
+            return PasswordChangeResult.SAME_PASSWORD;
+        }
+        String newHash = PasswordHashUtil.hashPassword(newPassword);
+        return userDAO.updatePasswordIfCurrentHash(userId, user.getPassword(), newHash)
+                ? PasswordChangeResult.SUCCESS : PasswordChangeResult.FAILED;
     }
 
     public boolean toggleStatus(UUID userId, String status) {

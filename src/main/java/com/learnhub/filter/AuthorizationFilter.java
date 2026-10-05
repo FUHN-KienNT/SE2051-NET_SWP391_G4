@@ -24,7 +24,8 @@ import java.nio.charset.StandardCharsets;
  */
 @WebFilter(filterName = "AuthorizationFilter", urlPatterns = {
         "/admin/*", "/expert/*", "/lessons/*", "/questions/*",
-        "/learn/*", "/quiz/*", "/learning-process/*"
+        "/learn/*", "/quiz/*", "/learning-process/*",
+        "/profile", "/account", "/account/*"
 })
 public class AuthorizationFilter implements Filter {
 

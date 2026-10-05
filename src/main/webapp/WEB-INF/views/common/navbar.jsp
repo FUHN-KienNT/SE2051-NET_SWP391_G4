@@ -55,22 +55,28 @@
                         <span id="notificationUnreadDot" class="hidden absolute right-1 top-1 h-2 w-2 rounded-full bg-status-success" aria-hidden="true"></span>
                     </button>
                     <div class="relative ml-2" id="userMenuDropdown">
-                        <button type="button" id="userMenuBtn" class="flex items-center justify-center w-9 h-9 focus:outline-none bg-emerald-50 hover:bg-emerald-100 rounded-full border border-emerald-600 transition-colors cursor-pointer" aria-expanded="false" aria-haspopup="true">
-                            <span class="text-emerald-800 font-bold text-sm uppercase select-none">
-                                ${fn:substring(sessionScope.currentUser.username, 0, 1)}
+                        <button type="button" id="userMenuBtn" class="flex items-center justify-center w-9 h-9 rounded-full border border-brand-700 bg-brand-50 text-brand-700 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2" aria-label="Account menu" aria-expanded="false" aria-haspopup="true" aria-controls="userMenuPanel">
+                            <span class="text-brand-700 font-bold text-sm uppercase select-none">
+                                <c:out value="${fn:substring(sessionScope.currentUser.username, 0, 1)}" />
                             </span>
                         </button>
                         <div id="userMenuPanel" class="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50 transition-all duration-200 ease-out opacity-0 invisible translate-y-1 pointer-events-none before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                             <div class="px-4 py-3 border-b border-slate-50">
                                 <p class="text-xs text-slate-400 font-medium">Signed in as</p>
-                                <p class="text-sm font-semibold text-slate-800 truncate">${sessionScope.currentUser.email}</p>
+                                <p class="text-sm font-semibold text-slate-800 truncate"><c:out value="${sessionScope.currentUser.email}" /></p>
                             </div>
-                            <a href="${pageContext.request.contextPath}/admin/users?action=profile" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                            <a href="${pageContext.request.contextPath}/profile" class="block px-4 py-2 text-sm text-slate-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                 <i class="fa-regular fa-user w-5 text-slate-400"></i>Profile
                             </a>
-                            <a href="${pageContext.request.contextPath}/my-enrollments" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                                <i class="fa-solid fa-book-bookmark w-5 text-slate-400"></i>My Courses
+                            <a href="${pageContext.request.contextPath}/account" class="block px-4 py-2 text-sm text-slate-600 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                <i class="fa-solid fa-gear w-5 text-slate-400"></i>Account
                             </a>
+                            <c:if test="${sessionScope.currentUser.roleCode eq 'ROLE_STUDENT'}">
+                                <a href="${pageContext.request.contextPath}/my-enrollments"
+                                   class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                                    <i class="fa-solid fa-book-bookmark w-5 text-slate-400"></i>My Courses
+                                </a>
+                            </c:if>
                             <div class="border-t border-slate-50 my-1"></div>
                             <a href="${pageContext.request.contextPath}/auth/logout" class="block px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-medium transition-colors">
                                 <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>Sign out
@@ -180,6 +186,13 @@
         document.addEventListener('click', function(e) {
             if (!dropdown.contains(e.target)) {
                 closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && panel.classList.contains('opacity-100')) {
+                closeMenu();
+                btn.focus();
             }
         });
     })();

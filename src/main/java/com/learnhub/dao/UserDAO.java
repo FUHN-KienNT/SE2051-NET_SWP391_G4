@@ -199,6 +199,39 @@ public class UserDAO {
         }
     }
 
+    public boolean isIdentityTakenByOther(UUID userId, String username) {
+        String sql = """
+                SELECT 1 FROM "user"
+                WHERE id <> ?
+                  AND (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?))
+                LIMIT 1
+                """;
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, userId);
+            ps.setString(2, username);
+            ps.setString(3, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot check username availability", e);
+        }
+    }
+
+    public boolean updateOwnUsername(UUID userId, String username) {
+        String sql = "UPDATE \"user\" SET username = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setObject(2, userId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.updateOwnUsername", e);
+            return false;
+        }
+    }
+
     public boolean updateStatus(UUID userId, String status) {
         String sql = "UPDATE \"user\" SET status = ?::user_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -221,6 +254,20 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.updatePassword: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
+        String sql = "UPDATE \"user\" SET password = ?, updated_at = NOW() WHERE id = ? AND password = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newHash);
+            ps.setObject(2, userId);
+            ps.setString(3, currentHash);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.updatePasswordIfCurrentHash", e);
             return false;
         }
     }

@@ -9,6 +9,7 @@ public class ContinueLearningDTO {
     private String thumbnailUrl;
     private int moduleCount;
     private int lessonCount;
+    private int completedLessonCount;
     private UUID lessonId;
     private String lessonTitle;
     private String moduleTitle;
@@ -31,6 +32,9 @@ public class ContinueLearningDTO {
 
     public int getLessonCount() { return lessonCount; }
     public void setLessonCount(int lessonCount) { this.lessonCount = lessonCount; }
+
+    public int getCompletedLessonCount() { return completedLessonCount; }
+    public void setCompletedLessonCount(int completedLessonCount) { this.completedLessonCount = completedLessonCount; }
 
     public UUID getLessonId() { return lessonId; }
     public void setLessonId(UUID lessonId) { this.lessonId = lessonId; }

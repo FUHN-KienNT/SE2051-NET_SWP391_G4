@@ -149,6 +149,7 @@ public class LearningProcessDAO {
                     int completed = rs.getInt("completed_count");
 
                     course.setLessonCount(total);
+                    course.setCompletedLessonCount(completed);
                     course.setProgressPercent(
                             total == 0 ? 0 : Math.min(
                                     100,
@@ -228,7 +229,11 @@ public class LearningProcessDAO {
                 VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?)
                 ON CONFLICT (registration_id, lesson_id)
                 DO UPDATE SET status = EXCLUDED.status,
-                              completed_at = EXCLUDED.completed_at
+                              completed_at = CASE
+                                  WHEN EXCLUDED.status = 'completed'
+                                      THEN COALESCE(learning_process.completed_at, EXCLUDED.completed_at)
+                                  ELSE learning_process.completed_at
+                              END
                 """;
 
         try (Connection conn = DbConnection.getConnection();
@@ -262,7 +267,7 @@ public class LearningProcessDAO {
                 UPDATE learning_process
                 SET status = ?,
                     completed_at = CASE WHEN ? = 'completed'
-                                        THEN NOW()
+                                        THEN COALESCE(completed_at, NOW())
                                         ELSE completed_at END
                 WHERE id = ?
                 """;

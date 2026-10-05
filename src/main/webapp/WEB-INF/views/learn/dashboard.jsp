@@ -3,6 +3,9 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
+<c:set var="pageLanguage" value="en" scope="request" />
+<c:set var="pageTitle" value="My Courses - LearnHub" scope="request" />
+
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
@@ -12,20 +15,20 @@
 
     <div class="rounded-2xl border border-brand-100 bg-brand-50 p-6 sm:p-8 mb-8">
         <p class="text-sm font-semibold text-brand-700 mb-2">
-            Không gian học tập
+            Learning Space
         </p>
         <h1 class="text-3xl font-bold text-text-primary">
-            Khóa học của tôi
+            My Courses
         </h1>
         <p class="mt-3 text-text-secondary">
-            Tiếp tục học và khám phá những khóa học mới phù hợp với bạn.
+            Continue learning and discover new courses tailored to you.
         </p>
     </div>
 
     <c:if test="${param.notice eq 'no-lessons'}">
         <p role="status"
            class="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-status-warning">
-            Khóa học này chưa có bài học. Vui lòng quay lại sau.
+            This course does not have any lessons yet. Please check back later.
         </p>
     </c:if>
 
@@ -35,23 +38,23 @@
 
         <div class="sm:col-span-2 lg:col-span-1">
             <label for="search" class="block text-sm font-semibold mb-2">
-                Tìm khóa học
+                Search Courses
             </label>
             <input id="search"
                    name="search"
                    value="${fn:escapeXml(search)}"
-                   placeholder="Nhập tên khóa học"
+                   placeholder="Enter a course name"
                    class="w-full rounded-lg border border-border-default px-3 py-2.5 focus:ring-2 focus:ring-brand-700 focus:outline-none">
         </div>
 
         <div>
             <label for="categoryId" class="block text-sm font-semibold mb-2">
-                Danh mục · Khóa học có sẵn
+                Category · Available Courses
             </label>
             <select id="categoryId"
                     name="categoryId"
                     class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
-                <option value="">Tất cả danh mục</option>
+                <option value="">All Categories</option>
 
                 <c:forEach items="${categories}" var="category">
                     <option value="${category.id}"
@@ -64,22 +67,22 @@
 
         <div>
             <label for="sort" class="block text-sm font-semibold mb-2">
-                Sắp xếp · Khóa học có sẵn
+                Sort · Available Courses
             </label>
             <select id="sort"
                     name="sort"
                     class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
                 <option value="newest" ${sort eq 'newest' ? 'selected' : ''}>
-                    Mới nhất
+                    Newest
                 </option>
                 <option value="title_asc" ${sort eq 'title_asc' ? 'selected' : ''}>
-                    Tên A–Z
+                    Title A–Z
                 </option>
                 <option value="price_asc" ${sort eq 'price_asc' ? 'selected' : ''}>
-                    Giá tăng dần
+                    Price: Low to High
                 </option>
                 <option value="price_desc" ${sort eq 'price_desc' ? 'selected' : ''}>
-                    Giá giảm dần
+                    Price: High to Low
                 </option>
             </select>
         </div>
@@ -87,12 +90,12 @@
         <div class="flex items-end gap-3">
             <button type="submit"
                     class="rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                Áp dụng
+                Apply
             </button>
 
             <a href="${pageContext.request.contextPath}/my-enrollments"
                class="rounded-lg border border-border-default px-4 py-2.5 font-medium hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                Đặt lại
+                Reset
             </a>
         </div>
     </form>
@@ -103,7 +106,7 @@
              aria-labelledby="my-heading">
 
         <h2 id="my-heading" class="text-2xl font-bold mb-5">
-            Khóa học đã đăng ký
+            Enrolled Courses
             <span class="text-base font-medium text-text-secondary">
                 (${fn:length(myCourses)})
             </span>
@@ -112,8 +115,7 @@
         <c:choose>
             <c:when test="${empty myCourses}">
                 <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
-                    Không có khóa học đã đăng ký phù hợp.
-                    Bạn có thể khám phá khóa học bên dưới.
+                    No matching enrolled courses found. Explore the courses below.
                 </p>
             </c:when>
 
@@ -142,7 +144,7 @@
 
                             <div class="p-5 flex flex-col flex-grow">
                                 <p class="text-xs font-semibold text-brand-700 mb-2">
-                                    <c:out value="${empty course.categoryName ? 'Khóa học' : course.categoryName}" />
+                                    <c:out value="${empty course.categoryName ? 'Course' : course.categoryName}" />
                                 </p>
 
                                 <h3 class="text-lg font-bold break-words">
@@ -150,13 +152,13 @@
                                 </h3>
 
                                 <p class="text-sm text-text-secondary mt-2">
-                                    ${course.moduleCount} chương ·
-                                    ${course.lessonCount} bài học
+                                    ${course.moduleCount} modules ·
+                                    ${course.lessonCount} lessons
                                 </p>
 
                                 <div class="mt-5 mb-5">
                                     <div class="flex justify-between text-sm mb-2">
-                                        <span>Tiến độ</span>
+                                        <span>Progress</span>
                                         <span class="font-semibold text-brand-700">
                                             ${course.progressPercent}%
                                         </span>
@@ -164,14 +166,14 @@
 
                                     <progress value="${course.progressPercent}"
                                               max="100"
-                                              aria-label="Tiến độ học"
+                                              aria-label="Learning progress"
                                               class="w-full h-2 rounded-full overflow-hidden text-brand-700 bg-slate-200 [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-brand-700 [&::-moz-progress-bar]:bg-brand-700">
                                     </progress>
 
                                     <c:if test="${not empty course.lessonTitle}">
                                         <p data-resume-label
                                            class="mt-2 text-sm text-text-secondary">
-                                            Bài đầu tiên:
+                                            Next lesson:
                                             <c:out value="${course.lessonTitle}" />
                                         </p>
                                     </c:if>
@@ -186,7 +188,7 @@
                                 <a data-continue-course="${course.courseId}"
                                    href="${fn:escapeXml(continueUrl)}"
                                    class="mt-auto text-center rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                                    Tiếp tục học
+                                    Continue Learning
                                 </a>
                             </div>
                         </article>
@@ -200,13 +202,13 @@
                             data-more
                             aria-controls="my-course-list"
                             class="rounded-lg border border-brand-700 text-brand-700 font-semibold px-5 py-2.5 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Xem thêm
+                        Show More
                     </button>
                     <button type="button"
                             data-less
                             aria-controls="my-course-list"
                             class="rounded-lg border border-border-default font-semibold px-5 py-2.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Thu gọn
+                        Show Less
                     </button>
                 </div>
             </c:otherwise>
@@ -217,7 +219,7 @@
     <section data-course-section aria-labelledby="available-heading">
 
         <h2 id="available-heading" class="text-2xl font-bold mb-5">
-            Khóa học có sẵn
+            Available Courses
             <span class="text-base font-medium text-text-secondary">
                 (${fn:length(availableCourses)})
             </span>
@@ -226,8 +228,7 @@
         <c:choose>
             <c:when test="${empty availableCourses}">
                 <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
-                    Không có khóa học phù hợp.
-                    Hãy thử từ khóa hoặc danh mục khác.
+                    No matching courses found. Try a different search term or category.
                 </p>
             </c:when>
 
@@ -256,7 +257,7 @@
 
                             <div class="p-5 flex flex-col flex-grow">
                                 <p class="text-xs font-semibold text-brand-700 mb-2">
-                                    <c:out value="${empty course.categoryName ? 'Khóa học' : course.categoryName}" />
+                                    <c:out value="${empty course.categoryName ? 'Course' : course.categoryName}" />
                                 </p>
 
                                 <h3 class="text-lg font-bold break-words">
@@ -268,18 +269,18 @@
                                 </p>
 
                                 <p class="text-sm text-text-secondary mt-2">
-                                    ${course.moduleCount} chương ·
-                                    ${course.lessonCount} bài học
+                                    ${course.moduleCount} modules ·
+                                    ${course.lessonCount} lessons
                                 </p>
 
                                 <p class="text-lg font-bold text-brand-700 mt-4 mb-5">
                                     <c:choose>
                                         <c:when test="${empty course.price or course.price le 0}">
-                                            Miễn phí
+                                            Free
                                         </c:when>
                                         <c:otherwise>
                                             <fmt:formatNumber value="${course.price}"
-                                                              pattern="#,##0" /> đ
+                                                              pattern="#,##0" /> VND
                                         </c:otherwise>
                                     </c:choose>
                                 </p>
@@ -290,7 +291,7 @@
 
                                 <a href="${fn:escapeXml(detailUrl)}"
                                    class="mt-auto text-center rounded-lg border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700">
-                                    Xem chi tiết
+                                    View Details
                                 </a>
                             </div>
                         </article>
@@ -304,13 +305,13 @@
                             data-more
                             aria-controls="available-course-list"
                             class="rounded-lg border border-brand-700 text-brand-700 font-semibold px-5 py-2.5 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Xem thêm
+                        Show More
                     </button>
                     <button type="button"
                             data-less
                             aria-controls="available-course-list"
                             class="rounded-lg border border-border-default font-semibold px-5 py-2.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Thu gọn
+                        Show Less
                     </button>
                 </div>
             </c:otherwise>
@@ -377,8 +378,8 @@
                 label.textContent =
                         typeof saved.lessonTitle === 'string'
                         && saved.lessonTitle.trim()
-                                ? 'Tiếp tục: ' + saved.lessonTitle
-                                : 'Tiếp tục bài học gần nhất';
+                                ? 'Resume: ' + saved.lessonTitle
+                                : 'Resume the last lesson';
             }
 
             function updateLink() {

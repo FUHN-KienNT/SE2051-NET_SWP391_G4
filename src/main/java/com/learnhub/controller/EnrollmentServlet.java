@@ -310,7 +310,7 @@ public class EnrollmentServlet extends HttpServlet {
                 categoryId == null ? "" : categoryId.toString()
         );
         req.setAttribute("sort", sort);
-        req.setAttribute("pageTitle", "Khóa học của tôi - LearnHub");
+        req.setAttribute("pageTitle", "My Courses - LearnHub");
 
         req.getRequestDispatcher(
                 "/WEB-INF/views/learn/dashboard.jsp"

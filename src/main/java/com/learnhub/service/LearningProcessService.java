@@ -7,9 +7,11 @@ import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.LearningProcess;
 import com.learnhub.entity.Lesson;
+import com.learnhub.entity.Registration;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class LearningProcessService {
@@ -36,6 +38,10 @@ public class LearningProcessService {
 
     public ContinueLearningDTO getContinueLearning(UUID userId) {
         return learningProcessDAO.findContinueLearning(userId);
+    }
+
+    public Registration findRegistration(UUID userId, UUID courseId) {
+        return registrationDAO.findByUserAndCourse(userId, courseId);
     }
 
     public List<ContinueLearningDTO> getStudentCourses(UUID userId) {
@@ -127,5 +133,17 @@ public class LearningProcessService {
                 100,
                 (int) Math.round(100.0 * completed / total)
         );
+    }
+    public Map<String, String> getLessonStatuses(
+            UUID registrationId
+    ) {
+        return learningProcessDAO.findLessonStatuses(registrationId);
+    }
+
+    public int getCompletedCount(UUID registrationId, List<Lesson> orderedLessons) {
+        Map<String, String> statuses = getLessonStatuses(registrationId);
+        return (int) orderedLessons.stream()
+                .filter(l -> "completed".equals(statuses.get(l.getId().toString())))
+                .count();
     }
 }

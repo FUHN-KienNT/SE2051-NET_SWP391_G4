@@ -1,7 +1,6 @@
 package com.learnhub.controller;
 
 import com.learnhub.constant.AppConstants;
-import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Lesson;
@@ -18,20 +17,17 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 @WebServlet(
         name = "LearningProcessServlet",
         urlPatterns = {"/learn/lesson", "/learn/complete"}
 )
 public class LearningProcessServlet extends HttpServlet {
-
     private final LearningProcessService learningService =
             new LearningProcessService();
 
     private final CourseService courseService = new CourseService();
-
-    private final RegistrationDAO registrationDAO =
-            new RegistrationDAO();
 
     private User requireStudent(
             HttpServletRequest req,
@@ -114,7 +110,7 @@ public class LearningProcessServlet extends HttpServlet {
         }
 
         Registration registration =
-                registrationDAO.findByUserAndCourse(user.getId(), courseId);
+                learningService.findRegistration(user.getId(), courseId);
 
         Course course =
                 courseService.getCourseDetailWithCurriculum(courseId);
@@ -137,10 +133,12 @@ public class LearningProcessServlet extends HttpServlet {
             return;
         }
 
+
         List<Lesson> orderedLessons = course.getModules().stream()
                 .flatMap(module -> module.getLessons().stream())
                 .toList();
 
+        // Resolve previous and next lessons.
         for (int index = 0; index < orderedLessons.size(); index++) {
             if (orderedLessons.get(index).getId().equals(lessonId)) {
                 if (index > 0) {
@@ -161,13 +159,20 @@ public class LearningProcessServlet extends HttpServlet {
             }
         }
 
+        Map<String, String> statuses =
+                learningService.getLessonStatuses(registration.getId());
+        int completedCount = learningService.getCompletedCount(
+                registration.getId(), orderedLessons);
+        int totalCount = orderedLessons.size();
+        int progressPercent = learningService.getProgressPercent(
+                registration.getId());
         req.setAttribute("lesson", lesson);
         req.setAttribute("course", course);
         req.setAttribute("registration", registration);
-        req.setAttribute(
-                "progressPercent",
-                learningService.getProgressPercent(registration.getId())
-        );
+        req.setAttribute("lessonStatuses", statuses);
+        req.setAttribute("completedLessons", completedCount);
+        req.setAttribute("totalLessons", totalCount);
+        req.setAttribute("progressPercent", progressPercent);
         req.setAttribute("pageTitle", lesson.getTitle() + " - LearnHub");
 
         req.getRequestDispatcher(
@@ -205,7 +210,7 @@ public class LearningProcessServlet extends HttpServlet {
         }
 
         Registration registration =
-                registrationDAO.findByUserAndCourse(user.getId(), courseId);
+                learningService.findRegistration(user.getId(), courseId);
 
         Course course =
                 courseService.getCourseDetailWithCurriculum(courseId);

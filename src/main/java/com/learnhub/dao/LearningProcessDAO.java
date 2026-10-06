@@ -5,6 +5,7 @@ import com.learnhub.entity.LearningProcess;
 import com.learnhub.util.DbConnection;
 
 import java.sql.*;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -329,5 +330,36 @@ public class LearningProcessDAO {
         }
 
         return 0;
+    }
+    public Map<String, String> findLessonStatuses(
+            UUID registrationId
+    ) {
+        Map<String, String> statuses =
+                new java.util.HashMap<>();
+
+        String sql =
+                "SELECT lesson_id, status FROM learning_process " +
+                        "WHERE registration_id = ?";
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, registrationId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    statuses.put(
+                            rs.getObject("lesson_id").toString(),
+                            rs.getString("status")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException(
+                    "Cannot load lesson states", e
+            );
+        }
+
+        return statuses;
     }
 }

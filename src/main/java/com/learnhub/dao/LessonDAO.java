@@ -95,18 +95,56 @@ public class LessonDAO {
     }
 
     public boolean insert(Lesson lesson) {
-        String sql = "INSERT INTO lesson (id, module_id, title, content, order_index, created_at, updated_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, NOW(), NOW())";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, lesson.getId());
-            ps.setObject(2, lesson.getModuleId());
-            ps.setString(3, lesson.getTitle());
-            ps.setString(4, lesson.getContent());
-            ps.setInt(5, lesson.getOrderIndex());
-            return ps.executeUpdate() > 0;
+        if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) {
+            return false;
+        }
+        String lockSql = "SELECT id FROM module WHERE id = ? FOR UPDATE";
+        String shiftSql = "UPDATE lesson " + "SET order_index = order_index + 1, updated_at = NOW() " + "WHERE module_id = ? AND order_index >= ?";
+        String insertSql = "INSERT INTO lesson " + "(id, module_id, title, content, order_index, " + "created_at, updated_at) " + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, " + "NOW(), NOW())";
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Serialize insertions within the selected module.
+                try (PreparedStatement ps = conn.prepareStatement(lockSql)) {
+                    ps.setObject(1, lesson.getModuleId());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+                // Move existing lessons down to make room.
+                try (PreparedStatement ps = conn.prepareStatement(shiftSql)) {
+                    ps.setObject(1, lesson.getModuleId());
+                    ps.setInt(2, lesson.getOrderIndex());
+                    ps.executeUpdate();
+                }
+                // Insert the new lesson at the requested position.
+                try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                    ps.setObject(1, lesson.getId());
+                    ps.setObject(2, lesson.getModuleId());
+                    ps.setString(3, lesson.getTitle());
+                    ps.setString(4, lesson.getContent());
+                    ps.setInt(5, lesson.getOrderIndex());
+                    if (ps.executeUpdate() != 1) {
+                        throw new SQLException(
+                                "Lesson insert did not succeed."
+                        );
+                    }
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in LessonDAO.insert: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error in LessonDAO.insert", e);
             return false;
         }
     }
@@ -128,20 +166,79 @@ public class LessonDAO {
     }
 
     public void delete(UUID lessonId) {
+        if (lessonId == null) return;
+        String lockSql = """
+            SELECT m.id
+            FROM module m
+            WHERE m.id = (
+                SELECT module_id FROM lesson WHERE id = ?
+            )
+            FOR UPDATE
+            """;
         String deleteProgressSql = "DELETE FROM learning_process WHERE lesson_id = ?";
-        String sql = "DELETE FROM lesson WHERE id = ?";
+        String deleteSql = "DELETE FROM lesson WHERE id = ? AND module_id = ?";
+        String reorderSql = """
+            WITH ordered_lessons AS (
+                SELECT id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY order_index, created_at, id
+                       )::INTEGER AS new_order
+                FROM lesson
+                WHERE module_id = ?
+            )
+            UPDATE lesson l
+            SET order_index = ordered_lessons.new_order,
+                updated_at = NOW()
+            FROM ordered_lessons
+            WHERE l.id = ordered_lessons.id
+            """;
         try (Connection conn = DbConnection.getConnection()) {
-            try (PreparedStatement psProgress = conn.prepareStatement(deleteProgressSql)) {
-                psProgress.setObject(1, lessonId);
-                psProgress.executeUpdate();
-            } catch (SQLException ignored) {
-            }
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setObject(1, lessonId);
-                ps.executeUpdate();
+            conn.setAutoCommit(false);
+            try {
+                UUID moduleId;
+                // Find and lock the module containing the lesson.
+                try (PreparedStatement ps = conn.prepareStatement(lockSql)) {
+                    ps.setObject(1, lessonId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return;
+                        }
+                        moduleId = (UUID) rs.getObject("id");
+                    }
+                }
+                // Remove learning progress linked to the deleted lesson.
+                try (PreparedStatement ps =
+                             conn.prepareStatement(deleteProgressSql)) {
+                    ps.setObject(1, lessonId);
+                    ps.executeUpdate();
+                }
+                // Delete the selected lesson.
+                try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                    ps.setObject(1, lessonId);
+                    ps.setObject(2, moduleId);
+                    if (ps.executeUpdate() != 1) {
+                        conn.rollback();
+                        return;
+                    }
+                }
+                // Renumber the remaining lessons in this module.
+                try (PreparedStatement ps = conn.prepareStatement(reorderSql)) {
+                    ps.setObject(1, moduleId);
+                    ps.executeUpdate();
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in LessonDAO.delete: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error deleting and reordering lessons", e);
+            throw new IllegalStateException("Cannot delete lesson", e);
         }
     }
 

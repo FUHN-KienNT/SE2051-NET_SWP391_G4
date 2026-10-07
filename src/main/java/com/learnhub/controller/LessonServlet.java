@@ -4,6 +4,8 @@ import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.Lesson;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Module;
+import com.learnhub.entity.User;
+import com.learnhub.constant.AppConstants;
 import com.learnhub.service.CourseService;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,16 +37,23 @@ public class LessonServlet extends HttpServlet {
 
      @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+         Object account = req.getSession(false) == null ? null
+                 : req.getSession(false).getAttribute(AppConstants.SessionKey.CURRENT_USER);
+         if (!(account instanceof User user)
+                 || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
+             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+             return;
+         }
+         UUID expertId = user.getId();
         String courseIdStr = req.getParameter("courseId");
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
             try {
                 UUID courseId = UUID.fromString(courseIdStr);
+                lessonService.requireCourseAccess(expertId, courseId);
                 Course course = courseService.getCourseDetailWithCurriculum(courseId);
                 if (course != null) {
                     req.setAttribute("course", course);
                     req.setAttribute("modules", course.getModules());
-                    
-                    // Tạo danh sách phẳng tất cả bài học
                     List<Lesson> allLessons = new ArrayList<>();
                     if (course.getModules() != null) {
                         for (Module m : course.getModules()) {
@@ -55,7 +64,11 @@ public class LessonServlet extends HttpServlet {
                     }
                     req.setAttribute("lessons", allLessons);
                 }
-            } catch (Exception ignored) {
+            } catch (SecurityException e) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            } catch (Exception e) {
+                throw new ServletException("Lesson operation failed.", e);
             }
         }
         String action = req.getParameter("action");
@@ -69,8 +82,12 @@ public class LessonServlet extends HttpServlet {
             if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
                 try {
                     UUID lessonId = UUID.fromString(lessonIdStr.trim());
-                    lessonService.deleteLesson(lessonId);
-                } catch (Exception ignored) {
+                    lessonService.deleteLesson(expertId, lessonId);
+                } catch (SecurityException e) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                } catch (Exception e) {
+                    throw new ServletException("Lesson operation failed.", e);
                 }
             }
             resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
@@ -81,9 +98,13 @@ public class LessonServlet extends HttpServlet {
             if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
                 try {
                     UUID lessonId = UUID.fromString(lessonIdStr.trim());
-                    LessonDTO lesson = lessonService.getLesson(lessonId);
+                    LessonDTO lesson = lessonService.getLesson(expertId, lessonId);
                     req.setAttribute("lesson", lesson);
-                } catch (Exception ignored) {
+                } catch (SecurityException e) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                } catch (Exception e) {
+                    throw new ServletException("Lesson operation failed.", e);
                 }
             }
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
@@ -94,8 +115,15 @@ public class LessonServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Object account = req.getSession(false) == null ? null
+                : req.getSession(false).getAttribute(AppConstants.SessionKey.CURRENT_USER);
+        if (!(account instanceof User user)
+                || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        UUID expertId = user.getId();
         String action = req.getParameter("action");
-
         if ("upload".equalsIgnoreCase(action)) {
             String lessonIdStr = req.getParameter("lessonId");
             Part filePart = req.getPart("file");
@@ -104,15 +132,18 @@ public class LessonServlet extends HttpServlet {
                     UUID lessonId = UUID.fromString(lessonIdStr);
                     InputStream inputStream = filePart.getInputStream();
                     String filename = filePart.getSubmittedFileName();
-                    lessonService.attachMaterial(lessonId, inputStream, filename);
-                } catch (Exception ignored) {
+                    lessonService.attachMaterial(expertId, lessonId, inputStream, filename);
+                } catch (SecurityException e) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                } catch (Exception e) {
+                    throw new ServletException("Lesson operation failed.", e);
                 }
             }
             resp.sendRedirect(req.getContextPath() + "/lessons/manage?id=" + req.getParameter("lessonId") + "&uploaded=true");
             return;
         }
 
-        // Save lesson
         String idStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
@@ -130,10 +161,13 @@ public class LessonServlet extends HttpServlet {
             UUID id = (idStr != null && !idStr.trim().isEmpty()) ? UUID.fromString(idStr) : UUID.randomUUID();
             UUID moduleId = UUID.fromString(moduleIdStr);
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
-            lessonService.saveLesson(dto);
+            lessonService.saveLesson(expertId, dto);
             resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
         } catch (Exception e) {
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
+            throw new ServletException("Cannot save lesson.", e);
         }
     }
 }

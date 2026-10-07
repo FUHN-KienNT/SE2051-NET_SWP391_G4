@@ -105,7 +105,8 @@
                                 class="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none">
                             <option value="">Tất cả vai trò</option>
                             <c:forEach var="role" items="${roles}">
-                                <option value="${role.id}" ${(roleId eq role.idString) or (roleId eq role.id) or (selectedRole eq role.idString) ? 'selected' : ''}>
+                                <c:set var="roleIdStrValue" value="${role.id.toString()}" />
+                                <option value="${role.id}" ${param.roleId eq roleIdStrValue or selectedRole eq roleIdStrValue ? 'selected' : ''}>
                                     ${role.name}
                                 </option>
                             </c:forEach>

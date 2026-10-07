@@ -72,62 +72,126 @@
             <div class="mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Assigned Courses</h1>
-                        <p class="text-slate-500 text-sm mt-1">Danh sách các khóa học được phân công xây dựng nội dung bài giảng & đề thi</p>
+                        <c:choose>
+                            <c:when test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Manager Dashboard</h1>
+                                <p class="text-slate-500 text-sm mt-1">Tổng quan về hệ thống khóa học</p>
+                            </c:when>
+                            <c:otherwise>
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
+                                <p class="text-slate-500 text-sm mt-1">Tổng quan về số lượng người dùng và hệ thống</p>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Quick Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase text-slate-500">KHÓA HỌC ĐƯỢC GIAO</p>
-                        <h3 class="text-2xl font-bold text-slate-800">3</h3>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-folder-tree"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase text-slate-500">TRẠNG THÁI HỆ THỐNG</p>
-                        <h3 class="text-2xl font-bold text-emerald-600">Đang hoạt động</h3>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                        <i class="fa-solid fa-chalkboard-user"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
-                        <h3 class="text-xl font-bold text-slate-800">Subject Expert</h3>
-                    </div>
-                </div>
-            </div>
-
-
-
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <h2 class="font-bold text-slate-800 text-lg min-w-0">Danh Sách Khóa Học (Assigned Courses)</h2>
-                    <div class="relative w-full lg:max-w-xs">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+            <c:choose>
+                <c:when test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
+                    <!-- Manager Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TỔNG SỐ KHÓA HỌC</p>
+                                <h3 class="text-2xl font-bold text-slate-800">
+                                    <fmt:formatNumber value="${dashboard.activeCourses != null ? dashboard.activeCourses : 0}" type="number"/>
+                                </h3>
+                            </div>
                         </div>
-                        <input type="text"
-                               id="courseSearchInput"
-                               placeholder="Search courses..."
-                               class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TRẠNG THÁI HỆ THỐNG</p>
+                                <h3 class="text-2xl font-bold text-emerald-600">Đang hoạt động</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
+                                <h3 class="text-xl font-bold text-slate-800">Manager</h3>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="overflow-x-auto p-4 text-center text-slate-500 text-sm py-10">
-                    <p>No courses available to display.</p>
-                </div>
-            </div>
+
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
+                        </div>
+                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
+                            <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3 block"></i>
+                            <p class="mb-4">Truy cập vào trang quản lý khóa học để xem danh sách chi tiết.</p>
+                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition">
+                                <i class="fa-solid fa-arrow-right"></i>
+                                Đi tới Quản lý khóa học
+                            </a>
+                        </div>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <!-- Admin Metrics -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TỔNG SỐ NGƯỜI DÙNG</p>
+                                <h3 class="text-2xl font-bold text-slate-800">
+                                    <fmt:formatNumber value="${dashboard.totalUsers != null ? dashboard.totalUsers : 0}" type="number"/>
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TRẠNG THÁI HỆ THỐNG</p>
+                                <h3 class="text-2xl font-bold text-emerald-600">Đang hoạt động</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
+                                <h3 class="text-xl font-bold text-slate-800">Administrator</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
+                            <div class="relative w-full lg:max-w-xs">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                                </div>
+                                <input type="text"
+                                       placeholder="Tìm kiếm nhanh..."
+                                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
+                            <i class="fa-solid fa-users text-4xl text-slate-300 mb-3 block"></i>
+                            <p class="mb-4">Truy cập vào trang quản lý người dùng để xem danh sách chi tiết.</p>
+                            <a href="${pageContext.request.contextPath}/admin/users" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition">
+                                <i class="fa-solid fa-arrow-right"></i>
+                                Đi tới Quản lý người dùng
+                            </a>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
 
         </main>
     </div>

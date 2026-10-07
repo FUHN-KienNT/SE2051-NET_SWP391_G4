@@ -15,31 +15,34 @@
                 <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
             </a>
 
-            <!-- Navigation Links -->
             <nav class="space-y-1.5 text-sm font-medium">
                 <a href="${pageContext.request.contextPath}/admin/dashboard"
                    class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-slate-400"></i>
+                    <i class="fa-solid fa-gauge-high w-5 text-center text-slate-400"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="${pageContext.request.contextPath}/admin/courses"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                    <i class="fa-solid fa-book-open w-5 text-white"></i>
-                    <span>Course Management</span>
-                </a>
+                <c:if test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
+                    <a href="${pageContext.request.contextPath}/admin/courses"
+                       class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
+                        <i class="fa-solid fa-book-open w-5 text-center text-white"></i>
+                        <span>Course Management</span>
+                    </a>
+                </c:if>
 
-                <a href="${pageContext.request.contextPath}/admin/users"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-users w-5 text-slate-400"></i>
-                    <span>User Management</span>
-                </a>
+                <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'ROLE_ADMIN'}">
+                    <a href="${pageContext.request.contextPath}/admin/users"
+                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+                        <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
+                        <span>User Management</span>
+                    </a>
 
-                <a href="${pageContext.request.contextPath}/admin/settings"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gear w-5 text-slate-400"></i>
-                    <span>System Settings</span>
-                </a>
+                    <a href="${pageContext.request.contextPath}/admin/settings"
+                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+                        <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
+                        <span>System Settings</span>
+                    </a>
+                </c:if>
             </nav>
         </div>
 

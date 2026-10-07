@@ -59,20 +59,36 @@ public class AuthorizationFilter implements Filter {
             boolean isCourseManagement = isUnder(path, "/admin/courses")
                     || isUnder(path, "/admin/course-status")
                     || isUnder(path, "/admin/course-detail");
+            boolean isUserManagement = isUnder(path, "/admin/users")
+                    || isUnder(path, "/admin/user-list");
+                    
             if (isCourseManagement) {
-                if (!hasAdminRole(req) && !hasExpertRole(req)) {
+                // Course management: Allowed for Manager and Expert
+                if (!hasManagerRole(req) && !hasExpertRole(req)) {
                     resp.sendError(
                             HttpServletResponse.SC_FORBIDDEN,
-                            "Access denied: Administrator or Expert privileges required."
+                            "Access denied: Manager or Expert privileges required for course management."
                     );
                     return;
                 }
-            } else if (!hasAdminRole(req)) {
-                resp.sendError(
-                        HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied: Administrator privileges required."
-                );
-                return;
+            } else if (isUserManagement) {
+                // User management: Allowed ONLY for Admin
+                if (!hasOnlyAdminRole(req)) {
+                    resp.sendError(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Access denied: Administrator privileges required for user management."
+                    );
+                    return;
+                }
+            } else {
+                // Other admin routes (Dashboard, Settings, etc.): Admin or Manager
+                if (!hasAdminRole(req)) {
+                    resp.sendError(
+                            HttpServletResponse.SC_FORBIDDEN,
+                            "Access denied: Administrator or Manager privileges required."
+                    );
+                    return;
+                }
             }
         }
 
@@ -103,11 +119,14 @@ public class AuthorizationFilter implements Filter {
     }
 
     public boolean hasAdminRole(HttpServletRequest req) {
+        return hasOnlyAdminRole(req) || hasManagerRole(req);
+    }
+
+    public boolean hasOnlyAdminRole(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session != null) {
             String role = (String) session.getAttribute("userRole");
-            if (role != null && ("ROLE_ADMIN".equalsIgnoreCase(role) || "ROLE_MANAGER".equalsIgnoreCase(role)
-                    || "admin".equalsIgnoreCase(role) || "manager".equalsIgnoreCase(role))) {
+            if (role != null && ("ROLE_ADMIN".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(role))) {
                 return true;
             }
         }
@@ -116,12 +135,26 @@ public class AuthorizationFilter implements Filter {
         String code = user.getRoleCode();
         String name = user.getRoleName();
         return AppConstants.Role.ADMIN.equalsIgnoreCase(code)
-                || AppConstants.Role.MANAGER.equalsIgnoreCase(code)
                 || "admin".equalsIgnoreCase(code)
-                || "manager".equalsIgnoreCase(code)
                 || "Administrator".equalsIgnoreCase(name)
-                || "Manager".equalsIgnoreCase(name)
                 || "Admin".equalsIgnoreCase(name);
+    }
+
+    public boolean hasManagerRole(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            String role = (String) session.getAttribute("userRole");
+            if (role != null && ("ROLE_MANAGER".equalsIgnoreCase(role) || "manager".equalsIgnoreCase(role))) {
+                return true;
+            }
+        }
+        User user = getCurrentUser(req);
+        if (user == null) return false;
+        String code = user.getRoleCode();
+        String name = user.getRoleName();
+        return AppConstants.Role.MANAGER.equalsIgnoreCase(code)
+                || "manager".equalsIgnoreCase(code)
+                || "Manager".equalsIgnoreCase(name);
     }
 
     public boolean hasExpertRole(HttpServletRequest req) {

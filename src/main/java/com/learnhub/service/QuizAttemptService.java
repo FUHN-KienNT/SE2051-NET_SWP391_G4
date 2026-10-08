@@ -52,7 +52,7 @@ public class QuizAttemptService {
 
         Quiz quiz = quizDAO.findById(attempt.getQuizId());
         BigDecimal passScoreThreshold = (quiz != null && quiz.getPassScore() != null) ? quiz.getPassScore() : BigDecimal.valueOf(5.0);
-        
+
         answerDAO.saveAnswers(submissionId, selectedAnswers);
         BigDecimal score = calculateScore(attempt.getQuizId(), selectedAnswers);
         boolean passed = score.compareTo(passScoreThreshold) >= 0;
@@ -82,6 +82,10 @@ public class QuizAttemptService {
         }
         LOGGER.info("Auto-submitted " + count + " expired quiz attempts.");
         return count;
+    }
+
+    public QuizSubmission getAttempt(UUID attemptId) {
+        return quizAttemptDAO.findById(attemptId);
     }
 
     public List<QuizSubmission> getAttemptHistory(UUID userId, UUID quizId) {

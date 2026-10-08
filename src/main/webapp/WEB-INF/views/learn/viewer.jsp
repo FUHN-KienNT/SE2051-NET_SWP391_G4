@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
@@ -137,9 +137,11 @@
 
                             <%-- Quizzes --%>
                             <c:forEach items="${module.quizzes}" var="quiz">
-                                <c:url value="/quiz/take" var="quizUrl">
+                                <c:url value="/quiz" var="quizUrl">
                                     <c:param name="quizId"
                                              value="${quiz.id}" />
+                                    <c:param name="courseId"
+                                             value="${course.id}" />
                                 </c:url>
 
                                 <li>

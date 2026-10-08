@@ -137,54 +137,34 @@
                 </c:when>
                 <c:otherwise>
                     <!-- Admin Metrics -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <!-- Card 1 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL USERS</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b]">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TỔNG SỐ NGƯỜI DÙNG</p>
+                                <h3 class="text-2xl font-bold text-slate-800">
                                     <fmt:formatNumber value="${dashboard.totalUsers != null ? dashboard.totalUsers : 0}" type="number"/>
                                 </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">
-                                    +<fmt:formatNumber value="${dashboard.userGrowthPct != null ? dashboard.userGrowthPct : 0}" type="number" maxFractionDigits="0"/>%
-                                </span>
                             </div>
                         </div>
-                        
-                        <!-- Card 2 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL ENROLLMENTS</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b]">
-                                    <fmt:formatNumber value="${dashboard.totalEnrollments != null ? dashboard.totalEnrollments : 0}" type="number"/>
-                                </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">
-                                    +<fmt:formatNumber value="${dashboard.enrollmentGrowthPct != null ? dashboard.enrollmentGrowthPct : 0}" type="number" maxFractionDigits="0"/>%
-                                </span>
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">TRẠNG THÁI HỆ THỐNG</p>
+                                <h3 class="text-2xl font-bold text-emerald-600">Đang hoạt động</h3>
                             </div>
                         </div>
-
-                        <!-- Card 3 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">MONTHLY REVENUE</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b] flex items-end gap-1">
-                                    <fmt:formatNumber value="${dashboard.monthlyRevenue != null ? dashboard.monthlyRevenue : 0}" pattern="#,###"/> <span class="text-2xl underline decoration-2 underline-offset-4">đ</span>
-                                </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">+15%</span>
+                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                                <i class="fa-solid fa-user-shield"></i>
                             </div>
-                        </div>
-
-                        <!-- Card 4 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">SYSTEM SETTING</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-xl font-bold text-[#1e293b] flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Stable
-                                </h3>
-                                <a href="${pageContext.request.contextPath}/admin/settings" class="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded-full px-3 py-1 text-[11px] font-bold mb-0.5 transition flex items-center gap-1">
-                                    View <i class="fa-solid fa-arrow-right text-[9px]"></i>
-                                </a>
+                            <div>
+                                <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
+                                <h3 class="text-xl font-bold text-slate-800">Administrator</h3>
                             </div>
                         </div>
                     </div>

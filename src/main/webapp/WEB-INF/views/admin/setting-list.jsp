@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -36,7 +36,7 @@
                 </a>
 
                 <a href="${pageContext.request.contextPath}/admin/settings"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
+                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-[#047857] text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
                     <i class="fa-solid fa-gear w-5 text-white"></i>
                     <span>System Settings</span>
                 </a>
@@ -92,75 +92,80 @@
                     <p class="text-slate-500 text-sm mt-1">Manage platform configuration, roles, categories, and payment options (SRS 2.2 / 2.2.1)</p>
                 </div>
                 <div>
-                    <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm transition shadow-sm shadow-indigo-600/20 cursor-pointer">
+                    <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm cursor-pointer">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>+ Add New Setting</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Filter Bar (SRS 2.2.1) -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">
-                <form id="filterForm" action="${pageContext.request.contextPath}/admin/settings" method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
+            <!-- Filter Bar -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mb-6 flex flex-col md:flex-row items-center gap-4">
+                <form id="filterForm" action="${pageContext.request.contextPath}/admin/settings" method="get" class="w-full flex flex-col md:flex-row items-center gap-4">
                     <input type="hidden" name="sortBy" value="${sortBy}">
                     <input type="hidden" name="sortOrder" value="${sortOrder}">
 
                     <!-- Search Input -->
-                    <div class="lg:col-span-5 relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <div class="relative w-full md:flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text"
                                name="search"
                                value="${search}"
-                               placeholder="Search setting name, code, description..."
-                               title="Search Settings: Enter keyword to search master data"
-                               class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                               placeholder="Search settings by name or value..."
+                               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-slate-800 font-medium placeholder-slate-400">
                     </div>
 
-                    <!-- Type Filter -->
-                    <div class="lg:col-span-3">
+                    <!-- Setting Type Filter -->
+                    <div class="relative w-full md:w-56" title="Setting Type">
                         <select name="type"
-                                title="Setting Type: Filter by category group"
-                                class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
-                            <option value="">All Types</option>
+                                class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-slate-700 font-medium appearance-none cursor-pointer">
+                            <option value="">All Setting Types</option>
                             <c:forEach var="t" items="${types}">
                                 <option value="${t}" ${selectedType eq t ? 'selected' : ''}>${t}</option>
                             </c:forEach>
                         </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
 
-                    <!-- Status Filter -->
-                    <div class="lg:col-span-2">
+                    <!-- Setting Status Filter -->
+                    <div class="relative w-full md:w-48" title="Setting Status">
                         <select name="status"
-                                title="Setting Status: Filter by active/inactive"
-                                class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                                class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-slate-700 font-medium appearance-none cursor-pointer">
                             <option value="">All Statuses</option>
                             <option value="active" ${selectedStatus eq 'active' ? 'selected' : ''}>Active</option>
                             <option value="inactive" ${selectedStatus eq 'inactive' ? 'selected' : ''}>Inactive</option>
                         </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
 
                     <!-- Filter Button -->
-                    <div class="lg:col-span-2 flex space-x-2">
-                        <button type="submit"
-                                class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm transition shadow-sm text-center">
-                            Filter
+                    <div class="w-full md:w-auto">
+                        <button type="submit" class="w-full px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-bold transition flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-filter text-xs"></i> Filter
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- Settings Table -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
-                        <thead class="bg-slate-50/80 text-slate-500 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200 select-none">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4">TYPE</th>
-                                <th class="px-6 py-4">CODE</th>
-                                <th class="px-6 py-4">NAME &amp; DESCRIPTION</th>
-                                <th class="px-6 py-4 text-center">ORDER</th>
-                                <th class="px-6 py-4">STATUS</th>
-                                <th class="px-6 py-4 text-right">ACTIONS</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider w-16">#</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
+                                    <div class="flex items-center gap-1.5">TÊN CẤU HÌNH (NAME) <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
+                                </th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
+                                    <div class="flex items-center gap-1.5">LOẠI (TYPE) <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
+                                </th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">GIÁ TRỊ (VALUE) / MÔ TẢ</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-center">THỨ TỰ</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
+                                    <div class="flex items-center gap-1.5">TRẠNG THÁI <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
+                                </th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-right">ACTION</th>
                             </tr>
                         </thead>
 
@@ -168,7 +173,7 @@
                             <c:choose>
                                 <c:when test="${empty settings}">
                                     <tr>
-                                        <td colspan="6" class="px-6 py-16 text-center text-slate-400">
+                                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
                                                 <p class="text-base font-semibold text-slate-700">No settings found</p>
@@ -182,55 +187,55 @@
                                 </c:when>
 
                                 <c:otherwise>
-                                    <c:forEach var="s" items="${settings}">
-                                        <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <c:forEach var="s" items="${settings}" varStatus="loop">
+                                        <tr class="hover:bg-slate-50/50 transition group">
+                                            <td class="px-6 py-5 text-slate-500 font-medium">${loop.index + 1}</td>
+                                            
+                                            <!-- Name and Code -->
+                                            <td class="px-6 py-5">
+                                                <div class="font-bold text-[#111827] text-[15px]">${s.name}</div>
+                                                <div class="text-xs text-slate-400 mt-0.5">Code: ${s.code}</div>
+                                            </td>
+
                                             <!-- Type -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase">
+                                            <td class="px-6 py-5">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#e8f5e9] text-[#2e7d32]">
                                                     ${s.type}
                                                 </span>
                                             </td>
 
-                                            <!-- Code -->
-                                            <td class="px-6 py-4 whitespace-nowrap font-mono text-xs text-indigo-600 font-bold">
-                                                ${s.code}
-                                            </td>
-
-                                            <!-- Name & Description -->
-                                            <td class="px-6 py-4">
-                                                <div class="font-bold text-slate-900">${s.name}</div>
-                                                <c:if test="${not empty s.description}">
-                                                    <div class="text-xs text-slate-400 mt-0.5 line-clamp-1">${s.description}</div>
-                                                </c:if>
+                                            <!-- Value/Description -->
+                                            <td class="px-6 py-5 text-slate-500 font-medium text-[13px] truncate max-w-[200px]" title="${s.value} ${s.description}">
+                                                ${not empty s.value ? s.value : s.description}
                                             </td>
 
                                             <!-- Sort Order -->
-                                            <td class="px-6 py-4 whitespace-nowrap text-center font-bold text-slate-700">
+                                            <td class="px-6 py-5 text-center font-semibold text-slate-600">
                                                 ${s.sortOrder}
                                             </td>
 
                                             <!-- Status -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-6 py-5">
                                                 <c:choose>
                                                     <c:when test="${s.status}">
-                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                            <i class="fa-solid fa-circle text-[6px]"></i> Active
+                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                                                            <i class="fa-solid fa-circle text-[6px]"></i> Inactive
+                                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
 
-                                            <!-- Actions: Edit / Toggle Status -->
-                                            <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                                            <!-- Actions -->
+                                            <td class="px-6 py-5 text-right space-x-2">
                                                 <button type="button"
                                                         onclick="openEditModal('${s.id}')"
-                                                        class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer">
-                                                    Edit
+                                                        class="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm" title="Manage Setting">
+                                                    <i class="fa-solid fa-pen-to-square"></i> Manage
                                                 </button>
 
                                                 <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái cài đặt này?');">
@@ -238,13 +243,13 @@
                                                     <input type="hidden" name="status" value="${!s.status}">
                                                     <c:choose>
                                                         <c:when test="${s.status}">
-                                                            <button type="submit" class="text-xs font-bold text-amber-600 hover:text-amber-800 hover:underline cursor-pointer ml-2">
-                                                                Deactivate
+                                                            <button type="submit" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Deactivate">
+                                                                <i class="fa-solid fa-power-off"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <button type="submit" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer ml-2">
-                                                                Activate
+                                                            <button type="submit" class="px-3 py-2 bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Activate">
+                                                                <i class="fa-solid fa-power-off"></i>
                                                             </button>
                                                         </c:otherwise>
                                                     </c:choose>
@@ -258,7 +263,7 @@
                     </table>
                 </div>
 
-                <!-- Pagination Footer -->
+<!-- Pagination Footer --><!-- Pagination Footer -->
                 <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
                     <div>
                         Showing 
@@ -281,7 +286,7 @@
                             <c:forEach begin="1" end="${totalPages}" var="p">
                                 <c:choose>
                                     <c:when test="${p eq currentPage}">
-                                        <span class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold">${p}</span>
+                                        <span class="px-3 py-1.5 rounded-lg bg-[#047857] text-white font-bold">${p}</span>
                                     </c:when>
                                     <c:otherwise>
                                         <a href="?search=${search}&type=${selectedType}&status=${selectedStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${p}"
@@ -406,7 +411,7 @@
                     Cancel
                 </button>
                 <button type="submit"
-                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition cursor-pointer">
+                        class="px-6 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm transition cursor-pointer">
                     Save Setting
                 </button>
             </div>

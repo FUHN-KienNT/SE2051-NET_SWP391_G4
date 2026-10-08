@@ -48,7 +48,13 @@ public class LearningProcessService {
         return learningProcessDAO.findStudentCourses(userId);
     }
 
-    public LessonDTO getLessonForStudent(
+    public ContinueLearningDTO findEnrolledCourse(UUID userId, UUID courseId) {
+        return getStudentCourses(userId).stream()
+                .filter(course -> courseId.equals(course.getCourseId()))
+                .findFirst().orElse(null);
+    }
+
+        public LessonDTO getLessonForStudent(
             UUID lessonId,
             UUID registrationId
     ) {

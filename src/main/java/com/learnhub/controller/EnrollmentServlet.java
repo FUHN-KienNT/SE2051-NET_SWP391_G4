@@ -164,7 +164,7 @@ public class EnrollmentServlet extends HttpServlet {
         if (alreadyEnrolled) {
             resp.sendRedirect(
                     req.getContextPath()
-                            + "/my-enrollments?action=continue&courseId="
+                            + "/learn/course?id="
                             + courseId
             );
             return;
@@ -439,10 +439,11 @@ public class EnrollmentServlet extends HttpServlet {
                         );
 
                 if (registration != null) {
-                    resp.sendRedirect(
-                            req.getContextPath()
-                                    + "/my-enrollments?registered=success"
-                    );
+                    boolean canLearn =
+                            learningService.findEnrolledCourse(user.getId(), courseId) != null;
+                    resp.sendRedirect(req.getContextPath() + (canLearn
+                            ? "/learn/course?id=" + courseId
+                            : "/my-enrollments?registered=success"));
                     return;
                 }
             } catch (IllegalArgumentException ignored) {

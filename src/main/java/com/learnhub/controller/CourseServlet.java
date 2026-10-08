@@ -1,11 +1,14 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
+import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.dto.CourseDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 import com.learnhub.service.CourseService;
+import com.learnhub.service.LearningProcessService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,11 +23,13 @@ import java.util.UUID;
     "/courses",
     "/course-detail",
     "/courses/register",
-    "/expert/dashboard"
+    "/expert/dashboard",
+        "/learn/course"
 })
 public class CourseServlet extends HttpServlet {
 
     private final CourseService courseService = new CourseService();
+    private final LearningProcessService learningService = new LearningProcessService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -35,6 +40,9 @@ public class CourseServlet extends HttpServlet {
                 break;
             case "/expert/dashboard":
                 handleExpertDashboard(req, resp);
+                break;
+            case "/learn/course":
+                handleMyCourseDetail(req, resp);
                 break;
             case "/courses":
             default:
@@ -147,16 +155,12 @@ public class CourseServlet extends HttpServlet {
 
                     // Kiểm tra user đã đăng ký khóa học chưa
                     HttpSession session = req.getSession(false);
-                    User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
-                    boolean isEnrolled = false;
-                    if (currentUser != null) {
-                        isEnrolled = courseService.getMyEnrollments(currentUser.getId())
-                                .stream()
-                                .anyMatch(r -> courseId.equals(r.getCourseId()) 
-                                        && ("paid".equalsIgnoreCase(r.getPaymentStatus()) 
-                                            || (course.getPrice() != null && course.getPrice().compareTo(java.math.BigDecimal.ZERO) <= 0)));
+                    User user = session == null ? null : (User) session.getAttribute("currentUser");
+                    if (user != null && AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())
+                            && learningService.findEnrolledCourse(user.getId(), courseId) != null) {
+                        resp.sendRedirect(req.getContextPath() + "/learn/course?id=" + courseId);
+                        return;
                     }
-                    req.setAttribute("isEnrolled", isEnrolled);
 
                     req.setAttribute("pageTitle", course.getTitle() + " - LearnHub");
                     req.getRequestDispatcher("/WEB-INF/views/courses/detail.jsp").forward(req, resp);
@@ -191,12 +195,36 @@ public class CourseServlet extends HttpServlet {
                 UUID courseId = UUID.fromString(courseIdStr);
                 Registration reg = courseService.processCourseRegistration(currentUser.getId(), courseId, null);
                 if (reg != null) {
-                    resp.sendRedirect(req.getContextPath() + "/my-enrollments");
+                    boolean canLearn = learningService.findEnrolledCourse(
+                            currentUser.getId(), courseId) != null;
+                    resp.sendRedirect(req.getContextPath() + (canLearn
+                            ? "/learn/course?id=" + courseId
+                            : "/my-enrollments"));
                     return;
                 }
             } catch (Exception ignored) {
             }
         }
         resp.sendRedirect(req.getContextPath() + "/courses");
+    }
+    private void handleMyCourseDetail(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        User user = session == null ? null : (User) session.getAttribute("currentUser");
+        if (user == null) { resp.sendRedirect(req.getContextPath() + "/auth/login"); return; }
+        if (!AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())) {
+            resp.sendError(403); return;
+        }
+        UUID courseId;
+        try { courseId = UUID.fromString(req.getParameter("id")); }
+        catch (IllegalArgumentException | NullPointerException e) { resp.sendError(400); return; }
+        ContinueLearningDTO progress = learningService.findEnrolledCourse(user.getId(), courseId);
+        if (progress == null) { resp.sendError(403); return; }
+        Course course = courseService.getCourseDetailWithCurriculum(courseId);
+        if (course == null) { resp.sendError(404); return; }
+        req.setAttribute("course", course);
+        req.setAttribute("progress", progress);
+        req.setAttribute("myCourseDetail", true);
+        req.getRequestDispatcher("/WEB-INF/views/courses/my-detail.jsp").forward(req, resp);
     }
 }

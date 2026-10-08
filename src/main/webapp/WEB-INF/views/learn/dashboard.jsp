@@ -126,7 +126,8 @@
                     <c:forEach items="${myCourses}" var="course">
                         <article data-course-card
                                  class="flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
-
+                            <a href="${pageContext.request.contextPath}/learn/course?id=${course.courseId}"
+                               aria-label="Xem chi tiết khóa học">
                             <c:choose>
                                 <c:when test="${not empty course.thumbnailUrl}">
                                     <img src="${fn:escapeXml(course.thumbnailUrl)}"
@@ -141,14 +142,16 @@
                                     </div>
                                 </c:otherwise>
                             </c:choose>
-
+                        </a>
                             <div class="p-5 flex flex-col flex-grow">
                                 <p class="text-xs font-semibold text-brand-700 mb-2">
                                     <c:out value="${empty course.categoryName ? 'Course' : course.categoryName}" />
                                 </p>
 
                                 <h3 class="text-lg font-bold break-words">
-                                    <c:out value="${course.courseTitle}" />
+                                    <a href="${pageContext.request.contextPath}/learn/course?id=${course.courseId}">
+                                        <c:out value="${course.courseTitle}" />
+                                    </a>
                                 </h3>
 
                                 <p class="text-sm text-text-secondary mt-2">

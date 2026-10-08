@@ -92,7 +92,10 @@
                                                         <div class="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-brand-50 transition group/lesson">
                                                             <span class="text-xs text-text-secondary w-5 text-right shrink-0">${lesStatus.count}</span>
                                                             <i class="fa-regular fa-circle-play text-text-secondary group-hover/lesson:text-brand-700 transition shrink-0"></i>
-                                                            <span class="text-sm text-text-primary group-hover/lesson:text-brand-900">${currentLesson.title}</span>
+                                                            <a href="${pageContext.request.contextPath}/learn/lesson?courseId=${course.id}&amp;lessonId=${currentLesson.id}"
+                                                               class="text-sm text-text-primary hover:text-brand-900 focus-visible:outline focus-visible:outline-2">
+                                                                <c:out value="${currentLesson.title}" />
+                                                            </a>
                                                         </div>
                                                     </c:forEach>
                                                 </c:when>
@@ -139,28 +142,35 @@
                             </c:otherwise>
                         </c:choose>
                     </div>
+                <div class="p-6">
+                    <div class="mb-5">
+                        <p class="text-sm text-text-secondary">
+                            ${progress.completedLessonCount}/${progress.lessonCount} bài hoàn thành · ${progress.progressPercent}%
+                        </p>
+                        <progress max="100" value="${progress.progressPercent}"
+                                  aria-label="Tiến độ học tập" class="w-full h-2"></progress>
+                    </div>
 
-                    <div class="p-6">
-                        <!-- Price -->
-                        <div class="mb-5">
-                            <c:choose>
-                                <c:when test="${course.price <= 0}">
-                                    <div class="text-3xl font-black text-brand-700">Miễn Phí</div>
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="text-3xl font-black text-text-primary">
-                                        <fmt:formatNumber value="${course.price}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-                        </div>
+                        <!-- CTA Button -->
+                        <c:choose>
+                        <c:when test="${empty progress.lessonId}">
+                            <button type="button" disabled
+                                    class="w-full py-3 px-4 rounded-lg bg-brand-50 text-text-secondary cursor-not-allowed">
+                                Chưa có bài học
+                            </button>
+                        </c:when>
+                            <c:when test="${myCourseDetail}">
+                                <a href="${pageContext.request.contextPath}/my-enrollments?action=continue&amp;courseId=${course.id}" class="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-xl shadow-md transition text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                    <i class="fa-solid fa-play"></i> Vào Học Ngay
+                                </a>
+                            </c:when>
+                            <c:otherwise>
+                                <a href="${pageContext.request.contextPath}/enrollment?courseId=${course.id}" class="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-xl shadow-md transition text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                    <i class="fa-solid fa-user-plus"></i> Đăng Ký Khóa Học
+                                </a>
+                            </c:otherwise>
+                        </c:choose>
 
-                        <a href="${pageContext.request.contextPath}/enrollment?courseId=${course.id}"
-                           class="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-lg transition focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                            <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-                            Đăng Ký Khóa Học
-                        </a>
-                        
                         <!-- Course Highlights -->
                         <ul class="mt-6 space-y-3 text-sm text-text-secondary border-t border-border-default pt-5">
                             <li class="flex items-center gap-3">

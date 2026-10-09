@@ -1,4 +1,4 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -23,7 +23,6 @@
                             </c:when>
                             <c:otherwise>
                                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
-                                <p class="text-slate-500 text-sm mt-1">Tổng quan về số lượng người dùng và hệ thống</p>
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -65,97 +64,140 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
-                        </div>
-                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
-                            <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3 block"></i>
-                            <p class="mb-4">Truy cập vào trang quản lý khóa học để xem danh sách chi tiết.</p>
-                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
-                                <i class="fa-solid fa-arrow-right"></i>
-                                Đi tới Quản lý khóa học
-                            </a>
-                        </div>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <!-- Admin Metrics -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <!-- Card 1 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL USERS</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b]">
-                                    <fmt:formatNumber value="${dashboard.totalUsers != null ? dashboard.totalUsers : 0}" type="number"/>
-                                </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">
-                                    +<fmt:formatNumber value="${dashboard.userGrowthPct != null ? dashboard.userGrowthPct : 0}" type="number" maxFractionDigits="0"/>%
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <!-- Card 2 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL ENROLLMENTS</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b]">
-                                    <fmt:formatNumber value="${dashboard.totalEnrollments != null ? dashboard.totalEnrollments : 0}" type="number"/>
-                                </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">
-                                    +<fmt:formatNumber value="${dashboard.enrollmentGrowthPct != null ? dashboard.enrollmentGrowthPct : 0}" type="number" maxFractionDigits="0"/>%
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Card 3 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">MONTHLY REVENUE</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-3xl font-bold text-[#1e293b] flex items-end gap-1">
-                                    <fmt:formatNumber value="${dashboard.monthlyRevenue != null ? dashboard.monthlyRevenue : 0}" pattern="#,###"/> <span class="text-2xl underline decoration-2 underline-offset-4">VND</span>
-                                </h3>
-                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">+15%</span>
-                            </div>
-                        </div>
-
-                        <!-- Card 4 -->
-                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
-                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">SYSTEM SETTING</p>
-                            <div class="flex items-end justify-between mt-auto">
-                                <h3 class="text-xl font-bold text-[#1e293b] flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Stable
-                                </h3>
-                                <a href="${pageContext.request.contextPath}/admin/settings" class="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded-full px-3 py-1 text-[11px] font-bold mb-0.5 transition flex items-center gap-1">
-                                    Modify <i class="fa-solid fa-arrow-right text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
-                            <div class="relative w-full lg:max-w-xs">
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <h2 class="font-bold text-slate-800 text-lg">Quản lý người dùng (Quick Access)</h2>
+                            <div class="relative w-full sm:max-w-xs">
                                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                     <i class="fa-solid fa-magnifying-glass text-sm"></i>
                                 </div>
-                                <input type="text"
-                                       placeholder="Tìm kiếm nhanh..."
-                                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-all">
+                                <input type="text" placeholder="Tìm kiếm nhanh..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] transition-all">
                             </div>
                         </div>
-                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
-                            <i class="fa-solid fa-users text-4xl text-slate-300 mb-3 block"></i>
-                            <p class="mb-4">Truy cập vào trang quản lý người dùng để xem danh sách chi tiết.</p>
-                            <a href="${pageContext.request.contextPath}/admin/users" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
-                                <i class="fa-solid fa-arrow-right"></i>
-                                Đi tới Quản lý người dùng
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase">
+                                    <tr>
+                                        <th class="px-6 py-4">User</th>
+                                        <th class="px-6 py-4">Role</th>
+                                        <th class="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs">N</div>
+                                                <div>
+                                                    <div class="font-bold text-slate-900">Nguyễn Văn A</div>
+                                                    <div class="text-xs text-slate-500">nguyenvana@gmail.com</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-3">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600">Student</span>
+                                        </td>
+                                        <td class="px-6 py-3">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">T</div>
+                                                <div>
+                                                    <div class="font-bold text-slate-900">Trần Thị B</div>
+                                                    <div class="text-xs text-slate-500">tranthib@learnhub.com</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-3">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700">Manager</span>
+                                        </td>
+                                        <td class="px-6 py-3">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-5 bg-slate-50/50 border-t border-slate-100 flex justify-center">
+                            <a href="${pageContext.request.contextPath}/admin/users" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition shadow-sm">
+                                <i class="fa-solid fa-users"></i> Đi tới Quản lý người dùng <i class="fa-solid fa-arrow-right ml-1"></i>
                             </a>
                         </div>
                     </div>
+
                 </c:otherwise>
             </c:choose>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('revenueChart')) {
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue (VND)',
+                        data: [15000000, 22000000, 18000000, 29000000, 34000000, 42500000],
+                        borderColor: '#047857',
+                        backgroundColor: 'rgba(4, 120, 87, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#047857',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9'} },
+                        x: { border: {display: false}, grid: {display: false} }
+                    }
+                }
+            });
+        }
+
+        if (document.getElementById('enrollmentChart')) {
+            const ctxEnr = document.getElementById('enrollmentChart').getContext('2d');
+            new Chart(ctxEnr, {
+                type: 'bar',
+                data: {
+                    labels: ['Python', 'Java', 'Web Dev', 'Data Sci', 'UI/UX'],
+                    datasets: [{
+                        label: 'Enrollments',
+                        data: [320, 210, 180, 95, 49],
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9'} },
+                        x: { border: {display: false}, grid: {display: false} }
+                    }
+                }
+            });
+        }
+    });
+</script>
 
         </main>
     </div>

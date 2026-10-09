@@ -6,63 +6,7 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar (SDS Admin Layout) -->
-    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
-        <div>
-            <!-- Brand Logo -->
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
-                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
-                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
-            </a>
-
-            <nav class="space-y-1.5 text-sm font-medium">
-                <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-center text-slate-400"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <c:if test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
-                    <a href="${pageContext.request.contextPath}/admin/courses"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-book-open w-5 text-center text-slate-400"></i>
-                        <span>Course Management</span>
-                    </a>
-                </c:if>
-
-                <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'ROLE_ADMIN'}">
-                    <a href="${pageContext.request.contextPath}/admin/users"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                        <i class="fa-solid fa-users w-5 text-center text-white"></i>
-                        <span>User Management</span>
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/admin/settings"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
-                        <span>System Settings</span>
-                    </a>
-                </c:if>
-            </nav>
-        </div>
-
-        <!-- Current User Info & Back to Site -->
-        <div class="pt-6 border-t border-slate-800/80 mt-6">
-            <div class="flex items-center space-x-3 px-2 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
-                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
-                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Return to LearnHub</span>
-            </a>
-        </div>
-    </aside>
+    
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">
@@ -71,14 +15,14 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-                        <i class="fa-solid fa-users text-indigo-600"></i>
+                        <i class="fa-solid fa-users text-[#047857]"></i>
                         <span>User Management</span>
                     </h1>
                     <p class="text-slate-500 text-xs sm:text-sm mt-1">Quản lý danh sách người dùng, vai trò và trạng thái tài khoản LearnHub</p>
                 </div>
                 <div>
                     <a href="${pageContext.request.contextPath}/admin/users?action=new"
-                       class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs transition shadow-sm shadow-indigo-600/20">
+                       class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] active:bg-[#064e3b] text-white font-bold rounded-xl text-xs transition shadow-sm shadow-[#047857]/20">
                         <i class="fa-solid fa-user-plus text-xs"></i>
                         <span>Thêm người dùng</span>
                     </a>
@@ -95,14 +39,14 @@
                                name="search"
                                value="${search}"
                                placeholder="Tìm theo tên đăng nhập hoặc email..."
-                               class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                               class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] bg-white">
                     </div>
 
                     <!-- Role Dropdown -->
                     <div class="relative w-full md:w-52">
                         <i class="fa-solid fa-shield-halved absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         <select name="roleId"
-                                class="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none">
+                                class="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#047857] cursor-pointer appearance-none">
                             <option value="">Tất cả vai trò</option>
                             <c:forEach var="role" items="${roles}">
                                 <c:set var="roleIdStrValue" value="${role.id.toString()}" />
@@ -118,7 +62,7 @@
                     <div class="relative w-full md:w-44">
                         <i class="fa-solid fa-circle-check absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                         <select name="status"
-                                class="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer appearance-none">
+                                class="w-full pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#047857] cursor-pointer appearance-none">
                             <option value="">Tất cả trạng thái</option>
                             <option value="active" ${selectedStatus eq 'active' ? 'selected' : ''}>Hoạt động (Active)</option>
                             <option value="inactive" ${selectedStatus eq 'inactive' ? 'selected' : ''}>Tạm ngưng (Inactive)</option>
@@ -178,7 +122,7 @@
                                         <td colspan="5" class="py-12 text-center text-slate-400">
                                             <i class="fa-solid fa-user-slash text-4xl text-slate-300 mb-3 block"></i>
                                             <p class="text-sm font-medium">Không tìm thấy người dùng phù hợp</p>
-                                            <a href="${pageContext.request.contextPath}/admin/users" class="mt-2 inline-block text-xs text-indigo-600 hover:underline">
+                                            <a href="${pageContext.request.contextPath}/admin/users" class="mt-2 inline-block text-xs text-[#047857] hover:underline">
                                                 Xóa bộ lọc để xem tất cả
                                             </a>
                                         </td>
@@ -189,7 +133,7 @@
                                         <tr class="hover:bg-slate-50/60 transition-colors">
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center space-x-3">
-                                                    <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
+                                                    <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
                                                         ${fn:substring(u.username, 0, 1)}
                                                     </div>
                                                     <div>
@@ -229,7 +173,7 @@
                                             </td>
                                             <td class="px-6 py-4 text-right">
                                                 <a href="${pageContext.request.contextPath}/admin/user-detail?id=${u.id}"
-                                                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-[#047857] hover:text-[#065f46] hover:bg-[#e8f5e9] rounded-lg transition-colors">
                                                     <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                                     <span>Sửa</span>
                                                 </a>
@@ -273,7 +217,7 @@
                             <c:forEach begin="1" end="${totalPages}" var="p">
                                 <c:choose>
                                     <c:when test="${p eq currentPage}">
-                                        <span class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-xs shadow-xs">
+                                        <span class="px-3 py-1.5 rounded-lg bg-[#047857] text-white font-black text-xs shadow-xs">
                                             ${p}
                                         </span>
                                     </c:when>

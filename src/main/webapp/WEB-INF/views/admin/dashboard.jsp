@@ -6,63 +6,7 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar (SDS Admin Layout) -->
-    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
-        <div>
-            <!-- Brand Logo -->
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
-                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
-                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
-            </a>
-
-            <nav class="space-y-1.5 text-sm font-medium">
-                <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-center text-white"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <c:if test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
-                    <a href="${pageContext.request.contextPath}/admin/courses"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-book-open w-5 text-center text-slate-400"></i>
-                        <span>Course Management</span>
-                    </a>
-                </c:if>
-
-                <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'ROLE_ADMIN'}">
-                    <a href="${pageContext.request.contextPath}/admin/users"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
-                        <span>User Management</span>
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/admin/settings"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
-                        <span>System Settings</span>
-                    </a>
-                </c:if>
-            </nav>
-        </div>
-
-        <!-- Current User Info & Back to Site -->
-        <div class="pt-6 border-t border-slate-800/80 mt-6">
-            <div class="flex items-center space-x-3 px-2 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
-                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
-                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Return to LearnHub</span>
-            </a>
-        </div>
-    </aside>
+    
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">
@@ -91,7 +35,7 @@
                     <!-- Manager Metrics -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                            <div class="w-12 h-12 rounded-xl bg-[#e8f5e9] text-[#047857] flex items-center justify-center text-xl font-bold">
                                 <i class="fa-solid fa-book-open"></i>
                             </div>
                             <div>
@@ -111,7 +55,7 @@
                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                            <div class="w-12 h-12 rounded-xl bg-[#e8f5e9] text-[#047857] flex items-center justify-center text-xl font-bold">
                                 <i class="fa-solid fa-user-tie"></i>
                             </div>
                             <div>
@@ -128,7 +72,7 @@
                         <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
                             <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3 block"></i>
                             <p class="mb-4">Truy cập vào trang quản lý khóa học để xem danh sách chi tiết.</p>
-                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition">
+                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
                                 <i class="fa-solid fa-arrow-right"></i>
                                 Đi tới Quản lý khóa học
                             </a>
@@ -183,7 +127,7 @@
                                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Stable
                                 </h3>
                                 <a href="${pageContext.request.contextPath}/admin/settings" class="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded-full px-3 py-1 text-[11px] font-bold mb-0.5 transition flex items-center gap-1">
-                                    View <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                                    Modify <i class="fa-solid fa-arrow-right text-[9px]"></i>
                                 </a>
                             </div>
                         </div>
@@ -198,13 +142,13 @@
                                 </div>
                                 <input type="text"
                                        placeholder="Tìm kiếm nhanh..."
-                                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                                       class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-all">
                             </div>
                         </div>
                         <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
                             <i class="fa-solid fa-users text-4xl text-slate-300 mb-3 block"></i>
                             <p class="mb-4">Truy cập vào trang quản lý người dùng để xem danh sách chi tiết.</p>
-                            <a href="${pageContext.request.contextPath}/admin/users" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition">
+                            <a href="${pageContext.request.contextPath}/admin/users" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
                                 <i class="fa-solid fa-arrow-right"></i>
                                 Đi tới Quản lý người dùng
                             </a>

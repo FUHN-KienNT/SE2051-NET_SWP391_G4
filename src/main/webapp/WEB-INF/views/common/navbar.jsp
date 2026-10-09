@@ -13,34 +13,33 @@
             <!-- Main Navigation Links -->
             <nav class="hidden md:flex items-center space-x-6">
                 <a href="${pageContext.request.contextPath}/home" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Home</a>
-                <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">
-                    Courses
-                </a>
-               <c:if test="${not empty sessionScope.currentUser}">
-                   <c:choose>
-                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_ADMIN'
-                                      || sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
-                           <a href="${pageContext.request.contextPath}/admin/dashboard"
-                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-                               Dashboard
-                           </a>
-                       </c:when>
-
-                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_EXPERT'}">
-                           <a href="${pageContext.request.contextPath}/expert/dashboard"
-                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-                               Dashboard
-                           </a>
-                       </c:when>
-
-                       <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_STUDENT'}">
-                           <a href="${pageContext.request.contextPath}/my-enrollments"
-                              class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-                               My Courses
-                           </a>
-                       </c:when>
-                   </c:choose>
-               </c:if>
+                
+                <c:choose>
+                    <c:when test="${not empty sessionScope.currentUser and sessionScope.currentUser.roleCode eq 'ROLE_ADMIN'}">
+                        <a href="${pageContext.request.contextPath}/admin/users" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">User</a>
+                        <a href="${pageContext.request.contextPath}/admin/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
+                        <a href="${pageContext.request.contextPath}/admin/settings" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Setting</a>
+                    </c:when>
+                    
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center">Courses</a>
+                        
+                        <c:if test="${not empty sessionScope.currentUser}">
+                            <c:choose>
+                                <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
+                                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
+                                    <a href="${pageContext.request.contextPath}/admin/courses" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Manage Courses</a>
+                                </c:when>
+                                <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_EXPERT'}">
+                                    <a href="${pageContext.request.contextPath}/expert/dashboard" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Dashboard</a>
+                                </c:when>
+                                <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_STUDENT'}">
+                                    <a href="${pageContext.request.contextPath}/my-enrollments" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">My Courses</a>
+                                </c:when>
+                            </c:choose>
+                        </c:if>
+                    </c:otherwise>
+                </c:choose>
             </nav>
         </div>
 

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -6,60 +6,7 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar (SDS Admin Layout) -->
-    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
-        <div>
-            <!-- Brand Logo -->
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
-                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
-                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
-            </a>
-
-            <!-- Navigation Links -->
-            <nav class="space-y-1.5 text-sm font-medium">
-                <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-slate-400"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/courses"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-book-open w-5 text-slate-400"></i>
-                    <span>Course Management</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/users"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-users w-5 text-slate-400"></i>
-                    <span>User Management</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/settings"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-[#047857] text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                    <i class="fa-solid fa-gear w-5 text-white"></i>
-                    <span>System Settings</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Current User Info & Back to Site -->
-        <div class="pt-6 border-t border-slate-800/80 mt-6">
-            <div class="flex items-center space-x-3 px-2 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
-                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
-                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Return to LearnHub</span>
-            </a>
-        </div>
-    </aside>
+    
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">

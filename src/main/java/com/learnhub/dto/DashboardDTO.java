@@ -4,6 +4,7 @@ import com.learnhub.entity.AuditLog;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.learnhub.entity.User;
 
 /**
  * Data Transfer Object for the Admin Dashboard screen.
@@ -47,6 +48,13 @@ public class DashboardDTO {
     /** Active date range filter: "today" | "week" | "month" (default: "month"). */
     private String dateRange;
 
+    private String revenueLabelsJson = "[]";
+    private String revenueDataJson = "[]";
+    private String enrollmentLabelsJson = "[]";
+    private String enrollmentDataJson = "[]";
+    private List<User> recentUsers;
+
+
     // ── Constructors ─────────────────────────────────────────────────────────────
 
     public DashboardDTO() {
@@ -87,4 +95,20 @@ public class DashboardDTO {
 
     public String getDateRange() { return dateRange; }
     public void setDateRange(String dateRange) { this.dateRange = dateRange; }
+
+    public String getRevenueLabelsJson() { return revenueLabelsJson; }
+    public void setRevenueLabelsJson(String s) { this.revenueLabelsJson = s; }
+
+    public String getRevenueDataJson() { return revenueDataJson; }
+    public void setRevenueDataJson(String s) { this.revenueDataJson = s; }
+
+    public String getEnrollmentLabelsJson() { return enrollmentLabelsJson; }
+    public void setEnrollmentLabelsJson(String s) { this.enrollmentLabelsJson = s; }
+
+    public String getEnrollmentDataJson() { return enrollmentDataJson; }
+    public void setEnrollmentDataJson(String s) { this.enrollmentDataJson = s; }
+
+    public List<User> getRecentUsers() { return recentUsers; }
+    public void setRecentUsers(List<User> list) { this.recentUsers = list; }
+
 }

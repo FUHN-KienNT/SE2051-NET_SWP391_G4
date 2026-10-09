@@ -2,6 +2,10 @@ package com.learnhub.service;
 
 import com.learnhub.dao.DashboardDAO;
 import com.learnhub.dto.DashboardDTO;
+import com.learnhub.dao.UserDAO;
+import com.learnhub.entity.User;
+import com.google.gson.Gson;
+
 import com.learnhub.entity.AuditLog;
 
 import java.math.BigDecimal;
@@ -25,14 +29,18 @@ public class DashboardService {
     private static final Logger LOGGER = Logger.getLogger(DashboardService.class.getName());
 
     private final DashboardDAO dashboardDAO;
+    private final UserDAO userDAO;
 
     public DashboardService() {
         this.dashboardDAO = new DashboardDAO();
+        this.userDAO = new UserDAO();
     }
 
-    public DashboardService(DashboardDAO dashboardDAO) {
+    public DashboardService(DashboardDAO dashboardDAO, UserDAO userDAO) {
         this.dashboardDAO = dashboardDAO;
+        this.userDAO = userDAO;
     }
+
 
     /**
      * Build a fully-populated DashboardDTO for the given date range.
@@ -111,6 +119,26 @@ public class DashboardService {
 
         List<AuditLog> logs = dashboardDAO.getRecentAuditLogs(10);
         dto.setRecentLogs(logs);
+
+        
+        // Charts Data
+        Object[] revData = dashboardDAO.getRevenueLast6Months();
+        List<String> revLabels = (List<String>) revData[0];
+        List<BigDecimal> revValues = (List<BigDecimal>) revData[1];
+        
+        Object[] enrData = dashboardDAO.getEnrollmentsByCategory();
+        List<String> enrLabels = (List<String>) enrData[0];
+        List<Long> enrValues = (List<Long>) enrData[1];
+        
+        Gson gson = new Gson();
+        dto.setRevenueLabelsJson(gson.toJson(revLabels));
+        dto.setRevenueDataJson(gson.toJson(revValues));
+        dto.setEnrollmentLabelsJson(gson.toJson(enrLabels));
+        dto.setEnrollmentDataJson(gson.toJson(enrValues));
+
+        // Quick Access Users (Top 5 most recent)
+        List<User> recentUsers = userDAO.findUsers("", null, "", 0, 5);
+        dto.setRecentUsers(recentUsers);
 
         return dto;
     }

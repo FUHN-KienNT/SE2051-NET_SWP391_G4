@@ -23,7 +23,6 @@
                             </c:when>
                             <c:otherwise>
                                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
-                                <p class="text-slate-500 text-sm mt-1">Tổng quan về số lượng người dùng và hệ thống</p>
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -166,44 +165,43 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-3">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs">N</div>
-                                                <div>
-                                                    <div class="font-bold text-slate-900">Nguyễn Văn A</div>
-                                                    <div class="text-xs text-slate-500">nguyenvana@gmail.com</div>
+                                    <c:if test="${empty dashboard.recentUsers}">
+                                        <tr>
+                                            <td colspan="3" class="px-6 py-4 text-center text-slate-500 text-sm">Chưa có người dùng nào.</td>
+                                        </tr>
+                                    </c:if>
+                                    <c:forEach var="u" items="${dashboard.recentUsers}">
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="px-6 py-3">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs uppercase border border-emerald-100">
+                                                        ${fn:substring(u.username, 0, 1)}
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-bold text-slate-900">${u.username}</div>
+                                                        <div class="text-xs text-slate-500">${u.email}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600">Student</span>
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-3">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">T</div>
-                                                <div>
-                                                    <div class="font-bold text-slate-900">Trần Thị B</div>
-                                                    <div class="text-xs text-slate-500">tranthib@learnhub.com</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700">Manager</span>
-                                        </td>
-                                        <td class="px-6 py-3">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
-                                            </span>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600">${u.roleName}</span>
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <c:choose>
+                                                    <c:when test="${u.status == 'active'}">
+                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e8f5e9] text-[#2e7d32]">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2e7d32]"></span> Active
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span> ${u.status}
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
                                 </tbody>
                             </table>
                         </div>
@@ -226,10 +224,10 @@
             new Chart(ctxRev, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: ${dashboard.revenueLabelsJson != null ? dashboard.revenueLabelsJson : "[]"},
                     datasets: [{
                         label: 'Revenue (VND)',
-                        data: [15000000, 22000000, 18000000, 29000000, 34000000, 42500000],
+                        data: ${dashboard.revenueDataJson != null ? dashboard.revenueDataJson : "[]"},
                         borderColor: '#047857',
                         backgroundColor: 'rgba(4, 120, 87, 0.1)',
                         borderWidth: 3,
@@ -258,10 +256,10 @@
             new Chart(ctxEnr, {
                 type: 'bar',
                 data: {
-                    labels: ['Python', 'Java', 'Web Dev', 'Data Sci', 'UI/UX'],
+                    labels: ${dashboard.enrollmentLabelsJson != null ? dashboard.enrollmentLabelsJson : "[]"},
                     datasets: [{
                         label: 'Enrollments',
-                        data: [320, 210, 180, 95, 49],
+                        data: ${dashboard.enrollmentDataJson != null ? dashboard.enrollmentDataJson : "[]"},
                         backgroundColor: '#10b981',
                         borderRadius: 6
                     }]

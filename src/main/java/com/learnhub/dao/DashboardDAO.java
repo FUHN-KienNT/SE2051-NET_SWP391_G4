@@ -152,6 +152,61 @@ public class DashboardDAO {
      *
      * @param limit maximum number of rows to return
      */
+    
+    /**
+     * Get revenue grouped by month for the last 6 months.
+     * Returns a pair of lists: [0] = List<String> labels, [1] = List<BigDecimal> data
+     */
+    public Object[] getRevenueLast6Months() {
+        List<String> labels = new ArrayList<>();
+        List<BigDecimal> data = new ArrayList<>();
+        String sql = "SELECT TO_CHAR(registration_date, 'Mon') as month_label, SUM(amount) as revenue " +
+                     "FROM registration " +
+                     "WHERE payment_status = 'paid' " +
+                     "  AND registration_date >= date_trunc('month', CURRENT_DATE - INTERVAL '5 months') " +
+                     "GROUP BY TO_CHAR(registration_date, 'Mon'), date_trunc('month', registration_date) " +
+                     "ORDER BY date_trunc('month', registration_date)";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                labels.add(rs.getString("month_label"));
+                BigDecimal rev = rs.getBigDecimal("revenue");
+                data.add(rev != null ? rev : BigDecimal.ZERO);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error fetching revenue chart data", e);
+        }
+        return new Object[]{labels, data};
+    }
+
+    /**
+     * Get enrollments grouped by course category.
+     * Returns a pair of lists: [0] = List<String> labels, [1] = List<Long> data
+     */
+    public Object[] getEnrollmentsByCategory() {
+        List<String> labels = new ArrayList<>();
+        List<Long> data = new ArrayList<>();
+        String sql = "SELECT s.value as category_name, COUNT(r.id) as enrollments " +
+                     "FROM registration r " +
+                     "JOIN course c ON r.course_id = c.id " +
+                     "JOIN setting s ON c.category_id = s.id " +
+                     "GROUP BY s.value " +
+                     "ORDER BY enrollments DESC " +
+                     "LIMIT 5";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                labels.add(rs.getString("category_name"));
+                data.add(rs.getLong("enrollments"));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error fetching enrollment chart data", e);
+        }
+        return new Object[]{labels, data};
+    }
+
     public List<AuditLog> getRecentAuditLogs(int limit) {
         List<AuditLog> list = new ArrayList<>();
         String sql = "SELECT id, actor, action_type, description, status, created_at " +

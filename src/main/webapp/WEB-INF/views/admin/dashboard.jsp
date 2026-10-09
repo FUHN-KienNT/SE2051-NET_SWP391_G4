@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
@@ -23,6 +23,7 @@
                             </c:when>
                             <c:otherwise>
                                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
+                                <p class="text-slate-500 text-sm mt-1">Tổng quan về số lượng người dùng và hệ thống</p>
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -60,6 +61,86 @@
                             <div>
                                 <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
                                 <h3 class="text-xl font-bold text-slate-800">Manager</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
+                        </div>
+                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
+                            <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3 block"></i>
+                            <p class="mb-4">Truy cập vào trang quản lý khóa học để xem danh sách chi tiết.</p>
+                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
+                                <i class="fa-solid fa-arrow-right"></i>
+                                Đi tới Quản lý khóa học
+                            </a>
+                        </div>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <!-- Admin Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Card 1: Total Users -->
+                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
+                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL USERS</p>
+                            <div class="flex items-end justify-between mt-auto">
+                                <h3 class="text-3xl font-bold text-[#1e293b]">
+                                    <fmt:formatNumber value="${dashboard.totalUsers != null ? dashboard.totalUsers : 0}" type="number"/>
+                                </h3>
+                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold mb-1">
+                                    +<fmt:formatNumber value="${dashboard.userGrowthPct != null ? dashboard.userGrowthPct : 0}" type="number" maxFractionDigits="0"/>%
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: System Setting -->
+                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
+                            <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">SYSTEM SETTING</p>
+                            <div class="flex items-end justify-between mt-auto">
+                                <h3 class="text-xl font-bold text-[#1e293b] flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Stable
+                                </h3>
+                                <a href="${pageContext.request.contextPath}/admin/settings" class="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] rounded-full px-3 py-1 text-[11px] font-bold mb-0.5 transition flex items-center gap-1">
+                                    Modify <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Monthly Revenue Chart -->
+                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">MONTHLY REVENUE</p>
+                                    <h3 class="text-2xl font-bold text-[#1e293b] flex items-end gap-1">
+                                        <fmt:formatNumber value="${dashboard.monthlyRevenue != null ? dashboard.monthlyRevenue : 0}" pattern="#,###"/> <span class="text-sm text-slate-400">VND</span>
+                                    </h3>
+                                </div>
+                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold">+15%</span>
+                            </div>
+                            <div class="relative flex-1 w-full" style="min-height: 250px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Total Enrollments Chart -->
+                        <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL ENROLLMENTS</p>
+                                    <h3 class="text-2xl font-bold text-[#1e293b]">
+                                        <fmt:formatNumber value="${dashboard.totalEnrollments != null ? dashboard.totalEnrollments : 0}" type="number"/>
+                                        <span class="text-sm text-slate-400">lượt</span>
+                                    </h3>
+                                </div>
+                                <span class="bg-[#dcfce7] text-[#166534] rounded-full px-2.5 py-0.5 text-[10px] font-bold">+8%</span>
+                            </div>
+                            <div class="relative flex-1 w-full" style="min-height: 250px;">
+                                <canvas id="enrollmentChart"></canvas>
                             </div>
                         </div>
                     </div>

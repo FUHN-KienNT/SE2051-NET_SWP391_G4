@@ -65,7 +65,6 @@
                         <th class="px-6 py-4">Tên khóa học (Course Title)</th>
                         <th class="px-6 py-4 whitespace-nowrap">Danh mục</th>
                         <th class="px-6 py-4 text-center whitespace-nowrap">Modules</th>
-                        <th class="px-6 py-4 text-center whitespace-nowrap">Lessons</th>
                         <th class="px-6 py-4 text-center whitespace-nowrap">Trạng thái</th>
                         <th class="px-6 py-4 text-right whitespace-nowrap">Action</th>
                     </tr>
@@ -90,11 +89,6 @@
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span class="inline-flex items-center justify-center px-3 py-1 bg-brand-50 text-brand-700 rounded-lg text-xs font-bold whitespace-nowrap min-w-20">
                                             ${c.moduleCount} modules
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center justify-center px-3 py-1 bg-brand-50 text-brand-700 rounded-lg text-xs font-bold whitespace-nowrap min-w-16">
-                                            ${c.lessonCount} bài
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -128,7 +122,7 @@
                         </c:when>
                         <c:otherwise>
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-text-secondary">
+                                <td colspan="6" class="px-6 py-12 text-center text-text-secondary">
                                     <i class="fa-regular fa-folder-open text-4xl mb-3 block text-slate-300"></i>
                                     Hiện chưa có khóa học nào được chỉ định cho bạn.
                                 </td>

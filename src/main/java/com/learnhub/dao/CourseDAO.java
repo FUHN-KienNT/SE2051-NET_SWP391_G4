@@ -377,7 +377,7 @@ public class CourseDAO {
                      "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
                      "s.name as category_name, u.username as expert_name, " +
                      "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
-                     "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) as lesson_count " +
+                     "0 as lesson_count " +
                      "FROM course c " +
                      "LEFT JOIN setting s ON c.category_id = s.id " +
                      "LEFT JOIN \"user\" u ON c.expert_id = u.id " +

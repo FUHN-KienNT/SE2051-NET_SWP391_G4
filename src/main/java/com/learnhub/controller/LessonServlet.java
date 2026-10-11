@@ -45,6 +45,10 @@ public class LessonServlet extends HttpServlet {
              return;
          }
          UUID expertId = user.getId();
+         if (req.getSession(false).getAttribute("lessonDeleteToken") == null) {
+             req.getSession(false).setAttribute(
+                     "lessonDeleteToken", UUID.randomUUID().toString());
+         }
         String courseIdStr = req.getParameter("courseId");
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
             try {
@@ -77,22 +81,11 @@ public class LessonServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
         }
-        if ("delete".equalsIgnoreCase(action)) {
-            String lessonIdStr = req.getParameter("id");
-            if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
-                try {
-                    UUID lessonId = UUID.fromString(lessonIdStr.trim());
-                    lessonService.deleteLesson(expertId, lessonId);
-                } catch (SecurityException e) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                } catch (Exception e) {
-                    throw new ServletException("Lesson operation failed.", e);
-                }
-            }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
-            return;
-        }
+         if ("delete".equalsIgnoreCase(action)) {
+             resp.setHeader("Allow", "POST");
+             resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+             return;
+         }
         if ("edit".equalsIgnoreCase(action)) {
             String lessonIdStr = req.getParameter("id");
             if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
@@ -124,6 +117,34 @@ public class LessonServlet extends HttpServlet {
         }
         UUID expertId = user.getId();
         String action = req.getParameter("action");
+        if ("delete".equalsIgnoreCase(action)) {
+            Object token = req.getSession(false).getAttribute("lessonDeleteToken");
+            if (!(token instanceof String expected)
+                    || !expected.equals(req.getParameter("csrfToken"))) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+            UUID lessonId;
+            UUID courseId;
+            try {
+                lessonId = UUID.fromString(req.getParameter("id"));
+                courseId = UUID.fromString(req.getParameter("courseId"));
+            } catch (IllegalArgumentException | NullPointerException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            try {
+                lessonService.requireCourseAccess(expertId, courseId);
+                lessonService.deleteLesson(expertId, lessonId);
+            } catch (SecurityException e) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            } catch (IllegalStateException e) {
+                throw new ServletException("Cannot delete lesson.", e);
+            }
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + courseId);
+            return;
+        }
         if ("upload".equalsIgnoreCase(action)) {
             String lessonIdStr = req.getParameter("lessonId");
             Part filePart = req.getPart("file");

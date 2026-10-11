@@ -72,9 +72,18 @@
                                                     <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
                                                         <a href="${pageContext.request.contextPath}/lessons/manage?action=edit&id=${les.id}&courseId=${course.id}"
                                                            class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
-                                                        <a href="${pageContext.request.contextPath}/lessons/manage?action=delete&id=${les.id}&courseId=${course.id}"
-                                                           class="inline-flex rounded-lg px-3 py-2 text-status-danger hover:bg-red-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
-                                                           onclick="return confirm('Bạn có chắc chắn muốn xóa bài giảng này không?');">Delete</a>
+                                                       <form action="${pageContext.request.contextPath}/lessons/manage"
+                                                             method="post" class="inline-block"
+                                                             onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài giảng này không?');">
+                                                           <input type="hidden" name="action" value="delete">
+                                                           <input type="hidden" name="id" value="${les.id}">
+                                                           <input type="hidden" name="courseId" value="${course.id}">
+                                                           <input type="hidden" name="csrfToken" value="${sessionScope.lessonDeleteToken}">
+                                                           <button type="submit"
+                                                                   class="inline-flex rounded-lg px-3 py-2 text-status-danger hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                                                               Delete
+                                                           </button>
+                                                       </form>
                                                     </td>
                                                 </tr>
                                                 <c:set var="globalIndex" value="${globalIndex + 1}" />

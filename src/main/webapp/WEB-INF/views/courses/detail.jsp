@@ -160,7 +160,6 @@
                             <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                             Đăng Ký Khóa Học
                         </a>
-                        
                         <!-- Course Highlights -->
                         <ul class="mt-6 space-y-3 text-sm text-text-secondary border-t border-border-default pt-5">
                             <li class="flex items-center gap-3">

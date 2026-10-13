@@ -99,7 +99,6 @@ public class LessonDAO {
             return false;
         }
         String lockSql = "SELECT id FROM module WHERE id = ? FOR UPDATE";
-        String shiftSql = "UPDATE lesson " + "SET order_index = order_index + 1, updated_at = NOW() " + "WHERE module_id = ? AND order_index >= ?";
         String insertSql = "INSERT INTO lesson " + "(id, module_id, title, content, order_index, " + "created_at, updated_at) " + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, " + "NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -115,10 +114,10 @@ public class LessonDAO {
                     }
                 }
                 // Move existing lessons down to make room.
-                try (PreparedStatement ps = conn.prepareStatement(shiftSql)) {
-                    ps.setObject(1, lesson.getModuleId());
-                    ps.setInt(2, lesson.getOrderIndex());
-                    ps.executeUpdate();
+                List<UUID> orderedIds = readLessonOrder(conn, lesson.getModuleId());
+                if (lesson.getOrderIndex() > orderedIds.size() + 1) {
+                    conn.rollback();
+                    return false;
                 }
                 // Insert the new lesson at the requested position.
                 try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
@@ -133,6 +132,10 @@ public class LessonDAO {
                         );
                     }
                 }
+                List<UUID> savedIds = readLessonOrder(conn, lesson.getModuleId());
+                savedIds.remove(lesson.getId());
+                savedIds.add(lesson.getOrderIndex() - 1, lesson.getId());
+                writeLessonOrder(conn, lesson.getModuleId(), savedIds);
                 conn.commit();
                 return true;
             } catch (SQLException e) {
@@ -150,18 +153,70 @@ public class LessonDAO {
     }
 
     public boolean update(Lesson lesson) {
-        String sql = "UPDATE lesson SET module_id = ?, title = ?, content = ?, order_index = ?, updated_at = NOW() WHERE id = ?";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, lesson.getModuleId());
-            ps.setString(2, lesson.getTitle());
-            ps.setString(3, lesson.getContent());
-            ps.setInt(4, lesson.getOrderIndex());
-            ps.setObject(5, lesson.getId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in LessonDAO.update: " + e.getMessage(), e);
+        if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) return false;
+        Lesson existing = findById(lesson.getId());
+        if (existing == null) return false;
+        UUID oldModule = existing.getModuleId(), newModule = lesson.getModuleId();
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Lock modules consistently with insert/delete.
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT id FROM module WHERE id IN (?, ?) ORDER BY id FOR UPDATE")) {
+                    ps.setObject(1, oldModule); ps.setObject(2, newModule);
+                    int count = 0;
+                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) count++; }
+                    if (count != (oldModule.equals(newModule) ? 1 : 2))
+                        throw new SQLException("Module no longer exists.");
+                }
+                List<UUID> source = readLessonOrder(conn, oldModule);
+                if (!source.remove(lesson.getId()))
+                    throw new SQLException("Lesson changed concurrently. Please retry.");
+                List<UUID> target = oldModule.equals(newModule)
+                        ? source : readLessonOrder(conn, newModule);
+                if (lesson.getOrderIndex() > target.size() + 1)
+                    throw new SQLException("Order index is outside the module.");
+                target.add(lesson.getOrderIndex() - 1, lesson.getId());
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
+                    ps.setObject(1, newModule); ps.setString(2, lesson.getTitle());
+                    ps.setString(3, lesson.getContent()); ps.setInt(4, lesson.getOrderIndex());
+                    ps.setObject(5, lesson.getId()); ps.setObject(6, oldModule);
+                    if (ps.executeUpdate() != 1) throw new SQLException("Lesson update failed.");
+                }
+                if (!oldModule.equals(newModule)) writeLessonOrder(conn, oldModule, source);
+                writeLessonOrder(conn, newModule, target);
+                conn.commit();
+                return true;
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackError) { e.addSuppressed(rollbackError); }
+                throw e;
+            }
+        } catch (SQLException | RuntimeException e) {
+            LOGGER.log(Level.SEVERE, "Cannot update and reorder lesson", e);
             return false;
+        }
+    }
+
+    private List<UUID> readLessonOrder(Connection conn, UUID moduleId) throws SQLException {
+        List<UUID> ids = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM lesson WHERE module_id=? ORDER BY order_index, created_at, id")) {
+            ps.setObject(1, moduleId);
+            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) ids.add((UUID) rs.getObject("id")); }
+        }
+        return ids;
+    }
+
+    private void writeLessonOrder(Connection conn, UUID moduleId, List<UUID> ids) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE lesson SET order_index=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
+            for (int i = 0; i < ids.size(); i++) {
+                ps.setInt(1, i + 1); ps.setObject(2, ids.get(i)); ps.setObject(3, moduleId);
+                ps.addBatch();
+            }
+            for (int count : ps.executeBatch())
+                if (count != 1 && count != Statement.SUCCESS_NO_INFO) throw new SQLException("Reordering failed.");
         }
     }
 

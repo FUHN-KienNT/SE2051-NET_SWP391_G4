@@ -12,8 +12,10 @@ import com.learnhub.entity.Lesson;
 import com.learnhub.entity.Registration;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import com.learnhub.util.DbConnection;
 
 public class LearningProcessService {
 
@@ -62,6 +64,24 @@ public class LearningProcessService {
     private int calculateProgressPercent(int completed, int total) {
         return total <= 0 ? 0
                 : Math.min(100, (int) Math.round(100.0 * completed / total));
+    }
+
+    public int getProgressPercent(UUID registrationId) {
+        int completed = learningProcessDAO.countCompletedLessons(registrationId);
+        int total = learningProcessDAO.countTotalLessons(registrationId);
+        return calculateProgressPercent(completed, total);
+    }
+
+    public Map<String, String> getLessonStatuses(UUID registrationId) {
+        return learningProcessDAO.findLessonStatuses(registrationId);
+    }
+
+    public int getCompletedCount(UUID registrationId, List<Lesson> orderedLessons) {
+        Map<String, String> statuses = getLessonStatuses(registrationId);
+        return (int) orderedLessons.stream()
+                .filter(l -> "completed".equals(
+                        statuses.get(l.getId().toString())))
+                .count();
     }
 
     public StudentDashboardData buildStudentDashboard(
@@ -247,56 +267,26 @@ public class LearningProcessService {
                 .anyMatch(lesson -> lesson.getId().equals(lessonId));
     }
 
-    public void markLessonComplete(
-            UUID registrationId,
-            UUID lessonId
-    ) {
-        LearningProcess process =
-                learningProcessDAO.findByRegistrationAndLesson(
-                        registrationId, lessonId
-                );
-
-        if (process == null) {
-            process = new LearningProcess(
-                    UUID.randomUUID(),
-                    registrationId,
-                    lessonId,
-                    "completed"
-            );
-        } else {
-            process.setStatus("completed");
+    public void markLessonComplete(UUID registrationId, UUID lessonId) {
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                registrationDAO.lockRegistration(conn, registrationId);
+                learningProcessDAO.completeLesson(conn, registrationId, lessonId);
+                var counts = learningProcessDAO.readProgressCounts(conn, registrationId);
+                int percent = calculateProgressPercent(counts.completed(), counts.total());
+                registrationDAO.updateProgressPercent(conn, registrationId, percent);
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
+        } catch (SQLException | RuntimeException e) {
+            throw new IllegalStateException("Cannot save learning progress.", e);
         }
-
-        process.setCompletedAt(
-                new Timestamp(System.currentTimeMillis())
-        );
-
-        learningProcessDAO.save(process);
-
-        registrationDAO.updateProgressPercent(
-                registrationId,
-                getProgressPercent(registrationId)
-        );
-    }
-
-    public int getProgressPercent(UUID registrationId) {
-        int completed =
-                learningProcessDAO.countCompletedLessons(registrationId);
-        int total =
-                learningProcessDAO.countTotalLessons(registrationId);
-        if (total <= 0) return 0;
-        return calculateProgressPercent(completed, total);
-    }
-    public Map<String, String> getLessonStatuses(
-            UUID registrationId
-    ) {
-        return learningProcessDAO.findLessonStatuses(registrationId);
-    }
-
-    public int getCompletedCount(UUID registrationId, List<Lesson> orderedLessons) {
-        Map<String, String> statuses = getLessonStatuses(registrationId);
-        return (int) orderedLessons.stream()
-                .filter(l -> "completed".equals(statuses.get(l.getId().toString())))
-                .count();
     }
 }

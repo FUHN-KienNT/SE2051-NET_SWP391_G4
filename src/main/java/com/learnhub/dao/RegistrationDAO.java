@@ -259,4 +259,22 @@ public class RegistrationDAO {
         }
         return r;
     }
+    public void lockRegistration(Connection conn, UUID registrationId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM registration WHERE id = ? FOR UPDATE")) {
+            ps.setObject(1, registrationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new SQLException("Registration not found.");
+            }
+        }
+    }
+    public void updateProgressPercent(Connection conn, UUID registrationId, int percent)
+            throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE registration SET progress_percent = ? WHERE id = ?")) {
+            ps.setInt(1, percent);
+            ps.setObject(2, registrationId);
+            if (ps.executeUpdate() != 1) throw new SQLException("Cannot update progress.");
+        }
+    }
 }

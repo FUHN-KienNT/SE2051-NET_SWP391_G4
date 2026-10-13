@@ -16,7 +16,7 @@ public class LearningProcessDAO {
 
     private static final Logger LOGGER =
             Logger.getLogger(LearningProcessDAO.class.getName());
-
+    public record LessonCounts(int completed, int total) {}
     /**
      * Returns a suggested unfinished lesson for the home page.
      */
@@ -355,4 +355,44 @@ public class LearningProcessDAO {
 
         return statuses;
     }
+
+    public void completeLesson(Connection conn, UUID registrationId, UUID lessonId)
+            throws SQLException {
+        String completeSql = """
+        INSERT INTO learning_process (id, registration_id, lesson_id, status, completed_at)
+        SELECT gen_random_uuid(), r.id, l.id, 'completed', NOW()
+        FROM registration r JOIN module m ON m.course_id = r.course_id
+        JOIN lesson l ON l.module_id = m.id
+        WHERE r.id = ? AND l.id = ?
+        ON CONFLICT (registration_id, lesson_id)
+        DO UPDATE SET status = 'completed',
+            completed_at = COALESCE(learning_process.completed_at, EXCLUDED.completed_at)
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(completeSql)) {
+            ps.setObject(1, registrationId);
+            ps.setObject(2, lessonId);
+            if (ps.executeUpdate() != 1)
+                throw new SQLException("Cannot complete lesson.");
+        }
+    }
+
+    public LessonCounts readProgressCounts(Connection conn, UUID registrationId)
+            throws SQLException {
+        String countsSql = """
+        SELECT COUNT(l.id) AS total,
+               COUNT(l.id) FILTER (WHERE lp.status = 'completed') AS completed
+        FROM registration r JOIN module m ON m.course_id = r.course_id
+        JOIN lesson l ON l.module_id = m.id
+        LEFT JOIN learning_process lp ON lp.lesson_id = l.id AND lp.registration_id = r.id
+        WHERE r.id = ?
+        """;
+        try (PreparedStatement ps = conn.prepareStatement(countsSql)) {
+            ps.setObject(1, registrationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) throw new SQLException("Cannot read progress counts.");
+                return new LessonCounts(rs.getInt("completed"), rs.getInt("total"));
+            }
+        }
+    }
+
 }

@@ -12,6 +12,8 @@ import com.learnhub.util.CloudinaryClient;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * Service handling Lesson management and materials upload.
@@ -75,6 +77,7 @@ public class LessonService {
 
     public boolean saveLesson(UUID expertId, LessonDTO dto) {
         if (dto == null) return false;
+        if (!validateLesson(expertId, dto).isEmpty()) return false;
         requireModuleAccess(expertId, dto.getModuleId());
         if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null) {
             requireLessonAccess(expertId, dto.getId());
@@ -88,6 +91,33 @@ public class LessonService {
     public void deleteLesson(UUID expertId, UUID lessonId) {
         requireLessonAccess(expertId, lessonId);
         lessonDAO.delete(lessonId);
+    }
+
+    public Map<String, String> validateLesson(UUID expertId, LessonDTO dto) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        if (dto.getModuleId() == null) {
+            errors.put("moduleId", "Please select a valid module.");
+        } else {
+            requireModuleAccess(expertId, dto.getModuleId());
+            if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null)
+                requireLessonAccess(expertId, dto.getId());
+        }
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            errors.put("title", "Please enter a lesson title.");
+        } else if (dto.getTitle().codePointCount(0, dto.getTitle().length()) > 255) {
+            errors.put("title", "Lesson title must not exceed 255 characters.");
+        }
+        if (dto.getContent() == null || dto.getContent().isBlank())
+            errors.put("content", "Please enter lesson content.");
+        if (dto.getOrderIndex() < 1) {
+            errors.put("orderIndex", "Order index must be a whole number greater than or equal to 1.");
+        } else if (dto.getModuleId() != null) {
+            long count = lessonDAO.findByModuleId(dto.getModuleId()).stream()
+                    .filter(l -> !l.getId().equals(dto.getId())).count();
+            if (dto.getOrderIndex() > count + 1)
+                errors.put("orderIndex", "Maximum allowed order index is " + (count + 1) + ".");
+        }
+        return errors;
     }
 
     public void reorderLessons(UUID moduleId, List<UUID> orderedIds) {

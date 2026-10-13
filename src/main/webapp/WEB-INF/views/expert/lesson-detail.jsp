@@ -45,13 +45,16 @@
                 <div>
                     <label for="moduleId" class="block text-sm font-semibold text-text-primary mb-2">Module <span class="text-status-danger">*</span></label>
                     <select id="moduleId" name="moduleId" required
+                            data-error="${fn:escapeXml(fieldErrors.moduleId)}"
                             class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                         <option value="" data-next-order="1">-- Chọn Module cho bài giảng --</option>
                         <c:forEach var="m" items="${modules}">
                             <c:set var="nextOrder" value="1" />
                             <c:if test="${not empty m.lessons}">
                                 <c:forEach var="l" items="${m.lessons}">
-                                    <c:set var="nextOrder" value="${l.orderIndex + 1}" />
+                                    <c:if test="${lesson == null || l.id ne lesson.id}">
+                                        <c:set var="nextOrder" value="${nextOrder + 1}" />
+                                    </c:if>
                                 </c:forEach>
                             </c:if>
                             <option value="${m.id}" data-next-order="${nextOrder}" ${lesson != null && lesson.moduleId eq m.id ? 'selected' : ''}>
@@ -64,6 +67,7 @@
                 <div>
                     <label for="title" class="block text-sm font-semibold text-text-primary mb-2">Lesson Title <span class="text-status-danger">*</span></label>
                     <input type="text" id="title" name="title" required
+                    data-error="${fn:escapeXml(fieldErrors.title)}"
                            value="${lesson != null ? lesson.title : ''}"
                            placeholder="Nhập tiêu đề bài giảng..."
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
@@ -72,6 +76,7 @@
                 <div>
                     <label for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span class="text-status-danger">*</span></label>
                     <textarea id="content" name="content" rows="10" required
+                    data-error="${fn:escapeXml(fieldErrors.content)}"
                               placeholder="Enter lesson content (text, or a video/document link)..."
                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">${lesson != null ? lesson.content : ''}</textarea>
                 </div>
@@ -80,6 +85,7 @@
                 <div class="w-44">
                     <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
                     <input type="number" id="orderIndex" name="orderIndex" min="1"
+                    data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
                            value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition text-center font-bold">
                 </div>
@@ -100,20 +106,31 @@
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const moduleSelect = document.getElementById('moduleId');
         const orderInput = document.getElementById('orderIndex');
-        const lessonIdInput = document.querySelector('input[name="id"]');
+        const fields = document.querySelectorAll('[data-error]');
+        let firstError = null;
 
-        if (moduleSelect && orderInput) {
-            moduleSelect.addEventListener('change', function() {
-                // Khi tạo mới (chưa có lessonId), tự động cập nhật orderIndex theo module được chọn
-                if (!lessonIdInput || !lessonIdInput.value) {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const nextOrder = selectedOption ? selectedOption.getAttribute('data-next-order') : '1';
-                    orderInput.value = nextOrder || 1;
-                }
-            });
+        fields.forEach(field => {
+            if (field.dataset.error) {
+                field.setCustomValidity(field.dataset.error);
+                if (!firstError) firstError = field;
+            }
+            const clearError = () => field.setCustomValidity('');
+            field.addEventListener('input', clearError);
+            field.addEventListener('change', clearError);
+        });
+
+        moduleSelect.addEventListener('change', function () {
+            const option = this.options[this.selectedIndex];
+            orderInput.value = option.dataset.nextOrder || '1';
+            orderInput.setCustomValidity('');
+        });
+
+        if (firstError) {
+            firstError.focus();
+            firstError.reportValidity();
         }
     });
 </script>

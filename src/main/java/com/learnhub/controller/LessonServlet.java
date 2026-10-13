@@ -7,8 +7,6 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.User;
 import com.learnhub.constant.AppConstants;
 import com.learnhub.service.CourseService;
-import java.util.ArrayList;
-import java.util.List;
 import com.learnhub.service.LessonService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -21,6 +19,9 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Servlet handling Lesson administration & material uploads.
@@ -171,27 +172,34 @@ public class LessonServlet extends HttpServlet {
         String title = req.getParameter("title");
         String content = req.getParameter("content");
         String orderIndexStr = req.getParameter("orderIndex");
-        int orderIndex = 1;
-        if (orderIndexStr != null && !orderIndexStr.trim().isEmpty()) {
-            try {
-                orderIndex = Integer.parseInt(orderIndexStr.trim());
-            } catch (NumberFormatException ignored) {
-            }
+        int orderIndex = 0;
+        try {
+            orderIndex = Integer.parseInt(orderIndexStr == null ? "" : orderIndexStr.trim());
+        } catch (NumberFormatException ignored) {
         }
         try {
             UUID id = (idStr != null && !idStr.trim().isEmpty()) ? UUID.fromString(idStr) : UUID.randomUUID();
-            UUID moduleId = UUID.fromString(moduleIdStr);
+            UUID moduleId = null;
+            try {
+                moduleId = UUID.fromString(moduleIdStr == null ? "" : moduleIdStr.trim());
+            } catch (IllegalArgumentException ignored) {
+            }
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
-            boolean saved = lessonService.saveLesson(expertId, dto);
+            Map<String, String> errors = lessonService.validateLesson(expertId, dto);
+            boolean saved = errors.isEmpty() && lessonService.saveLesson(expertId, dto);
             if (!saved) {
                 Course course = courseService.getCourseDetailWithCurriculum(
                         UUID.fromString(courseIdStr));
                 req.setAttribute("course", course);
                 req.setAttribute("modules", course == null ? List.of() : course.getModules());
                 req.setAttribute("lesson", dto);
-                req.setAttribute("saveError",
-                        "Cannot save lesson. Please try again");
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                req.setAttribute("fieldErrors", errors);
+                if (errors.isEmpty()) {
+                    req.setAttribute("saveError", "Can not save lesson.");
+                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                } else {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                }
                 req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp")
                         .forward(req, resp);
                 return;

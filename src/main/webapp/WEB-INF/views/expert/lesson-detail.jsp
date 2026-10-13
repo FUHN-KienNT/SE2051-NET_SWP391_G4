@@ -32,6 +32,11 @@
                 </a>
                 <h1 class="text-xl sm:text-2xl font-bold text-text-primary">Lesson Detail</h1>
             </div>
+            <c:if test="${not empty saveError}">
+                <p role="alert" class="mb-4 text-sm text-status-danger">
+                    <c:out value="${saveError}" />
+                </p>
+            </c:if>
             <form action="${pageContext.request.contextPath}/lessons/manage" method="POST" class="space-y-6 w-full">
                 <input type="hidden" name="action" value="save">
                 <input type="hidden" name="courseId" value="${course.id}">

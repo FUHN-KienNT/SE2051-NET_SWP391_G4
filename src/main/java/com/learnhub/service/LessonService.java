@@ -73,8 +73,8 @@ public class LessonService {
         return dto;
     }
 
-    public void saveLesson(UUID expertId, LessonDTO dto) {
-        if (dto == null) return;
+    public boolean saveLesson(UUID expertId, LessonDTO dto) {
+        if (dto == null) return false;
         requireModuleAccess(expertId, dto.getModuleId());
         if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null) {
             requireLessonAccess(expertId, dto.getId());
@@ -82,7 +82,7 @@ public class LessonService {
         Lesson lesson = new Lesson(dto.getId(), dto.getModuleId(),
                 dto.getTitle(), dto.getContent(), dto.getOrderIndex());
         lesson.setMaterialUrl(dto.getMaterialUrl());
-        lessonDAO.save(lesson);
+        return lessonDAO.save(lesson);
     }
 
     public void deleteLesson(UUID expertId, UUID lessonId) {

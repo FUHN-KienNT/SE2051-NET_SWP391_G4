@@ -182,7 +182,20 @@ public class LessonServlet extends HttpServlet {
             UUID id = (idStr != null && !idStr.trim().isEmpty()) ? UUID.fromString(idStr) : UUID.randomUUID();
             UUID moduleId = UUID.fromString(moduleIdStr);
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
-            lessonService.saveLesson(expertId, dto);
+            boolean saved = lessonService.saveLesson(expertId, dto);
+            if (!saved) {
+                Course course = courseService.getCourseDetailWithCurriculum(
+                        UUID.fromString(courseIdStr));
+                req.setAttribute("course", course);
+                req.setAttribute("modules", course == null ? List.of() : course.getModules());
+                req.setAttribute("lesson", dto);
+                req.setAttribute("saveError",
+                        "Cannot save lesson. Please try again");
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp")
+                        .forward(req, resp);
+                return;
+            }
             resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);

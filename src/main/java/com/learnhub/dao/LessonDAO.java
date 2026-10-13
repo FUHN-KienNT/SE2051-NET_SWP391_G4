@@ -86,12 +86,12 @@ public class LessonDAO {
         return list;
     }
 
-    public void save(Lesson lesson) {
+    public boolean save(Lesson lesson) {
+        if (lesson == null) return false;
         if (lesson.getId() != null && findById(lesson.getId()) != null) {
-            update(lesson);
-        } else {
-            insert(lesson);
+            return update(lesson);
         }
+        return insert(lesson);
     }
 
     public boolean insert(Lesson lesson) {

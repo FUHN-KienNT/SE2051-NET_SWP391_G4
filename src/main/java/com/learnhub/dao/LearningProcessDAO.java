@@ -151,13 +151,6 @@ public class LearningProcessDAO {
 
                     course.setLessonCount(total);
                     course.setCompletedLessonCount(completed);
-                    course.setProgressPercent(
-                            total == 0 ? 0 : Math.min(
-                                    100,
-                                    (int) Math.round(100.0 * completed / total)
-                            )
-                    );
-
                     course.setLessonId((UUID) rs.getObject("lesson_id"));
                     course.setLessonTitle(rs.getString("lesson_title"));
 

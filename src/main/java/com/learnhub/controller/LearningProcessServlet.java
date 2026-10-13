@@ -58,32 +58,6 @@ public class LearningProcessServlet extends HttpServlet {
         return user;
     }
 
-    private boolean canStudy(
-            Registration registration,
-            Course course,
-            UUID lessonId
-    ) {
-        if (registration == null || course == null) return false;
-
-        boolean active =
-                "enrolled".equalsIgnoreCase(registration.getStatus())
-                        || "completed".equalsIgnoreCase(registration.getStatus());
-
-        if (!active) return false;
-
-        boolean paidCourse = course.getPrice() != null
-                && course.getPrice().compareTo(BigDecimal.ZERO) > 0;
-
-        if (paidCourse
-                && !"paid".equalsIgnoreCase(registration.getPaymentStatus())) {
-            return false;
-        }
-
-        return course.getModules().stream()
-                .flatMap(module -> module.getLessons().stream())
-                .anyMatch(lesson -> lesson.getId().equals(lessonId));
-    }
-
     @Override
     protected void doGet(
             HttpServletRequest req,
@@ -115,7 +89,7 @@ public class LearningProcessServlet extends HttpServlet {
         Course course =
                 courseService.getCourseDetailWithCurriculum(courseId);
 
-        if (!canStudy(registration, course, lessonId)) {
+        if (!learningService.canStudy(registration, course, lessonId)) {
             resp.sendError(
                     HttpServletResponse.SC_FORBIDDEN,
                     "Course access denied."
@@ -215,7 +189,7 @@ public class LearningProcessServlet extends HttpServlet {
         Course course =
                 courseService.getCourseDetailWithCurriculum(courseId);
 
-        if (!canStudy(registration, course, lessonId)
+        if (!learningService.canStudy(registration, course, lessonId)
                 || !registration.getId().equals(registrationId)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;

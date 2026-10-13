@@ -80,22 +80,6 @@ public class EnrollmentServlet extends HttpServlet {
         );
     }
 
-    private boolean isAccessibleRegistration(
-            Registration registration,
-            Course course
-    ) {
-        boolean active =
-                "enrolled".equalsIgnoreCase(registration.getStatus())
-                        || "completed".equalsIgnoreCase(registration.getStatus());
-
-        boolean paymentAllowed =
-                course.getPrice() == null
-                        || course.getPrice().compareTo(BigDecimal.ZERO) <= 0
-                        || "paid".equalsIgnoreCase(registration.getPaymentStatus());
-
-        return active && paymentAllowed;
-    }
-
     private void handleEnrollmentPage(
             HttpServletRequest req,
             HttpServletResponse resp
@@ -158,7 +142,7 @@ public class EnrollmentServlet extends HttpServlet {
         boolean alreadyEnrolled = registrations != null
                 && registrations.stream().anyMatch(registration ->
                 courseId.equals(registration.getCourseId())
-                        && isAccessibleRegistration(registration, course)
+                        && learningService.isAccessibleRegistration(registration, course)
         );
 
         if (alreadyEnrolled) {
@@ -221,8 +205,6 @@ public class EnrollmentServlet extends HttpServlet {
         String search = req.getParameter("search");
         search = search == null ? "" : search.trim();
 
-        String keyword = search.toLowerCase(Locale.ROOT);
-
         String categoryValue = req.getParameter("categoryId");
         UUID categoryId = null;
 
@@ -239,81 +221,17 @@ public class EnrollmentServlet extends HttpServlet {
         }
 
         String sort = req.getParameter("sort");
-
-        if (!Set.of(
-                "newest", "title_asc", "price_asc", "price_desc"
-        ).contains(sort == null ? "" : sort)) {
-            sort = "newest";
-        }
-
-        Set<UUID> enrolledIds = new HashSet<>();
-
-        List<ContinueLearningDTO> myCourses = new ArrayList<>();
-
-        for (ContinueLearningDTO course : enrolled) {
-            enrolledIds.add(course.getCourseId());
-
-            if (course.getCourseTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                myCourses.add(course);
-            }
-        }
-
-        int count =
-                courseService.countPublicCourses(search, categoryId);
-
-        List<CourseDTO> availableCourses = new ArrayList<>();
-
-        List<CourseDTO> publishedCourses =
-                courseService.searchPublicCourses(
-                        search,
-                        categoryId,
-                        1,
-                        Math.max(1, count)
-                );
-
-        for (CourseDTO course : publishedCourses) {
-            if (!enrolledIds.contains(course.getId())
-                    && course.getTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                availableCourses.add(course);
-            }
-        }
-
-        Comparator<CourseDTO> priceOrder = Comparator.comparing(course ->
-                course.getPrice() == null
-                        ? BigDecimal.ZERO
-                        : course.getPrice()
-        );
-
-        if ("title_asc".equals(sort)) {
-            availableCourses.sort(
-                    Comparator.comparing(
-                            CourseDTO::getTitle,
-                            String.CASE_INSENSITIVE_ORDER
-                    ).thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_asc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_desc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.reversed().thenComparing(CourseDTO::getId)
-            );
-        }
-
-        req.setAttribute("myCourses", myCourses);
-        req.setAttribute("availableCourses", availableCourses);
+        var data = learningService.buildStudentDashboard(
+                enrolled, search, categoryId, sort);
+        req.setAttribute("myCourses", data.myCourses());
+        req.setAttribute("availableCourses", data.availableCourses());
         req.setAttribute("categories", courseService.getActiveCategories());
         req.setAttribute("search", search);
         req.setAttribute(
                 "selectedCategory",
                 categoryId == null ? "" : categoryId.toString()
         );
-        req.setAttribute("sort", sort);
+        req.setAttribute("sort", data.sort());
         req.setAttribute("pageTitle", "My Courses - LearnHub");
 
         req.getRequestDispatcher(
@@ -327,64 +245,22 @@ public class EnrollmentServlet extends HttpServlet {
             List<ContinueLearningDTO> enrolled
     ) throws IOException {
 
-        String courseIdValue = req.getParameter("courseId");
-
-        ContinueLearningDTO selected = enrolled.stream()
-                .filter(course ->
-                        course.getCourseId().toString().equals(courseIdValue))
-                .findFirst()
-                .orElse(null);
-
-        if (selected == null) {
-            resp.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
-                    "Course access denied."
-            );
+        ContinueLearningDTO selected;
+        try {
+            selected = learningService.resolveContinueLesson(
+                    enrolled, req.getParameter("courseId"), req.getParameter("lessonId"));
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
-
         if (selected.getLessonId() == null) {
-            resp.sendRedirect(
-                    req.getContextPath()
-                            + "/my-enrollments?notice=no-lessons"
-            );
+            resp.sendRedirect(req.getContextPath()
+                    + "/my-enrollments?notice=no-lessons");
             return;
         }
-
-        UUID targetLessonId = selected.getLessonId();
-        String savedLessonValue = req.getParameter("lessonId");
-
-        if (savedLessonValue != null && !savedLessonValue.isBlank()) {
-            try {
-                UUID candidate = UUID.fromString(savedLessonValue);
-
-                Course curriculum =
-                        courseService.getCourseDetailWithCurriculum(
-                                selected.getCourseId()
-                        );
-
-                boolean belongsToCourse = curriculum != null
-                        && curriculum.getModules().stream()
-                        .flatMap(module ->
-                                module.getLessons().stream())
-                        .anyMatch(lesson ->
-                                lesson.getId().equals(candidate));
-
-                if (belongsToCourse) {
-                    targetLessonId = candidate;
-                }
-            } catch (IllegalArgumentException ignored) {
-                // Invalid browser state uses the first lesson.
-            }
-        }
-
-        resp.sendRedirect(
-                req.getContextPath()
-                        + "/learn/lesson?courseId="
-                        + selected.getCourseId()
-                        + "&lessonId="
-                        + targetLessonId
-        );
+        resp.sendRedirect(req.getContextPath()
+                + "/learn/lesson?courseId=" + selected.getCourseId()
+                + "&lessonId=" + selected.getLessonId());
     }
 
     @Override

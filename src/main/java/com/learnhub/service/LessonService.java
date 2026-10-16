@@ -63,11 +63,6 @@ public class LessonService {
         this.lessonDAO = lessonDAO;
     }
 
-    public List<Lesson> getLessons(UUID expertId, UUID moduleId) {
-        requireModuleAccess(expertId, moduleId);
-        return lessonDAO.findByModuleId(moduleId);
-    }
-
     public LessonDTO getLesson(UUID expertId, UUID lessonId) {
         Lesson l = requireLessonAccess(expertId, lessonId);
         LessonDTO dto = new LessonDTO(l.getId(), l.getModuleId(), l.getTitle(), l.getContent(), l.getOrderIndex());

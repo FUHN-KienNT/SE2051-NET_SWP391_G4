@@ -66,9 +66,9 @@ public class ModuleDAO {
         if (module == null) {
             return false;
         }
-
-        String sql = "INSERT INTO module (id, course_id, title, content, order_index, created_at, updated_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO module "
+                + "(id, course_id, title, content, order_index, created_at, updated_at) "
+                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, NOW(), NOW())";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -79,7 +79,7 @@ public class ModuleDAO {
             ps.setInt(5, module.getOrderIndex());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in ModuleDAO.insert: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error in ModuleDAO.insert", e);
             return false;
         }
     }

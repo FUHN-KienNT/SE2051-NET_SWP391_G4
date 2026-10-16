@@ -170,44 +170,25 @@ public class EnrollmentServlet extends HttpServlet {
         ).forward(req, resp);
     }
 
-    private void handleMyEnrollments(
-            HttpServletRequest req,
-            HttpServletResponse resp
-    ) throws ServletException, IOException {
-
+    private void handleMyEnrollments(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = getCurrentUser(req);
-
         if (user == null) {
-            redirectToLogin(
-                    req,
-                    resp,
-                    req.getContextPath() + "/my-enrollments"
-            );
+            redirectToLogin(req, resp, req.getContextPath() + "/my-enrollments");
             return;
         }
-
         if (!AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())) {
-            resp.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
-                    "Student access required."
-            );
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Student access required.");
             return;
         }
-
-        List<ContinueLearningDTO> enrolled =
-                learningService.getStudentCourses(user.getId());
-
+        List<ContinueLearningDTO> enrolled = learningService.getStudentCourses(user.getId());
         if ("continue".equals(req.getParameter("action"))) {
             handleContinue(req, resp, enrolled);
             return;
         }
-
         String search = req.getParameter("search");
         search = search == null ? "" : search.trim();
-
         String categoryValue = req.getParameter("categoryId");
         UUID categoryId = null;
-
         if (categoryValue != null && !categoryValue.isBlank()) {
             try {
                 categoryId = UUID.fromString(categoryValue);

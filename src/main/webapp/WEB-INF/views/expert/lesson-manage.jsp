@@ -36,7 +36,11 @@
                                 <span>Quay lại</span>
                             </a>
                             <h1 class="text-xl sm:text-2xl font-bold text-text-primary">Lesson List</h1>
-                            <div class="hidden sm:block w-24"></div>
+                            <a href="${pageContext.request.contextPath}/lessons/manage?action=create&courseId=${course.id}"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-sm transition focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                                <span>Create Lesson</span>
+                            </a>
                         </div>
             <div class="overflow-x-auto border border-border-default rounded-xl">
                 <table class="w-full text-left text-sm text-text-secondary">
@@ -115,14 +119,6 @@
                         </c:choose>
                     </tbody>
                 </table>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <a href="${pageContext.request.contextPath}/lessons/manage?action=create&courseId=${course.id}"
-                   class="inline-flex items-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-sm transition shadow-sm space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-plus text-xs"></i>
-                    <span>Create Lesson</span>
-                </a>
             </div>
         </div>
     </div>

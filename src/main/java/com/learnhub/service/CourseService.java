@@ -11,7 +11,6 @@ import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -165,6 +164,10 @@ public class CourseService {
 
     public int countAssignedCourses(UUID expertId) {
         return courseDAO.countByExpertId(expertId);
+    }
+
+    public int countAssignedCourses(UUID expertId, String status) {
+        return courseDAO.countByExpertId(expertId, status);
     }
 
     public List<Registration> getMyEnrollments(UUID userId) {

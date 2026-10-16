@@ -87,16 +87,21 @@ public class CourseServlet extends HttpServlet {
         int totalCourses;
         courses = courseService.getAssignedCourses(expertId, page, pageSize);
         totalCourses = courseService.countAssignedCourses(expertId);
+        int publishedCourses =  courseService.countAssignedCourses(expertId, "published");
+        int draftCourses = courseService.countAssignedCourses(expertId, "draft");
+        int archivedCourse = courseService.countAssignedCourses(expertId, "archived");
         int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
         req.setAttribute("courses", courses);
         req.setAttribute("currentPage", page);
         req.setAttribute("totalPages", Math.max(1, totalPages));
         req.setAttribute("totalCourses", totalCourses);
+        req.setAttribute("publishedCourses", publishedCourses);
+        req.setAttribute("draftCourses", draftCourses);
+        req.setAttribute("archivedCourses", archivedCourse);
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
     }
 
     private void handleCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Nếu có action=detail thì chuyển sang trang chi tiết
         String action = req.getParameter("action");
         if ("detail".equals(action)) {
             handleCourseDetail(req, resp);

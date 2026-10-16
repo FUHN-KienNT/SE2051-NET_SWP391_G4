@@ -15,38 +15,33 @@
         </div>
     </div>
     <!-- Stats Quick Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-surface-card p-6 rounded-xl border border-border-default shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center text-xl font-bold">
-                <i class="fa-solid fa-graduation-cap"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold uppercase text-text-secondary">Khóa học được giao</p>
-                <h3 class="text-2xl font-bold text-text-primary">${totalCourses}</h3>
-            </div>
-        </div>
-        <div class="bg-surface-card p-6 rounded-xl border border-border-default shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center text-xl font-bold">
-                <i class="fa-solid fa-folder-tree"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold uppercase text-text-secondary">Trạng thái hệ thống</p>
-                <h3 class="text-2xl font-bold text-brand-700">Đang hoạt động</h3>
-            </div>
-        </div>
-        <div class="bg-surface-card p-6 rounded-xl border border-border-default shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center text-xl font-bold">
-                <i class="fa-solid fa-chalkboard-user"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold uppercase text-text-secondary">Phân quyền</p>
-                <h3 class="text-xl font-bold text-text-primary">Subject Expert</h3>
-            </div>
-        </div>
-    </div>
     <div class="bg-surface-card rounded-xl border border-border-default shadow-sm overflow-hidden">
             <div class="p-4 sm:p-6 border-b border-border-default flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <h2 class="font-bold text-text-primary text-lg min-w-0">Danh Sách Khóa Học (Assigned Courses)</h2>
+                <div class="min-w-0">
+                    <h2 class="font-bold text-text-primary text-lg">
+                        Danh Sách Khóa Học (Assigned Courses)
+                    </h2>
+                    <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <dt class="text-text-secondary">Published</dt>
+                            <dd class="font-bold text-status-success">
+                                ${empty publishedCourses ? 0 : publishedCourses}
+                            </dd>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <dt class="text-text-secondary">Draft</dt>
+                            <dd class="font-bold text-status-warning">
+                                ${empty draftCourses ? 0 : draftCourses}
+                            </dd>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <dt class="text-text-secondary">Archived</dt>
+                            <dd class="font-bold text-text-secondary">
+                                ${empty archivedCourses ? 0 : archivedCourses}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
                 <div class="relative w-full lg:max-w-xs">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
                         <i class="fa-solid fa-magnifying-glass text-sm"></i>

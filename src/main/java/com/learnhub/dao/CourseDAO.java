@@ -399,21 +399,28 @@ public class CourseDAO {
         }
         return list;
     }
-    
+
     public int countByExpertId(UUID expertId) {
-        String sql = "SELECT COUNT(*) FROM course WHERE expert_id = ?";
+        return countByExpertId(expertId, null);
+    }
+
+    public int countByExpertId(UUID expertId, String status) {
+        String sql = "SELECT COUNT(*) FROM course WHERE expert_id = ?"
+                + (status == null ? "" : " AND status = ?::course_status");
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, expertId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            if (status != null) {
+                ps.setString(2, status);
             }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+            throw new SQLException("Course count returned no result.");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in CourseDAO.countByExpertId: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.countByExpertId", e);
+            throw new IllegalStateException("Cannot count assigned courses.", e);
         }
-        return 0;
     }
 
     public List<Course> findByExpertId(UUID expertId) {

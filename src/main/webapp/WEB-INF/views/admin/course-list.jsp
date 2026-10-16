@@ -373,19 +373,29 @@
                                                 <!-- Toggle Status (Archive / Publish) -->
                                                 <c:choose>
                                                     <c:when test="${c.status eq 'published'}">
-                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn lưu trữ (Archive) khóa học này?');">
+                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline">
                                                             <input type="hidden" name="courseId" value="${c.id}">
                                                             <input type="hidden" name="status" value="archived">
-                                                            <button type="submit" class="text-xs font-bold text-amber-600 hover:text-amber-800 hover:underline cursor-pointer ml-2">
+                                                            <button type="submit" 
+                                                                    data-confirm="Bạn có chắc chắn muốn lưu trữ (Archive) khóa học này?"
+                                                                    data-confirm-title="Lưu trữ Khóa học"
+                                                                    data-confirm-btn="Lưu trữ"
+                                                                    data-confirm-type="warning"
+                                                                    class="text-xs font-bold text-amber-600 hover:text-amber-800 hover:underline cursor-pointer ml-2">
                                                                 Archive
                                                             </button>
                                                         </form>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline" onsubmit="return confirm('Bạn có muốn xuất bản (Publish) khóa học này lên hệ thống?');">
+                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline">
                                                             <input type="hidden" name="courseId" value="${c.id}">
                                                             <input type="hidden" name="status" value="published">
-                                                            <button type="submit" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer ml-2">
+                                                            <button type="submit" 
+                                                                    data-confirm="Bạn có muốn xuất bản (Publish) khóa học này lên hệ thống?"
+                                                                    data-confirm-title="Xuất bản Khóa học"
+                                                                    data-confirm-btn="Xuất bản"
+                                                                    data-confirm-type="info"
+                                                                    class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer ml-2">
                                                                 Publish
                                                             </button>
                                                         </form>

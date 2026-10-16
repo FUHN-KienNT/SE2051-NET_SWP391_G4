@@ -15,10 +15,6 @@ import java.util.logging.Logger;
 
 /**
  * Service managing Quiz attempts, scoring submissions, and auto-submits.
- * Implements methods specified in SDS Quiz Submission & Scoring Diagram (3.1, 3.2, 3.3):
- * - startQuizAttempt()
- * - submitQuizAttempt()
- * - autoSubmitExpired()
  */
 public class QuizAttemptService {
     private static final Logger LOGGER = Logger.getLogger(QuizAttemptService.class.getName());
@@ -47,20 +43,50 @@ public class QuizAttemptService {
     }
 
     public QuizAttemptDTO submitQuizAttempt(UUID submissionId, Map<UUID, List<UUID>> selectedAnswers) {
+        return submitQuizAttempt(submissionId, selectedAnswers, Collections.emptyMap());
+    }
+
+    public QuizAttemptDTO submitQuizAttempt(
+            UUID submissionId,
+            Map<UUID, List<UUID>> selectedAnswers,
+            Map<UUID, String> textAnswers) {
+
         QuizSubmission attempt = quizAttemptDAO.findById(submissionId);
         if (attempt == null) return null;
 
         Quiz quiz = quizDAO.findById(attempt.getQuizId());
-        BigDecimal passScoreThreshold = (quiz != null && quiz.getPassScore() != null) ? quiz.getPassScore() : BigDecimal.valueOf(5.0);
+        BigDecimal passScoreThreshold = (quiz != null && quiz.getPassScore() != null)
+                ? quiz.getPassScore() : BigDecimal.valueOf(5.0);
 
-        answerDAO.saveAnswers(submissionId, selectedAnswers);
-        BigDecimal score = calculateScore(attempt.getQuizId(), selectedAnswers);
+        Map<UUID, List<UUID>> mergedAnswers = new HashMap<>();
+        if (selectedAnswers != null) {
+            mergedAnswers.putAll(selectedAnswers);
+        }
+
+        List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
+        for (Question q : questions) {
+            if (q.isFillInBlank()) {
+                String userText = textAnswers != null ? textAnswers.get(q.getId()) : null;
+                if (userText != null && !userText.trim().isEmpty()) {
+                    String normUserText = userText.trim().toLowerCase();
+                    List<com.learnhub.entity.QuestionOption> options = questionDAO.findOptionsByQuestionId(q.getId());
+                    for (com.learnhub.entity.QuestionOption opt : options) {
+                        String optText = opt.getOptionText() != null ? opt.getOptionText().trim().toLowerCase() : "";
+                        if (!optText.isEmpty() && (normUserText.equals(optText) || normUserText.contains(optText))) {
+                            mergedAnswers.put(q.getId(), List.of(opt.getId()));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        answerDAO.saveAnswers(submissionId, mergedAnswers);
+        BigDecimal score = calculateScore(attempt.getQuizId(), mergedAnswers, textAnswers);
         boolean passed = score.compareTo(passScoreThreshold) >= 0;
 
         quizAttemptDAO.updateScore(submissionId, score, passed);
         quizAttemptDAO.updateBestFlag(submissionId);
-
-        List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
 
         QuizAttemptDTO dto = new QuizAttemptDTO();
         dto.setAttemptId(submissionId);
@@ -69,7 +95,7 @@ public class QuizAttemptService {
         dto.setScore(score);
         dto.setPassed(passed);
         dto.setTotalQuestions(questions.size());
-        dto.setSelectedAnswers(selectedAnswers);
+        dto.setSelectedAnswers(mergedAnswers);
         return dto;
     }
 
@@ -93,6 +119,14 @@ public class QuizAttemptService {
     }
 
     public BigDecimal calculateScore(UUID quizId, Map<UUID, List<UUID>> selectedAnswers) {
+        return calculateScore(quizId, selectedAnswers, Collections.emptyMap());
+    }
+
+    public BigDecimal calculateScore(
+            UUID quizId,
+            Map<UUID, List<UUID>> selectedAnswers,
+            Map<UUID, String> textAnswers) {
+
         List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
         if (questions == null || questions.isEmpty()) {
             return BigDecimal.ZERO;
@@ -102,9 +136,34 @@ public class QuizAttemptService {
         int correctCount = 0;
 
         for (Question q : questions) {
-            List<UUID> selected = selectedAnswers != null ? selectedAnswers.get(q.getId()) : Collections.emptyList();
-            if (isAllOrNothingCorrect(q.getId(), selected)) {
-                correctCount++;
+            if (q.isFillInBlank()) {
+                String userText = textAnswers != null ? textAnswers.get(q.getId()) : null;
+                boolean isCorrect = false;
+                List<com.learnhub.entity.QuestionOption> options = questionDAO.findOptionsByQuestionId(q.getId());
+                if (userText != null && !userText.trim().isEmpty()) {
+                    String normUserText = userText.trim().toLowerCase();
+                    for (com.learnhub.entity.QuestionOption opt : options) {
+                        String optText = opt.getOptionText() != null ? opt.getOptionText().trim().toLowerCase() : "";
+                        if (!optText.isEmpty() && (normUserText.equals(optText) || normUserText.contains(optText))) {
+                            isCorrect = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isCorrect && selectedAnswers != null && selectedAnswers.containsKey(q.getId())) {
+                    List<UUID> selOptIds = selectedAnswers.get(q.getId());
+                    if (selOptIds != null && !selOptIds.isEmpty()) {
+                        isCorrect = true;
+                    }
+                }
+                if (isCorrect) {
+                    correctCount++;
+                }
+            } else {
+                List<UUID> selected = selectedAnswers != null ? selectedAnswers.get(q.getId()) : Collections.emptyList();
+                if (isAllOrNothingCorrect(q.getId(), selected)) {
+                    correctCount++;
+                }
             }
         }
 

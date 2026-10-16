@@ -42,5 +42,6 @@
         </div>
     </div>
 </footer>
+<jsp:include page="/WEB-INF/views/common/confirm-modal.jsp" />
 </body>
 </html>

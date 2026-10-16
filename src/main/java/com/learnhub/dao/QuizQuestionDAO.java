@@ -47,14 +47,41 @@ public class QuizQuestionDAO {
     }
 
     public List<Question> findQuestionsNotInQuiz(UUID quizId, String keyword){
+        return findQuestionsNotInQuiz(quizId, keyword, null);
+    }
+
+    public List<Question> findQuestionsNotInQuiz(UUID quizId, String keyword, UUID moduleId){
         List<Question> list=new ArrayList<>();
-        StringBuilder sql=new StringBuilder("SELECT q.id,q.content,q.type,q.created_at,q.updated_at FROM question q WHERE NOT EXISTS(SELECT 1 FROM quiz_question qq WHERE qq.quiz_id=? AND qq.question_id=q.id) ");
-        List<Object> params=new ArrayList<>();params.add(quizId);
-        if(keyword!=null&&!keyword.trim().isEmpty()){sql.append("AND q.content ILIKE ? ");params.add("%"+keyword.trim()+"%");}
+        StringBuilder sql=new StringBuilder("SELECT q.id,q.module_id,q.content,q.type,COALESCE(q.status, 'public') status,q.created_at,q.updated_at FROM question q WHERE COALESCE(q.status, 'public') != 'hidden' ");
+        List<Object> params=new ArrayList<>();
+        if(quizId!=null){
+            sql.append("AND NOT EXISTS(SELECT 1 FROM quiz_question qq WHERE qq.quiz_id=? AND qq.question_id=q.id) ");
+            params.add(quizId);
+        }
+        if(moduleId!=null){
+            sql.append("AND q.module_id=? ");
+            params.add(moduleId);
+        }
+        if(keyword!=null&&!keyword.trim().isEmpty()){
+            sql.append("AND q.content ILIKE ? ");
+            params.add("%"+keyword.trim()+"%");
+        }
         sql.append("ORDER BY q.updated_at DESC");
         try(Connection conn=DbConnection.getConnection();PreparedStatement ps=conn.prepareStatement(sql.toString())){
             for(int i=0;i<params.size();i++)ps.setObject(i+1,params.get(i));
-            try(ResultSet rs=ps.executeQuery()){while(rs.next()){Question q=new Question();q.setId((UUID)rs.getObject("id"));q.setContent(rs.getString("content"));q.setType(rs.getString("type"));q.setCreatedAt(rs.getTimestamp("created_at"));q.setUpdatedAt(rs.getTimestamp("updated_at"));list.add(q);}}
+            try(ResultSet rs=ps.executeQuery()){
+                while(rs.next()){
+                    Question q=new Question();
+                    q.setId((UUID)rs.getObject("id"));
+                    q.setModuleId((UUID)rs.getObject("module_id"));
+                    q.setContent(rs.getString("content"));
+                    q.setType(rs.getString("type"));
+                    q.setStatus(rs.getString("status"));
+                    q.setCreatedAt(rs.getTimestamp("created_at"));
+                    q.setUpdatedAt(rs.getTimestamp("updated_at"));
+                    list.add(q);
+                }
+            }
         }catch(SQLException e){LOGGER.log(Level.SEVERE,"Error in QuizQuestionDAO.findQuestionsNotInQuiz",e);}
         return list;
     }

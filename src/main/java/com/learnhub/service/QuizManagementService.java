@@ -43,7 +43,24 @@ public class QuizManagementService {
                 expertId,
                 keyword,
                 moduleId,
-                courseId
+                courseId,
+                null
+        );
+    }
+
+    public List<Quiz> findByExpert(
+            UUID expertId,
+            String keyword,
+            UUID moduleId,
+            UUID courseId,
+            String status) {
+
+        return quizDAO.findByExpertId(
+                expertId,
+                keyword,
+                moduleId,
+                courseId,
+                status
         );
     }
 
@@ -72,12 +89,19 @@ public class QuizManagementService {
     // SAVE QUIZ
     // =========================================================
 
+    public boolean save(
+            UUID expertId,
+            UUID id,
+            UUID moduleId,
+            String title,
+            Integer timeLimit,
+            BigDecimal passScore,
+            List<UUID> questionIds) {
+        return save(expertId, id, moduleId, title, timeLimit, passScore, "published", null, questionIds);
+    }
+
     /**
-     * Creates or updates a Quiz.
-     *
-     * Validation is performed here.
-     * Actual database save is handled by QuizDAO
-     * in a single transaction.
+     * Creates or updates a Quiz with status and image support.
      */
     public boolean save(
             UUID expertId,
@@ -86,6 +110,8 @@ public class QuizManagementService {
             String title,
             Integer timeLimit,
             BigDecimal passScore,
+            String status,
+            String imageUrl,
             List<UUID> questionIds) {
 
         // -----------------------------------------------------
@@ -159,16 +185,17 @@ public class QuizManagementService {
                 title,
                 timeLimit,
                 passScore,
+                status,
+                imageUrl,
                 safeQuestionIds
         );
     }
 
     // =========================================================
-    // DELETE QUIZ
+    // HIDE / UNHIDE / DELETE QUIZ
     // =========================================================
 
-    public boolean delete(UUID expertId, UUID id) {
-
+    public boolean hide(UUID expertId, UUID id) {
         if (expertId == null || id == null) {
             return false;
         }
@@ -177,6 +204,23 @@ public class QuizManagementService {
             return false;
         }
 
-        return quizDAO.delete(id);
+        return quizDAO.hide(id);
+    }
+
+    public boolean unhide(UUID expertId, UUID id) {
+        if (expertId == null || id == null) {
+            return false;
+        }
+
+        if (!quizDAO.belongsToExpert(id, expertId)) {
+            return false;
+        }
+
+        return quizDAO.unhide(id);
+    }
+
+    public boolean delete(UUID expertId, UUID id) {
+        // Soft delete (hide) quiz
+        return hide(expertId, id);
     }
 }

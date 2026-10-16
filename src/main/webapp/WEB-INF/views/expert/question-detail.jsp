@@ -5,556 +5,583 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-16 flex flex-col md:flex-row gap-6">
-    <aside class="w-full md:w-44 shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-            <nav class="flex flex-col">
-                <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition border-l-4 border-transparent">
-                    <i class="fa-solid fa-book-open text-slate-400 text-sm"></i>
-                    <span>Lesson</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition border-l-4 border-transparent">
-                    <i class="fa-solid fa-clipboard-question text-slate-400 text-sm"></i>
-                    <span>Quiz</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3.5 text-sm font-bold bg-slate-100 text-slate-900 border-l-4 border-blue-600">
-                    <i class="fa-solid fa-list-check text-blue-600 text-sm"></i>
-                    <span>Question Bank</span>
-                </a>
-            </nav>
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-52 shrink-0">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-2 space-y-1">
+            <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
+               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
+                <i class="fa-solid fa-book-open text-slate-400 w-4 text-center"></i>
+                <span>Bài học (Lesson)</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
+               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
+                <i class="fa-solid fa-clipboard-question text-slate-400 w-4 text-center"></i>
+                <span>Bài thi (Quiz)</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-bold bg-emerald-50 text-emerald-800 rounded-xl transition">
+                <i class="fa-solid fa-list-check text-emerald-600 w-4 text-center"></i>
+                <span>Ngân hàng câu hỏi</span>
+            </a>
         </div>
     </aside>
 
+    <!-- Main Form Area -->
     <main class="flex-1 min-w-0 max-w-4xl">
+        <!-- Breadcrumb & Top Actions Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+                    <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}" class="hover:underline">Question Bank</a>
+                    <span>/</span>
+                    <span class="text-slate-500">${empty question ? 'Create Question' : 'Edit Question'}</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900">
+                    ${empty question ? 'Tạo câu hỏi mới' : 'Chỉnh sửa câu hỏi'}
+                </h1>
+            </div>
 
-    <div class="flex items-center justify-between mb-6">
-
-        <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-blue-600">
-                Question Bank
-            </p>
-
-            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
-                ${empty question
-                  ? 'Question Detail - Create'
-                  : 'Question Detail - Edit'}
-            </h1>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
+                   class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    <i class="fa-solid fa-clipboard-question mr-1.5 text-slate-500"></i>Quản lý Quiz
+                </a>
+                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                   class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-slate-500"></i>Danh sách câu hỏi
+                </a>
+            </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <c:if test="${not empty error}">
+            <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold flex items-center gap-3">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+                <span>${error}</span>
+            </div>
+        </c:if>
 
-            <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
-               class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50">
+        <form method="post" action="${pageContext.request.contextPath}/questions/detail" id="questionForm" class="space-y-6">
+            <input type="hidden" name="id" value="${question.id}">
 
-                <i class="fa-solid fa-clipboard-question mr-2"></i>
-                Quiz Management
-
-            </a>
-
-            <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-               class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50">
-
-                <i class="fa-solid fa-arrow-left mr-2"></i>
-                Question List
-
-            </a>
-
-        </div>
-
-    </div>
-
-
-    <c:if test="${not empty error}">
-
-        <div class="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">
-            ${error}
-        </div>
-
-    </c:if>
-
-
-    <form method="post"
-          action="${pageContext.request.contextPath}/questions/detail"
-          id="questionForm"
-          class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
-
-
-        <input type="hidden" name="courseId" value="${courseId}">
-
-        <!-- Question ID -->
-        <input type="hidden"
-               name="id"
-               value="${question.id}">
-
-
-        <!-- Question Content -->
-        <div>
-
-            <label class="block text-sm font-bold text-slate-800 mb-2">
-
-                Question Content
-                <span class="text-rose-500">*</span>
-
-            </label>
-
-            <textarea
-                name="content"
-                rows="5"
-                required
-                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">${question.content}</textarea>
-
-        </div>
-
-
-        <!-- Question Type -->
-        <div class="max-w-sm">
-
-            <label class="block text-sm font-bold text-slate-800 mb-2">
-
-                Question Type
-                <span class="text-rose-500">*</span>
-
-            </label>
-
-            <select
-                id="type"
-                name="type"
-                required
-                onchange="toggleOptions()"
-                class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
-
-                <option value="single_choice"
-                        ${question.type == 'single_choice' ? 'selected' : ''}>
-                    Single Choice
-                </option>
-
-                <option value="multiple_choice"
-                        ${question.type == 'multiple_choice' ? 'selected' : ''}>
-                    Multiple Choice
-                </option>
-
-                <option value="text"
-                        ${question.type == 'text' ? 'selected' : ''}>
-                    Text
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- Answer Options -->
-        <div id="optionsBox"
-             class="border border-slate-200 rounded-2xl p-5">
-
-            <div class="flex items-center justify-between mb-4">
-
-                <div>
-
-                    <h2 class="font-black text-slate-900">
-                        Answer Options
-                    </h2>
-
-                    <p class="text-xs text-slate-500 mt-1">
-                        Tick the correct answer(s).
-                        Single Choice must have exactly one.
-                    </p>
-
+            <!-- CARD 1: Basic Classification & Status -->
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-6 bg-emerald-600 rounded-full inline-block"></span>
+                        <h2 class="text-lg font-black text-slate-900">Thông tin phân loại & Trạng thái</h2>
+                    </div>
+                    <!-- Top Save Button -->
+                    <button type="submit" class="inline-flex items-center px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>Lưu câu hỏi
+                    </button>
                 </div>
 
-                <button
-                    type="button"
-                    onclick="addOption()"
-                    class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Course Filter / Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Khóa học áp dụng
+                        </label>
+                        <select name="courseId" id="courseSelect" onchange="filterModulesByCourse(this.value)"
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition">
+                            <option value="">-- Chọn khóa học --</option>
+                            <c:forEach var="c" items="${courses}">
+                                <option value="${c.id}" ${(courseId eq c.id.toString() or question.courseId eq c.id) ? 'selected' : ''}>${c.title}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
 
-                    <i class="fa-solid fa-plus mr-1"></i>
-                    Add option
+                    <!-- Module Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Chương / Module <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="moduleId" id="moduleSelect" required
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition">
+                            <option value="">-- Chọn module --</option>
+                            <c:forEach var="m" items="${modules}">
+                                <option value="${m.id}" data-course="${m.courseId}" ${(question.moduleId eq m.id or moduleId eq m.id) ? 'selected' : ''}>${m.title}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
 
-                </button>
+                    <!-- Status Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Trạng thái câu hỏi <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="status" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition">
+                            <option value="public" ${empty question.status or question.status eq 'public' ? 'selected' : ''}>Công khai (Public)</option>
+                            <option value="draft" ${question.status eq 'draft' ? 'selected' : ''}>Bản nháp (Draft)</option>
+                            <option value="hidden" ${question.status eq 'hidden' ? 'selected' : ''}>Đã ẩn (Hidden)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
 
-            </div>
+            <!-- CARD 2: Question Content & Type -->
+            <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-5">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-6 bg-emerald-600 rounded-full inline-block"></span>
+                        <h2 class="text-lg font-black text-slate-900">Nội dung câu hỏi</h2>
+                    </div>
+                    <!-- Live Word Counter with limit -->
+                    <div id="wordCountBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 transition-colors">
+                        <i class="fa-solid fa-pen-nib mr-1.5 text-slate-400"></i>
+                        Số từ: <span id="wordCountNum" class="mx-1">0</span> / 120 từ
+                    </div>
+                </div>
 
+                <!-- Textarea for Question Content -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        Nội dung chi tiết / Tiêu đề câu hỏi <span class="text-rose-500">*</span>
+                    </label>
+                    <textarea name="content" id="questionContent" rows="4" required
+                              oninput="onContentChange()"
+                              placeholder="Nhập nội dung câu hỏi tại đây... (Ví dụ: Trong Java Servlet, phương thức nào được gọi khi có yêu cầu HTTP GET?)"
+                              class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition leading-relaxed">${question.content}</textarea>
+                    
+                    <div id="wordCountAlert" class="hidden mt-1.5 text-xs font-bold text-rose-600 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Nội dung đã vượt quá giới hạn 120 từ! Vui lòng rút gọn nội dung câu hỏi.</span>
+                    </div>
+                </div>
 
-            <div id="optionRows"
-                 class="space-y-3">
-
-                <c:choose>
-
-                    <%-- EXISTING OPTIONS --%>
-                    <c:when test="${not empty question.options}">
-
-                        <c:forEach
-                            var="o"
-                            items="${question.options}"
-                            varStatus="status">
-
-                            <div class="option-row flex gap-3 items-center">
-
-
-                                <!--
-                                    IMPORTANT:
-                                    Giữ ID của question_option cũ.
-                                    Backend dùng ID này để UPDATE.
-                                -->
-                                <input
-                                    type="hidden"
-                                    name="optionId"
-                                    value="${o.id}"
-                                    class="option-id">
-
-
-                                <!-- Correct -->
-                                <input
-                                    type="${question.type == 'single_choice'
-                                            ? 'radio'
-                                            : 'checkbox'}"
-                                    name="correctIndex"
-                                    value="${status.index}"
-                                    class="correct-box w-4 h-4 accent-blue-600"
-                                    ${o.correct ? 'checked' : ''}>
-
-
-                                <!-- Option Text -->
-                                <input
-                                    type="text"
-                                    name="optionText"
-                                    value="${o.optionText}"
-                                    required
-                                    class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500">
-
-
-                                <!-- Delete -->
-                                <button
-                                    type="button"
-                                    onclick="removeOption(this)"
-                                    class="w-9 h-9 rounded-lg text-rose-500 hover:bg-rose-50">
-
-                                    <i class="fa-solid fa-trash"></i>
-
-                                </button>
-
+                <!-- Question Type Selection -->
+                <div class="pt-2">
+                    <label class="block text-xs font-bold text-slate-700 mb-2">
+                        Loại câu hỏi <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="type" value="single_choice"
+                                   ${empty question.type or question.type eq 'single_choice' ? 'checked' : ''}
+                                   onchange="onTypeChanged('single_choice')" class="mt-1 accent-emerald-600">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">Một đáp án đúng (Single)</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5">Chọn duy nhất 1 phương án chính xác trong danh sách lựa chọn.</div>
                             </div>
+                        </label>
 
-                        </c:forEach>
+                        <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="type" value="multiple_choice"
+                                   ${question.type eq 'multiple_choice' ? 'checked' : ''}
+                                   onchange="onTypeChanged('multiple_choice')" class="mt-1 accent-emerald-600">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">Nhiều đáp án đúng (Multiple)</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5">Học viên cần chọn đủ các phương án đúng.</div>
+                            </div>
+                        </label>
 
-                    </c:when>
+                        <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="type" value="fill_in_blank"
+                                   ${question.type eq 'fill_in_blank' or question.type eq 'text' ? 'checked' : ''}
+                                   onchange="onTypeChanged('fill_in_blank')" class="mt-1 accent-emerald-600">
+                            <div>
+                                <div class="font-bold text-xs text-slate-800">Điền vào chỗ trống (Fill in blank)</div>
+                                <div class="text-[11px] text-slate-400 mt-0.5">Nhập 1 hoặc 2 từ khóa đáp án. Học viên điền khớp sẽ có điểm.</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </section>
 
-
-                    <%-- CREATE NEW QUESTION --%>
-                    <c:otherwise>
-
-                        <div class="option-row flex gap-3 items-center">
-
-                            <input
-                                type="hidden"
-                                name="optionId"
-                                value=""
-                                class="option-id">
-
-
-                            <input
-                                type="radio"
-                                name="correctIndex"
-                                value="0"
-                                class="correct-box w-4 h-4 accent-blue-600">
-
-
-                            <input
-                                type="text"
-                                name="optionText"
-                                required
-                                placeholder="Option A"
-                                class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-
-
-                            <button
-                                type="button"
-                                onclick="removeOption(this)"
-                                class="w-9 h-9 rounded-lg text-rose-500 hover:bg-rose-50">
-
-                                <i class="fa-solid fa-trash"></i>
-
-                            </button>
-
+            <!-- CARD 3A: Answer Options for Single/Multiple Choice -->
+            <section id="choiceOptionsBox" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-6 bg-emerald-600 rounded-full inline-block"></span>
+                            <h2 class="text-lg font-black text-slate-900">Danh sách phương án lựa chọn</h2>
                         </div>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Đánh dấu tích vào phương án đúng. Với loại Một đáp án, chỉ được chọn đúng 1 đáp án.
+                        </p>
+                    </div>
+                    <button type="button" onclick="addOptionRow()"
+                            class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition">
+                        <i class="fa-solid fa-plus mr-1.5"></i>Thêm lựa chọn
+                    </button>
+                </div>
 
+                <div id="choiceRows" class="space-y-3">
+                    <c:choose>
+                        <c:when test="${not empty question.options and question.type ne 'fill_in_blank' and question.type ne 'text'}">
+                            <c:forEach var="o" items="${question.options}" varStatus="status">
+                                <div class="choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                                    <input type="hidden" name="optionId" value="${o.id}">
+                                    <div class="flex items-center justify-center w-8">
+                                        <input type="${question.type eq 'single_choice' ? 'radio' : 'checkbox'}"
+                                               name="correctIndex" value="${status.index}"
+                                               ${o.correct ? 'checked' : ''}
+                                               class="correct-box w-4 h-4 accent-emerald-600 cursor-pointer">
+                                    </div>
+                                    <input type="text" name="optionText" value="${o.optionText}" required
+                                           placeholder="Nhập nội dung lựa chọn..."
+                                           class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <button type="button" onclick="removeOptionRow(this)"
+                                            class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <!-- Default 4 Choices -->
+                            <c:forEach var="label" items="${['A', 'B', 'C', 'D']}" varStatus="st">
+                                <div class="choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
+                                    <input type="hidden" name="optionId" value="">
+                                    <div class="flex items-center justify-center w-8">
+                                        <input type="radio" name="correctIndex" value="${st.index}" ${st.index == 0 ? 'checked' : ''}
+                                               class="correct-box w-4 h-4 accent-emerald-600 cursor-pointer">
+                                    </div>
+                                    <input type="text" name="optionText" required
+                                           placeholder="Phương án ${label}..."
+                                           class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <button type="button" onclick="removeOptionRow(this)"
+                                            class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </section>
 
-                        <div class="option-row flex gap-3 items-center">
-
-                            <input
-                                type="hidden"
-                                name="optionId"
-                                value=""
-                                class="option-id">
-
-
-                            <input
-                                type="radio"
-                                name="correctIndex"
-                                value="1"
-                                class="correct-box w-4 h-4 accent-blue-600">
-
-
-                            <input
-                                type="text"
-                                name="optionText"
-                                required
-                                placeholder="Option B"
-                                class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">
-
-
-                            <button
-                                type="button"
-                                onclick="removeOption(this)"
-                                class="w-9 h-9 rounded-lg text-rose-500 hover:bg-rose-50">
-
-                                <i class="fa-solid fa-trash"></i>
-
-                            </button>
-
+            <!-- CARD 3B: Keywords Box for Fill in the Blank -->
+            <section id="fillBlankBox" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-6 bg-purple-600 rounded-full inline-block"></span>
+                            <h2 class="text-lg font-black text-slate-900">Từ khóa đáp án chấp nhận (Điền vào chỗ trống)</h2>
                         </div>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Nhập 1 hoặc 2 từ khóa đáp án chuẩn (có thể thêm từ đồng nghĩa/viết tắt). Học viên điền trùng 1 trong các từ khóa này (không phân biệt hoa thường) sẽ được tính điểm trọn vẹn.
+                        </p>
+                    </div>
+                    <button type="button" onclick="addKeywordRow()"
+                            class="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-bold transition">
+                        <i class="fa-solid fa-plus mr-1.5"></i>Thêm từ khóa khác
+                    </button>
+                </div>
 
-                    </c:otherwise>
+                <div id="keywordRows" class="space-y-3">
+                    <c:choose>
+                        <c:when test="${not empty question.options and (question.type eq 'fill_in_blank' or question.type eq 'text')}">
+                            <c:forEach var="o" items="${question.options}" varStatus="status">
+                                <div class="keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20">
+                                    <input type="hidden" name="optionId" value="${o.id}">
+                                    <span class="w-8 text-center text-xs font-bold text-purple-700">#${status.count}</span>
+                                    <input type="text" name="optionText" value="${o.optionText}" required
+                                           placeholder="Nhập từ khóa đáp án (ví dụ: HttpServlet hoặc doGet)..."
+                                           class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-purple-500">
+                                    <button type="button" onclick="removeKeywordRow(this)"
+                                            class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <!-- Default 2 Keywords -->
+                            <div class="keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20">
+                                <input type="hidden" name="optionId" value="">
+                                <span class="w-8 text-center text-xs font-bold text-purple-700">#1</span>
+                                <input type="text" name="optionText" required
+                                       placeholder="Từ khóa chính (Ví dụ: doGet)..."
+                                       class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-purple-500">
+                                <button type="button" onclick="removeKeywordRow(this)"
+                                        class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                            <div class="keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20">
+                                <input type="hidden" name="optionId" value="">
+                                <span class="w-8 text-center text-xs font-bold text-purple-700">#2</span>
+                                <input type="text" name="optionText"
+                                       placeholder="Từ khóa phụ / viết tắt thay thế (Tùy chọn)..."
+                                       class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-purple-500">
+                                <button type="button" onclick="removeKeywordRow(this)"
+                                        class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </section>
 
-                </c:choose>
+            <!-- CARD 4: Question Verification Panel -->
+            <section class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 text-sm"></i>
+                        <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Kiểm tra tính hợp lệ của câu hỏi (Verification)</h3>
+                    </div>
+                    <button type="button" onclick="verifyQuestion()" class="text-xs font-bold text-emerald-700 hover:underline">
+                        <i class="fa-solid fa-rotate mr-1"></i>Kiểm tra lại
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="verifyChecklist">
+                    <div class="flex items-center gap-2" id="chkContent">
+                        <i class="fa-solid fa-circle-check text-slate-300"></i>
+                        <span class="text-slate-600">Nội dung câu hỏi không rỗng</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkWords">
+                        <i class="fa-solid fa-circle-check text-slate-300"></i>
+                        <span class="text-slate-600">Độ dài câu hỏi &le; 120 từ</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkModule">
+                        <i class="fa-solid fa-circle-check text-slate-300"></i>
+                        <span class="text-slate-600">Đã chọn Chương / Module</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkAnswers">
+                        <i class="fa-solid fa-circle-check text-slate-300"></i>
+                        <span class="text-slate-600">Phương án &amp; đáp án đúng hợp lệ</span>
+                    </div>
+                </div>
+            </section>
 
+            <!-- Bottom Action Buttons -->
+            <div class="flex items-center justify-between pt-2">
+                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                   class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm bg-white hover:bg-slate-50 transition shadow-sm">
+                    <i class="fa-solid fa-arrow-left mr-2 text-slate-400"></i>Quay lại danh sách
+                </a>
+                <button type="submit" id="saveQuestionBtn" class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i>Lưu câu hỏi
+                </button>
             </div>
-
-        </div>
-
-
-        <!-- Buttons -->
-        <div class="pt-4 border-t border-slate-100 flex gap-3">
-
-            <button
-                type="submit"
-                class="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm">
-
-                Save Question
-
-            </button>
-
-
-            <a
-                href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-                class="px-6 py-3 rounded-xl border border-slate-200 font-bold text-sm text-slate-700 hover:bg-slate-50">
-
-                Cancel
-
-            </a>
-
-        </div>
-
-    </form>
-
-</main>
+        </form>
+    </main>
 </div>
 
-
 <script>
+const MAX_WORDS = 120;
 
-    /*
-     * Đánh lại correctIndex theo vị trí hiện tại.
-     */
-    function renumber() {
+function countWords(str) {
+    if (!str) return 0;
+    const trimmed = str.trim();
+    if (!trimmed) return 0;
+    return trimmed.split(/\s+/).length;
+}
 
-        document
-                .querySelectorAll('#optionRows .option-row')
-                .forEach(function (row, index) {
+function onContentChange() {
+    const text = document.getElementById('questionContent').value;
+    const words = countWords(text);
+    const numSpan = document.getElementById('wordCountNum');
+    const badge = document.getElementById('wordCountBadge');
+    const alertBox = document.getElementById('wordCountAlert');
 
-                    const box =
-                            row.querySelector('.correct-box');
+    if (numSpan) numSpan.textContent = words;
 
-                    if (box) {
-                        box.value = index;
-                    }
-                });
+    if (words > MAX_WORDS) {
+        badge.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-200');
+        badge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-300');
+        alertBox.classList.remove('hidden');
+    } else {
+        badge.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200');
+        badge.classList.remove('bg-rose-50', 'text-rose-700', 'border-rose-300');
+        alertBox.classList.add('hidden');
     }
 
+    verifyQuestion();
+}
 
-    /*
-     * Thêm option mới.
-     *
-     * optionId = ""
-     * => backend hiểu đây là option mới
-     * và sẽ INSERT UUID mới.
-     */
-    function addOption() {
+function getCurrentType() {
+    const selectedRadio = document.querySelector('input[name="type"]:checked');
+    return selectedRadio ? selectedRadio.value : 'single_choice';
+}
 
-        const rows =
-                document.getElementById('optionRows');
+function onTypeChanged(type) {
+    const choiceBox = document.getElementById('choiceOptionsBox');
+    const fillBlankBox = document.getElementById('fillBlankBox');
 
-        const index =
-                rows.querySelectorAll('.option-row').length;
+    if (type === 'fill_in_blank') {
+        choiceBox.classList.add('hidden');
+        fillBlankBox.classList.remove('hidden');
 
-        const type =
-                document.getElementById('type').value;
+        // Disable inputs inside choice box so they are not submitted
+        choiceBox.querySelectorAll('input').forEach(input => input.disabled = true);
+        fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = false);
+    } else {
+        choiceBox.classList.remove('hidden');
+        fillBlankBox.classList.add('hidden');
 
-        const inputType =
-                type === 'single_choice'
-                ? 'radio'
-                : 'checkbox';
+        choiceBox.querySelectorAll('input').forEach(input => input.disabled = false);
+        fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = true);
 
-
-        const row =
-                document.createElement('div');
-
-        row.className =
-                'option-row flex gap-3 items-center';
-
-
-        row.innerHTML =
-                '<input ' +
-                'type="hidden" ' +
-                'name="optionId" ' +
-                'value="" ' +
-                'class="option-id">' +
-                '<input ' +
-                'type="' + inputType + '" ' +
-                'name="correctIndex" ' +
-                'value="' + index + '" ' +
-                'class="correct-box w-4 h-4 accent-blue-600">' +
-                '<input ' +
-                'type="text" ' +
-                'name="optionText" ' +
-                'required ' +
-                'placeholder="Option ' +
-                String.fromCharCode(65 + index) +
-                '" ' +
-                'class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none">' +
-                '<button ' +
-                'type="button" ' +
-                'onclick="removeOption(this)" ' +
-                'class="w-9 h-9 rounded-lg text-rose-500 hover:bg-rose-50">' +
-                '<i class="fa-solid fa-trash"></i>' +
-                '</button>';
-
-
-        rows.appendChild(row);
-
-        renumber();
+        // Update radio vs checkbox
+        const wantedInputType = (type === 'single_choice') ? 'radio' : 'checkbox';
+        document.querySelectorAll('#choiceRows .correct-box').forEach(box => {
+            box.type = wantedInputType;
+        });
+        renumberChoices();
     }
 
+    verifyQuestion();
+}
 
-    /*
-     * Xóa option khỏi form.
-     *
-     * Nếu là option cũ:
-     * hidden optionId vẫn bị remove khỏi request.
-     *
-     * Backend sẽ kiểm tra:
-     *
-     * - chưa được dùng -> DELETE
-     * - đã được quiz_answer sử dụng -> giữ lại để không phá FK
-     */
-    function removeOption(button) {
+function filterModulesByCourse(selectedCourseId) {
+    const moduleSelect = document.getElementById('moduleSelect');
+    if (!moduleSelect) return;
 
-        const row =
-                button.closest('.option-row');
-
-        if (!row) {
-            return;
+    let hasVisible = false;
+    for (let i = 0; i < moduleSelect.options.length; i++) {
+        const opt = moduleSelect.options[i];
+        if (!opt.value) continue;
+        const optCourse = opt.getAttribute('data-course');
+        if (!selectedCourseId || !optCourse || optCourse === selectedCourseId) {
+            opt.style.display = '';
+            hasVisible = true;
+        } else {
+            opt.style.display = 'none';
         }
-
-        row.remove();
-
-        renumber();
     }
+    verifyQuestion();
+}
 
+function renumberChoices() {
+    document.querySelectorAll('#choiceRows .choice-row').forEach((row, idx) => {
+        const box = row.querySelector('.correct-box');
+        if (box) box.value = idx;
+    });
+}
 
-    /*
-     * Hiển thị / ẩn Answer Options
-     * theo Question Type.
-     */
-    function toggleOptions() {
+function addOptionRow() {
+    const rowsContainer = document.getElementById('choiceRows');
+    const index = rowsContainer.querySelectorAll('.choice-row').length;
+    const type = getCurrentType();
+    const inputType = (type === 'single_choice') ? 'radio' : 'checkbox';
 
-        const type =
-                document.getElementById('type').value;
+    const row = document.createElement('div');
+    row.className = 'choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50';
+    row.innerHTML = `
+        <input type="hidden" name="optionId" value="">
+        <div class="flex items-center justify-center w-8">
+            <input type="${inputType}" name="correctIndex" value="${index}" class="correct-box w-4 h-4 accent-emerald-600 cursor-pointer">
+        </div>
+        <input type="text" name="optionText" required placeholder="Nội dung phương án..."
+               class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+        <button type="button" onclick="removeOptionRow(this)"
+                class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+    `;
+    rowsContainer.appendChild(row);
+    renumberChoices();
+    verifyQuestion();
+}
 
-        const box =
-                document.getElementById('optionsBox');
+function removeOptionRow(btn) {
+    const row = btn.closest('.choice-row');
+    if (row) row.remove();
+    renumberChoices();
+    verifyQuestion();
+}
 
+function addKeywordRow() {
+    const container = document.getElementById('keywordRows');
+    const count = container.querySelectorAll('.keyword-row').length + 1;
+    const row = document.createElement('div');
+    row.className = 'keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20';
+    row.innerHTML = `
+        <input type="hidden" name="optionId" value="">
+        <span class="w-8 text-center text-xs font-bold text-purple-700">#${count}</span>
+        <input type="text" name="optionText" required placeholder="Từ khóa đáp án bổ sung..."
+               class="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-purple-500">
+        <button type="button" onclick="removeKeywordRow(this)"
+                class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+    `;
+    container.appendChild(row);
+    verifyQuestion();
+}
 
-        if (type === 'text') {
+function removeKeywordRow(btn) {
+    const row = btn.closest('.keyword-row');
+    if (row) row.remove();
+    // Renumber badges
+    document.querySelectorAll('#keywordRows .keyword-row').forEach((r, idx) => {
+        const badge = r.querySelector('span');
+        if (badge) badge.textContent = '#' + (idx + 1);
+    });
+    verifyQuestion();
+}
 
-            box.style.display = 'none';
+function setCheckStatus(elemId, isValid) {
+    const el = document.getElementById(elemId);
+    if (!el) return;
+    const icon = el.querySelector('i');
+    if (isValid) {
+        icon.className = 'fa-solid fa-circle-check text-emerald-600';
+    } else {
+        icon.className = 'fa-solid fa-circle-xmark text-rose-500';
+    }
+}
 
-            document
-                    .querySelectorAll('.correct-box')
-                    .forEach(function (input) {
-                        input.disabled = true;
-                    });
+function verifyQuestion() {
+    const content = (document.getElementById('questionContent').value || '').trim();
+    const words = countWords(content);
+    const moduleId = (document.getElementById('moduleSelect').value || '').trim();
+    const type = getCurrentType();
 
-            document
-                    .querySelectorAll('input[name="optionText"]')
-                    .forEach(function (input) {
-                        input.disabled = true;
-                        input.required = false;
-                    });
+    const isContentValid = content.length > 0;
+    const isWordsValid = words > 0 && words <= MAX_WORDS;
+    const isModuleValid = moduleId.length > 0;
 
-            return;
+    let isAnswersValid = false;
+    if (type === 'fill_in_blank') {
+        const keywords = Array.from(document.querySelectorAll('#keywordRows input[name="optionText"]'))
+            .filter(input => !input.disabled && input.value.trim().length > 0);
+        isAnswersValid = keywords.length >= 1;
+    } else {
+        const options = Array.from(document.querySelectorAll('#choiceRows .choice-row input[name="optionText"]'))
+            .filter(input => !input.disabled && input.value.trim().length > 0);
+        const correctBoxes = Array.from(document.querySelectorAll('#choiceRows .correct-box:checked'))
+            .filter(box => !box.disabled);
+
+        if (type === 'single_choice') {
+            isAnswersValid = options.length >= 2 && correctBoxes.length === 1;
+        } else {
+            isAnswersValid = options.length >= 2 && correctBoxes.length >= 1;
         }
-
-
-        box.style.display = 'block';
-
-
-        const wantedType =
-                type === 'single_choice'
-                ? 'radio'
-                : 'checkbox';
-
-
-        document
-                .querySelectorAll('.correct-box')
-                .forEach(function (input) {
-
-                    if (input.type !== wantedType) {
-
-                        const checked =
-                                input.checked;
-
-                        input.type =
-                                wantedType;
-
-                        input.checked =
-                                checked;
-                    }
-
-                    input.disabled = false;
-                });
-
-
-        document
-                .querySelectorAll('input[name="optionText"]')
-                .forEach(function (input) {
-
-                    input.disabled = false;
-                    input.required = true;
-
-                });
-
-
-        renumber();
     }
 
+    setCheckStatus('chkContent', isContentValid);
+    setCheckStatus('chkWords', isWordsValid);
+    setCheckStatus('chkModule', isModuleValid);
+    setCheckStatus('chkAnswers', isAnswersValid);
 
-    /*
-     * Page loaded.
-     */
-    document.addEventListener(
-            'DOMContentLoaded',
-            function () {
+    return isContentValid && isWordsValid && isModuleValid && isAnswersValid;
+}
 
-                renumber();
-                toggleOptions();
+document.addEventListener('DOMContentLoaded', function() {
+    const type = getCurrentType();
+    onTypeChanged(type);
+    onContentChange();
+    verifyQuestion();
 
+    // Attach form submit validation
+    document.getElementById('questionForm').addEventListener('submit', function(e) {
+        if (!verifyQuestion()) {
+            const words = countWords(document.getElementById('questionContent').value);
+            if (words > MAX_WORDS) {
+                alert('Nội dung câu hỏi quá dài (' + words + ' từ). Vui lòng giới hạn tối đa 120 từ.');
+                e.preventDefault();
+                return;
             }
-    );
-
+            if (!confirm('Một số điều kiện kiểm tra hợp lệ câu hỏi chưa đạt chuẩn. Bạn có chắc chắn muốn lưu tiếp không?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
 </script>
-
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

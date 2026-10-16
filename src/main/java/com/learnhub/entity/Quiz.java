@@ -14,10 +14,14 @@ public class Quiz implements Serializable {
     private String title;
     private Integer timeLimit;
     private java.math.BigDecimal passScore;
+    private String status = "published"; // published | draft | hidden
+    private String imageUrl;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
     // Helper / joined fields
+    private UUID courseId;
+    private String courseTitle;
     private String moduleTitle;
     private int questionCount;
     private List<Question> questions = new ArrayList<>();
@@ -47,11 +51,23 @@ public class Quiz implements Serializable {
     public java.math.BigDecimal getPassScore() { return passScore; }
     public void setPassScore(java.math.BigDecimal passScore) { this.passScore = passScore; }
 
+    public String getStatus() { return status != null ? status : "published"; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public UUID getCourseId() { return courseId; }
+    public void setCourseId(UUID courseId) { this.courseId = courseId; }
+
+    public String getCourseTitle() { return courseTitle; }
+    public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; }
 
     public String getModuleTitle() { return moduleTitle; }
     public void setModuleTitle(String moduleTitle) { this.moduleTitle = moduleTitle; }
@@ -62,8 +78,20 @@ public class Quiz implements Serializable {
     public List<Question> getQuestions() { return questions; }
     public void setQuestions(List<Question> questions) { this.questions = questions; }
 
+    public boolean isHidden() {
+        return "hidden".equalsIgnoreCase(status);
+    }
+
+    public boolean isPublished() {
+        return "published".equalsIgnoreCase(status);
+    }
+
+    public boolean isDraft() {
+        return "draft".equalsIgnoreCase(status);
+    }
+
     @Override
     public String toString() {
-        return "Quiz{id=" + id + ", title='" + title + "', timeLimit=" + timeLimit + "}";
+        return "Quiz{id=" + id + ", title='" + title + "', timeLimit=" + timeLimit + ", status='" + status + "'}";
     }
 }

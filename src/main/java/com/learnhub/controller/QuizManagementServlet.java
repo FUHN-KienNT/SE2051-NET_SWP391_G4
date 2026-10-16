@@ -114,6 +114,9 @@ public class QuizManagementServlet extends HttpServlet {
         UUID courseId =
                 parseUUID(req.getParameter("courseId"));
 
+        List<Course> courses = courseDAO.findByExpertId(user.getId());
+        req.setAttribute("courses", courses);
+
         Course course = courseId == null
                 ? null
                 : courseDAO.findById(courseId);
@@ -127,7 +130,7 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         List<Question> questions =
-                questionDAO.search(null, null);
+                questionDAO.search(null, null, null, null, null);
 
         List<UUID> selectedQuestionIds =
                 new ArrayList<>();
@@ -140,6 +143,8 @@ public class QuizManagementServlet extends HttpServlet {
                 "selectedQuestionIds",
                 selectedQuestionIds
         );
+
+        UUID defaultFilterModuleId = parseUUID(req.getParameter("moduleId"));
 
         // -----------------------------------------------------
         // EDIT EXISTING QUIZ
@@ -158,6 +163,7 @@ public class QuizManagementServlet extends HttpServlet {
                 if (quiz != null) {
 
                     req.setAttribute("quiz", quiz);
+                    defaultFilterModuleId = quiz.getModuleId();
 
                     selectedQuestionIds =
                             service.getQuestionIds(quizId);
@@ -211,6 +217,8 @@ public class QuizManagementServlet extends HttpServlet {
             }
         }
 
+        req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
+
         req.getRequestDispatcher(
                 "/WEB-INF/views/expert/quiz-detail.jsp"
         ).forward(req, resp);
@@ -234,6 +242,12 @@ public class QuizManagementServlet extends HttpServlet {
 
         UUID moduleId =
                 parseUUID(req.getParameter("moduleId"));
+
+        String status =
+                req.getParameter("status");
+
+        List<Course> courses = courseDAO.findByExpertId(user.getId());
+        req.setAttribute("courses", courses);
 
         Course course = courseId == null
                 ? null
@@ -265,6 +279,11 @@ public class QuizManagementServlet extends HttpServlet {
         );
 
         req.setAttribute(
+                "status",
+                status == null ? "" : status
+        );
+
+        req.setAttribute(
                 "course",
                 course
         );
@@ -274,28 +293,18 @@ public class QuizManagementServlet extends HttpServlet {
                 modules
         );
 
-        req.setAttribute(
-                "quizzes",
-                service.findByExpert(
-                        user.getId(),
-                        keyword,
-                        moduleId,
-                        courseId
-                )
-        );
-
         // =====================================================
-        // DELETE
+        // HIDE / UNHIDE / DELETE
         // =====================================================
 
-        if ("delete".equalsIgnoreCase(
-                req.getParameter("action"))) {
+        String action = req.getParameter("action");
+        if ("delete".equalsIgnoreCase(action) || "hide".equalsIgnoreCase(action)) {
 
             UUID quizId =
                     parseUUID(req.getParameter("id"));
 
             boolean ok =
-                    service.delete(
+                    service.hide(
                             user.getId(),
                             quizId
                     );
@@ -303,7 +312,7 @@ public class QuizManagementServlet extends HttpServlet {
             StringBuilder redirect =
                     new StringBuilder(
                             req.getContextPath()
-                                    + "/quiz/manage?deleted="
+                                    + "/quiz/manage?hidden="
                                     + ok
                     );
 
@@ -319,6 +328,36 @@ public class QuizManagementServlet extends HttpServlet {
 
             return;
         }
+
+        if ("unhide".equalsIgnoreCase(action)) {
+            UUID quizId = parseUUID(req.getParameter("id"));
+            boolean ok = service.unhide(user.getId(), quizId);
+
+            StringBuilder redirect =
+                    new StringBuilder(
+                            req.getContextPath()
+                                    + "/quiz/manage?unhidden="
+                                    + ok
+                    );
+
+            if (courseId != null) {
+                redirect.append("&courseId=").append(courseId);
+            }
+
+            resp.sendRedirect(redirect.toString());
+            return;
+        }
+
+        req.setAttribute(
+                "quizzes",
+                service.findByExpert(
+                        user.getId(),
+                        keyword,
+                        moduleId,
+                        courseId,
+                        status
+                )
+        );
 
         req.getRequestDispatcher(
                 "/WEB-INF/views/expert/quiz-list.jsp"
@@ -361,6 +400,15 @@ public class QuizManagementServlet extends HttpServlet {
 
         String title =
                 req.getParameter("title");
+
+        String status =
+                req.getParameter("status");
+        if (status == null || status.isBlank()) {
+            status = "published";
+        }
+
+        String imageUrl =
+                req.getParameter("imageUrl");
 
         Integer timeLimit =
                 parseInteger(
@@ -409,6 +457,8 @@ public class QuizManagementServlet extends HttpServlet {
                         title,
                         timeLimit,
                         passScore,
+                        status,
+                        imageUrl,
                         questionIds
                 );
 
@@ -442,17 +492,14 @@ public class QuizManagementServlet extends HttpServlet {
         // SAVE FAILED
         // =====================================================
 
-        /*
-         * Keep submitted values on the form so the user
-         * doesn't lose everything after validation failure.
-         */
-
         Quiz formQuiz = new Quiz();
 
         formQuiz.setId(id);
         formQuiz.setModuleId(moduleId);
         formQuiz.setTitle(title);
         formQuiz.setTimeLimit(timeLimit);
+        formQuiz.setStatus(status);
+        formQuiz.setImageUrl(imageUrl);
 
         if (passScore != null) {
             formQuiz.setPassScore(passScore);
@@ -474,15 +521,15 @@ public class QuizManagementServlet extends HttpServlet {
 
         req.setAttribute(
                 "error",
-                "Cannot save quiz. Please check Module, "
-                        + "quiz title, time limit, "
-                        + "Pass Score (0-10), "
-                        + "and selected questions."
+                "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn."
         );
 
         // -----------------------------------------------------
         // Reload course/modules/questions
         // -----------------------------------------------------
+
+        List<Course> courses = courseDAO.findByExpertId(user.getId());
+        req.setAttribute("courses", courses);
 
         Course course = courseId == null
                 ? null
@@ -518,8 +565,10 @@ public class QuizManagementServlet extends HttpServlet {
 
         req.setAttribute(
                 "questions",
-                questionDAO.search(null, null)
+                questionDAO.search(null, null, null, null, null)
         );
+
+        req.setAttribute("defaultFilterModuleId", moduleId);
 
         req.getRequestDispatcher(
                 "/WEB-INF/views/expert/quiz-detail.jsp"
@@ -537,7 +586,7 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         try {
-            return UUID.fromString(value);
+            return UUID.fromString(value.trim());
 
         } catch (IllegalArgumentException e) {
             return null;
@@ -551,7 +600,7 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         try {
-            return Integer.valueOf(value);
+            return Integer.valueOf(value.trim());
 
         } catch (NumberFormatException e) {
             return null;
@@ -561,13 +610,11 @@ public class QuizManagementServlet extends HttpServlet {
     private BigDecimal parseBigDecimal(String value) {
 
         if (value == null || value.isBlank()) {
-
-            // Match the JSP default.
             return new BigDecimal("5.0");
         }
 
         try {
-            return new BigDecimal(value);
+            return new BigDecimal(value.trim());
 
         } catch (NumberFormatException e) {
             return null;

@@ -18,6 +18,7 @@ public class Module implements Serializable {
     private Timestamp updatedAt;
 
     // Helper / joined fields
+    private String courseTitle;
     private List<Lesson> lessons = new ArrayList<>();
     private List<Quiz> quizzes = new ArrayList<>();
 
@@ -59,6 +60,9 @@ public class Module implements Serializable {
 
     public List<Quiz> getQuizzes() { return quizzes; }
     public void setQuizzes(List<Quiz> quizzes) { this.quizzes = quizzes; }
+
+    public String getCourseTitle() { return courseTitle; }
+    public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; }
 
     @Override
     public String toString() {

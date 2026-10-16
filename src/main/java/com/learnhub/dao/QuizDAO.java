@@ -47,7 +47,7 @@ public class QuizDAO {
     }
 
     public List<Quiz> findByExpertId(UUID expertId, String keyword, UUID moduleId) {
-        return findByExpertId(expertId, keyword, moduleId, null);
+        return findByExpertId(expertId, keyword, moduleId, null, null);
     }
 
     public List<Quiz> findByExpertId(
@@ -55,6 +55,15 @@ public class QuizDAO {
             String keyword,
             UUID moduleId,
             UUID courseId) {
+        return findByExpertId(expertId, keyword, moduleId, courseId, null);
+    }
+
+    public List<Quiz> findByExpertId(
+            UUID expertId,
+            String keyword,
+            UUID moduleId,
+            UUID courseId,
+            String status) {
 
         List<Quiz> list = new ArrayList<>();
 
@@ -77,6 +86,11 @@ public class QuizDAO {
         if (courseId != null) {
             sql.append("AND c.id=? ");
             params.add(courseId);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND COALESCE(q.status, 'published') = ? ");
+            params.add(status.trim());
         }
 
         sql.append("ORDER BY q.updated_at DESC");
@@ -107,7 +121,7 @@ public class QuizDAO {
         List<Quiz> list = new ArrayList<>();
 
         String sql = baseSelect()
-                + " WHERE q.module_id=? ORDER BY q.created_at ASC";
+                + " WHERE q.module_id=? AND COALESCE(q.status, 'published') != 'hidden' ORDER BY q.created_at ASC";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -140,25 +154,10 @@ public class QuizDAO {
             return false;
         }
 
-        /*
-         * IMPORTANT:
-         *
-         * quiz table has 7 columns:
-         *
-         * id
-         * module_id
-         * title
-         * time_limit
-         * pass_score
-         * created_at
-         * updated_at
-         *
-         * Therefore VALUES must contain exactly 7 values.
-         */
         String sql =
                 "INSERT INTO quiz " +
-                "(id,module_id,title,time_limit,pass_score,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,NOW(),NOW())";
+                "(id,module_id,title,time_limit,pass_score,status,image_url,created_at,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,NOW(),NOW())";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -182,6 +181,12 @@ public class QuizDAO {
             } else {
                 ps.setBigDecimal(5, quiz.getPassScore());
             }
+
+            String st = quiz.getStatus();
+            ps.setString(6, (st == null || st.isBlank()) ? "published" : st.trim());
+
+            String img = quiz.getImageUrl();
+            ps.setString(7, (img == null || img.isBlank()) ? null : img.trim());
 
             return ps.executeUpdate() > 0;
 
@@ -211,6 +216,8 @@ public class QuizDAO {
                 "title=?," +
                 "time_limit=?," +
                 "pass_score=?," +
+                "status=?," +
+                "image_url=?," +
                 "updated_at=NOW() " +
                 "WHERE id=?";
 
@@ -232,7 +239,13 @@ public class QuizDAO {
                 ps.setBigDecimal(4, quiz.getPassScore());
             }
 
-            ps.setObject(5, quiz.getId());
+            String st = quiz.getStatus();
+            ps.setString(5, (st == null || st.isBlank()) ? "published" : st.trim());
+
+            String img = quiz.getImageUrl();
+            ps.setString(6, (img == null || img.isBlank()) ? null : img.trim());
+
+            ps.setObject(7, quiz.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -267,6 +280,19 @@ public class QuizDAO {
             Integer timeLimit,
             BigDecimal passScore,
             List<UUID> questionIds) {
+        return saveWithQuestions(expertId, quizId, moduleId, title, timeLimit, passScore, "published", null, questionIds);
+    }
+
+    public boolean saveWithQuestions(
+            UUID expertId,
+            UUID quizId,
+            UUID moduleId,
+            String title,
+            Integer timeLimit,
+            BigDecimal passScore,
+            String status,
+            String imageUrl,
+            List<UUID> questionIds) {
 
         if (expertId == null
                 || moduleId == null
@@ -285,6 +311,9 @@ public class QuizDAO {
                 || passScore.compareTo(BigDecimal.TEN) > 0) {
             return false;
         }
+
+        String safeStatus = (status == null || status.isBlank()) ? "published" : status.trim();
+        String safeImageUrl = (imageUrl == null || imageUrl.isBlank()) ? null : imageUrl.trim();
 
         Connection conn = null;
 
@@ -313,8 +342,8 @@ public class QuizDAO {
 
                 String insertSql =
                         "INSERT INTO quiz " +
-                        "(id,module_id,title,time_limit,pass_score,created_at,updated_at) " +
-                        "VALUES (?,?,?,?,?,NOW(),NOW())";
+                        "(id,module_id,title,time_limit,pass_score,status,image_url,created_at,updated_at) " +
+                        "VALUES (?,?,?,?,?,?,?,NOW(),NOW())";
 
                 try (PreparedStatement ps =
                              conn.prepareStatement(insertSql)) {
@@ -330,6 +359,8 @@ public class QuizDAO {
                     }
 
                     ps.setBigDecimal(5, passScore);
+                    ps.setString(6, safeStatus);
+                    ps.setString(7, safeImageUrl);
 
                     int affected = ps.executeUpdate();
 
@@ -358,6 +389,8 @@ public class QuizDAO {
                         "title=?," +
                         "time_limit=?," +
                         "pass_score=?," +
+                        "status=?," +
+                        "image_url=?," +
                         "updated_at=NOW() " +
                         "WHERE id=?";
 
@@ -374,7 +407,9 @@ public class QuizDAO {
                     }
 
                     ps.setBigDecimal(4, passScore);
-                    ps.setObject(5, finalQuizId);
+                    ps.setString(5, safeStatus);
+                    ps.setString(6, safeImageUrl);
+                    ps.setObject(7, finalQuizId);
 
                     int affected = ps.executeUpdate();
 
@@ -473,29 +508,50 @@ public class QuizDAO {
     }
 
     // =========================================================
-    // DELETE QUIZ
+    // HIDE / SOFT DELETE QUIZ
     // =========================================================
 
-    public boolean delete(UUID id) {
-
+    public boolean hide(UUID id) {
         if (id == null) {
             return false;
         }
 
-        String sql = "DELETE FROM quiz WHERE id=?";
+        String sql = "UPDATE quiz SET status='hidden', updated_at=NOW() WHERE id=?";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setObject(1, id);
-
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuizDAO.delete", e);
+            LOGGER.log(Level.SEVERE, "Error in QuizDAO.hide", e);
             return false;
         }
+    }
+
+    public boolean unhide(UUID id) {
+        if (id == null) {
+            return false;
+        }
+
+        String sql = "UPDATE quiz SET status='published', updated_at=NOW() WHERE id=?";
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in QuizDAO.unhide", e);
+            return false;
+        }
+    }
+
+    public boolean delete(UUID id) {
+        // Thay vì xóa cứng làm hỏng dữ liệu bài làm cũ của học sinh, ta ẩn quiz (soft delete)
+        return hide(id);
     }
 
     // =========================================================
@@ -640,6 +696,8 @@ public class QuizDAO {
                 "q.title," +
                 "q.time_limit," +
                 "q.pass_score," +
+                "COALESCE(q.status, 'published') status," +
+                "q.image_url," +
                 "q.created_at," +
                 "q.updated_at," +
                 "m.title module_title," +
@@ -665,9 +723,13 @@ public class QuizDAO {
         q.setTimeLimit(rs.wasNull() ? null : timeLimit);
 
         q.setPassScore(rs.getBigDecimal("pass_score"));
+        q.setStatus(rs.getString("status"));
+        q.setImageUrl(rs.getString("image_url"));
         q.setCreatedAt(rs.getTimestamp("created_at"));
         q.setUpdatedAt(rs.getTimestamp("updated_at"));
         q.setModuleTitle(rs.getString("module_title"));
+        q.setCourseId((UUID) rs.getObject("course_id"));
+        q.setCourseTitle(rs.getString("course_title"));
         q.setQuestionCount(rs.getInt("question_count"));
 
         return q;

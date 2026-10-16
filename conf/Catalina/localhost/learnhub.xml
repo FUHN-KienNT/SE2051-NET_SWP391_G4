@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Context docBase="D:\NetBeansProjects\SE2051-NET_SWP391_G4\src\main\webapp" path="/learnhub">
+  <Resources cacheMaxSize="10240">
+    <PreResources base="D:/NetBeansProjects/SE2051-NET_SWP391_G4/target/classes" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/classes"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/jakarta/servlet/jsp/jstl/jakarta.servlet.jsp.jstl-api/3.0.0/jakarta.servlet.jsp.jstl-api-3.0.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jakarta.servlet.jsp.jstl-api-3.0.0.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/jakarta/el/jakarta.el-api/5.0.0/jakarta.el-api-5.0.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jakarta.el-api-5.0.0.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/glassfish/web/jakarta.servlet.jsp.jstl/3.0.1/jakarta.servlet.jsp.jstl-3.0.1.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jakarta.servlet.jsp.jstl-3.0.1.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/postgresql/postgresql/42.7.2/postgresql-42.7.2.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/postgresql-42.7.2.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/checker-qual-3.42.0.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/com/zaxxer/HikariCP/5.1.0/HikariCP-5.1.0.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/HikariCP-5.1.0.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/gson-2.10.1.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/mindrot/jbcrypt/0.4/jbcrypt-0.4.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jbcrypt-0.4.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/eclipse/angus/jakarta.mail/2.0.5/jakarta.mail-2.0.5.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jakarta.mail-2.0.5.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/jakarta.activation-api-2.1.4.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/eclipse/angus/angus-activation/2.0.3/angus-activation-2.0.3.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/angus-activation-2.0.3.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/slf4j/slf4j-api/2.0.12/slf4j-api-2.0.12.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/slf4j-api-2.0.12.jar"/>
+    <PostResources base="C:/Users/Admin/.m2/repository/org/slf4j/slf4j-simple/2.0.12/slf4j-simple-2.0.12.jar" className="org.apache.catalina.webresources.FileResourceSet" webAppMount="/WEB-INF/lib/slf4j-simple-2.0.12.jar"/>
+  </Resources>
+</Context>

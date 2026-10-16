@@ -1,12 +1,20 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
+import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dao.QuestionDAO;
 import com.learnhub.dao.QuizDAO;
 import com.learnhub.dto.QuizAttemptDTO;
+import com.learnhub.entity.Course;
+import com.learnhub.entity.Lesson;
+import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
 import com.learnhub.entity.QuizSubmission;
+import com.learnhub.entity.Registration;
 import com.learnhub.entity.User;
+import com.learnhub.service.CourseService;
+import com.learnhub.service.LearningProcessService;
 import com.learnhub.service.QuizAttemptService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -32,6 +40,9 @@ public class QuizServlet extends HttpServlet {
     private final QuizAttemptService quizService = new QuizAttemptService();
     private final QuizDAO quizDAO = new QuizDAO();
     private final QuestionDAO questionDAO = new QuestionDAO();
+    private final ModuleDAO moduleDAO = new ModuleDAO();
+    private final CourseService courseService = new CourseService();
+    private final LearningProcessService learningService = new LearningProcessService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -97,6 +108,31 @@ public class QuizServlet extends HttpServlet {
                 UUID quizId = UUID.fromString(quizIdStr);
                 Quiz quiz = quizDAO.findById(quizId);
                 if (quiz != null) {
+                    // Khóa học của quiz suy ra từ module (không phụ thuộc courseId trên URL)
+                    Module module = moduleDAO.findById(quiz.getModuleId());
+                    Course course = module != null
+                            ? courseService.getCourseDetailWithCurriculum(module.getCourseId()) : null;
+                    Registration registration = course != null
+                            ? learningService.findRegistration(user.getId(), course.getId()) : null;
+
+                    if (!canStudy(registration, course)) {
+                        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Course access denied.");
+                        return;
+                    }
+
+                    // Dữ liệu cho sidebar (giống trang bài học)
+                    List<Lesson> orderedLessons = new ArrayList<>();
+                    for (Module m : course.getModules()) {
+                        orderedLessons.addAll(m.getLessons());
+                    }
+                    req.setAttribute("course", course);
+                    req.setAttribute("registration", registration);
+                    req.setAttribute("lessonStatuses", learningService.getLessonStatuses(registration.getId()));
+                    req.setAttribute("completedLessons", learningService.getCompletedCount(registration.getId(), orderedLessons));
+                    req.setAttribute("totalLessons", orderedLessons.size());
+                    req.setAttribute("progressPercent", learningService.getProgressPercent(registration.getId()));
+                    req.setAttribute("pageTitle", quiz.getTitle() + " - LearnHub");
+
                     List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
                     List<QuizSubmission> history = quizService.getAttemptHistory(user.getId(), quizId);
 
@@ -123,7 +159,6 @@ public class QuizServlet extends HttpServlet {
                     req.setAttribute("hasAttempted", !completedAttempts.isEmpty());
                     req.setAttribute("highestScore", highestScore);
                     req.setAttribute("passed", passedAny);
-                    req.setAttribute("courseId", req.getParameter("courseId"));
 
                     req.getRequestDispatcher("/WEB-INF/views/quiz/info.jsp").forward(req, resp);
                     return;
@@ -133,6 +168,18 @@ public class QuizServlet extends HttpServlet {
         }
 
         resp.sendRedirect(req.getContextPath() + "/courses");
+    }
+
+    private boolean canStudy(Registration registration, Course course) {
+        if (registration == null || course == null) return false;
+
+        boolean active = "enrolled".equalsIgnoreCase(registration.getStatus())
+                || "completed".equalsIgnoreCase(registration.getStatus());
+        if (!active) return false;
+
+        boolean paidCourse = course.getPrice() != null
+                && course.getPrice().compareTo(BigDecimal.ZERO) > 0;
+        return !paidCourse || "paid".equalsIgnoreCase(registration.getPaymentStatus());
     }
 
     @Override
@@ -161,21 +208,45 @@ public class QuizServlet extends HttpServlet {
             try {
                 UUID attemptId = UUID.fromString(attemptIdStr);
                 Map<UUID, List<UUID>> selectedAnswers = new HashMap<>();
+                Map<UUID, String> textAnswers = new HashMap<>();
 
                 for (String paramName : req.getParameterMap().keySet()) {
                     if (paramName.startsWith("question_")) {
-                        String qIdStr = paramName.substring("question_".length());
-                        UUID qId = UUID.fromString(qIdStr);
-                        String[] vals = req.getParameterValues(paramName);
-                        List<UUID> optIds = new ArrayList<>();
-                        for (String v : vals) {
-                            optIds.add(UUID.fromString(v));
+                        String rawQId = paramName.substring("question_".length());
+                        boolean isTextParam = rawQId.endsWith("_text");
+                        if (isTextParam) {
+                            rawQId = rawQId.substring(0, rawQId.length() - "_text".length());
                         }
-                        selectedAnswers.put(qId, optIds);
+
+                        UUID qId;
+                        try {
+                            qId = UUID.fromString(rawQId);
+                        } catch (IllegalArgumentException e) {
+                            continue;
+                        }
+
+                        String[] vals = req.getParameterValues(paramName);
+                        if (vals == null || vals.length == 0) continue;
+
+                        if (isTextParam) {
+                            textAnswers.put(qId, vals[0]);
+                        } else {
+                            List<UUID> optIds = new ArrayList<>();
+                            for (String v : vals) {
+                                try {
+                                    optIds.add(UUID.fromString(v));
+                                } catch (IllegalArgumentException e) {
+                                    textAnswers.put(qId, v);
+                                }
+                            }
+                            if (!optIds.isEmpty()) {
+                                selectedAnswers.put(qId, optIds);
+                            }
+                        }
                     }
                 }
 
-                QuizAttemptDTO result = quizService.submitQuizAttempt(attemptId, selectedAnswers);
+                QuizAttemptDTO result = quizService.submitQuizAttempt(attemptId, selectedAnswers, textAnswers);
                 Quiz quiz = quizDAO.findById(result.getQuizId());
                 req.setAttribute("quiz", quiz);
                 req.setAttribute("result", result);

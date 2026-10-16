@@ -54,7 +54,7 @@ CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
 
 CREATE TYPE learning_status AS ENUM ('not_started', 'in_progress', 'completed');
 
-CREATE TYPE question_type AS ENUM ('text', 'single_choice', 'multiple_choice');
+CREATE TYPE question_type AS ENUM ('text', 'single_choice', 'multiple_choice', 'fill_in_blank');
 
 CREATE TYPE notification_status AS ENUM ('unread', 'read', 'sent', 'failed');
 
@@ -204,6 +204,8 @@ CREATE TABLE quiz (
     title      VARCHAR(255) NOT NULL,
     time_limit INTEGER,  -- don vi: phut
     pass_score NUMERIC(5, 2) NOT NULL DEFAULT 5.0,
+    status     VARCHAR(20) NOT NULL DEFAULT 'published', -- 'published', 'draft', 'hidden'
+    image_url  TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -216,11 +218,15 @@ CREATE INDEX idx_quiz_module_id ON quiz (module_id);
 -- ---------------------------------------------------------------------
 CREATE TABLE question (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    module_id  UUID REFERENCES module (id) ON DELETE SET NULL,
     content    TEXT NOT NULL,
     type       question_type NOT NULL DEFAULT 'single_choice',
+    status     VARCHAR(20) NOT NULL DEFAULT 'public', -- 'public', 'draft', 'hidden'
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE INDEX idx_question_module_id ON question (module_id);
 
 
 -- ---------------------------------------------------------------------

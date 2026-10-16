@@ -44,8 +44,24 @@
                                 <h3 class="text-base sm:text-lg font-semibold text-text-primary leading-relaxed">${q.content}</h3>
                             </div>
 
-                            <div class="space-y-3 sm:pl-11">
                                 <c:choose>
+                                    <c:when test="${q.type == 'fill_in_blank' or q.type == 'text'}">
+                                        <div class="space-y-2">
+                                            <label class="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
+                                                <i class="fa-solid fa-pen-nib mr-1 text-purple-600"></i>Nhập câu trả lời của bạn:
+                                            </label>
+                                            <div class="relative">
+                                                <input type="text"
+                                                       name="question_${q.id}_text"
+                                                       autocomplete="off"
+                                                       placeholder="Nhập từ khóa hoặc câu trả lời vào đây..."
+                                                       class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-border-default text-base font-semibold text-text-primary outline-none focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition">
+                                            </div>
+                                            <p class="text-xs text-text-secondary">
+                                                <i class="fa-solid fa-circle-info mr-1 text-brand-600"></i>Hệ thống sẽ đối chiếu với từ khóa đáp án chuẩn (không phân biệt chữ hoa, chữ thường).
+                                            </p>
+                                        </div>
+                                    </c:when>
                                     <c:when test="${q.type == 'multiple_choice'}">
                                         <c:forEach var="opt" items="${q.options}">
                                             <label class="flex items-start p-4 rounded-lg border border-border-default hover:border-brand-500 hover:bg-brand-50/30 cursor-pointer transition-all duration-150 group">
@@ -169,10 +185,17 @@
             navButtons.forEach(function(btn) {
                 var qId = btn.getAttribute("data-q-nav");
                 var inputs = document.querySelectorAll("input[name='question_" + qId + "']");
+                var textInput = document.querySelector("input[name='question_" + qId + "_text']");
                 var isAnswered = false;
 
+                if (textInput && textInput.value.trim().length > 0) {
+                    isAnswered = true;
+                }
+
                 inputs.forEach(function(input) {
-                    if (input.checked) {
+                    if (input.type === 'radio' || input.type === 'checkbox') {
+                        if (input.checked) isAnswered = true;
+                    } else if (input.value.trim().length > 0) {
                         isAnswered = true;
                     }
                 });
@@ -205,6 +228,7 @@
 
         if (quizForm) {
             quizForm.addEventListener("change", updateProgress);
+            quizForm.addEventListener("input", updateProgress);
             updateProgress();
         }
 

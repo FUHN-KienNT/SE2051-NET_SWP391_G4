@@ -15,21 +15,29 @@ import java.util.logging.Logger;
  * A question is shared across quizzes.
  * Quiz membership is maintained by QuizQuestionDAO.
  */
-public class QuestionDAO {
+public class    QuestionDAO {
 
     private static final Logger LOGGER =
             Logger.getLogger(QuestionDAO.class.getName());
 
     public List<Question> search(String keyword, String type) {
+        return search(keyword, type, null, null, null);
+    }
+
+    public List<Question> search(String keyword, String type, UUID moduleId, UUID courseId, String status) {
         List<Question> list = new ArrayList<>();
 
         StringBuilder sql = new StringBuilder(
-                "SELECT q.id, q.content, q.type, q.created_at, q.updated_at, "
+                "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
+                + "m.title module_title, c.id course_id, c.title course_title, "
                 + "(SELECT COUNT(*) FROM question_option qo "
                 + " WHERE qo.question_id=q.id) option_count, "
                 + "(SELECT COUNT(*) FROM quiz_question qq "
                 + " WHERE qq.question_id=q.id) quiz_count "
-                + "FROM question q WHERE 1=1 "
+                + "FROM question q "
+                + "LEFT JOIN module m ON q.module_id=m.id "
+                + "LEFT JOIN course c ON m.course_id=c.id "
+                + "WHERE 1=1 "
         );
 
         List<Object> params = new ArrayList<>();
@@ -40,8 +48,27 @@ public class QuestionDAO {
         }
 
         if (type != null && !type.trim().isEmpty()) {
-            sql.append("AND q.type = ?::question_type ");
-            params.add(type.trim());
+            if ("fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type)) {
+                sql.append("AND (q.type = 'fill_in_blank'::question_type OR q.type = 'text'::question_type) ");
+            } else {
+                sql.append("AND q.type = ?::question_type ");
+                params.add(type.trim());
+            }
+        }
+
+        if (moduleId != null) {
+            sql.append("AND q.module_id = ? ");
+            params.add(moduleId);
+        }
+
+        if (courseId != null) {
+            sql.append("AND c.id = ? ");
+            params.add(courseId);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND COALESCE(q.status, 'public') = ? ");
+            params.add(status.trim());
         }
 
         sql.append("ORDER BY q.updated_at DESC, q.created_at DESC");
@@ -72,8 +99,12 @@ public class QuestionDAO {
         }
 
         String sql =
-                "SELECT id, content, type, created_at, updated_at "
-                + "FROM question WHERE id=?";
+                "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
+                + "m.title module_title, c.id course_id, c.title course_title "
+                + "FROM question q "
+                + "LEFT JOIN module m ON q.module_id=m.id "
+                + "LEFT JOIN course c ON m.course_id=c.id "
+                + "WHERE q.id=?";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -103,10 +134,13 @@ public class QuestionDAO {
         }
 
         String sql =
-                "SELECT q.id, q.content, q.type, q.created_at, q.updated_at, "
+                "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
+                + "m.title module_title, c.id course_id, c.title course_title, "
                 + "qq.order_index "
                 + "FROM question q "
                 + "JOIN quiz_question qq ON q.id=qq.question_id "
+                + "LEFT JOIN module m ON q.module_id=m.id "
+                + "LEFT JOIN course c ON m.course_id=c.id "
                 + "WHERE qq.quiz_id=? "
                 + "ORDER BY qq.order_index ASC, q.created_at ASC";
 
@@ -162,8 +196,8 @@ public class QuestionDAO {
 
         String sql =
                 "INSERT INTO question "
-                + "(id, content, type, created_at, updated_at) "
-                + "VALUES (?, ?, ?::question_type, NOW(), NOW())";
+                + "(id, module_id, content, type, status, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?::question_type, ?, NOW(), NOW())";
 
         Connection conn = null;
 
@@ -174,8 +208,11 @@ public class QuestionDAO {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
                 ps.setObject(1, question.getId());
-                ps.setString(2, question.getContent().trim());
-                ps.setString(3, normalizeType(question.getType()));
+                ps.setObject(2, question.getModuleId());
+                ps.setString(3, question.getContent().trim());
+                ps.setString(4, normalizeType(question.getType()));
+                String st = question.getStatus();
+                ps.setString(5, (st == null || st.isBlank()) ? "public" : st.trim());
 
                 ps.executeUpdate();
             }
@@ -215,7 +252,7 @@ public class QuestionDAO {
 
         String sql =
                 "UPDATE question "
-                + "SET content=?, type=?::question_type, updated_at=NOW() "
+                + "SET module_id=?, content=?, type=?::question_type, status=?, updated_at=NOW() "
                 + "WHERE id=?";
 
         Connection conn = null;
@@ -227,9 +264,12 @@ public class QuestionDAO {
             // 1. Update question
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-                ps.setString(1, question.getContent().trim());
-                ps.setString(2, normalizeType(question.getType()));
-                ps.setObject(3, question.getId());
+                ps.setObject(1, question.getModuleId());
+                ps.setString(2, question.getContent().trim());
+                ps.setString(3, normalizeType(question.getType()));
+                String st = question.getStatus();
+                ps.setString(4, (st == null || st.isBlank()) ? "public" : st.trim());
+                ps.setObject(5, question.getId());
 
                 int affected = ps.executeUpdate();
 
@@ -255,14 +295,14 @@ public class QuestionDAO {
     }
 
     /**
-     * DELETE question.
+     * Soft delete: ẩn câu hỏi thay vì xóa cứng.
      */
-    public boolean delete(UUID id) {
+    public boolean hide(UUID id) {
         if (id == null) {
             return false;
         }
 
-        String sql = "DELETE FROM question WHERE id=?";
+        String sql = "UPDATE question SET status='hidden', updated_at=NOW() WHERE id=?";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -271,10 +311,35 @@ public class QuestionDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING,
-                    "Question cannot be deleted: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error in QuestionDAO.hide", e);
             return false;
         }
+    }
+
+    public boolean unhide(UUID id) {
+        if (id == null) {
+            return false;
+        }
+
+        String sql = "UPDATE question SET status='public', updated_at=NOW() WHERE id=?";
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in QuestionDAO.unhide", e);
+            return false;
+        }
+    }
+
+    /**
+     * DELETE question -> thay bằng hide() để không gây lỗi FK nếu học sinh đã làm câu đó.
+     */
+    public boolean delete(UUID id) {
+        return hide(id);
     }
 
     /**
@@ -611,8 +676,25 @@ public class QuestionDAO {
         Question q = new Question();
 
         q.setId((UUID) rs.getObject("id"));
+        try {
+            q.setModuleId((UUID) rs.getObject("module_id"));
+        } catch (SQLException ignored) {}
         q.setContent(rs.getString("content"));
-        q.setType(rs.getString("type"));
+        String type = rs.getString("type");
+        if ("text".equalsIgnoreCase(type)) {
+            type = "fill_in_blank";
+        }
+        q.setType(type);
+        try {
+            q.setStatus(rs.getString("status"));
+        } catch (SQLException ignored) {
+            q.setStatus("public");
+        }
+        try {
+            q.setModuleTitle(rs.getString("module_title"));
+            q.setCourseId((UUID) rs.getObject("course_id"));
+            q.setCourseTitle(rs.getString("course_title"));
+        } catch (SQLException ignored) {}
         q.setCreatedAt(rs.getTimestamp("created_at"));
         q.setUpdatedAt(rs.getTimestamp("updated_at"));
 
@@ -621,12 +703,12 @@ public class QuestionDAO {
 
     private static String normalizeType(String type) {
 
-        if ("multiple_choice".equals(type)) {
+        if ("multiple_choice".equalsIgnoreCase(type)) {
             return "multiple_choice";
         }
 
-        if ("text".equals(type)) {
-            return "text";
+        if ("fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type)) {
+            return "fill_in_blank";
         }
 
         return "single_choice";

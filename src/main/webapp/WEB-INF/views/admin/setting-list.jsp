@@ -185,17 +185,27 @@
                                                     <i class="fa-solid fa-pen-to-square"></i> Manage
                                                 </button>
 
-                                                <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái cài đặt này?');">
+                                                <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline">
                                                     <input type="hidden" name="id" value="${s.id}">
                                                     <input type="hidden" name="status" value="${!s.status}">
                                                     <c:choose>
                                                         <c:when test="${s.status}">
-                                                            <button type="submit" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Deactivate">
+                                                            <button type="submit" 
+                                                                    data-confirm="Bạn có chắc chắn muốn TẮT cài đặt này không?"
+                                                                    data-confirm-title="Tắt Cài đặt"
+                                                                    data-confirm-btn="Tắt cài đặt"
+                                                                    data-confirm-type="warning"
+                                                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Deactivate">
                                                                 <i class="fa-solid fa-power-off"></i>
                                                             </button>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <button type="submit" class="px-3 py-2 bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Activate">
+                                                            <button type="submit" 
+                                                                    data-confirm="Bạn có muốn BẬT cài đặt này không?"
+                                                                    data-confirm-title="Bật Cài đặt"
+                                                                    data-confirm-btn="Bật cài đặt"
+                                                                    data-confirm-type="info"
+                                                                    class="px-3 py-2 bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Activate">
                                                                 <i class="fa-solid fa-power-off"></i>
                                                             </button>
                                                         </c:otherwise>

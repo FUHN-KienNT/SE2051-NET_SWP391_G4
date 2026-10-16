@@ -415,4 +415,8 @@ public class CourseDAO {
         }
         return 0;
     }
+
+    public List<Course> findByExpertId(UUID expertId) {
+        return findByExpertId(expertId, 0, 100);
+    }
 }

@@ -27,158 +27,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
 
         <%-- Sidebar: course progress, modules, lessons and quizzes --%>
-        <aside aria-label="Nội dung khóa học"
-               class="lg:col-span-1 min-w-0 rounded-xl border border-border-default bg-surface-card shadow-sm overflow-hidden">
-
-            <div class="p-5 border-b border-border-default">
-                <p class="text-xs font-semibold uppercase tracking-wide text-brand-700 mb-2">
-                    Nội dung khóa học
-                </p>
-
-                <h2 class="text-lg font-bold text-text-primary break-words">
-                    <c:out value="${course.title}" />
-                </h2>
-
-                <div class="flex justify-between gap-3 text-sm mt-4 mb-2">
-                    <span class="text-text-secondary">
-                        Đã hoàn thành ${completedLessons}/${totalLessons} bài
-                    </span>
-                    <span class="font-semibold text-brand-700">
-                        ${progressPercent}%
-                    </span>
-                </div>
-
-                <progress value="${progressPercent}"
-                          max="100"
-                          aria-label="Tiến độ khóa học"
-                          class="w-full h-2 rounded-full overflow-hidden text-brand-700 bg-slate-200 [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:bg-brand-700 [&::-moz-progress-bar]:bg-brand-700">
-                </progress>
-            </div>
-
-            <div class="divide-y divide-border-default">
-                <c:forEach items="${course.modules}"
-                           var="module"
-                           varStatus="moduleStatus">
-
-                    <details class="viewer-module group"
-                             ${module.id eq lesson.moduleId ? 'open' : ''}>
-
-                        <summary class="list-none cursor-pointer flex items-start justify-between gap-3 p-4 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700">
-
-                            <span class="min-w-0">
-                                <span class="block text-xs text-text-secondary mb-1">
-                                    Chương ${moduleStatus.count}
-                                </span>
-
-                                <span class="block text-sm font-semibold text-text-primary break-words">
-                                    <c:out value="${module.title}" />
-                                </span>
-
-                                <span class="block text-xs text-text-secondary mt-1">
-                                    ${fn:length(module.lessons)} bài học ·
-                                    ${fn:length(module.quizzes)} quiz
-                                </span>
-                            </span>
-
-                            <i class="fa-solid fa-chevron-down text-xs text-text-secondary mt-2 transition-transform group-open:rotate-180"
-                               aria-hidden="true"></i>
-                        </summary>
-
-                        <ul class="space-y-1 px-2 pb-3">
-
-                            <%-- Lessons --%>
-                            <c:forEach items="${module.lessons}" var="item">
-                                <c:set var="isCurrent"
-                                       value="${item.id eq lesson.id}" />
-
-                                <c:set var="itemStatus"
-                                       value="${lessonStatuses[item.id.toString()]}" />
-
-                                <c:url value="/learn/lesson" var="lessonUrl">
-                                    <c:param name="courseId"
-                                             value="${course.id}" />
-                                    <c:param name="lessonId"
-                                             value="${item.id}" />
-                                </c:url>
-
-                                <li>
-                                    <a href="${fn:escapeXml(lessonUrl)}"
-                                       aria-current="${isCurrent ? 'page' : 'false'}"
-                                       class="flex items-start gap-3 rounded-lg p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isCurrent ? 'bg-brand-50 text-brand-900 font-semibold' : 'text-text-primary hover:bg-surface'}">
-
-                                        <i class="fa-solid ${itemStatus eq 'completed' ? 'fa-circle-check text-status-success' : 'fa-file-lines text-text-secondary'} mt-1 shrink-0"
-                                           aria-hidden="true"></i>
-
-                                        <span class="min-w-0">
-                                            <span class="block break-words">
-                                                <c:out value="${item.title}" />
-                                            </span>
-
-                                            <span class="block text-xs mt-1 ${itemStatus eq 'completed' ? 'text-status-success' : 'text-text-secondary'}">
-                                                <c:choose>
-                                                    <c:when test="${itemStatus eq 'completed'}">
-                                                        Đã hoàn thành
-                                                    </c:when>
-                                                    <c:when test="${isCurrent}">
-                                                        Đang xem
-                                                    </c:when>
-                                                    <c:when test="${itemStatus eq 'in_progress'}">
-                                                        Đang học
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        Chưa học
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </span>
-                                        </span>
-                                    </a>
-                                </li>
-                            </c:forEach>
-
-                            <%-- Quizzes --%>
-                            <c:forEach items="${module.quizzes}" var="quiz">
-                                <c:url value="/quiz" var="quizUrl">
-                                    <c:param name="quizId"
-                                             value="${quiz.id}" />
-                                    <c:param name="courseId"
-                                             value="${course.id}" />
-                                </c:url>
-
-                                <li>
-                                    <a href="${fn:escapeXml(quizUrl)}"
-                                       class="flex items-start gap-3 rounded-lg p-3 text-sm text-text-primary hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
-
-                                        <i class="fa-solid fa-list-check text-brand-700 mt-1 shrink-0"
-                                           aria-hidden="true"></i>
-
-                                        <span class="min-w-0">
-                                            <span class="block font-medium break-words">
-                                                <c:out value="${quiz.title}" />
-                                            </span>
-                                            <span class="block text-xs text-text-secondary mt-1">
-                                                Quiz · ${quiz.questionCount} câu hỏi
-                                            </span>
-                                        </span>
-                                    </a>
-                                </li>
-                            </c:forEach>
-
-                            <c:if test="${empty module.lessons and empty module.quizzes}">
-                                <li class="p-3 text-sm text-text-secondary">
-                                    Chương này chưa có nội dung.
-                                </li>
-                            </c:if>
-                        </ul>
-                    </details>
-                </c:forEach>
-
-                <c:if test="${empty course.modules}">
-                    <p class="p-5 text-sm text-text-secondary">
-                        Khóa học chưa có chương.
-                    </p>
-                </c:if>
-            </div>
-        </aside>
+        <jsp:include page="/WEB-INF/views/learn/sidebar.jsp" />
 
         <%-- Main lesson content --%>
         <section aria-labelledby="lesson-heading"
@@ -286,6 +135,48 @@
                 </footer>
             </article>
 
+            <%-- Direct Quiz Link under Lesson --%>
+            <c:set var="currentModule" value="${null}" />
+            <c:forEach items="${course.modules}" var="mod">
+                <c:if test="${mod.id eq lesson.moduleId}">
+                    <c:set var="currentModule" value="${mod}" />
+                </c:if>
+            </c:forEach>
+
+            <c:if test="${not empty currentModule and not empty currentModule.quizzes}">
+                <div class="mt-6 p-6 rounded-xl border border-brand-200 bg-brand-50/50 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold shrink-0 mt-0.5">
+                            <i class="fa-solid fa-clipboard-question text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-brand-700">Ôn tập kiến thức</p>
+                            <h3 class="text-base font-bold text-text-primary mt-0.5">Bài kiểm tra ôn tập của chương này</h3>
+                            <div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-text-secondary">
+                                <c:forEach var="qz" items="${currentModule.quizzes}" varStatus="qst">
+                                    <span class="font-medium text-slate-700">
+                                        <i class="fa-solid fa-circle-check text-brand-600 mr-1"></i>${qz.title} (${qz.questionCount} câu hỏi)
+                                    </span>
+                                </c:forEach>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <c:forEach var="qz" items="${currentModule.quizzes}" varStatus="qst">
+                            <c:url value="/quiz" var="directQuizUrl">
+                                <c:param name="quizId" value="${qz.id}" />
+                                <c:param name="courseId" value="${course.id}" />
+                            </c:url>
+                            <a href="${fn:escapeXml(directQuizUrl)}"
+                               class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold shadow-sm transition">
+                                <span>Vào làm Quiz</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </a>
+                        </c:forEach>
+                    </div>
+                </div>
+            </c:if>
+
             <nav aria-label="Điều hướng bài học"
                  class="flex flex-wrap justify-between gap-3 mt-6">
 
@@ -361,9 +252,9 @@
         }
 
         const key = 'learnhub:lastLesson:'
-                + data.lessonContext + ':'
-                + data.lessonUser + ':'
-                + data.lessonCourse;
+            + data.lessonContext + ':'
+            + data.lessonUser + ':'
+            + data.lessonCourse;
 
         try {
             localStorage.setItem(key, JSON.stringify({

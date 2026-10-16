@@ -257,26 +257,27 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------
 -- 6. SEED QUIZ (Bài thi trắc nghiệm)
 -- ---------------------------------------------------------------------
-INSERT INTO quiz (id, module_id, title, time_limit, pass_score) VALUES
-    ('10000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'Quiz Ôn tập: Vòng đời Servlet & Xử lý HTTP Request', 15, 5.0),
-    ('10000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'Quiz Đánh giá: JSP, JSTL Core Tags & Mô hình MVC', 20, 6.0),
-    ('10000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000003', 'Quiz Bảo mật: Session, Cookie & Filter Authorization', 20, 7.0),
-    ('10000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'Quiz Chuyên gia: Đánh Index & Đọc EXPLAIN PostgreSQL', 25, 8.0)
+INSERT INTO quiz (id, module_id, title, time_limit, pass_score, status, image_url) VALUES
+    ('10000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'Quiz Ôn tập: Vòng đời Servlet & Xử lý HTTP Request', 15, 5.0, 'published', 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&auto=format&fit=crop&q=80'),
+    ('10000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000002', 'Quiz Đánh giá: JSP, JSTL Core Tags & Mô hình MVC', 20, 6.0, 'published', 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&auto=format&fit=crop&q=80'),
+    ('10000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000003', 'Quiz Bảo mật: Session, Cookie & Filter Authorization', 20, 7.0, 'published', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&auto=format&fit=crop&q=80'),
+    ('10000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000005', 'Quiz Chuyên gia: Đánh Index & Đọc EXPLAIN PostgreSQL', 25, 8.0, 'published', 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=400&auto=format&fit=crop&q=80')
 ON CONFLICT (id) DO NOTHING;
 
 
 -- ---------------------------------------------------------------------
 -- 7. SEED QUESTION (Ngân hàng câu hỏi trắc nghiệm)
 -- ---------------------------------------------------------------------
-INSERT INTO question (id, content, type) VALUES
-    ('20000000-0000-0000-0000-000000000001', 'Phương thức nào trong vòng đời của Servlet chỉ được gọi đúng MỘT lần duy nhất khi Servlet được khởi tạo?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000002', 'Sự khác biệt chính giữa RequestDispatcher.forward() và HttpServletResponse.sendRedirect() là gì?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000003', 'Trong Jakarta EE 10, package nào thay thế hoàn toàn cho package cũ "javax.servlet"?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000004', 'Thẻ JSTL nào sau đây được sử dụng để duyệt qua một Collection hoặc mảng trong JSP?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000005', 'Phương thức nào được dùng để hủy bỏ hoàn toàn một HttpSession khi người dùng đăng xuất?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000006', 'Trong kiến trúc MVC, tầng Controller đảm nhiệm vai trò gì?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000007', 'Loại Index mặc định trong PostgreSQL khi bạn tạo khóa chính (Primary Key) là gì?', 'single_choice'),
-    ('20000000-0000-0000-0000-000000000008', 'Lệnh nào trong PostgreSQL cho phép xem thời gian thực tế thực thi câu lệnh SQL cùng với kế hoạch truy vấn?', 'single_choice')
+INSERT INTO question (id, module_id, content, type, status) VALUES
+    ('20000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'Phương thức nào trong vòng đời của Servlet chỉ được gọi đúng MỘT lần duy nhất khi Servlet được khởi tạo?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 'Sự khác biệt chính giữa RequestDispatcher.forward() và HttpServletResponse.sendRedirect() là gì?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 'Trong Jakarta EE 10, package nào thay thế hoàn toàn cho package cũ "javax.servlet"?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000002', 'Thẻ JSTL nào sau đây được sử dụng để duyệt qua một Collection hoặc mảng trong JSP?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000003', 'Phương thức nào được dùng để hủy bỏ hoàn toàn một HttpSession khi người dùng đăng xuất?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-000000000001', 'Trong kiến trúc MVC, tầng Controller đảm nhiệm vai trò gì?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000005', 'Loại Index mặc định trong PostgreSQL khi bạn tạo khóa chính (Primary Key) là gì?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-000000000005', 'Lệnh nào trong PostgreSQL cho phép xem thời gian thực tế thực thi câu lệnh SQL cùng với kế hoạch truy vấn?', 'single_choice', 'public'),
+    ('20000000-0000-0000-0000-000000000009', 'e0000000-0000-0000-0000-000000000001', 'Điền vào chỗ trống: Phương thức xử lý HTTP GET trong HttpServlet là _____', 'fill_in_blank', 'public')
 ON CONFLICT (id) DO NOTHING;
 
 
@@ -330,7 +331,11 @@ INSERT INTO question_option (id, question_id, option_text, is_correct) VALUES
     ('30000000-0000-0000-0000-000000000029', '20000000-0000-0000-0000-000000000008', 'EXPLAIN ANALYZE <câu_lệnh_sql>', TRUE),
     ('30000000-0000-0000-0000-000000000030', '20000000-0000-0000-0000-000000000008', 'DESCRIBE <câu_lệnh_sql>', FALSE),
     ('30000000-0000-0000-0000-000000000031', '20000000-0000-0000-0000-000000000008', 'SHOW PROFILE <câu_lệnh_sql>', FALSE),
-    ('30000000-0000-0000-0000-000000000032', '20000000-0000-0000-0000-000000000008', 'OPTIMIZE <câu_lệnh_sql>', FALSE)
+    ('30000000-0000-0000-0000-000000000032', '20000000-0000-0000-0000-000000000008', 'OPTIMIZE <câu_lệnh_sql>', FALSE),
+
+    -- Câu 9 (Fill in the blank keywords)
+    ('30000000-0000-0000-0000-000000000033', '20000000-0000-0000-0000-000000000009', 'doGet', TRUE),
+    ('30000000-0000-0000-0000-000000000034', '20000000-0000-0000-0000-000000000009', 'doGet()', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 

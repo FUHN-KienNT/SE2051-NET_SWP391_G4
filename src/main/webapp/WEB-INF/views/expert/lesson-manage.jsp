@@ -73,14 +73,17 @@
                                                         <a href="${pageContext.request.contextPath}/lessons/manage?action=edit&id=${les.id}&courseId=${course.id}"
                                                            class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
                                                        <form action="${pageContext.request.contextPath}/lessons/manage"
-                                                             method="post" class="inline-block"
-                                                             onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài giảng này không?');">
+                                                             method="post" class="inline-block">
                                                            <input type="hidden" name="action" value="delete">
                                                            <input type="hidden" name="id" value="${les.id}">
                                                            <input type="hidden" name="courseId" value="${course.id}">
                                                            <input type="hidden" name="csrfToken" value="${sessionScope.lessonDeleteToken}">
                                                            <button type="submit"
-                                                                   class="inline-flex rounded-lg px-3 py-2 text-status-danger hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-brand-700">
+                                                                   class="inline-flex rounded-lg px-3 py-2 text-status-danger hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-brand-700"
+                                                                   data-confirm="Bạn có chắc chắn muốn xóa bài giảng này không? Hành động này không thể hoàn tác."
+                                                                   data-confirm-title="Xóa Bài Giảng"
+                                                                   data-confirm-btn="Xóa Bài Giảng"
+                                                                   data-confirm-type="danger">
                                                                Delete
                                                            </button>
                                                        </form>

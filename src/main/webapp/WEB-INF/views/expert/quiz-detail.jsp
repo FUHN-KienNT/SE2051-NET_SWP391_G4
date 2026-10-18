@@ -83,7 +83,7 @@
                     <select name="moduleId" id="quizModuleSelect" required onchange="onQuizModuleChange(this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                         <option value="">-- Chọn module áp dụng --</option>
                         <c:forEach var="m" items="${modules}">
-                            <option value="${m.id}" ${(quiz.moduleId eq m.id or defaultFilterModuleId eq m.id) ? 'selected' : ''} data-course="${m.courseId}">${m.title}</option>
+                            <option value="${m.id}" ${(quiz.moduleId eq m.id or defaultFilterModuleId eq m.id) ? 'selected' : ''} data-course="${m.courseId}"><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
                         </c:forEach>
                     </select>
                     <p class="text-xs text-slate-400 mt-1">Khi chọn module, danh sách câu hỏi bên dưới sẽ được tự động lọc theo module tương ứng.</p>
@@ -112,7 +112,7 @@
                                    class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                         </div>
                         <div class="w-12 h-12 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                            <img id="imagePreview" src="${empty quiz.imageUrl ? 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80' : quiz.imageUrl}" 
+                            <img id="imagePreview" src="${empty quiz.imageUrl ? 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80' : quiz.imageUrl}"
                                  alt="Preview" class="w-full h-full object-cover"
                                  onerror="this.src='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80'">
                         </div>
@@ -183,7 +183,7 @@
                         <option value="">-- Tất cả Module --</option>
                         <c:forEach var="m" items="${modules}">
                             <option value="${m.id}" ${(not empty defaultFilterModuleId and defaultFilterModuleId eq m.id) or (not empty quiz and quiz.moduleId eq m.id) ? 'selected' : ''}>
-                                Module: ${m.title}
+                                Module: <c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}
                             </option>
                         </c:forEach>
                     </select>
@@ -265,14 +265,14 @@
                 <c:if test="${empty questions}">
                     <div class="text-center py-12 text-slate-400 text-sm">
                         <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
-                        Chưa có câu hỏi nào trong Question Bank. 
+                        Chưa có câu hỏi nào trong Question Bank.
                         <a class="text-emerald-700 font-bold hover:underline" href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}">
                             Tạo câu hỏi đầu tiên
                         </a>.
                     </div>
                 </c:if>
             </div>
-            
+
             <div id="noQuestionMatch" class="hidden p-8 text-center text-slate-400 text-sm">
                 <i class="fa-solid fa-filter-circle-xmark text-2xl text-slate-300 mb-2 block"></i>
                 Không có câu hỏi nào khớp với bộ lọc module hoặc từ khóa tìm kiếm.
@@ -294,102 +294,102 @@
 </main>
 
 <script>
-function updateImagePreview(url) {
-    const preview = document.getElementById('imagePreview');
-    if (url && url.trim().length > 0) {
-        preview.src = url.trim();
-    } else {
-        preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
+    function updateImagePreview(url) {
+        const preview = document.getElementById('imagePreview');
+        if (url && url.trim().length > 0) {
+            preview.src = url.trim();
+        } else {
+            preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
+        }
     }
-}
 
-function onQuizModuleChange(selectedModuleId) {
-    const moduleFilter = document.getElementById('questionModuleFilter');
-    if (moduleFilter && selectedModuleId) {
-        moduleFilter.value = selectedModuleId;
+    function onQuizModuleChange(selectedModuleId) {
+        const moduleFilter = document.getElementById('questionModuleFilter');
+        if (moduleFilter && selectedModuleId) {
+            moduleFilter.value = selectedModuleId;
+            filterQuestions();
+        }
+    }
+
+    function onCourseChange(courseId) {
+        if (!courseId) return;
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('courseId', courseId);
+        window.location.href = currentUrl.toString();
+    }
+
+    function onQuestionCheckChange(checkbox) {
+        const item = checkbox.closest('.question-item');
+        if (checkbox.checked) {
+            item.classList.add('bg-emerald-50/40', 'border-emerald-300', 'ring-1', 'ring-emerald-200');
+            item.classList.remove('bg-white');
+            item.dataset.selected = 'true';
+        } else {
+            item.classList.remove('bg-emerald-50/40', 'border-emerald-300', 'ring-1', 'ring-emerald-200');
+            item.classList.add('bg-white');
+            item.dataset.selected = 'false';
+        }
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('.question-check:checked').length;
+        const badge = document.getElementById('selectedCountBadge');
+        if (badge) badge.textContent = checked;
+    }
+
+    function filterQuestions() {
+        const keyword = (document.getElementById('questionSearch').value || '').toLowerCase().trim();
+        const targetModule = (document.getElementById('questionModuleFilter').value || '').trim();
+        const onlySelected = document.getElementById('onlySelectedFilter') ? document.getElementById('onlySelectedFilter').checked : false;
+
+        let visibleCount = 0;
+        const items = document.querySelectorAll('.question-item');
+        items.forEach(function(row) {
+            const text = (row.dataset.text || '').toLowerCase();
+            const mod = (row.dataset.module || '').trim();
+            const isSelected = row.dataset.selected === 'true';
+
+            let matchesKeyword = keyword === '' || text.includes(keyword);
+            let matchesModule = targetModule === '' || mod === targetModule;
+            let matchesSelected = !onlySelected || isSelected;
+
+            if (matchesKeyword && matchesModule && matchesSelected) {
+                row.style.display = 'flex';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const noMatchMsg = document.getElementById('noQuestionMatch');
+        if (noMatchMsg) {
+            if (visibleCount === 0 && items.length > 0) {
+                noMatchMsg.classList.remove('hidden');
+            } else {
+                noMatchMsg.classList.add('hidden');
+            }
+        }
+    }
+
+    function toggleSelectAllVisible() {
+        const visibleCheckboxes = Array.from(document.querySelectorAll('.question-item'))
+            .filter(item => item.style.display !== 'none')
+            .map(item => item.querySelector('.question-check'));
+
+        if (visibleCheckboxes.length === 0) return;
+
+        const allChecked = visibleCheckboxes.every(cb => cb.checked);
+        visibleCheckboxes.forEach(cb => {
+            cb.checked = !allChecked;
+            onQuestionCheckChange(cb);
+        });
+    }
+
+    // Initial filter execution on DOM load
+    document.addEventListener('DOMContentLoaded', function() {
         filterQuestions();
-    }
-}
-
-function onCourseChange(courseId) {
-    if (!courseId) return;
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('courseId', courseId);
-    window.location.href = currentUrl.toString();
-}
-
-function onQuestionCheckChange(checkbox) {
-    const item = checkbox.closest('.question-item');
-    if (checkbox.checked) {
-        item.classList.add('bg-emerald-50/40', 'border-emerald-300', 'ring-1', 'ring-emerald-200');
-        item.classList.remove('bg-white');
-        item.dataset.selected = 'true';
-    } else {
-        item.classList.remove('bg-emerald-50/40', 'border-emerald-300', 'ring-1', 'ring-emerald-200');
-        item.classList.add('bg-white');
-        item.dataset.selected = 'false';
-    }
-    updateSelectedCount();
-}
-
-function updateSelectedCount() {
-    const checked = document.querySelectorAll('.question-check:checked').length;
-    const badge = document.getElementById('selectedCountBadge');
-    if (badge) badge.textContent = checked;
-}
-
-function filterQuestions() {
-    const keyword = (document.getElementById('questionSearch').value || '').toLowerCase().trim();
-    const targetModule = (document.getElementById('questionModuleFilter').value || '').trim();
-    const onlySelected = document.getElementById('onlySelectedFilter') ? document.getElementById('onlySelectedFilter').checked : false;
-
-    let visibleCount = 0;
-    const items = document.querySelectorAll('.question-item');
-    items.forEach(function(row) {
-        const text = (row.dataset.text || '').toLowerCase();
-        const mod = (row.dataset.module || '').trim();
-        const isSelected = row.dataset.selected === 'true';
-
-        let matchesKeyword = keyword === '' || text.includes(keyword);
-        let matchesModule = targetModule === '' || mod === targetModule;
-        let matchesSelected = !onlySelected || isSelected;
-
-        if (matchesKeyword && matchesModule && matchesSelected) {
-            row.style.display = 'flex';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
+        updateSelectedCount();
     });
-
-    const noMatchMsg = document.getElementById('noQuestionMatch');
-    if (noMatchMsg) {
-        if (visibleCount === 0 && items.length > 0) {
-            noMatchMsg.classList.remove('hidden');
-        } else {
-            noMatchMsg.classList.add('hidden');
-        }
-    }
-}
-
-function toggleSelectAllVisible() {
-    const visibleCheckboxes = Array.from(document.querySelectorAll('.question-item'))
-        .filter(item => item.style.display !== 'none')
-        .map(item => item.querySelector('.question-check'));
-
-    if (visibleCheckboxes.length === 0) return;
-
-    const allChecked = visibleCheckboxes.every(cb => cb.checked);
-    visibleCheckboxes.forEach(cb => {
-        cb.checked = !allChecked;
-        onQuestionCheckChange(cb);
-    });
-}
-
-// Initial filter execution on DOM load
-document.addEventListener('DOMContentLoaded', function() {
-    filterQuestions();
-    updateSelectedCount();
-});
 </script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

@@ -70,7 +70,7 @@
                             class="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border-default text-sm text-text-primary outline-none focus:ring-2 focus:ring-brand-700 focus:bg-white">
                         <option value="">-- Tất cả module --</option>
                         <c:forEach var="m" items="${modules}">
-                            <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}>${m.title}</option>
+                            <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
                         </c:forEach>
                     </select>
                 </div>

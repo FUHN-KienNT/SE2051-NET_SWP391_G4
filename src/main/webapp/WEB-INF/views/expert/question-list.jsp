@@ -93,7 +93,7 @@
                         <select name="moduleId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
                             <option value="">-- Tất cả Module --</option>
                             <c:forEach var="m" items="${modules}">
-                                <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}>${m.title}</option>
+                                <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
                             </c:forEach>
                         </select>
                     </div>
@@ -296,7 +296,7 @@
                     <select name="moduleId" required class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="">-- Chọn module --</option>
                         <c:forEach var="m" items="${modules}">
-                            <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}>${m.title}</option>
+                            <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
                         </c:forEach>
                     </select>
                 </div>

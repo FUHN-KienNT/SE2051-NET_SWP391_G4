@@ -217,6 +217,12 @@ public class QuizManagementServlet extends HttpServlet {
             }
         }
 
+        // Ẩn các câu hỏi đã ẩn (trừ câu đang nằm sẵn trong quiz đang sửa)
+        req.setAttribute(
+                "questions",
+                filterHidden(questions, selectedQuestionIds)
+        );
+
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
 
         req.getRequestDispatcher(
@@ -449,8 +455,38 @@ public class QuizManagementServlet extends HttpServlet {
         // SAVE
         // =====================================================
 
+        // Không cho thêm câu hỏi đã ẩn vào quiz
+        // (câu đã ẩn nhưng đang có sẵn trong quiz thì được giữ lại)
+        List<UUID> oldQuestionIds =
+                id == null
+                        ? new ArrayList<>()
+                        : service.getQuestionIds(id);
+
+        List<UUID> rejectedIds = new ArrayList<>();
+
+        for (UUID qid : questionIds) {
+            Question q = questionDAO.findById(qid);
+
+            if (q != null
+                    && "hidden".equalsIgnoreCase(q.getStatus())
+                    && !oldQuestionIds.contains(qid)) {
+                rejectedIds.add(qid);
+            }
+        }
+
+        questionIds.removeAll(rejectedIds);
+
+        String errorMessage =
+                "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+
+        if (!rejectedIds.isEmpty()) {
+            errorMessage =
+                    "Không thể thêm câu hỏi đã ẩn vào Quiz. Các câu hỏi đó đã được bỏ chọn.";
+        }
+
         boolean ok =
-                service.save(
+                rejectedIds.isEmpty()
+                        && service.save(
                         user.getId(),
                         id,
                         moduleId,
@@ -521,7 +557,7 @@ public class QuizManagementServlet extends HttpServlet {
 
         req.setAttribute(
                 "error",
-                "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn."
+                errorMessage
         );
 
         // -----------------------------------------------------
@@ -565,7 +601,10 @@ public class QuizManagementServlet extends HttpServlet {
 
         req.setAttribute(
                 "questions",
-                questionDAO.search(null, null, null, null, null)
+                filterHidden(
+                        questionDAO.search(null, null, null, null, null),
+                        questionIds
+                )
         );
 
         req.setAttribute("defaultFilterModuleId", moduleId);
@@ -591,6 +630,27 @@ public class QuizManagementServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    /**
+     * Loại bỏ câu hỏi đã ẩn khỏi danh sách chọn,
+     * trừ những câu đang nằm sẵn trong quiz (để Expert còn bỏ chọn được).
+     */
+    private List<Question> filterHidden(
+            List<Question> all,
+            List<UUID> selectedIds) {
+
+        List<Question> result = new ArrayList<>();
+
+        for (Question q : all) {
+            boolean hidden = "hidden".equalsIgnoreCase(q.getStatus());
+
+            if (!hidden || selectedIds.contains(q.getId())) {
+                result.add(q);
+            }
+        }
+
+        return result;
     }
 
     private Integer parseInteger(String value) {

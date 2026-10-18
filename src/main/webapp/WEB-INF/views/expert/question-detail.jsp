@@ -4,25 +4,27 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-16 flex flex-col md:flex-row gap-6">
+<div class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 flex flex-col lg:flex-row gap-6">
     <!-- Sidebar Navigation -->
-    <aside class="w-full md:w-52 shrink-0">
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-2 space-y-1">
-            <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
-               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
-                <i class="fa-solid fa-book-open text-slate-400 w-4 text-center"></i>
-                <span>Bài học (Lesson)</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
-               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
-                <i class="fa-solid fa-clipboard-question text-slate-400 w-4 text-center"></i>
-                <span>Bài thi (Quiz)</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-               class="flex items-center space-x-3 px-3.5 py-3 text-sm font-bold bg-emerald-50 text-emerald-800 rounded-xl transition">
-                <i class="fa-solid fa-list-check text-emerald-600 w-4 text-center"></i>
-                <span>Ngân hàng câu hỏi</span>
-            </a>
+    <aside class="w-full lg:w-52 shrink-0">
+        <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
+            <nav class="flex flex-wrap lg:flex-col p-2 gap-1">
+                <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
+                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                    <i class="fa-solid fa-book-open text-text-secondary text-sm"></i>
+                    <span>Lesson</span>
+                </a>
+                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
+                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                    <i class="fa-solid fa-clipboard-question text-text-secondary text-sm"></i>
+                    <span>Quiz</span>
+                </a>
+                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 border-l-4 border-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                    <i class="fa-solid fa-list-check text-brand-700 text-sm"></i>
+                    <span>Question Bank</span>
+                </a>
+            </nav>
         </div>
     </aside>
 
@@ -100,7 +102,7 @@
                                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition">
                             <option value="">-- Chọn module --</option>
                             <c:forEach var="m" items="${modules}">
-                                <option value="${m.id}" data-course="${m.courseId}" ${(question.moduleId eq m.id or moduleId eq m.id) ? 'selected' : ''}>${m.title}</option>
+                                <option value="${m.id}" data-course="${m.courseId}" ${(question.moduleId eq m.id or moduleId eq m.id) ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
                             </c:forEach>
                         </select>
                     </div>
@@ -142,7 +144,7 @@
                               oninput="onContentChange()"
                               placeholder="Nhập nội dung câu hỏi tại đây... (Ví dụ: Trong Java Servlet, phương thức nào được gọi khi có yêu cầu HTTP GET?)"
                               class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition leading-relaxed">${question.content}</textarea>
-                    
+
                     <div id="wordCountAlert" class="hidden mt-1.5 text-xs font-bold text-rose-600 flex items-center gap-1.5">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>Nội dung đã vượt quá giới hạn 120 từ! Vui lòng rút gọn nội dung câu hỏi.</span>
@@ -157,7 +159,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                             <input type="radio" name="type" value="single_choice"
-                                   ${empty question.type or question.type eq 'single_choice' ? 'checked' : ''}
+                            ${empty question.type or question.type eq 'single_choice' ? 'checked' : ''}
                                    onchange="onTypeChanged('single_choice')" class="mt-1 accent-emerald-600">
                             <div>
                                 <div class="font-bold text-xs text-slate-800">Một đáp án đúng (Single)</div>
@@ -167,7 +169,7 @@
 
                         <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                             <input type="radio" name="type" value="multiple_choice"
-                                   ${question.type eq 'multiple_choice' ? 'checked' : ''}
+                            ${question.type eq 'multiple_choice' ? 'checked' : ''}
                                    onchange="onTypeChanged('multiple_choice')" class="mt-1 accent-emerald-600">
                             <div>
                                 <div class="font-bold text-xs text-slate-800">Nhiều đáp án đúng (Multiple)</div>
@@ -177,7 +179,7 @@
 
                         <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                             <input type="radio" name="type" value="fill_in_blank"
-                                   ${question.type eq 'fill_in_blank' or question.type eq 'text' ? 'checked' : ''}
+                            ${question.type eq 'fill_in_blank' or question.type eq 'text' ? 'checked' : ''}
                                    onchange="onTypeChanged('fill_in_blank')" class="mt-1 accent-emerald-600">
                             <div>
                                 <div class="font-bold text-xs text-slate-800">Điền vào chỗ trống (Fill in blank)</div>
@@ -215,7 +217,7 @@
                                     <div class="flex items-center justify-center w-8">
                                         <input type="${question.type eq 'single_choice' ? 'radio' : 'checkbox'}"
                                                name="correctIndex" value="${status.index}"
-                                               ${o.correct ? 'checked' : ''}
+                                            ${o.correct ? 'checked' : ''}
                                                class="correct-box w-4 h-4 accent-emerald-600 cursor-pointer">
                                     </div>
                                     <input type="text" name="optionText" value="${o.optionText}" required
@@ -361,106 +363,106 @@
 </div>
 
 <script>
-const MAX_WORDS = 120;
+    const MAX_WORDS = 120;
 
-function countWords(str) {
-    if (!str) return 0;
-    const trimmed = str.trim();
-    if (!trimmed) return 0;
-    return trimmed.split(/\s+/).length;
-}
-
-function onContentChange() {
-    const text = document.getElementById('questionContent').value;
-    const words = countWords(text);
-    const numSpan = document.getElementById('wordCountNum');
-    const badge = document.getElementById('wordCountBadge');
-    const alertBox = document.getElementById('wordCountAlert');
-
-    if (numSpan) numSpan.textContent = words;
-
-    if (words > MAX_WORDS) {
-        badge.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-200');
-        badge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-300');
-        alertBox.classList.remove('hidden');
-    } else {
-        badge.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200');
-        badge.classList.remove('bg-rose-50', 'text-rose-700', 'border-rose-300');
-        alertBox.classList.add('hidden');
+    function countWords(str) {
+        if (!str) return 0;
+        const trimmed = str.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).length;
     }
 
-    verifyQuestion();
-}
+    function onContentChange() {
+        const text = document.getElementById('questionContent').value;
+        const words = countWords(text);
+        const numSpan = document.getElementById('wordCountNum');
+        const badge = document.getElementById('wordCountBadge');
+        const alertBox = document.getElementById('wordCountAlert');
 
-function getCurrentType() {
-    const selectedRadio = document.querySelector('input[name="type"]:checked');
-    return selectedRadio ? selectedRadio.value : 'single_choice';
-}
+        if (numSpan) numSpan.textContent = words;
 
-function onTypeChanged(type) {
-    const choiceBox = document.getElementById('choiceOptionsBox');
-    const fillBlankBox = document.getElementById('fillBlankBox');
-
-    if (type === 'fill_in_blank') {
-        choiceBox.classList.add('hidden');
-        fillBlankBox.classList.remove('hidden');
-
-        // Disable inputs inside choice box so they are not submitted
-        choiceBox.querySelectorAll('input').forEach(input => input.disabled = true);
-        fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = false);
-    } else {
-        choiceBox.classList.remove('hidden');
-        fillBlankBox.classList.add('hidden');
-
-        choiceBox.querySelectorAll('input').forEach(input => input.disabled = false);
-        fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = true);
-
-        // Update radio vs checkbox
-        const wantedInputType = (type === 'single_choice') ? 'radio' : 'checkbox';
-        document.querySelectorAll('#choiceRows .correct-box').forEach(box => {
-            box.type = wantedInputType;
-        });
-        renumberChoices();
-    }
-
-    verifyQuestion();
-}
-
-function filterModulesByCourse(selectedCourseId) {
-    const moduleSelect = document.getElementById('moduleSelect');
-    if (!moduleSelect) return;
-
-    let hasVisible = false;
-    for (let i = 0; i < moduleSelect.options.length; i++) {
-        const opt = moduleSelect.options[i];
-        if (!opt.value) continue;
-        const optCourse = opt.getAttribute('data-course');
-        if (!selectedCourseId || !optCourse || optCourse === selectedCourseId) {
-            opt.style.display = '';
-            hasVisible = true;
+        if (words > MAX_WORDS) {
+            badge.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-200');
+            badge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-300');
+            alertBox.classList.remove('hidden');
         } else {
-            opt.style.display = 'none';
+            badge.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-200');
+            badge.classList.remove('bg-rose-50', 'text-rose-700', 'border-rose-300');
+            alertBox.classList.add('hidden');
         }
+
+        verifyQuestion();
     }
-    verifyQuestion();
-}
 
-function renumberChoices() {
-    document.querySelectorAll('#choiceRows .choice-row').forEach((row, idx) => {
-        const box = row.querySelector('.correct-box');
-        if (box) box.value = idx;
-    });
-}
+    function getCurrentType() {
+        const selectedRadio = document.querySelector('input[name="type"]:checked');
+        return selectedRadio ? selectedRadio.value : 'single_choice';
+    }
 
-function addOptionRow() {
-    const rowsContainer = document.getElementById('choiceRows');
-    const index = rowsContainer.querySelectorAll('.choice-row').length;
-    const type = getCurrentType();
-    const inputType = (type === 'single_choice') ? 'radio' : 'checkbox';
+    function onTypeChanged(type) {
+        const choiceBox = document.getElementById('choiceOptionsBox');
+        const fillBlankBox = document.getElementById('fillBlankBox');
 
-    const row = document.createElement('div');
-    row.className = 'choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50';
-    row.innerHTML = `
+        if (type === 'fill_in_blank') {
+            choiceBox.classList.add('hidden');
+            fillBlankBox.classList.remove('hidden');
+
+            // Disable inputs inside choice box so they are not submitted
+            choiceBox.querySelectorAll('input').forEach(input => input.disabled = true);
+            fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = false);
+        } else {
+            choiceBox.classList.remove('hidden');
+            fillBlankBox.classList.add('hidden');
+
+            choiceBox.querySelectorAll('input').forEach(input => input.disabled = false);
+            fillBlankBox.querySelectorAll('input').forEach(input => input.disabled = true);
+
+            // Update radio vs checkbox
+            const wantedInputType = (type === 'single_choice') ? 'radio' : 'checkbox';
+            document.querySelectorAll('#choiceRows .correct-box').forEach(box => {
+                box.type = wantedInputType;
+            });
+            renumberChoices();
+        }
+
+        verifyQuestion();
+    }
+
+    function filterModulesByCourse(selectedCourseId) {
+        const moduleSelect = document.getElementById('moduleSelect');
+        if (!moduleSelect) return;
+
+        let hasVisible = false;
+        for (let i = 0; i < moduleSelect.options.length; i++) {
+            const opt = moduleSelect.options[i];
+            if (!opt.value) continue;
+            const optCourse = opt.getAttribute('data-course');
+            if (!selectedCourseId || !optCourse || optCourse === selectedCourseId) {
+                opt.style.display = '';
+                hasVisible = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        }
+        verifyQuestion();
+    }
+
+    function renumberChoices() {
+        document.querySelectorAll('#choiceRows .choice-row').forEach((row, idx) => {
+            const box = row.querySelector('.correct-box');
+            if (box) box.value = idx;
+        });
+    }
+
+    function addOptionRow() {
+        const rowsContainer = document.getElementById('choiceRows');
+        const index = rowsContainer.querySelectorAll('.choice-row').length;
+        const type = getCurrentType();
+        const inputType = (type === 'single_choice') ? 'radio' : 'checkbox';
+
+        const row = document.createElement('div');
+        row.className = 'choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50';
+        row.innerHTML = `
         <input type="hidden" name="optionId" value="">
         <div class="flex items-center justify-center w-8">
             <input type="${inputType}" name="correctIndex" value="${index}" class="correct-box w-4 h-4 accent-emerald-600 cursor-pointer">
@@ -472,24 +474,24 @@ function addOptionRow() {
             <i class="fa-solid fa-trash-can text-xs"></i>
         </button>
     `;
-    rowsContainer.appendChild(row);
-    renumberChoices();
-    verifyQuestion();
-}
+        rowsContainer.appendChild(row);
+        renumberChoices();
+        verifyQuestion();
+    }
 
-function removeOptionRow(btn) {
-    const row = btn.closest('.choice-row');
-    if (row) row.remove();
-    renumberChoices();
-    verifyQuestion();
-}
+    function removeOptionRow(btn) {
+        const row = btn.closest('.choice-row');
+        if (row) row.remove();
+        renumberChoices();
+        verifyQuestion();
+    }
 
-function addKeywordRow() {
-    const container = document.getElementById('keywordRows');
-    const count = container.querySelectorAll('.keyword-row').length + 1;
-    const row = document.createElement('div');
-    row.className = 'keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20';
-    row.innerHTML = `
+    function addKeywordRow() {
+        const container = document.getElementById('keywordRows');
+        const count = container.querySelectorAll('.keyword-row').length + 1;
+        const row = document.createElement('div');
+        row.className = 'keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20';
+        row.innerHTML = `
         <input type="hidden" name="optionId" value="">
         <span class="w-8 text-center text-xs font-bold text-purple-700">#${count}</span>
         <input type="text" name="optionText" required placeholder="Từ khóa đáp án bổ sung..."
@@ -499,89 +501,89 @@ function addKeywordRow() {
             <i class="fa-solid fa-trash-can text-xs"></i>
         </button>
     `;
-    container.appendChild(row);
-    verifyQuestion();
-}
-
-function removeKeywordRow(btn) {
-    const row = btn.closest('.keyword-row');
-    if (row) row.remove();
-    // Renumber badges
-    document.querySelectorAll('#keywordRows .keyword-row').forEach((r, idx) => {
-        const badge = r.querySelector('span');
-        if (badge) badge.textContent = '#' + (idx + 1);
-    });
-    verifyQuestion();
-}
-
-function setCheckStatus(elemId, isValid) {
-    const el = document.getElementById(elemId);
-    if (!el) return;
-    const icon = el.querySelector('i');
-    if (isValid) {
-        icon.className = 'fa-solid fa-circle-check text-emerald-600';
-    } else {
-        icon.className = 'fa-solid fa-circle-xmark text-rose-500';
+        container.appendChild(row);
+        verifyQuestion();
     }
-}
 
-function verifyQuestion() {
-    const content = (document.getElementById('questionContent').value || '').trim();
-    const words = countWords(content);
-    const moduleId = (document.getElementById('moduleSelect').value || '').trim();
-    const type = getCurrentType();
+    function removeKeywordRow(btn) {
+        const row = btn.closest('.keyword-row');
+        if (row) row.remove();
+        // Renumber badges
+        document.querySelectorAll('#keywordRows .keyword-row').forEach((r, idx) => {
+            const badge = r.querySelector('span');
+            if (badge) badge.textContent = '#' + (idx + 1);
+        });
+        verifyQuestion();
+    }
 
-    const isContentValid = content.length > 0;
-    const isWordsValid = words > 0 && words <= MAX_WORDS;
-    const isModuleValid = moduleId.length > 0;
-
-    let isAnswersValid = false;
-    if (type === 'fill_in_blank') {
-        const keywords = Array.from(document.querySelectorAll('#keywordRows input[name="optionText"]'))
-            .filter(input => !input.disabled && input.value.trim().length > 0);
-        isAnswersValid = keywords.length >= 1;
-    } else {
-        const options = Array.from(document.querySelectorAll('#choiceRows .choice-row input[name="optionText"]'))
-            .filter(input => !input.disabled && input.value.trim().length > 0);
-        const correctBoxes = Array.from(document.querySelectorAll('#choiceRows .correct-box:checked'))
-            .filter(box => !box.disabled);
-
-        if (type === 'single_choice') {
-            isAnswersValid = options.length >= 2 && correctBoxes.length === 1;
+    function setCheckStatus(elemId, isValid) {
+        const el = document.getElementById(elemId);
+        if (!el) return;
+        const icon = el.querySelector('i');
+        if (isValid) {
+            icon.className = 'fa-solid fa-circle-check text-emerald-600';
         } else {
-            isAnswersValid = options.length >= 2 && correctBoxes.length >= 1;
+            icon.className = 'fa-solid fa-circle-xmark text-rose-500';
         }
     }
 
-    setCheckStatus('chkContent', isContentValid);
-    setCheckStatus('chkWords', isWordsValid);
-    setCheckStatus('chkModule', isModuleValid);
-    setCheckStatus('chkAnswers', isAnswersValid);
+    function verifyQuestion() {
+        const content = (document.getElementById('questionContent').value || '').trim();
+        const words = countWords(content);
+        const moduleId = (document.getElementById('moduleSelect').value || '').trim();
+        const type = getCurrentType();
 
-    return isContentValid && isWordsValid && isModuleValid && isAnswersValid;
-}
+        const isContentValid = content.length > 0;
+        const isWordsValid = words > 0 && words <= MAX_WORDS;
+        const isModuleValid = moduleId.length > 0;
 
-document.addEventListener('DOMContentLoaded', function() {
-    const type = getCurrentType();
-    onTypeChanged(type);
-    onContentChange();
-    verifyQuestion();
+        let isAnswersValid = false;
+        if (type === 'fill_in_blank') {
+            const keywords = Array.from(document.querySelectorAll('#keywordRows input[name="optionText"]'))
+                .filter(input => !input.disabled && input.value.trim().length > 0);
+            isAnswersValid = keywords.length >= 1;
+        } else {
+            const options = Array.from(document.querySelectorAll('#choiceRows .choice-row input[name="optionText"]'))
+                .filter(input => !input.disabled && input.value.trim().length > 0);
+            const correctBoxes = Array.from(document.querySelectorAll('#choiceRows .correct-box:checked'))
+                .filter(box => !box.disabled);
 
-    // Attach form submit validation
-    document.getElementById('questionForm').addEventListener('submit', function(e) {
-        if (!verifyQuestion()) {
-            const words = countWords(document.getElementById('questionContent').value);
-            if (words > MAX_WORDS) {
-                alert('Nội dung câu hỏi quá dài (' + words + ' từ). Vui lòng giới hạn tối đa 120 từ.');
-                e.preventDefault();
-                return;
-            }
-            if (!confirm('Một số điều kiện kiểm tra hợp lệ câu hỏi chưa đạt chuẩn. Bạn có chắc chắn muốn lưu tiếp không?')) {
-                e.preventDefault();
+            if (type === 'single_choice') {
+                isAnswersValid = options.length >= 2 && correctBoxes.length === 1;
+            } else {
+                isAnswersValid = options.length >= 2 && correctBoxes.length >= 1;
             }
         }
+
+        setCheckStatus('chkContent', isContentValid);
+        setCheckStatus('chkWords', isWordsValid);
+        setCheckStatus('chkModule', isModuleValid);
+        setCheckStatus('chkAnswers', isAnswersValid);
+
+        return isContentValid && isWordsValid && isModuleValid && isAnswersValid;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const type = getCurrentType();
+        onTypeChanged(type);
+        onContentChange();
+        verifyQuestion();
+
+        // Attach form submit validation
+        document.getElementById('questionForm').addEventListener('submit', function(e) {
+            if (!verifyQuestion()) {
+                const words = countWords(document.getElementById('questionContent').value);
+                if (words > MAX_WORDS) {
+                    alert('Nội dung câu hỏi quá dài (' + words + ' từ). Vui lòng giới hạn tối đa 120 từ.');
+                    e.preventDefault();
+                    return;
+                }
+                if (!confirm('Một số điều kiện kiểm tra hợp lệ câu hỏi chưa đạt chuẩn. Bạn có chắc chắn muốn lưu tiếp không?')) {
+                    e.preventDefault();
+                }
+            }
+        });
     });
-});
 </script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

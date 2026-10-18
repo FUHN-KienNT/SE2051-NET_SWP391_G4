@@ -57,12 +57,7 @@
                         Oversee courses, evaluate expert curriculum submissions, allocate domain experts, and monitor real-time enrollments.
                     </p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <a href="${pageContext.request.contextPath}/enrollment"
-                       class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-border-default bg-surface-card hover:bg-brand-50 text-text-primary transition shadow-xs">
-                        <i class="fa-solid fa-list-check text-brand-700"></i>
-                        <span>View Enrollment List</span>
-                    </a>
+                <div class="flex items-center gap-2.5">
                     <a href="${pageContext.request.contextPath}/admin/course-detail?action=new"
                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-xs transition cursor-pointer">
                         <i class="fa-solid fa-plus text-xs"></i>

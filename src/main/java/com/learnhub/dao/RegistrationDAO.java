@@ -73,9 +73,12 @@ public class RegistrationDAO {
             params.add(status.trim());
         }
 
-        sql.append("ORDER BY r.enrolled_at DESC LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
+        sql.append("ORDER BY r.enrolled_at DESC ");
+        if (limit > 0) {
+            sql.append("LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {

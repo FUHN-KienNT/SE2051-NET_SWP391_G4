@@ -5,6 +5,23 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(148, 163, 184, 0.08);
+        border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.4);
+        border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.7);
+    }
+</style>
+
 <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
             <!-- Success / Error Alert Messages -->
@@ -46,11 +63,11 @@
                         <i class="fa-solid fa-list-check text-brand-700"></i>
                         <span>View Enrollment List</span>
                     </a>
-                    <button type="button" onclick="openCreateCourseModal()"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-xs transition cursor-pointer">
+                    <a href="${pageContext.request.contextPath}/admin/course-detail?action=new"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-xs transition cursor-pointer">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>Create Course</span>
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -430,29 +447,30 @@
                 </div>
             </div>
 
-            <!-- Real-time Recent Student Enrollments Log Feed -->
+            <!-- Student Enrollments Log Feed -->
             <div class="bg-surface-card border border-border-default rounded-2xl p-5 shadow-xs">
                 <div class="flex items-center justify-between pb-3 border-b border-border-default">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-bolt text-brand-700 text-sm"></i>
-                        <h3 class="font-bold text-sm sm:text-base text-text-primary">Recent Student Enrollments Log</h3>
+                        <h3 class="font-bold text-sm sm:text-base text-text-primary">Student Enrollments Log</h3>
                     </div>
-                    <a href="${pageContext.request.contextPath}/enrollment"
-                       class="text-xs font-bold text-brand-700 hover:text-brand-800 hover:underline">
-                        View All Registrations & Export →
-                    </a>
+                    <c:if test="${not empty dashboard.recentEnrollments}">
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-100">
+                            ${fn:length(dashboard.recentEnrollments)} records
+                        </span>
+                    </c:if>
                 </div>
 
-                <div class="divide-y divide-border-default mt-2">
+                <div class="custom-scrollbar overflow-y-auto max-h-[340px] pr-2 divide-y divide-border-default mt-2">
                     <c:choose>
                         <c:when test="${empty dashboard.recentEnrollments}">
                             <div class="py-6 text-center text-text-secondary text-xs">
-                                No recent enrollment logs found for this period.
+                                No enrollment logs found for this period.
                             </div>
                         </c:when>
                         <c:otherwise>
                             <c:forEach var="reg" items="${dashboard.recentEnrollments}">
-                                <div class="py-3 flex items-center justify-between gap-3 text-xs sm:text-sm">
+                                <div class="py-3 flex items-center justify-between gap-3 text-xs sm:text-sm hover:bg-slate-50/70 px-2 rounded-xl transition">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <div class="w-8 h-8 rounded-full bg-brand-50 text-brand-700 font-bold flex items-center justify-center text-xs shrink-0 uppercase">
                                             ${fn:substring(reg.userName, 0, 1)}
@@ -532,92 +550,6 @@
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- Modal: Quick Create Course                                                -->
-<!-- ========================================================================= -->
-<div id="createCourseModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
-    <div class="bg-surface-card rounded-2xl border border-border-default shadow-2xl max-w-xl w-full p-6 animate-scale-up max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between pb-3 border-b border-border-default">
-            <div>
-                <h3 class="font-bold text-base text-text-primary">Create New Course</h3>
-                <p class="text-xs text-text-secondary">Initiate a course entity and allocate an expert</p>
-            </div>
-            <button type="button" onclick="closeCreateCourseModal()" class="text-text-secondary hover:text-text-primary cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        <form action="${pageContext.request.contextPath}/admin/courses" method="post" class="mt-4 space-y-4">
-            <input type="hidden" name="action" value="save">
-
-            <!-- Title -->
-            <div>
-                <label class="block text-xs font-bold uppercase text-text-secondary mb-1">
-                    Course Title <span class="text-status-danger">*</span>
-                </label>
-                <input type="text" name="title" required placeholder="e.g. Full-Stack Web Development with Jakarta EE"
-                       class="w-full px-3.5 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700">
-            </div>
-
-            <!-- Grid: Category & Expert -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-text-secondary mb-1">
-                        Category <span class="text-status-danger">*</span>
-                    </label>
-                    <select name="categoryId" required class="w-full px-3 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700 cursor-pointer">
-                        <option value="">Select Category</option>
-                        <c:forEach var="cat" items="${dashboard.categories}">
-                            <option value="${cat.id}">${cat.name}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-text-secondary mb-1">Assigned Expert</label>
-                    <select name="expertId" class="w-full px-3 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700 cursor-pointer">
-                        <option value="">-- None (Assign Later) --</option>
-                        <c:forEach var="inst" items="${dashboard.instructors}">
-                            <option value="${inst.id}">${inst.username} (${inst.email})</option>
-                        </c:forEach>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Grid: Price & Status -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-text-secondary mb-1">Price (VND)</label>
-                    <input type="number" name="price" min="0" step="1000" placeholder="0 = Free"
-                           class="w-full px-3.5 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-text-secondary mb-1">Initial Status</label>
-                    <select name="status" class="w-full px-3 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700 cursor-pointer">
-                        <option value="draft">Draft (Bản nháp)</option>
-                        <option value="published">Published (Công khai)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Description -->
-            <div>
-                <label class="block text-xs font-bold uppercase text-text-secondary mb-1">Course Summary</label>
-                <textarea name="description" rows="3" placeholder="Brief outline of course objectives..."
-                          class="w-full px-3.5 py-2 text-xs sm:text-sm bg-surface border border-border-default rounded-xl text-text-primary focus:ring-2 focus:ring-brand-700"></textarea>
-            </div>
-
-            <div class="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-border-default">
-                <button type="button" onclick="closeCreateCourseModal()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-border-default bg-surface hover:bg-slate-100 text-text-secondary cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white transition shadow-xs cursor-pointer">
-                    Create Course
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
     function openAssignExpertModal(courseId, title, expertId) {
         document.getElementById('assignModalCourseId').value = courseId;
@@ -635,19 +567,8 @@
         document.getElementById('assignExpertModal').classList.add('hidden');
     }
 
-    function openCreateCourseModal() {
-        document.getElementById('createCourseModal').classList.remove('hidden');
-    }
-
-    function closeCreateCourseModal() {
-        document.getElementById('createCourseModal').classList.add('hidden');
-    }
-
     document.getElementById('assignExpertModal').addEventListener('click', function(e) {
         if (e.target === this) closeAssignExpertModal();
-    });
-    document.getElementById('createCourseModal').addEventListener('click', function(e) {
-        if (e.target === this) closeCreateCourseModal();
     });
 </script>
 

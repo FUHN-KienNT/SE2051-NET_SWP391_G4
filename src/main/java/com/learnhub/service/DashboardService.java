@@ -250,8 +250,8 @@ public class DashboardService {
         dto.setCourses(catalog);
         dto.setTotalCatalogCourses(totalCatalog);
 
-        // 4. Recent Student Registrations Feed
-        List<Registration> recent = registrationDAO.findRegistrations("", "all", 0, 5);
+        // 4. Student Registrations Feed (All records, displayed with scrollable viewport)
+        List<Registration> recent = registrationDAO.findRegistrations("", "all", 0, 0);
         dto.setRecentEnrollments(recent);
 
         // 5. Lookups

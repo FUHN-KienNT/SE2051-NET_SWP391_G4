@@ -1,7 +1,9 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="lessonHtml" uri="/WEB-INF/lesson-html.tld" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
 
 <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
     <div class="flex flex-wrap items-center gap-4 mb-6">
@@ -59,7 +61,7 @@
                 </div>
                 <details class="mt-4">
                     <summary class="cursor-pointer text-sm font-semibold text-brand-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Content</summary>
-                    <div class="mt-3 whitespace-pre-wrap break-words text-sm text-text-primary"><c:out value="${les.content}" /></div>
+                    <div class="lesson-content mt-3 break-words text-sm text-text-primary">${lessonHtml:sanitize(les.content)}</div>
                 </details>
             </article>
         </c:forEach>

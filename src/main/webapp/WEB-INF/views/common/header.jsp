@@ -47,6 +47,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        :root { --lesson-accent: #028446; --lesson-border: #e2e8f0; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-surface text-text-primary antialiased">

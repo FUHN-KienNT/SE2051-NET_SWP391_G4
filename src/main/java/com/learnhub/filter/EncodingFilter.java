@@ -18,7 +18,11 @@ public class EncodingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html; charset=UTF-8");
+        // Let Tomcat choose the correct MIME type for static CSS, JS, and images.
+        if (!(request instanceof HttpServletRequest httpRequest)
+                || !httpRequest.getServletPath().startsWith("/assets/")) {
+            response.setContentType("text/html; charset=UTF-8");
+        }
         chain.doFilter(request, response);
     }
 

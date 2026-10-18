@@ -68,6 +68,8 @@ These values are the target palette for new and touched UI. Existing views still
 
 ## Component guidance for JSP
 
+- Lesson authoring uses Quill's Snow toolbar without media upload controls. Lesson review and reading share `assets/lesson-content.css`; its CSS variables `--lesson-accent` and `--lesson-border` mirror `brand-700` and `border-default` for third-party editor styling, without introducing new palette colors.
+
 - Use shared JSP includes for page-wide structure. Keep page-specific content in the corresponding view.
 - Reuse established markup for primary/secondary buttons, form controls, cards, badges, and alerts. Extract a JSP fragment or tag file when the same pattern is repeated across views.
 - Keep interactive elements semantic: use `<button>` for actions and `<a>` for navigation. Provide labels for form inputs and meaningful alternative text for informative images.

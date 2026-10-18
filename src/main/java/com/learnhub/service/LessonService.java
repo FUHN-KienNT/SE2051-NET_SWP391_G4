@@ -10,6 +10,7 @@ import com.learnhub.entity.Lesson;
 import com.learnhub.entity.User;
 import com.learnhub.constant.AppConstants;
 import com.learnhub.util.CloudinaryClient;
+import com.learnhub.util.LessonHtml;
 
 import java.io.InputStream;
 import java.util.List;
@@ -85,6 +86,7 @@ public class LessonService {
         if (dto == null) return false;
         dto.setPublicationStatus("draft");
         if (!validateLesson(expertId, dto).isEmpty()) return false;
+        dto.setContent(LessonHtml.sanitize(dto.getContent()));
         requireModuleAccess(expertId, dto.getModuleId());
         if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null) {
             requireLessonAccess(expertId, dto.getId());
@@ -129,7 +131,7 @@ public class LessonService {
         } else if (dto.getTitle().codePointCount(0, dto.getTitle().length()) > 255) {
             errors.put("title", "Lesson title must not exceed 255 characters.");
         }
-        if (dto.getContent() == null || dto.getContent().isBlank())
+        if (!LessonHtml.hasText(dto.getContent()))
             errors.put("content", "Please enter lesson content.");
         if (dto.getOrderIndex() < 1) {
             errors.put("orderIndex", "Order index must be a whole number greater than or equal to 1.");

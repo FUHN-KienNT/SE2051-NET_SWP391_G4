@@ -1,9 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="lessonHtml" uri="/WEB-INF/lesson-html.tld" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
 
 <main data-lesson-user="${sessionScope.currentUser.id}"
       data-lesson-course="${course.id}"
@@ -78,7 +80,7 @@
 
                     <c:choose>
                         <c:when test="${not empty lesson.content}">
-                            <div class="lesson-content text-text-primary leading-relaxed break-words">${lesson.content}</div>
+                            <div class="lesson-content text-text-primary leading-relaxed break-words">${lessonHtml:sanitize(lesson.content)}</div>
                         </c:when>
 
                         <c:when test="${empty lesson.materialUrl}">
@@ -217,9 +219,6 @@
         accent-color: currentColor;
     }
 
-    .lesson-content {
-        white-space: pre-wrap;
-    }
 
     .lesson-content img,
     .lesson-content video,

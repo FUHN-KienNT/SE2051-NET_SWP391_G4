@@ -1,8 +1,11 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="lessonHtml" uri="/WEB-INF/lesson-html.tld" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
 
 <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 flex flex-col lg:flex-row gap-6">
     <aside class="w-full lg:w-52 shrink-0">
@@ -74,14 +77,6 @@
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                 </div>
 
-                <div>
-                    <label for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span class="text-status-danger">*</span></label>
-                    <textarea id="content" name="content" rows="10" required
-                    data-error="${fn:escapeXml(fieldErrors.content)}"
-                              placeholder="Enter lesson content (text, or a video/document link)..."
-                              class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">${lesson != null ? lesson.content : ''}</textarea>
-                </div>
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
@@ -102,13 +97,45 @@
                     </div>
                 </div>
 
-                <!-- Field 4: Order Index -->
                 <div class="w-44">
                     <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
                     <input type="number" id="orderIndex" name="orderIndex" min="1"
                     data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
                            value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition text-center font-bold">
+                </div>
+
+                <div>
+                    <label id="contentLabel" for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span class="text-status-danger">*</span></label>
+                    <div id="lessonEditorWrapper" class="relative hidden">
+                        <div id="lessonToolbar" role="toolbar" aria-label="Content formatting">
+                            <span class="ql-formats">
+                                <select class="ql-header" aria-label="Paragraph style">
+                                    <option selected>Paragraph</option><option value="2">Heading 2</option><option value="3">Heading 3</option>
+                                </select>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-bold" aria-label="Bold" title="Bold"></button>
+                                <button type="button" class="ql-italic" aria-label="Italic" title="Italic"></button>
+                                <button type="button" class="ql-underline" aria-label="Underline" title="Underline"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-list" value="ordered" aria-label="Numbered list" title="Numbered list"></button>
+                                <button type="button" class="ql-list" value="bullet" aria-label="Bullet list" title="Bullet list"></button>
+                                <button type="button" class="ql-blockquote" aria-label="Quote" title="Quote"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button type="button" class="ql-link" aria-label="Insert link" title="Insert link"></button>
+                                <button type="button" class="ql-clean" aria-label="Clear formatting" title="Clear formatting"></button>
+                            </span>
+                        </div>
+                        <div id="lessonEditor"></div>
+                        <input id="contentValidation" type="text" tabindex="-1" aria-label="Content" class="absolute bottom-0 left-0 w-px h-px opacity-0" disabled>
+                    </div>
+                    <textarea id="content" name="content" rows="10" required
+                    data-error="${fn:escapeXml(fieldErrors.content)}"
+                              placeholder="Enter lesson content..."
+                              class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition"><c:out value="${lessonHtml:sanitize(lesson.content)}" /></textarea>
                 </div>
 
                 <div class="pt-6 flex flex-wrap items-center gap-3 border-t border-border-default">
@@ -126,6 +153,8 @@
     </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/lesson-editor.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const moduleSelect = document.getElementById('moduleId');
@@ -134,6 +163,7 @@
         let firstError = null;
 
         fields.forEach(field => {
+            if (field.id === 'content' && field.hidden) return;
             if (field.dataset.error) {
                 field.setCustomValidity(field.dataset.error);
                 if (!firstError) firstError = field;

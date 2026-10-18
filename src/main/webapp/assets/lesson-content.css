@@ -1,0 +1,19 @@
+.lesson-content { overflow-wrap: anywhere; line-height: 1.75; }
+.lesson-content > * + * { margin-top: 1rem; }
+.lesson-content h1 { font-size: 1.5rem; font-weight: 700; }
+.lesson-content h2 { font-size: 1.25rem; font-weight: 700; }
+.lesson-content h3, .lesson-content h4 { font-size: 1.125rem; font-weight: 600; }
+.lesson-content ul { list-style: disc; padding-left: 1.5rem; }
+.lesson-content ol { list-style: decimal; padding-left: 1.5rem; }
+.lesson-content li + li { margin-top: .25rem; }
+.lesson-content a { color: var(--lesson-accent); text-decoration: underline; }
+.lesson-content blockquote { border-left: 3px solid var(--lesson-border); padding-left: 1rem; }
+.lesson-content pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
+.lesson-content table { display: block; max-width: 100%; overflow-x: auto; }
+.lesson-content td, .lesson-content th { border: 1px solid var(--lesson-border); padding: .5rem; }
+#lessonEditorWrapper .ql-toolbar { border-color: var(--lesson-border); border-radius: .5rem .5rem 0 0; }
+#lessonEditorWrapper .ql-container { border-color: var(--lesson-border); border-radius: 0 0 .5rem .5rem; font: inherit; }
+#lessonEditorWrapper .ql-editor { min-height: 16rem; overflow-wrap: anywhere; }
+#lessonEditorWrapper:focus-within { outline: 2px solid var(--lesson-accent); outline-offset: 2px; border-radius: .5rem; }
+#lessonEditorWrapper .ql-tooltip { left: 0 !important; max-width: 100%; white-space: normal; z-index: 10; }
+#lessonEditorWrapper .ql-tooltip input { max-width: 100%; }

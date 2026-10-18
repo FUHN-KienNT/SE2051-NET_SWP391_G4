@@ -272,36 +272,99 @@ public class EnrollmentServlet extends HttpServlet {
             return;
         }
 
+        String phone = req.getParameter("phone");
         String paymentMethodValue = req.getParameter("paymentMethodId");
 
         if (courseIdValue != null && !courseIdValue.isBlank()) {
             try {
                 UUID courseId = UUID.fromString(courseIdValue.trim());
-                UUID paymentMethodId = null;
+                Course course = courseService.getCourseDetailWithCurriculum(courseId);
+                if (course == null) {
+                    resp.sendRedirect(req.getContextPath() + "/courses");
+                    return;
+                }
 
-                if (paymentMethodValue != null
-                        && !paymentMethodValue.isBlank()) {
+                // Kiểm tra validation số điện thoại nếu khóa học có phí
+                boolean isFree = course.getPrice() == null || course.getPrice().compareTo(BigDecimal.ZERO) <= 0;
+                if (!isFree) {
+                    String phoneRegex = "^(0[35789])[0-9]{8}$";
+                    if (phone == null || phone.trim().isEmpty() || !phone.trim().matches(phoneRegex)) {
+                        String phoneErrorMsg = (phone == null || phone.trim().isEmpty())
+                                ? "Vui lòng nhập số điện thoại liên hệ."
+                                : "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).";
+                        req.setAttribute("course", course);
+                        req.setAttribute("student", user);
+                        req.setAttribute("paymentMethods", courseService.getPaymentMethods());
+                        req.setAttribute("phoneError", phoneErrorMsg);
+                        req.setAttribute("pageTitle", "Thông tin thanh toán - " + course.getTitle());
+                        req.getRequestDispatcher("/WEB-INF/views/courses/enrollment.jsp").forward(req, resp);
+                        return;
+                    }
+                    user.setPhone(phone.trim());
+                }
+
+                UUID paymentMethodId = null;
+                if (paymentMethodValue != null && !paymentMethodValue.isBlank()) {
                     try {
-                        paymentMethodId =
-                                UUID.fromString(paymentMethodValue.trim());
+                        paymentMethodId = UUID.fromString(paymentMethodValue.trim());
                     } catch (IllegalArgumentException ignored) {
                     }
                 }
 
-                Registration registration =
-                        courseService.processCourseRegistration(
-                                user.getId(),
-                                courseId,
-                                paymentMethodId
-                        );
+                Registration registration = courseService.processCourseRegistration(
+                        user.getId(),
+                        courseId,
+                        paymentMethodId
+                );
 
                 if (registration != null) {
-                    boolean canLearn =
-                            learningService.findEnrolledCourse(user.getId(), courseId) != null;
-                    resp.sendRedirect(req.getContextPath() + (canLearn
-                            ? "/learn/course?id=" + courseId
-                            : "/my-enrollments?registered=success"));
-                    return;
+                    // Nếu là khóa học miễn phí: Cho vào học ngay
+                    if (isFree) {
+                        resp.sendRedirect(req.getContextPath() + "/learn/course?id=" + courseId);
+                        return;
+                    }
+
+                    // Xác định cổng thanh toán đã chọn (VNPay hay SePay)
+                    String methodCode = "vnpay";
+                    if (paymentMethodId != null) {
+                        for (Setting s : courseService.getPaymentMethods()) {
+                            if (paymentMethodId.equals(s.getId())) {
+                                methodCode = s.getCode();
+                                break;
+                            }
+                        }
+                    }
+
+                    if ("vnpay".equalsIgnoreCase(methodCode)) {
+                        // Tạo VNPay Sandbox URL
+                        String clientIp = req.getHeader("X-Forwarded-For");
+                        if (clientIp == null || clientIp.isBlank()) {
+                            clientIp = req.getRemoteAddr();
+                        }
+                        String orderInfo = "Thanh toan khoa hoc " + course.getTitle();
+                        long amountVnd = course.getPrice().longValue();
+                        
+                        // Callback return URL
+                        String scheme = req.getScheme();
+                        String serverName = req.getServerName();
+                        int serverPort = req.getServerPort();
+                        String contextPath = req.getContextPath();
+                        String callbackUrl = scheme + "://" + serverName + ":" + serverPort + contextPath + "/payment/vnpay-return";
+
+                        String paymentUrl = com.learnhub.util.VNPayUtil.createPaymentUrl(
+                                registration.getId().toString(),
+                                amountVnd,
+                                orderInfo,
+                                clientIp,
+                                callbackUrl
+                        );
+                        resp.sendRedirect(paymentUrl);
+                        return;
+                    } else {
+                        // Chuyển hướng sang màn hình thanh toán SePay (VietQR)
+                        resp.sendRedirect(req.getContextPath() + "/payment/checkout?regId=" + registration.getId());
+                        return;
+                    }
                 }
             } catch (IllegalArgumentException ignored) {
             }

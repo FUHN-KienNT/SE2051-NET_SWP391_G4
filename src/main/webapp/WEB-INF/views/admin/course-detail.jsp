@@ -6,7 +6,7 @@
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar (SDS Admin Layout) -->
+    <!-- Left Sidebar ( Admin Layout) -->
     <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
         <div>
             <!-- Brand Logo -->

@@ -334,7 +334,7 @@
         function validatePhone(showMsg) {
             if (!phoneInput) return true;
             const val = phoneInput.value.trim();
-            // Đầu số Việt Nam hợp lệ: 03, 05, 07, 08, 09 và đủ 10 số
+            
             const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
 
             if (val === '') {

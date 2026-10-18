@@ -75,6 +75,10 @@
                                    class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
                                     <i class="fa-solid fa-book-bookmark w-5 text-slate-400"></i>My Courses
                                 </a>
+                                <a href="${pageContext.request.contextPath}/my-payments"
+                                   class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
+                                    <i class="fa-solid fa-receipt w-5 text-slate-400"></i>Lịch sử thanh toán
+                                </a>
                             </c:if>
                             <div class="border-t border-slate-50 my-1"></div>
                             <a href="${pageContext.request.contextPath}/auth/logout" class="block px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 font-medium transition-colors">

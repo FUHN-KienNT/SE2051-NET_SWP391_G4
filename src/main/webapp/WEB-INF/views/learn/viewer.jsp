@@ -137,9 +137,9 @@
 
             <%-- Direct Quiz Link under Lesson --%>
             <c:set var="currentModule" value="${null}" />
-            <c:forEach items="${course.modules}" var="mod">
-                <c:if test="${mod.id eq lesson.moduleId}">
-                    <c:set var="currentModule" value="${mod}" />
+            <c:forEach items="${course.modules}" var="moduleItem">
+                <c:if test="${not empty lesson and moduleItem.id eq lesson.moduleId}">
+                    <c:set var="currentModule" value="${moduleItem}" />
                 </c:if>
             </c:forEach>
 

@@ -38,7 +38,7 @@
                    varStatus="moduleStatus">
 
             <details class="viewer-module group"
-                ${(module.id eq lesson.moduleId) or (module.id eq quiz.moduleId) ? 'open' : ''}>
+                ${(not empty lesson and module.id eq lesson.moduleId) or (not empty quiz and module.id eq quiz.moduleId) ? 'open' : ''}>
 
                 <summary class="list-none cursor-pointer flex items-start justify-between gap-3 p-4 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700">
 
@@ -66,7 +66,7 @@
                         <%-- Lessons --%>
                     <c:forEach items="${module.lessons}" var="item">
                         <c:set var="isCurrent"
-                               value="${item.id eq lesson.id}" />
+                               value="${not empty lesson and item.id eq lesson.id}" />
 
                         <c:set var="itemStatus"
                                value="${lessonStatuses[item.id.toString()]}" />
@@ -114,7 +114,7 @@
 
                         <%-- Quizzes --%>
                     <c:forEach items="${module.quizzes}" var="qz">
-                        <c:set var="isCurrentQuiz" value="${qz.id eq quiz.id}" />
+                        <c:set var="isCurrentQuiz" value="${not empty quiz and qz.id eq quiz.id}" />
 
                         <c:url value="/quiz" var="quizUrl">
                             <c:param name="quizId" value="${qz.id}" />

@@ -103,6 +103,11 @@ public class CourseService {
 
         Registration existing = registrationDAO.findByUserAndCourse(userId, courseId);
         if (existing != null) {
+            if ("pending".equalsIgnoreCase(existing.getPaymentStatus())) {
+                existing.setPaymentMethodId(paymentMethodId);
+                // Keep same registration, allow proceed to checkout
+                return existing;
+            }
             return existing;
         }
 

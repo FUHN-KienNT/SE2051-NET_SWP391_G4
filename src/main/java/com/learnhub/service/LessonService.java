@@ -139,7 +139,7 @@ public class LessonService {
 
     public boolean saveLesson(UUID expertId, LessonDTO dto) {
         if (dto == null) return false;
-        dto.setPublicationStatus("draft");
+        dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
         if (!validateLesson(expertId, dto).isEmpty()) return false;
         dto.setContent(LessonHtml.sanitize(dto.getContent()));
         requireModuleAccess(expertId, dto.getModuleId());
@@ -150,7 +150,7 @@ public class LessonService {
                 dto.getTitle(), dto.getContent(), dto.getOrderIndex());
         lesson.setMaterialUrl(dto.getMaterialUrl());
         lesson.setDurationMinutes(dto.getDurationMinutes());
-        lesson.setPublicationStatus("draft");
+        lesson.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
         return lessonDAO.save(lesson);
     }
 
@@ -162,8 +162,10 @@ public class LessonService {
             throw new SecurityException("Lesson does not belong to this course.");
         }
         if (expectedUpdatedAt == null) throw new IllegalArgumentException("Missing lesson version.");
-        String expectedStatus = activate ? "archived" : "published";
-        String targetStatus = activate ? "published" : "archived";
+        String expectedStatus = activate
+                ? AppConstants.LessonStatus.ARCHIVED : AppConstants.LessonStatus.PUBLISHED;
+        String targetStatus = activate
+                ? AppConstants.LessonStatus.PUBLISHED : AppConstants.LessonStatus.ARCHIVED;
         if (!expectedStatus.equals(lesson.getPublicationStatus())) return false;
         return lessonDAO.changeAvailability(expertId, courseId, lessonId,
                 expectedUpdatedAt, expectedStatus, targetStatus);
@@ -225,7 +227,8 @@ public class LessonService {
                                 Timestamp expectedUpdatedAt, String decision) {
         requireManager(manager);
         if (courseId == null || lessonId == null || expectedUpdatedAt == null
-                || !("published".equals(decision) || "decline".equals(decision))) {
+                || !(AppConstants.LessonStatus.PUBLISHED.equals(decision)
+                    || AppConstants.LessonStatus.DECLINE.equals(decision))) {
             throw new IllegalArgumentException("Invalid lesson review.");
         }
         return lessonDAO.reviewPublication(courseId, lessonId, expectedUpdatedAt, decision);
@@ -236,7 +239,7 @@ public class LessonService {
         Lesson lesson = requireLessonAccess(expertId, lessonId);
         String secureUrl = CloudinaryClient.uploadFile(fileStream, filename);
         lesson.setMaterialUrl(secureUrl);
-        lesson.setPublicationStatus("draft");
+        lesson.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
         lessonDAO.update(lesson);
         return secureUrl;
     }

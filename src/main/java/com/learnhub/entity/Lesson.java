@@ -1,5 +1,7 @@
 package com.learnhub.entity;
 
+import com.learnhub.constant.AppConstants;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -13,7 +15,7 @@ public class Lesson implements Serializable {
     private String content;
     private int orderIndex;
     private Integer durationMinutes;
-    private String publicationStatus = "draft";
+    private String publicationStatus = AppConstants.LessonStatus.DRAFT;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 

@@ -1,5 +1,6 @@
 package com.learnhub.service;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.QuizDAO;
 import com.learnhub.dao.QuizQuestionDAO;
 import com.learnhub.entity.Quiz;
@@ -97,7 +98,8 @@ public class QuizManagementService {
             Integer timeLimit,
             BigDecimal passScore,
             List<UUID> questionIds) {
-        return save(expertId, id, moduleId, title, timeLimit, passScore, "published", null, questionIds);
+        return save(expertId, id, moduleId, title, timeLimit, passScore,
+                AppConstants.QuizStatus.PUBLISHED, null, questionIds);
     }
 
     /**

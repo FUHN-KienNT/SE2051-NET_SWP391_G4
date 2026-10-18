@@ -1,5 +1,6 @@
 package com.learnhub.dao;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
 import com.learnhub.util.DbConnection;
@@ -89,7 +90,7 @@ public class QuizDAO {
         }
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND COALESCE(q.status, 'published') = ? ");
+            sql.append("AND q.status = ?::quiz_status ");
             params.add(status.trim());
         }
 
@@ -121,7 +122,7 @@ public class QuizDAO {
         List<Quiz> list = new ArrayList<>();
 
         String sql = baseSelect()
-                + " WHERE q.module_id=? AND COALESCE(q.status, 'published') != 'hidden' ORDER BY q.created_at ASC";
+                + " WHERE q.module_id=? AND q.status != 'hidden' ORDER BY q.created_at ASC";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -157,7 +158,7 @@ public class QuizDAO {
         String sql =
                 "INSERT INTO quiz " +
                 "(id,module_id,title,time_limit,pass_score,status,image_url,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,NOW(),NOW())";
+                "VALUES (?,?,?,?,?,?::quiz_status,?,NOW(),NOW())";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -183,7 +184,7 @@ public class QuizDAO {
             }
 
             String st = quiz.getStatus();
-            ps.setString(6, (st == null || st.isBlank()) ? "published" : st.trim());
+            ps.setString(6, (st == null || st.isBlank()) ? AppConstants.QuizStatus.PUBLISHED : st.trim());
 
             String img = quiz.getImageUrl();
             ps.setString(7, (img == null || img.isBlank()) ? null : img.trim());
@@ -216,7 +217,7 @@ public class QuizDAO {
                 "title=?," +
                 "time_limit=?," +
                 "pass_score=?," +
-                "status=?," +
+                "status=?::quiz_status," +
                 "image_url=?," +
                 "updated_at=NOW() " +
                 "WHERE id=?";
@@ -240,7 +241,7 @@ public class QuizDAO {
             }
 
             String st = quiz.getStatus();
-            ps.setString(5, (st == null || st.isBlank()) ? "published" : st.trim());
+            ps.setString(5, (st == null || st.isBlank()) ? AppConstants.QuizStatus.PUBLISHED : st.trim());
 
             String img = quiz.getImageUrl();
             ps.setString(6, (img == null || img.isBlank()) ? null : img.trim());
@@ -280,7 +281,8 @@ public class QuizDAO {
             Integer timeLimit,
             BigDecimal passScore,
             List<UUID> questionIds) {
-        return saveWithQuestions(expertId, quizId, moduleId, title, timeLimit, passScore, "published", null, questionIds);
+        return saveWithQuestions(expertId, quizId, moduleId, title, timeLimit, passScore,
+                AppConstants.QuizStatus.PUBLISHED, null, questionIds);
     }
 
     public boolean saveWithQuestions(
@@ -312,7 +314,7 @@ public class QuizDAO {
             return false;
         }
 
-        String safeStatus = (status == null || status.isBlank()) ? "published" : status.trim();
+        String safeStatus = (status == null || status.isBlank()) ? AppConstants.QuizStatus.PUBLISHED : status.trim();
         String safeImageUrl = (imageUrl == null || imageUrl.isBlank()) ? null : imageUrl.trim();
 
         Connection conn = null;
@@ -343,7 +345,7 @@ public class QuizDAO {
                 String insertSql =
                         "INSERT INTO quiz " +
                         "(id,module_id,title,time_limit,pass_score,status,image_url,created_at,updated_at) " +
-                        "VALUES (?,?,?,?,?,?,?,NOW(),NOW())";
+                        "VALUES (?,?,?,?,?,?::quiz_status,?,NOW(),NOW())";
 
                 try (PreparedStatement ps =
                              conn.prepareStatement(insertSql)) {
@@ -389,7 +391,7 @@ public class QuizDAO {
                         "title=?," +
                         "time_limit=?," +
                         "pass_score=?," +
-                        "status=?," +
+                        "status=?::quiz_status," +
                         "image_url=?," +
                         "updated_at=NOW() " +
                         "WHERE id=?";
@@ -696,7 +698,7 @@ public class QuizDAO {
                 "q.title," +
                 "q.time_limit," +
                 "q.pass_score," +
-                "COALESCE(q.status, 'published') status," +
+                "q.status status," +
                 "q.image_url," +
                 "q.created_at," +
                 "q.updated_at," +

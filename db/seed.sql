@@ -1,6 +1,6 @@
 -- =====================================================================
 -- LEARNHUB DATABASE SEED SCRIPT
--- ~55 users | 30 courses | 130+ registrations | Rich dashboard data
+-- ~300 users | 30 courses | ~860 registrations | Rich dashboard data
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -253,6 +253,22 @@ ON CONFLICT (id) DO UPDATE SET
     password  = EXCLUDED.password,
     role_id   = EXCLUDED.role_id,
     status    = EXCLUDED.status;
+
+-- 240 additional demo buyers. Stable IDs and emails make the seed repeatable.
+INSERT INTO "user" (id, username, full_name, email, password, role_id, status, created_at)
+SELECT ('e1000000-0000-0000-0000-' || lpad(to_hex(buyer_no), 12, '0'))::uuid,
+       'buyer_demo_' || lpad(buyer_no::text, 3, '0'),
+       (ARRAY['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng', 'Bùi', 'Đỗ', 'Mai'])[(buyer_no - 1) % 10 + 1]
+           || ' ' ||
+       (ARRAY['Minh Anh', 'Gia Huy', 'Bảo Ngọc', 'Khánh Linh', 'Tuấn Kiệt', 'Thảo Vy',
+              'Quang Minh', 'Hải Yến', 'Đức Anh', 'Ngọc Hà', 'Thanh Tùng', 'Phương Mai'])[(buyer_no - 1) % 12 + 1],
+       'buyer.demo.' || lpad(buyer_no::text, 3, '0') || '@example.test',
+       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+       (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT'),
+       'active'::user_status,
+       NOW() - (1 + (buyer_no * 13) % 160) * INTERVAL '1 day'
+FROM generate_series(1, 240) AS buyer_no
+ON CONFLICT (id) DO NOTHING;
 
 
 -- ---------------------------------------------------------------------
@@ -1007,6 +1023,53 @@ INSERT INTO registration (id, user_id, course_id, enrolled_at, status, progress_
      NOW() - INTERVAL '3 days', 'enrolled', 0, 550000.00, 'b0000000-0000-0000-0000-000000000011', NULL, 'pending', NULL),
     ('50000000-0000-0000-0000-000000000140', 'c0000000-0000-0000-0000-000000000049', 'd0000000-0000-0000-0000-000000000006',
      NOW() - INTERVAL '4 days', 'enrolled', 0, 620000.00, 'b0000000-0000-0000-0000-000000000013', NULL, 'pending', NULL)
+ON CONFLICT (user_id, course_id) DO NOTHING;
+
+-- Three distinct paid-course selections per demo buyer, spread across six months.
+-- Pending/failed orders have no paid_at and do not contribute to revenue.
+WITH published_courses AS (
+    SELECT id, price,
+           row_number() OVER (ORDER BY id) AS course_no,
+           count(*) OVER () AS course_count
+    FROM course
+    WHERE status = 'published' AND price > 0
+), buyer_orders AS (
+    SELECT buyer_no, slot,
+           ('e1000000-0000-0000-0000-' || lpad(to_hex(buyer_no), 12, '0'))::uuid AS buyer_id,
+           c.id AS course_id, c.price,
+           u.created_at
+               + (slot + 1) * CASE WHEN u.created_at < NOW() - INTERVAL '4 days'
+                                   THEN INTERVAL '1 day' ELSE INTERVAL '2 hours' END
+               + (buyer_no % 17) * INTERVAL '1 minute' AS enrolled_at,
+           CASE WHEN (buyer_no + slot * 7) % 20 < 17 THEN 'paid'
+                WHEN (buyer_no + slot * 7) % 20 < 19 THEN 'pending'
+                ELSE 'failed' END AS payment_state
+    FROM generate_series(1, 240) AS buyer_no
+    CROSS JOIN generate_series(0, 2) AS slot
+    JOIN "user" u ON u.id = ('e1000000-0000-0000-0000-' || lpad(to_hex(buyer_no), 12, '0'))::uuid
+    JOIN published_courses c
+      ON c.course_no = (buyer_no * 7 + slot * 5) % c.course_count + 1
+)
+INSERT INTO registration
+    (id, user_id, course_id, enrolled_at, status, progress_percent, amount,
+     payment_method_id, transaction_id, payment_status, paid_at)
+SELECT ('e2000000-0000-0000-0000-' || lpad(to_hex((buyer_no - 1) * 3 + slot + 1), 12, '0'))::uuid,
+       buyer_id, course_id, enrolled_at,
+       (CASE WHEN payment_state = 'failed' THEN 'cancelled'
+             WHEN payment_state = 'paid' AND (buyer_no + slot) % 7 = 0 THEN 'completed'
+             ELSE 'enrolled' END)::registration_status,
+       CASE WHEN payment_state <> 'paid' THEN 0
+            WHEN (buyer_no + slot) % 7 = 0 THEN 100
+            ELSE (buyer_no * 7 + slot * 11) % 90 END,
+       price,
+       CASE WHEN slot % 2 = 0 THEN 'b0000000-0000-0000-0000-000000000011'::uuid
+            ELSE 'b0000000-0000-0000-0000-000000000013'::uuid END,
+       CASE WHEN payment_state = 'paid'
+            THEN 'DEMO-PAID-' || buyer_no || '-' || slot END,
+       payment_state::payment_status,
+       CASE WHEN payment_state = 'paid'
+            THEN enrolled_at + INTERVAL '5 minutes' END
+FROM buyer_orders
 ON CONFLICT (user_id, course_id) DO NOTHING;
 
 

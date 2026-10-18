@@ -144,8 +144,11 @@ createdb -U postgres learnhub
 
 # Execute schema and seed data
 psql -U postgres -d learnhub -f db/schema.sql
-psql -U postgres -d learnhub -f db/seed.sql
+psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/seed.sql
 ```
+
+`db/seed.sql` includes 240 synthetic buyer accounts and 720 additional course orders spread across the last six months. Their `@example.test` addresses and `DEMO-PAID-*` transaction IDs mark them as demo data; the script can be rerun without duplicating these rows. Paid orders populate the Admin revenue chart, while all registrations populate enrollment metrics.
+Run the complete seed file with `psql -f` (or your SQL client's file execution command) instead of pasting or selecting part of it in a query editor.
 
 For an existing database, run these migrations **before** deploying the updated WAR:
 

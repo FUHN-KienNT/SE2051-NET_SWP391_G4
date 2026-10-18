@@ -31,7 +31,28 @@ public final class AppConstants {
     }
 
     // =========================================================================
-    // 3. Course Registration Statuses (matches schema registration_status ENUM)
+    // 3. Lesson Statuses (matches schema lesson_status ENUM)
+    // =========================================================================
+    public static final class LessonStatus {
+        private LessonStatus() {}
+        public static final String DRAFT = "draft";
+        public static final String PUBLISHED = "published";
+        public static final String ARCHIVED = "archived";
+        public static final String DECLINE = "decline";
+    }
+
+    // =========================================================================
+    // 4. Quiz Statuses (matches schema quiz_status ENUM)
+    // =========================================================================
+    public static final class QuizStatus {
+        private QuizStatus() {}
+        public static final String PUBLISHED = "published";
+        public static final String DRAFT = "draft";
+        public static final String HIDDEN = "hidden";
+    }
+
+    // =========================================================================
+    // 5. Course Registration Statuses (matches schema registration_status ENUM)
     // =========================================================================
     public static final class RegistrationStatus {
         private RegistrationStatus() {}
@@ -41,7 +62,7 @@ public final class AppConstants {
     }
 
     // =========================================================================
-    // 4. Payment Statuses (matches schema payment_status ENUM)
+    // 6. Payment Statuses (matches schema payment_status ENUM)
     // =========================================================================
     public static final class PaymentStatus {
         private PaymentStatus() {}
@@ -52,7 +73,7 @@ public final class AppConstants {
     }
 
     // =========================================================================
-    // 5. Learning Progress Statuses (matches schema learning_status ENUM)
+    // 7. Learning Progress Statuses (matches schema learning_status ENUM)
     // =========================================================================
     public static final class LearningStatus {
         private LearningStatus() {}
@@ -62,7 +83,7 @@ public final class AppConstants {
     }
 
     // =========================================================================
-    // 6. Notification Statuses (matches schema notification_status ENUM)
+    // 8. Notification Statuses (matches schema notification_status ENUM)
     // =========================================================================
     public static final class NotificationStatus {
         private NotificationStatus() {}
@@ -73,7 +94,7 @@ public final class AppConstants {
     }
 
     // =========================================================================
-    // 7. Security Roles (matches RBAC settings & AuthorizationFilter)
+    // 9. Security Roles (matches RBAC settings & AuthorizationFilter)
     // =========================================================================
     public static final class Role {
         private Role() {}

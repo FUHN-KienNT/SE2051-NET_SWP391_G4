@@ -1,5 +1,7 @@
 package com.learnhub.entity;
 
+import com.learnhub.constant.AppConstants;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ public class Quiz implements Serializable {
     private String title;
     private Integer timeLimit;
     private java.math.BigDecimal passScore;
-    private String status = "published"; // published | draft | hidden
+    private String status = AppConstants.QuizStatus.PUBLISHED;
     private String imageUrl;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -51,7 +53,7 @@ public class Quiz implements Serializable {
     public java.math.BigDecimal getPassScore() { return passScore; }
     public void setPassScore(java.math.BigDecimal passScore) { this.passScore = passScore; }
 
-    public String getStatus() { return status != null ? status : "published"; }
+    public String getStatus() { return status != null ? status : AppConstants.QuizStatus.PUBLISHED; }
     public void setStatus(String status) { this.status = status; }
 
     public String getImageUrl() { return imageUrl; }
@@ -79,15 +81,15 @@ public class Quiz implements Serializable {
     public void setQuestions(List<Question> questions) { this.questions = questions; }
 
     public boolean isHidden() {
-        return "hidden".equalsIgnoreCase(status);
+        return AppConstants.QuizStatus.HIDDEN.equalsIgnoreCase(status);
     }
 
     public boolean isPublished() {
-        return "published".equalsIgnoreCase(status);
+        return AppConstants.QuizStatus.PUBLISHED.equalsIgnoreCase(status);
     }
 
     public boolean isDraft() {
-        return "draft".equalsIgnoreCase(status);
+        return AppConstants.QuizStatus.DRAFT.equalsIgnoreCase(status);
     }
 
     @Override

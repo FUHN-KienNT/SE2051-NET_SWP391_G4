@@ -222,7 +222,7 @@ public class LessonServlet extends HttpServlet {
             }
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
             dto.setDurationMinutes(durationMinutes);
-            dto.setPublicationStatus("draft");
+            dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
             Map<String, String> errors = lessonService.validateLesson(expertId, dto);
             boolean saved = errors.isEmpty() && lessonService.saveLesson(expertId, dto);
             if (!saved) {

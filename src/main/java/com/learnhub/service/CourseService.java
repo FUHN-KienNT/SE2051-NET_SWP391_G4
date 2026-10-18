@@ -1,5 +1,6 @@
 package com.learnhub.service;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dao.SettingDAO;
@@ -98,7 +99,7 @@ public class CourseService {
             int lessonCount = 0;
             for (com.learnhub.entity.Module module : course.getModules()) {
                 module.setLessons(module.getLessons().stream()
-                        .filter(lesson -> "published".equals(lesson.getPublicationStatus()))
+                        .filter(lesson -> AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()))
                         .toList());
                 lessonCount += module.getLessons().size();
             }

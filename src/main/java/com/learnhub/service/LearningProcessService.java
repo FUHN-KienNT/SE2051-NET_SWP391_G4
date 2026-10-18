@@ -1,5 +1,6 @@
 package com.learnhub.service;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.LearningProcessDAO;
 import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.RegistrationDAO;
@@ -220,7 +221,7 @@ public class LearningProcessService {
             UUID registrationId
     ) {
         Lesson lesson = lessonDAO.findById(lessonId);
-        if (lesson == null || !"published".equals(lesson.getPublicationStatus())) return null;
+        if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) return null;
 
         LessonDTO dto = new LessonDTO(
                 lesson.getId(),
@@ -277,7 +278,7 @@ public class LearningProcessService {
         return course.getModules().stream()
                 .flatMap(module -> module.getLessons().stream())
                 .anyMatch(lesson -> lesson.getId().equals(lessonId)
-                        && "published".equals(lesson.getPublicationStatus()));
+                        && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()));
     }
 
     public void markLessonComplete(UUID registrationId, UUID lessonId) {

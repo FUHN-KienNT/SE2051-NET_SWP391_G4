@@ -160,12 +160,12 @@ public class DashboardDAO {
     public Object[] getRevenueLast6Months() {
         List<String> labels = new ArrayList<>();
         List<BigDecimal> data = new ArrayList<>();
-        String sql = "SELECT TO_CHAR(registration_date, 'Mon') as month_label, SUM(amount) as revenue " +
+        String sql = "SELECT TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon') as month_label, SUM(amount) as revenue " +
                      "FROM registration " +
                      "WHERE payment_status = 'paid' " +
-                     "  AND registration_date >= date_trunc('month', CURRENT_DATE - INTERVAL '5 months') " +
-                     "GROUP BY TO_CHAR(registration_date, 'Mon'), date_trunc('month', registration_date) " +
-                     "ORDER BY date_trunc('month', registration_date)";
+                     "  AND COALESCE(paid_at, enrolled_at) >= date_trunc('month', CURRENT_DATE - INTERVAL '5 months') " +
+                     "GROUP BY TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon'), date_trunc('month', COALESCE(paid_at, enrolled_at)) " +
+                     "ORDER BY date_trunc('month', COALESCE(paid_at, enrolled_at))";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -187,11 +187,11 @@ public class DashboardDAO {
     public Object[] getEnrollmentsByCategory() {
         List<String> labels = new ArrayList<>();
         List<Long> data = new ArrayList<>();
-        String sql = "SELECT s.value as category_name, COUNT(r.id) as enrollments " +
+        String sql = "SELECT s.name as category_name, COUNT(r.id) as enrollments " +
                      "FROM registration r " +
                      "JOIN course c ON r.course_id = c.id " +
                      "JOIN setting s ON c.category_id = s.id " +
-                     "GROUP BY s.value " +
+                     "GROUP BY s.name " +
                      "ORDER BY enrollments DESC " +
                      "LIMIT 5";
         try (Connection conn = DbConnection.getConnection();

@@ -410,7 +410,7 @@ public class QuizManagementServlet extends HttpServlet {
         String status =
                 req.getParameter("status");
         if (status == null || status.isBlank()) {
-            status = "published";
+            status = AppConstants.QuizStatus.PUBLISHED;
         }
 
         String imageUrl =

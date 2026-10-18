@@ -83,14 +83,16 @@ public class CourseServlet extends HttpServlet {
             } catch (NumberFormatException ignored) {
             }
         }
-        List<Course> courses;
-        int totalCourses;
-        courses = courseService.getAssignedCourses(expertId, page, pageSize);
-        totalCourses = courseService.countAssignedCourses(expertId);
-        int publishedCourses =  courseService.countAssignedCourses(expertId, "published");
-        int draftCourses = courseService.countAssignedCourses(expertId, "draft");
-        int archivedCourse = courseService.countAssignedCourses(expertId, "archived");
-        int totalPages = (int) Math.ceil((double) totalCourses / pageSize);
+        String search = req.getParameter("search");
+        search = search == null ? "" : search.strip();
+        int totalCourses = courseService.countAssignedCourses(expertId, null, search);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalCourses / pageSize));
+        page = Math.min(page, totalPages);
+        List<Course> courses = courseService.getAssignedCourses(expertId, page, pageSize, search);
+        int publishedCourses = courseService.countAssignedCourses(expertId, "published", search);
+        int draftCourses = courseService.countAssignedCourses(expertId, "draft", search);
+        int archivedCourse = courseService.countAssignedCourses(expertId, "archived", search);
+        req.setAttribute("search", search);
         req.setAttribute("courses", courses);
         req.setAttribute("currentPage", page);
         req.setAttribute("totalPages", Math.max(1, totalPages));

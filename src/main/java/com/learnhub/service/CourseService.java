@@ -152,14 +152,18 @@ public class CourseService {
     }
 
     public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize) {
-        if (page < 1) {
-            page = 1;
-        }
-        if (pageSize < 1) {
-            pageSize = 10;
-        }
-        int offset = (page - 1) * pageSize;
-        return courseDAO.findByExpertId(expertId, offset, pageSize);
+        return getAssignedCourses(expertId, page, pageSize, "");
+    }
+
+    public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize, String search) {
+        page = Math.max(1, page);
+        pageSize = pageSize < 1 ? 10 : pageSize;
+        String keyword = search == null ? "" : search.strip();
+        return courseDAO.findByExpertId(expertId, (page - 1) * pageSize, pageSize, keyword);
+    }
+    public int countAssignedCourses(UUID expertId, String status, String search) {
+        String keyword = search == null ? "" : search.strip();
+        return courseDAO.countByExpertId(expertId, status, keyword);
     }
 
     public int countAssignedCourses(UUID expertId) {

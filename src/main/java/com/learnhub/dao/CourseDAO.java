@@ -372,6 +372,10 @@ public class CourseDAO {
         }
     }
     public List<Course> findByExpertId(UUID expertId, int offset, int limit) {
+        return findByExpertId(expertId, offset, limit, "");
+    }
+
+    public List<Course> findByExpertId(UUID expertId, int offset, int limit, String search) {
         List<Course> list = new ArrayList<>();
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                      "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
@@ -381,14 +385,15 @@ public class CourseDAO {
                      "FROM course c " +
                      "LEFT JOIN setting s ON c.category_id = s.id " +
                      "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
-                     "WHERE c.expert_id = ? " +
-                     "ORDER BY c.updated_at DESC LIMIT ? OFFSET ?";
+                     "WHERE c.expert_id = ? AND strpos(lower(c.title), lower(?)) > 0 " +
+                     "ORDER BY c.updated_at DESC, c.id LIMIT ? OFFSET ?";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, expertId);
-            ps.setInt(2, limit);
-            ps.setInt(3, offset);
+            ps.setString(2, search);
+            ps.setInt(3, limit);
+            ps.setInt(4, offset);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapResultSetToCourse(rs));
@@ -405,13 +410,19 @@ public class CourseDAO {
     }
 
     public int countByExpertId(UUID expertId, String status) {
-        String sql = "SELECT COUNT(*) FROM course WHERE expert_id = ?"
+        return countByExpertId(expertId, status, "");
+    }
+
+    public int countByExpertId(UUID expertId, String status, String search) {
+        String sql = "SELECT COUNT(*) FROM course WHERE expert_id = ? "
+                + "AND strpos(lower(title), lower(?)) > 0"
                 + (status == null ? "" : " AND status = ?::course_status");
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, expertId);
+            ps.setString(2, search);
             if (status != null) {
-                ps.setString(2, status);
+                ps.setString(3, status);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);

@@ -42,15 +42,18 @@
                         </div>
                     </dl>
                 </div>
-                <div class="relative w-full lg:max-w-xs">
+                <form method="GET" action="${pageContext.request.contextPath}/expert/dashboard" class="relative w-full lg:max-w-xs">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
                         <i class="fa-solid fa-magnifying-glass text-sm"></i>
                     </div>
                     <input type="text"
                            id="courseSearchInput"
+                           name="search"
+                           value="${fn:escapeXml(search)}"
+                           aria-label="Search courses"
                            placeholder="Search courses..."
                            class="w-full pl-10 pr-4 py-2 bg-surface border border-border-default rounded-lg text-sm placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition-all">
-                </div>
+                </form>
             </div>
         <div class="overflow-x-auto">
             <table class="w-full min-w-max text-left text-sm text-text-secondary" id="coursesTable">
@@ -133,17 +136,29 @@
                 <span class="text-xs text-text-secondary font-medium">Trang ${currentPage} / ${totalPages}</span>
                 <div class="flex flex-wrap items-center gap-2">
                     <c:if test="${currentPage > 1}">
-                        <a href="?page=${currentPage - 1}" class="px-3 py-1.5 bg-surface-card border border-border-default text-text-secondary text-xs font-bold rounded-lg hover:bg-surface transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                        <c:url var="previousPageUrl" value="/expert/dashboard">
+                            <c:param name="page" value="${currentPage - 1}" />
+                            <c:param name="search" value="${search}" />
+                        </c:url>
+                        <a href="${fn:escapeXml(previousPageUrl)}" class="px-3 py-1.5 bg-surface-card border border-border-default text-text-secondary text-xs font-bold rounded-lg hover:bg-surface transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                             <i class="fa-solid fa-chevron-left mr-1"></i> Trước
                         </a>
                     </c:if>
                     <c:forEach begin="1" end="${totalPages}" var="p">
-                        <a href="?page=${p}" class="px-3 py-1.5 text-xs font-bold rounded-lg transition ${currentPage eq p ? 'bg-brand-700 text-white' : 'bg-surface-card border border-border-default text-slate-700 hover:bg-surface'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                        <c:url var="pageUrl" value="/expert/dashboard">
+                            <c:param name="page" value="${p}" />
+                            <c:param name="search" value="${search}" />
+                        </c:url>
+                        <a href="${fn:escapeXml(pageUrl)}" class="px-3 py-1.5 text-xs font-bold rounded-lg transition ${currentPage eq p ? 'bg-brand-700 text-white' : 'bg-surface-card border border-border-default text-slate-700 hover:bg-surface'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                             ${p}
                         </a>
                     </c:forEach>
                     <c:if test="${currentPage < totalPages}">
-                        <a href="?page=${currentPage + 1}" class="px-3 py-1.5 bg-surface-card border border-border-default text-text-secondary text-xs font-bold rounded-lg hover:bg-surface transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                        <c:url var="nextPageUrl" value="/expert/dashboard">
+                            <c:param name="page" value="${currentPage + 1}" />
+                            <c:param name="search" value="${search}" />
+                        </c:url>
+                        <a href="${fn:escapeXml(nextPageUrl)}" class="px-3 py-1.5 bg-surface-card border border-border-default text-text-secondary text-xs font-bold rounded-lg hover:bg-surface transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                             Sau <i class="fa-solid fa-chevron-right ml-1"></i>
                         </a>
                     </c:if>
@@ -152,18 +167,4 @@
         </c:if>
     </div>
 </main>
-<script>
-    document.getElementById('courseSearchInput').addEventListener('input', function(e) {
-        const keyword = e.target.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('.course-row');
-        rows.forEach(row => {
-            const title = row.querySelector('.course-title').textContent.toLowerCase();
-            if (title.includes(keyword)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-</script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

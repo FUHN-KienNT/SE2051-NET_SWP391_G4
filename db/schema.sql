@@ -33,6 +33,8 @@ DROP TABLE IF EXISTS setting CASCADE;
 
 DROP TYPE IF EXISTS notification_status CASCADE;
 DROP TYPE IF EXISTS question_type CASCADE;
+DROP TYPE IF EXISTS quiz_status CASCADE;
+DROP TYPE IF EXISTS lesson_status CASCADE;
 DROP TYPE IF EXISTS learning_status CASCADE;
 DROP TYPE IF EXISTS payment_status CASCADE;
 DROP TYPE IF EXISTS registration_status CASCADE;
@@ -47,6 +49,10 @@ DROP TYPE IF EXISTS user_status CASCADE;
 CREATE TYPE user_status AS ENUM ('active', 'inactive', 'banned');
 
 CREATE TYPE course_status AS ENUM ('draft', 'published', 'archived');
+
+CREATE TYPE lesson_status AS ENUM ('draft', 'published', 'archived', 'decline');
+
+CREATE TYPE quiz_status AS ENUM ('published', 'draft', 'hidden');
 
 CREATE TYPE registration_status AS ENUM ('enrolled', 'completed', 'cancelled');
 
@@ -175,8 +181,7 @@ CREATE TABLE lesson (
     content     TEXT,
     order_index INTEGER NOT NULL DEFAULT 0,
     duration_minutes INTEGER CONSTRAINT ck_lesson_duration_minutes CHECK (duration_minutes > 0),
-    status      VARCHAR(20) NOT NULL DEFAULT 'draft'
-                CONSTRAINT ck_lesson_publication_status CHECK (status IN ('published', 'draft', 'archived', 'decline')),
+    status      lesson_status NOT NULL DEFAULT 'draft',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -210,7 +215,7 @@ CREATE TABLE quiz (
     title      VARCHAR(255) NOT NULL,
     time_limit INTEGER,  -- don vi: phut
     pass_score NUMERIC(5, 2) NOT NULL DEFAULT 5.0,
-    status     VARCHAR(20) NOT NULL DEFAULT 'published', -- 'published', 'draft', 'hidden'
+    status     quiz_status NOT NULL DEFAULT 'published',
     image_url  TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

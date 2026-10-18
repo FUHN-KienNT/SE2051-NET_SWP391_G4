@@ -62,7 +62,7 @@
                         <input type="text"
                                name="search"
                                value="${search}"
-                               placeholder="Search settings by name or value..."
+                               placeholder="Search settings by name or description..."
                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition-colors text-slate-800 font-medium placeholder-slate-400">
                     </div>
 
@@ -107,7 +107,7 @@
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider w-16">#</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">TÊN CẤU HÌNH (NAME)</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">LOẠI (TYPE)</th>
-                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">GIÁ TRỊ (VALUE) / MÔ TẢ</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">MÔ TẢ</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-center">THỨ TỰ</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">TRẠNG THÁI</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-right">ACTION</th>
@@ -149,9 +149,16 @@
                                                 </span>
                                             </td>
 
-                                            <!-- Value/Description -->
-                                            <td class="px-6 py-5 text-slate-500 font-medium text-[13px] truncate max-w-[200px]" title="${s.value} ${s.description}">
-                                                ${not empty s.value ? s.value : s.description}
+                                            <!-- Description -->
+                                            <td class="px-6 py-5 text-slate-500 font-medium text-[13px] truncate max-w-[320px]" title="${fn:escapeXml(s.description)}">
+                                                <c:choose>
+                                                    <c:when test="${not empty s.description}">
+                                                        <c:out value="${s.description}" />
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-slate-300 italic">Chưa có mô tả</span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </td>
 
                                             <!-- Sort Order -->

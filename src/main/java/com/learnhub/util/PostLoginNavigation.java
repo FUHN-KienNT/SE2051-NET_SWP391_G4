@@ -21,6 +21,7 @@ public final class PostLoginNavigation {
 
     public static String destination(User user, String requested, String contextPath) {
         String fallback = contextPath + dashboardPath(user);
+        if (user != null && AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode())) return fallback;
         String safe = safeLocalPath(requested, contextPath);
         if (safe == null) return fallback;
 

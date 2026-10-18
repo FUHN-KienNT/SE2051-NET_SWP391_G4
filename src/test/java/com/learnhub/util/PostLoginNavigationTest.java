@@ -21,11 +21,17 @@ class PostLoginNavigationTest {
     @Test
     void preservesAllowedDeepLinksAndQueryStrings() {
         assertEquals("/learnhub/admin/users?page=2", destination(AppConstants.Role.ADMIN, "/admin/users?page=2"));
-        assertEquals("/learnhub/admin/courses?status=draft", destination(AppConstants.Role.MANAGER,
-                "/learnhub/admin/courses?status=draft"));
         assertEquals("/learnhub/expert/dashboard", destination(AppConstants.Role.EXPERT, "/expert/dashboard"));
         assertEquals("/learnhub/my-enrollments?registered=success", destination(AppConstants.Role.STUDENT,
                 "/my-enrollments?registered=success"));
+    }
+
+    @Test
+    void managerAlwaysStartsAtDashboardAfterLogin() {
+        assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER,
+                "/learnhub/admin/courses?status=draft"));
+        assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER,
+                "/manager/dashboard?period=quarter"));
     }
 
     @Test

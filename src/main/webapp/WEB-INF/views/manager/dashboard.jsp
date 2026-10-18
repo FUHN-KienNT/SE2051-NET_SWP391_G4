@@ -3,7 +3,6 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <style>
     .custom-scrollbar::-webkit-scrollbar {
@@ -22,7 +21,13 @@
     }
 </style>
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="dashboard" />
+    </jsp:include>
+
+    <div class="flex-1 flex flex-col min-w-0">
+        <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10 space-y-6">
 
             <!-- Success / Error Alert Messages -->
             <c:if test="${not empty successMessage}">
@@ -494,6 +499,8 @@
             </div>
 
         </main>
+    </div>
+</div>
 
 <!-- ========================================================================= -->
 <!-- Modal: Assign Domain Expert                                               -->
@@ -567,4 +574,4 @@
     });
 </script>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

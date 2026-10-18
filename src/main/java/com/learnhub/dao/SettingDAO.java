@@ -230,6 +230,30 @@ public class SettingDAO {
         return types;
     }
 
+    public boolean existsByName(String name, UUID excludeId) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        String sql = excludeId != null
+                ? "SELECT COUNT(*) FROM setting WHERE LOWER(name) = LOWER(?) AND id <> ?"
+                : "SELECT COUNT(*) FROM setting WHERE LOWER(name) = LOWER(?)";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name.trim());
+            if (excludeId != null) {
+                ps.setObject(2, excludeId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in SettingDAO.existsByName: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
     public boolean updateStatus(UUID id, boolean status) {
         String sql = "UPDATE setting SET status = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();

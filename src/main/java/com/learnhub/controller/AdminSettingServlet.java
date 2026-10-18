@@ -28,9 +28,9 @@ import java.util.logging.Logger;
  * - Activate/Deactivate Setting: change status of master data.
  * - Create/Update Setting: modal form for adding/editing master data.
  *
- * URLs: /admin/settings, /admin/setting-status
+ * URLs: /admin/settings, /admin/setting-detail, /admin/setting-status
  */
-@WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-status"})
+@WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-detail", "/admin/setting-status"})
 public class AdminSettingServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AdminSettingServlet.class.getName());
@@ -53,6 +53,12 @@ public class AdminSettingServlet extends HttpServlet {
         String role = (String) session.getAttribute("userRole");
         if (!isAuthorizedAdmin(currentUser, role)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Administrator privileges required.");
+            return;
+        }
+
+        String path = req.getServletPath();
+        if ("/admin/setting-detail".equals(path)) {
+            handleShowDetail(req, resp);
             return;
         }
 
@@ -110,9 +116,70 @@ public class AdminSettingServlet extends HttpServlet {
             req.setAttribute("successMessage", "Trạng thái cấu hình đã được cập nhật thành công!");
         } else if ("true".equals(req.getParameter("save_success"))) {
             req.setAttribute("successMessage", "Thông tin cấu hình đã được lưu thành công!");
+        } else if ("core_role_protected".equals(req.getParameter("error")) || "role_deactivate_blocked".equals(req.getParameter("error"))) {
+            req.setAttribute("errorMessage", "Không thể vô hiệu hóa vai trò (Role luôn ở trạng thái Active)!");
         }
 
         req.getRequestDispatcher("/WEB-INF/views/admin/setting-list.jsp").forward(req, resp);
+    }
+
+    private static final java.util.Set<String> CORE_ROLES = java.util.Set.of(
+            "ROLE_ADMIN", "ROLE_STUDENT", "ROLE_MANAGER", "ROLE_EXPERT",
+            "admin", "student", "manager", "expert"
+    );
+
+    private boolean isRoleSetting(Setting setting) {
+        if (setting == null) return false;
+        return "role".equalsIgnoreCase(setting.getType());
+    }
+
+    private boolean isProtectedCoreSetting(Setting setting) {
+        if (setting == null) return false;
+        String type = setting.getType();
+        String code = setting.getCode();
+        return "role".equalsIgnoreCase(type) && (code == null || CORE_ROLES.contains(code.trim()) || true);
+    }
+
+    private void handleShowDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String idStr = req.getParameter("id");
+        Setting setting = null;
+        if (idStr != null && !idStr.trim().isEmpty()) {
+            try {
+                UUID id = UUID.fromString(idStr.trim());
+                setting = settingDAO.findById(id);
+            } catch (IllegalArgumentException ignored) {
+            }
+            if (setting == null) {
+                resp.sendRedirect(req.getContextPath() + "/admin/settings");
+                return;
+            }
+        }
+
+        req.setAttribute("setting", setting);
+        req.setAttribute("types", getSettingTypes(setting));
+        req.setAttribute("isProtected", isProtectedCoreSetting(setting));
+        req.setAttribute("pageTitle", setting != null
+                ? "Setting Detail - " + setting.getCode() + " – LearnHub Admin"
+                : "Add New Setting – LearnHub Admin");
+        req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+    }
+
+    private List<String> getSettingTypes(Setting setting) {
+        List<String> types = new java.util.ArrayList<>(settingDAO.findAllTypes());
+        if (setting != null && setting.getType() != null && !setting.getType().trim().isEmpty()) {
+            String currentType = setting.getType().trim();
+            boolean exists = false;
+            for (String t : types) {
+                if (t != null && t.equalsIgnoreCase(currentType)) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                types.add(currentType);
+            }
+        }
+        return types;
     }
 
     @Override
@@ -135,7 +202,7 @@ public class AdminSettingServlet extends HttpServlet {
 
         if ("/admin/setting-status".equals(path) || "status".equalsIgnoreCase(action)) {
             handleChangeStatus(req, resp, currentUser);
-        } else if ("save".equalsIgnoreCase(action)) {
+        } else if ("/admin/setting-detail".equals(path) || "save".equalsIgnoreCase(action)) {
             handleSaveSetting(req, resp, currentUser);
         } else {
             resp.sendRedirect(req.getContextPath() + "/admin/settings");
@@ -152,6 +219,10 @@ public class AdminSettingServlet extends HttpServlet {
                 boolean newStatus = Boolean.parseBoolean(statusStr.trim());
                 Setting setting = settingDAO.findById(id);
                 if (setting != null) {
+                    if (isProtectedCoreSetting(setting) && !newStatus) {
+                        resp.sendRedirect(req.getContextPath() + "/admin/settings?error=core_role_protected");
+                        return;
+                    }
                     boolean success = settingDAO.updateStatus(id, newStatus);
                     if (success) {
                         dashboardService.logEvent(
@@ -171,7 +242,7 @@ public class AdminSettingServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/settings?error=status_failed");
     }
 
-    private void handleSaveSetting(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
+    private void handleSaveSetting(HttpServletRequest req, HttpServletResponse resp, User actor) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         String type = req.getParameter("type");
         String code = req.getParameter("code");
@@ -179,11 +250,6 @@ public class AdminSettingServlet extends HttpServlet {
         String description = req.getParameter("description");
         String statusStr = req.getParameter("status");
         String sortOrderStr = req.getParameter("sortOrder");
-
-        if (name == null || name.trim().isEmpty() || type == null || type.trim().isEmpty() || code == null || code.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/admin/settings?error=missing_fields");
-            return;
-        }
 
         int sortOrder = 1;
         if (sortOrderStr != null && !sortOrderStr.trim().isEmpty()) {
@@ -193,23 +259,70 @@ public class AdminSettingServlet extends HttpServlet {
             }
         }
 
-        boolean status = "true".equalsIgnoreCase(statusStr) || "active".equalsIgnoreCase(statusStr);
+        boolean status = statusStr == null || "true".equalsIgnoreCase(statusStr) || "active".equalsIgnoreCase(statusStr);
+        boolean isUpdate = idStr != null && !idStr.trim().isEmpty();
+        UUID currentId = null;
+        Setting existing = null;
+
+        if (isUpdate) {
+            try {
+                currentId = UUID.fromString(idStr.trim());
+                existing = settingDAO.findById(currentId);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        boolean isRole = "role".equalsIgnoreCase(type) || (existing != null && isRoleSetting(existing));
+        if (isRole) {
+            status = true; // Roles are strictly active
+        }
+
+        boolean protectedSetting = isRole || (existing != null && isProtectedCoreSetting(existing));
+
+        // Role protection: prevent deactivation
+        if (protectedSetting && !status) {
+            req.setAttribute("errorMessage", "Vai trò hệ thống luôn ở trạng thái Active, không thể chuyển sang Inactive.");
+            req.setAttribute("setting", existing);
+            req.setAttribute("types", getSettingTypes(existing));
+            req.setAttribute("isProtected", true);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+            return;
+        }
+
+        String resolvedCode = (code != null && !code.trim().isEmpty())
+                ? code.trim()
+                : (existing != null ? existing.getCode() : generateSettingCode(name));
 
         Setting s = new Setting();
-        s.setType(type.trim());
-        s.setCode(code.trim());
-        s.setName(name.trim());
+        s.setId(currentId);
+        s.setType(type != null ? type.trim() : "");
+        s.setCode(resolvedCode);
+        s.setName(name != null ? name.trim() : "");
         s.setDescription(description != null ? description.trim() : "");
         s.setStatus(status);
         s.setSortOrder(sortOrder);
 
-        boolean isUpdate = idStr != null && !idStr.trim().isEmpty();
-        boolean result;
+        if (s.getName().isEmpty() || s.getType().isEmpty()) {
+            req.setAttribute("errorMessage", "Setting Name and Setting Type are required and cannot be empty.");
+            req.setAttribute("setting", s);
+            req.setAttribute("types", getSettingTypes(s));
+            req.setAttribute("isProtected", protectedSetting);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+            return;
+        }
 
-        if (isUpdate) {
+        if (settingDAO.existsByName(s.getName(), currentId)) {
+            req.setAttribute("errorMessage", "Setting Name '" + s.getName() + "' already exists. Setting Name must be unique.");
+            req.setAttribute("setting", s);
+            req.setAttribute("types", getSettingTypes(s));
+            req.setAttribute("isProtected", protectedSetting);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+            return;
+        }
+
+        boolean result;
+        if (isUpdate && currentId != null) {
             try {
-                UUID id = UUID.fromString(idStr.trim());
-                s.setId(id);
                 result = settingDAO.update(s);
                 if (result) {
                     dashboardService.logEvent(actor.getEmail(), "SETTING_UPDATE", "Cập nhật cấu hình: " + s.getName(), "SUCCESS");
@@ -229,8 +342,34 @@ public class AdminSettingServlet extends HttpServlet {
         if (result) {
             resp.sendRedirect(req.getContextPath() + "/admin/settings?save_success=true");
         } else {
-            resp.sendRedirect(req.getContextPath() + "/admin/settings?error=save_failed");
+            req.setAttribute("errorMessage", "Could not save setting into the database. Please try again.");
+            req.setAttribute("setting", s);
+            req.setAttribute("types", getSettingTypes(s));
+            req.setAttribute("isProtected", protectedSetting);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
         }
+    }
+
+    private String generateSettingCode(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "STG_" + System.currentTimeMillis() % 10000;
+        }
+        String normalized = java.text.Normalizer.normalize(name.trim(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .replaceAll("[đĐ]", "d")
+                .toUpperCase()
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+        if (normalized.isEmpty()) {
+            normalized = "STG";
+        }
+        if (normalized.length() > 40) {
+            normalized = normalized.substring(0, 40);
+        }
+        if (settingDAO.findByCode(normalized) != null) {
+            normalized = normalized + "_" + (System.currentTimeMillis() % 1000);
+        }
+        return normalized;
     }
 
     private void handleGetJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {

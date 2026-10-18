@@ -1,0 +1,10 @@
+target/
+*.war
+*.jar
+
+.idea/
+*.iml
+.vscode/
+
+.smarttomcat/
+*.log

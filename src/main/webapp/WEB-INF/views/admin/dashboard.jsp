@@ -15,49 +15,15 @@
 
             <!-- Page Header -->
             <div class="mb-6">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <c:choose>
-                            <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
-                                <p class="mb-2 text-sm font-semibold text-brand-700">Manager workspace</p>
-                                <h1 class="text-3xl font-bold tracking-tight text-text-primary">Manager dashboard</h1>
-                                <p class="mt-2 text-sm text-text-secondary">Tổng quan về hệ thống khóa học</p>
-                            </c:when>
-                            <c:otherwise>
-                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
-                            </c:otherwise>
-                        </c:choose>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
+                        <p class="text-slate-500 text-sm mt-1">Tổng quan về hệ thống và người dùng</p>
                     </div>
                 </div>
             </div>
 
-            <c:choose>
-                <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
-                    <!-- Manager Metrics -->
-                    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div class="rounded-xl border border-border-default bg-surface-card p-6 shadow-sm">
-                            <p class="text-sm font-medium text-text-secondary">Khóa học đang hoạt động</p>
-                            <p class="mt-3 text-3xl font-bold text-text-primary"><fmt:formatNumber value="${dashboard.activeCourses}" type="number"/></p>
-                        </div>
-                        <div class="rounded-xl border border-border-default bg-surface-card p-6 shadow-sm">
-                            <p class="text-sm font-medium text-text-secondary">Tổng lượt ghi danh</p>
-                            <p class="mt-3 text-3xl font-bold text-text-primary"><fmt:formatNumber value="${dashboard.totalEnrollments}" type="number"/></p>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-5 rounded-xl border border-border-default bg-surface-card p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 class="text-lg font-semibold text-text-primary">Quản lý khóa học</h2>
-                            <p class="mt-1 text-sm text-text-secondary">Xem danh sách, lọc và cập nhật khóa học.</p>
-                        </div>
-                        <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                            Đi tới khóa học <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                        </a>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <!-- Admin Metrics -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Admin Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <!-- Card 1: Total Users -->
                         <div class="bg-white rounded-[16px] border border-slate-100 p-5 shadow-sm flex flex-col justify-between h-28 relative">
                             <p class="text-[11px] font-bold uppercase text-[#94a3b8] tracking-wider">TOTAL USERS</p>
@@ -189,9 +155,6 @@
                             </a>
                         </div>
                     </div>
-
-                </c:otherwise>
-            </c:choose>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

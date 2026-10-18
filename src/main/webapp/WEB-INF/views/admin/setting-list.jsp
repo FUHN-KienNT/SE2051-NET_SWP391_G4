@@ -23,6 +23,15 @@
                     <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </c:if>
+            <c:if test="${not empty errorMessage}">
+                <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
+                        <span class="font-medium"><c:out value="${errorMessage}" /></span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </c:if>
             <c:if test="${param.error eq 'missing_fields'}">
                 <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm">
                     <div class="flex items-center space-x-2.5">
@@ -37,13 +46,12 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">System Settings</h1>
-                    <p class="text-slate-500 text-sm mt-1">Manage platform configuration, roles, categories, and payment options (SRS 2.2 / 2.2.1)</p>
                 </div>
                 <div>
-                    <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm cursor-pointer">
+                    <a href="${pageContext.request.contextPath}/admin/setting-detail" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm cursor-pointer">
                         <i class="fa-solid fa-plus text-xs"></i>
-                        <span>+ Add New Setting</span>
-                    </button>
+                        <span> Add New Setting</span>
+                    </a>
                 </div>
             </div>
 
@@ -102,17 +110,11 @@
                         <thead class="bg-white border-b border-slate-100">
                             <tr>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider w-16">#</th>
-                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
-                                    <div class="flex items-center gap-1.5">TÊN CẤU HÌNH (NAME) <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
-                                </th>
-                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
-                                    <div class="flex items-center gap-1.5">LOẠI (TYPE) <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
-                                </th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">TÊN CẤU HÌNH (NAME)</th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">LOẠI (TYPE)</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">GIÁ TRỊ (VALUE) / MÔ TẢ</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-center">THỨ TỰ</th>
-                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider sortable-header select-none group">
-                                    <div class="flex items-center gap-1.5">TRẠNG THÁI <i class="fa-solid fa-sort text-[10px] text-slate-300"></i></div>
-                                </th>
+                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">TRẠNG THÁI</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider text-right">ACTION</th>
                             </tr>
                         </thead>
@@ -180,38 +182,54 @@
 
                                             <!-- Actions -->
                                             <td class="px-6 py-5 text-right space-x-2">
-                                                <button type="button"
-                                                        onclick="openEditModal('${s.id}')"
-                                                        class="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm" title="Manage Setting">
+                                                <a href="${pageContext.request.contextPath}/admin/setting-detail?id=${s.id}"
+                                                   class="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm" title="Manage Setting">
                                                     <i class="fa-solid fa-pen-to-square"></i> Manage
-                                                </button>
+                                                </a>
 
-                                                <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline">
-                                                    <input type="hidden" name="id" value="${s.id}">
-                                                    <input type="hidden" name="status" value="${!s.status}">
-                                                    <c:choose>
-                                                        <c:when test="${s.status}">
-                                                            <button type="submit" 
-                                                                    data-confirm="Bạn có chắc chắn muốn TẮT cài đặt này không?"
-                                                                    data-confirm-title="Tắt Cài đặt"
-                                                                    data-confirm-btn="Tắt cài đặt"
-                                                                    data-confirm-type="warning"
-                                                                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Deactivate">
-                                                                <i class="fa-solid fa-power-off"></i>
-                                                            </button>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <button type="submit" 
-                                                                    data-confirm="Bạn có muốn BẬT cài đặt này không?"
-                                                                    data-confirm-title="Bật Cài đặt"
-                                                                    data-confirm-btn="Bật cài đặt"
-                                                                    data-confirm-type="info"
-                                                                    class="px-3 py-2 bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Activate">
-                                                                <i class="fa-solid fa-power-off"></i>
-                                                            </button>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </form>
+                                                <c:set var="isRoleSetting" value="${s.type eq 'role'}" />
+                                                <c:choose>
+                                                    <c:when test="${isRoleSetting}">
+                                                        <button type="button"
+                                                                disabled
+                                                                class="px-3 py-2 bg-slate-100 text-slate-400 rounded-[8px] text-xs font-bold inline-flex items-center justify-center cursor-not-allowed shadow-sm select-none relative group"
+                                                                title="Vai trò hệ thống - Luôn Active, không thể tắt">
+                                                            <span class="relative inline-flex items-center justify-center w-3.5 h-3.5">
+                                                                <i class="fa-solid fa-power-off text-slate-400 text-xs"></i>
+                                                                <!-- Đường gạch chéo đỏ xuyên qua icon -->
+                                                                <span class="absolute w-[140%] h-[1.5px] bg-rose-500 -rotate-45 transform origin-center pointer-events-none"></span>
+                                                            </span>
+                                                        </button>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline">
+                                                            <input type="hidden" name="id" value="${s.id}">
+                                                            <input type="hidden" name="status" value="${!s.status}">
+                                                            <c:choose>
+                                                                <c:when test="${s.status}">
+                                                                    <button type="submit" 
+                                                                            data-confirm="Bạn có chắc chắn muốn TẮT cài đặt này không?"
+                                                                            data-confirm-title="Tắt Cài đặt"
+                                                                            data-confirm-btn="Tắt cài đặt"
+                                                                            data-confirm-type="warning"
+                                                                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Deactivate">
+                                                                        <i class="fa-solid fa-power-off"></i>
+                                                                    </button>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <button type="submit" 
+                                                                            data-confirm="Bạn có muốn BẬT cài đặt này không?"
+                                                                            data-confirm-title="Bật Cài đặt"
+                                                                            data-confirm-btn="Bật cài đặt"
+                                                                            data-confirm-type="info"
+                                                                            class="px-3 py-2 bg-[#e8f5e9] hover:bg-[#c8e6c9] text-[#2e7d32] rounded-[8px] text-xs font-bold transition inline-flex items-center shadow-sm" title="Activate">
+                                                                        <i class="fa-solid fa-power-off"></i>
+                                                                    </button>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </form>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </td>
                                         </tr>
                                     </c:forEach>
@@ -221,7 +239,7 @@
                     </table>
                 </div>
 
-<!-- Pagination Footer --><!-- Pagination Footer -->
+                <!-- Pagination Footer -->
                 <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
                     <div>
                         Showing 
@@ -269,171 +287,5 @@
         </main>
     </div>
 </div>
-
-<!-- ========================================================================= -->
-<!-- Modal: Create / Edit Setting Form                                         -->
-<!-- ========================================================================= -->
-<div id="settingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden transition-opacity">
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto transform transition-transform">
-        <div class="flex items-center justify-between px-7 py-5 border-b border-slate-100">
-            <div>
-                <h3 id="modalTitle" class="text-xl font-black text-slate-900">Add New Setting</h3>
-                <p id="modalSubtitle" class="text-xs text-slate-400 mt-0.5">Configure system master data</p>
-            </div>
-            <button type="button" onclick="closeSettingModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        <form action="${pageContext.request.contextPath}/admin/settings" method="post" class="p-7 space-y-4">
-            <input type="hidden" name="action" value="save">
-            <input type="hidden" id="settingId" name="id" value="">
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Setting Type <span class="text-rose-500">*</span>
-                </label>
-                <input type="text"
-                       id="settingTypeInput"
-                       name="type"
-                       required
-                       placeholder="e.g. role, category, payment_method"
-                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Setting Code <span class="text-rose-500">*</span>
-                </label>
-                <input type="text"
-                       id="settingCodeInput"
-                       name="code"
-                       required
-                       placeholder="e.g. ROLE_ASSISTANT, web_security"
-                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition font-mono">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Setting Name <span class="text-rose-500">*</span>
-                </label>
-                <input type="text"
-                       id="settingNameInput"
-                       name="name"
-                       required
-                       placeholder="e.g. Teaching Assistant"
-                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                        Display Order
-                    </label>
-                    <input type="number"
-                           id="settingOrderInput"
-                           name="sortOrder"
-                           value="1"
-                           min="0"
-                           class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                        Status
-                    </label>
-                    <select id="settingStatusInput"
-                            name="status"
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-pointer">
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
-                    Description
-                </label>
-                <textarea id="settingDescriptionInput"
-                          name="description"
-                          rows="3"
-                          placeholder="Optional notes or description..."
-                          class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-                <button type="button"
-                        onclick="closeSettingModal()"
-                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="px-6 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm transition cursor-pointer">
-                    Save Setting
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    const modal = document.getElementById('settingModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalSubtitle = document.getElementById('modalSubtitle');
-    const settingId = document.getElementById('settingId');
-    const settingTypeInput = document.getElementById('settingTypeInput');
-    const settingCodeInput = document.getElementById('settingCodeInput');
-    const settingNameInput = document.getElementById('settingNameInput');
-    const settingOrderInput = document.getElementById('settingOrderInput');
-    const settingStatusInput = document.getElementById('settingStatusInput');
-    const settingDescriptionInput = document.getElementById('settingDescriptionInput');
-
-    function openCreateModal() {
-        modalTitle.innerText = "Add New Setting";
-        modalSubtitle.innerText = "Add a new system configuration item";
-        settingId.value = "";
-        settingTypeInput.value = "";
-        settingCodeInput.value = "";
-        settingNameInput.value = "";
-        settingOrderInput.value = "1";
-        settingStatusInput.value = "true";
-        settingDescriptionInput.value = "";
-        modal.classList.remove('hidden');
-    }
-
-    function openEditModal(id) {
-        fetch('${pageContext.request.contextPath}/admin/settings?action=get-json&id=' + encodeURIComponent(id))
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Could not find setting item.');
-                    return;
-                }
-                modalTitle.innerText = "Edit Setting";
-                modalSubtitle.innerText = "Update configuration: " + data.name;
-                settingId.value = data.id || "";
-                settingTypeInput.value = data.type || "";
-                settingCodeInput.value = data.code || "";
-                settingNameInput.value = data.name || "";
-                settingOrderInput.value = data.sortOrder != null ? data.sortOrder : "1";
-                settingStatusInput.value = data.status ? "true" : "false";
-                settingDescriptionInput.value = data.description || "";
-                modal.classList.remove('hidden');
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error loading setting data.');
-            });
-    }
-
-    function closeSettingModal() {
-        modal.classList.add('hidden');
-    }
-
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) closeSettingModal();
-    });
-</script>
 
 <jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

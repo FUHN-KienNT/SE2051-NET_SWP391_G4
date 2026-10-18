@@ -293,4 +293,50 @@ public class LessonDAO {
         }
         return l;
     }
+
+    public int countCoursesAwaitingReview() {
+        String sql = "SELECT COUNT(DISTINCT m.course_id) FROM lesson l " +
+                     "JOIN module m ON l.module_id = m.id " +
+                     "WHERE l.status = 'draft'";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in LessonDAO.countCoursesAwaitingReview: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> findCoursesAwaitingReview(int limit) {
+        List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> list = new ArrayList<>();
+        String sql = "SELECT c.id as course_id, c.title as course_title, s.name as category_name, " +
+                     "u.username as expert_name, COUNT(l.id) as pending_count " +
+                     "FROM course c " +
+                     "JOIN module m ON m.course_id = c.id " +
+                     "JOIN lesson l ON l.module_id = m.id " +
+                     "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
+                     "LEFT JOIN setting s ON c.category_id = s.id " +
+                     "WHERE l.status = 'draft' " +
+                     "GROUP BY c.id, c.title, s.name, u.username " +
+                     "ORDER BY pending_count DESC, c.title ASC LIMIT ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem(
+                            (UUID) rs.getObject("course_id"),
+                            rs.getString("course_title"),
+                            rs.getString("category_name"),
+                            rs.getString("expert_name"),
+                            rs.getInt("pending_count")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in LessonDAO.findCoursesAwaitingReview: " + e.getMessage(), e);
+        }
+        return list;
+    }
 }

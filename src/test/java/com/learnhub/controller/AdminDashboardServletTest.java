@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdminDashboardServletTest {
     @Test
     void managerHasDedicatedServletUrl() {
-        WebServlet mapping = AdminDashboardServlet.class.getAnnotation(WebServlet.class);
+        WebServlet mapping = ManagerDashboardServlet.class.getAnnotation(WebServlet.class);
         assertTrue(Arrays.asList(mapping.urlPatterns()).contains("/manager/dashboard"));
     }
 
@@ -33,7 +33,7 @@ class AdminDashboardServletTest {
     @Test
     void adminCannotOpenManagerDashboard() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.ADMIN, "/manager/dashboard");
-        new AdminDashboardServlet().doGet(exchange.request, exchange.response);
+        new ManagerDashboardServlet().doGet(exchange.request, exchange.response);
         assertEquals(HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
     }
 

@@ -1,5 +1,6 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dto.DashboardDTO;
 import com.learnhub.entity.User;
 import com.learnhub.service.DashboardService;
@@ -20,9 +21,9 @@ import java.io.IOException;
  * - filterMetricsByDateRange()  — accepts ?dateRange=today|week|month
  * - viewRecentSystemLogs()      — passes recent audit_log entries to view
  *
- * URLs: /admin/dashboard (Admin), /manager/dashboard (Manager)
+ * URLs: /admin/dashboard
  */
-@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard", "/manager/dashboard"})
+@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
     private final DashboardService dashboardService = new DashboardService();
@@ -39,14 +40,29 @@ public class AdminDashboardServlet extends HttpServlet {
         }
 
         User currentUser = (User) session.getAttribute("currentUser");
-        String roleCode = currentUser.getRoleCode();
-        boolean manager = "ROLE_MANAGER".equalsIgnoreCase(roleCode);
-        boolean managerPage = "/manager/dashboard".equals(req.getServletPath());
-        if (!managerPage && manager) {
+        String roleCode = currentUser != null ? currentUser.getRoleCode() : null;
+        String userRole = (String) session.getAttribute("userRole");
+        String roleName = currentUser != null ? currentUser.getRoleName() : "";
+
+        boolean isManager = AppConstants.Role.MANAGER.equalsIgnoreCase(roleCode)
+                || "ROLE_MANAGER".equalsIgnoreCase(userRole)
+                || "manager".equalsIgnoreCase(userRole)
+                || "manager".equalsIgnoreCase(roleCode)
+                || "Manager".equalsIgnoreCase(roleName);
+
+        if (isManager) {
             resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
             return;
         }
-        if (managerPage ? !manager : !"ROLE_ADMIN".equalsIgnoreCase(roleCode)) {
+
+        boolean isAuthorized = AppConstants.Role.ADMIN.equalsIgnoreCase(roleCode)
+                || "ROLE_ADMIN".equalsIgnoreCase(userRole)
+                || "admin".equalsIgnoreCase(userRole)
+                || "admin".equalsIgnoreCase(roleCode)
+                || "Administrator".equalsIgnoreCase(roleName)
+                || "Admin".equalsIgnoreCase(roleName);
+
+        if (!isAuthorized) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -62,8 +78,7 @@ public class AdminDashboardServlet extends HttpServlet {
 
         // ── Forward to JSP ────────────────────────────────────────────────────
         req.setAttribute("dashboard", dashboard);
-        req.setAttribute("pageTitle", managerPage
-                ? "Manager dashboard – LearnHub" : "Admin dashboard – LearnHub");
+        req.setAttribute("pageTitle", "Admin dashboard – LearnHub");
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
     }
 }

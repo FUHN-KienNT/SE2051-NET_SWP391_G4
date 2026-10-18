@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * - findById()
  * - findByCourseId()
  * - save()
- * - delete()
+ * - changeAvailability()
  * - updateOrderIndex()
  */
 public class LessonDAO {
@@ -26,7 +26,7 @@ public class LessonDAO {
     public List<Lesson> findByModuleId(UUID moduleId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "WHERE l.module_id = ? ORDER BY l.order_index ASC";
@@ -47,7 +47,7 @@ public class LessonDAO {
     public Lesson findById(UUID lessonId) {
         if (lessonId == null) return null;
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "WHERE l.id = ?";
@@ -68,7 +68,7 @@ public class LessonDAO {
     public List<Lesson> findByCourseId(UUID courseId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "WHERE m.course_id = ? ORDER BY m.order_index ASC, l.order_index ASC";
@@ -99,7 +99,9 @@ public class LessonDAO {
             return false;
         }
         String lockSql = "SELECT id FROM module WHERE id = ? FOR UPDATE";
-        String insertSql = "INSERT INTO lesson " + "(id, module_id, title, content, order_index, " + "created_at, updated_at) " + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, " + "NOW(), NOW())";
+        String insertSql = "INSERT INTO lesson "
+                + "(id, module_id, title, content, order_index, duration_minutes, status, created_at, updated_at) "
+                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -126,6 +128,8 @@ public class LessonDAO {
                     ps.setString(3, lesson.getTitle());
                     ps.setString(4, lesson.getContent());
                     ps.setInt(5, lesson.getOrderIndex());
+                    ps.setObject(6, lesson.getDurationMinutes(), Types.INTEGER);
+                    ps.setString(7, lesson.getPublicationStatus());
                     if (ps.executeUpdate() != 1) {
                         throw new SQLException(
                                 "Lesson insert did not succeed."
@@ -178,10 +182,12 @@ public class LessonDAO {
                     throw new SQLException("Order index is outside the module.");
                 target.add(lesson.getOrderIndex() - 1, lesson.getId());
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
+                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
                     ps.setObject(1, newModule); ps.setString(2, lesson.getTitle());
                     ps.setString(3, lesson.getContent()); ps.setInt(4, lesson.getOrderIndex());
-                    ps.setObject(5, lesson.getId()); ps.setObject(6, oldModule);
+                    ps.setObject(5, lesson.getDurationMinutes(), Types.INTEGER);
+                    ps.setString(6, lesson.getPublicationStatus());
+                    ps.setObject(7, lesson.getId()); ps.setObject(8, oldModule);
                     if (ps.executeUpdate() != 1) throw new SQLException("Lesson update failed.");
                 }
                 if (!oldModule.equals(newModule)) writeLessonOrder(conn, oldModule, source);
@@ -220,80 +226,23 @@ public class LessonDAO {
         }
     }
 
-    public void delete(UUID lessonId) {
-        if (lessonId == null) return;
-        String lockSql = """
-            SELECT m.id
-            FROM module m
-            WHERE m.id = (
-                SELECT module_id FROM lesson WHERE id = ?
-            )
-            FOR UPDATE
-            """;
-        String deleteProgressSql = "DELETE FROM learning_process WHERE lesson_id = ?";
-        String deleteSql = "DELETE FROM lesson WHERE id = ? AND module_id = ?";
-        String reorderSql = """
-            WITH ordered_lessons AS (
-                SELECT id,
-                       ROW_NUMBER() OVER (
-                           ORDER BY order_index, created_at, id
-                       )::INTEGER AS new_order
-                FROM lesson
-                WHERE module_id = ?
-            )
-            UPDATE lesson l
-            SET order_index = ordered_lessons.new_order,
-                updated_at = NOW()
-            FROM ordered_lessons
-            WHERE l.id = ordered_lessons.id
-            """;
-        try (Connection conn = DbConnection.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                UUID moduleId;
-                // Find and lock the module containing the lesson.
-                try (PreparedStatement ps = conn.prepareStatement(lockSql)) {
-                    ps.setObject(1, lessonId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (!rs.next()) {
-                            conn.rollback();
-                            return;
-                        }
-                        moduleId = (UUID) rs.getObject("id");
-                    }
-                }
-                // Remove learning progress linked to the deleted lesson.
-                try (PreparedStatement ps =
-                             conn.prepareStatement(deleteProgressSql)) {
-                    ps.setObject(1, lessonId);
-                    ps.executeUpdate();
-                }
-                // Delete the selected lesson.
-                try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
-                    ps.setObject(1, lessonId);
-                    ps.setObject(2, moduleId);
-                    if (ps.executeUpdate() != 1) {
-                        conn.rollback();
-                        return;
-                    }
-                }
-                // Renumber the remaining lessons in this module.
-                try (PreparedStatement ps = conn.prepareStatement(reorderSql)) {
-                    ps.setObject(1, moduleId);
-                    ps.executeUpdate();
-                }
-                conn.commit();
-            } catch (SQLException e) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rollbackError) {
-                    e.addSuppressed(rollbackError);
-                }
-                throw e;
-            }
+    public boolean changeAvailability(UUID expertId, UUID courseId, UUID lessonId,
+                                      Timestamp expectedUpdatedAt, String expectedStatus, String targetStatus) {
+        String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
+                + "WHERE id=? AND status=? AND updated_at=? "
+                + "AND module_id IN (SELECT m.id FROM module m JOIN course c ON c.id=m.course_id "
+                + "WHERE c.id=? AND c.expert_id=?)";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, targetStatus);
+            ps.setObject(2, lessonId);
+            ps.setString(3, expectedStatus);
+            ps.setTimestamp(4, expectedUpdatedAt);
+            ps.setObject(5, courseId);
+            ps.setObject(6, expertId);
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error deleting and reordering lessons", e);
-            throw new IllegalStateException("Cannot delete lesson", e);
+            throw new IllegalStateException("Cannot change lesson availability.", e);
         }
     }
 
@@ -309,6 +258,23 @@ public class LessonDAO {
         }
     }
 
+    public boolean reviewPublication(UUID courseId, UUID lessonId,
+                                     Timestamp expectedUpdatedAt, String status) {
+        String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
+                + "WHERE id=? AND status='draft' AND updated_at=? "
+                + "AND module_id IN (SELECT id FROM module WHERE course_id=?)";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setObject(2, lessonId);
+            ps.setTimestamp(3, expectedUpdatedAt);
+            ps.setObject(4, courseId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot save lesson review.", e);
+        }
+    }
+
     private Lesson mapResultSetToLesson(ResultSet rs) throws SQLException {
         Lesson l = new Lesson();
         l.setId((UUID) rs.getObject("id"));
@@ -316,6 +282,8 @@ public class LessonDAO {
         l.setTitle(rs.getString("title"));
         l.setContent(rs.getString("content"));
         l.setOrderIndex(rs.getInt("order_index"));
+        l.setDurationMinutes((Integer) rs.getObject("duration_minutes"));
+        l.setPublicationStatus(rs.getString("status"));
         l.setCreatedAt(rs.getTimestamp("created_at"));
         l.setUpdatedAt(rs.getTimestamp("updated_at"));
         try {

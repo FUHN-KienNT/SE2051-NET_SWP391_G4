@@ -127,7 +127,7 @@ public class CourseDAO {
 
         String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at " +
                            "FROM module WHERE course_id = ? ORDER BY order_index ASC";
-        String lessonSql = "SELECT id, module_id, title, content, order_index, created_at, updated_at " +
+        String lessonSql = "SELECT id, module_id, title, content, order_index, duration_minutes, status, created_at, updated_at " +
                            "FROM lesson WHERE module_id = ? ORDER BY order_index ASC";
 
         List<Module> modules = new ArrayList<>();
@@ -156,6 +156,8 @@ public class CourseDAO {
                                 l.setTitle(lRs.getString("title"));
                                 l.setContent(lRs.getString("content"));
                                 l.setOrderIndex(lRs.getInt("order_index"));
+                                l.setDurationMinutes((Integer) lRs.getObject("duration_minutes"));
+                                l.setPublicationStatus(lRs.getString("status"));
                                 l.setCreatedAt(lRs.getTimestamp("created_at"));
                                 l.setUpdatedAt(lRs.getTimestamp("updated_at"));
                                 l.setCourseId(courseId);

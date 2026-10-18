@@ -11,6 +11,8 @@ public class LessonDTO implements Serializable {
     private String title;
     private String content;
     private int orderIndex;
+    private Integer durationMinutes;
+    private String publicationStatus = "draft";
     private String materialUrl;
     private String status;
 
@@ -39,6 +41,12 @@ public class LessonDTO implements Serializable {
 
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
+
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+
+    public String getPublicationStatus() { return publicationStatus; }
+    public void setPublicationStatus(String publicationStatus) { this.publicationStatus = publicationStatus; }
 
     public String getMaterialUrl() { return materialUrl; }
     public void setMaterialUrl(String materialUrl) { this.materialUrl = materialUrl; }

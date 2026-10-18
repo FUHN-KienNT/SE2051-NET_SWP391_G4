@@ -87,7 +87,7 @@ public class LearningProcessServlet extends HttpServlet {
                 learningService.findRegistration(user.getId(), courseId);
 
         Course course =
-                courseService.getCourseDetailWithCurriculum(courseId);
+                courseService.getPublishedCourseCurriculum(courseId);
 
         if (!learningService.canStudy(registration, course, lessonId)) {
             resp.sendError(
@@ -187,7 +187,7 @@ public class LearningProcessServlet extends HttpServlet {
                 learningService.findRegistration(user.getId(), courseId);
 
         Course course =
-                courseService.getCourseDetailWithCurriculum(courseId);
+                courseService.getPublishedCourseCurriculum(courseId);
 
         if (!learningService.canStudy(registration, course, lessonId)
                 || !registration.getId().equals(registrationId)) {

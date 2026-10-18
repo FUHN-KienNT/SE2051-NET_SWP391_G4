@@ -111,7 +111,7 @@ public class QuizServlet extends HttpServlet {
                     // Khóa học của quiz suy ra từ module (không phụ thuộc courseId trên URL)
                     Module module = moduleDAO.findById(quiz.getModuleId());
                     Course course = module != null
-                            ? courseService.getCourseDetailWithCurriculum(module.getCourseId()) : null;
+                            ? courseService.getPublishedCourseCurriculum(module.getCourseId()) : null;
                     Registration registration = course != null
                             ? learningService.findRegistration(user.getId(), course.getId()) : null;
 

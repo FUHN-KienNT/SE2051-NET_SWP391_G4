@@ -39,6 +39,7 @@
             </c:if>
             <form action="${pageContext.request.contextPath}/lessons/manage" method="POST" class="space-y-6 w-full">
                 <input type="hidden" name="action" value="save">
+                <input type="hidden" name="csrfToken" value="${sessionScope.lessonActionToken}">
                 <input type="hidden" name="courseId" value="${course.id}">
                 <input type="hidden" name="id" value="${lesson != null ? lesson.id : ''}">
 
@@ -79,6 +80,26 @@
                     data-error="${fn:escapeXml(fieldErrors.content)}"
                               placeholder="Enter lesson content (text, or a video/document link)..."
                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">${lesson != null ? lesson.content : ''}</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
+                            Estimated Duration (minutes) <span class="text-status-danger">*</span>
+                        </label>
+                        <input type="number" id="durationMinutes" name="durationMinutes" min="1" max="2147483647" step="1" required
+                               data-error="${fn:escapeXml(fieldErrors.durationMinutes)}"
+                               value="${lesson != null ? lesson.durationMinutes : ''}"
+                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">
+                    </div>
+                    <div>
+                        <label for="publicationStatus" class="block text-sm font-semibold text-text-primary mb-2">
+                            Status
+                        </label>
+                        <input type="text" id="publicationStatus" readonly
+                               value="${lesson == null ? 'Draft' : fn:escapeXml(lesson.publicationStatus)}"
+                               class="w-full px-4 py-2.5 bg-surface border border-border-default rounded-lg text-sm text-text-secondary">
+                    </div>
                 </div>
 
                 <!-- Field 4: Order Index -->

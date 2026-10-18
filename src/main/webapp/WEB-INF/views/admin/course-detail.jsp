@@ -276,11 +276,22 @@
                                     <p class="text-xs text-slate-500 mt-0.5">Inspect and organize course sections, lesson lists, and attached quiz assessments</p>
                                 </div>
                                 <div class="flex items-center gap-2">
+                                    <c:choose>
+                                        <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
+                                            <a href="${pageContext.request.contextPath}/admin/lesson-review?courseId=${course.id}"
+                                               class="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                                                <span>Review Lessons</span>
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise>
                                     <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${course.id}"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition">
                                         <i class="fa-solid fa-book-open text-xs"></i>
                                         <span>Manage Lessons</span>
                                     </a>
+                                        </c:otherwise>
+                                    </c:choose>
                                     <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${course.id}"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-xl transition">
                                         <i class="fa-solid fa-list-check text-xs"></i>
@@ -299,25 +310,25 @@
                                         </div>
                                     </c:when>
                                     <c:otherwise>
-                                        <c:forEach var="mod" items="${course.modules}" varStatus="status">
+                                        <c:forEach var="courseModule" items="${course.modules}" varStatus="status">
                                             <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-4">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">
                                                             ${status.count}
                                                         </span>
-                                                        <h3 class="text-xs font-bold text-slate-900">${mod.title}</h3>
+                                                        <h3 class="text-xs font-bold text-slate-900">${courseModule.title}</h3>
                                                     </div>
                                                     <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-3">
-                                                        <span><i class="fa-solid fa-play text-slate-400 mr-1 text-[10px]"></i>${fn:length(mod.lessons)} lessons</span>
-                                                        <span><i class="fa-solid fa-clipboard-question text-slate-400 mr-1 text-[10px]"></i>${fn:length(mod.quizzes)} quizzes</span>
+                                                        <span><i class="fa-solid fa-play text-slate-400 mr-1 text-[10px]"></i>${fn:length(courseModule.lessons)} lessons</span>
+                                                        <span><i class="fa-solid fa-clipboard-question text-slate-400 mr-1 text-[10px]"></i>${fn:length(courseModule.quizzes)} quizzes</span>
                                                     </div>
                                                 </div>
 
                                                 <!-- Lessons in module -->
-                                                <c:if test="${not empty mod.lessons}">
+                                                <c:if test="${not empty courseModule.lessons}">
                                                     <div class="mt-3 pl-8 space-y-1.5 border-t border-slate-200/60 pt-2.5">
-                                                        <c:forEach var="les" items="${mod.lessons}">
+                                                        <c:forEach var="les" items="${courseModule.lessons}">
                                                             <div class="flex items-center justify-between text-xs text-slate-600 py-1 hover:text-slate-900">
                                                                 <span class="flex items-center gap-2">
                                                                     <i class="fa-regular fa-circle-play text-[11px] text-slate-400"></i>
@@ -330,9 +341,9 @@
                                                 </c:if>
 
                                                 <!-- Quizzes in module -->
-                                                <c:if test="${not empty mod.quizzes}">
+                                                <c:if test="${not empty courseModule.quizzes}">
                                                     <div class="mt-2 pl-8 space-y-1 border-t border-slate-200/60 pt-2">
-                                                        <c:forEach var="qz" items="${mod.quizzes}">
+                                                        <c:forEach var="qz" items="${courseModule.quizzes}">
                                                             <div class="flex items-center justify-between text-xs text-purple-700 py-0.5">
                                                                 <span class="flex items-center gap-2 font-medium">
                                                                     <i class="fa-solid fa-trophy text-[11px] text-purple-500"></i>

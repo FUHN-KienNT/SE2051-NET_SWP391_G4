@@ -12,6 +12,8 @@ public class Lesson implements Serializable {
     private String title;
     private String content;
     private int orderIndex;
+    private Integer durationMinutes;
+    private String publicationStatus = "draft";
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -47,6 +49,12 @@ public class Lesson implements Serializable {
 
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
+
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+
+    public String getPublicationStatus() { return publicationStatus; }
+    public void setPublicationStatus(String publicationStatus) { this.publicationStatus = publicationStatus; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

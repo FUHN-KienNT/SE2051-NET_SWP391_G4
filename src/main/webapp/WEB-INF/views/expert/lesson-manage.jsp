@@ -42,6 +42,15 @@
                                 <span>Create Lesson</span>
                             </a>
                         </div>
+            <c:if test="${param.submitted eq 'true'}">
+                <p role="status" class="mb-4 text-sm text-status-success">Lesson submitted for Manager review.</p>
+            </c:if>
+            <c:if test="${param.availability eq 'inactive'}">
+                <p role="status" class="mb-4 text-sm text-status-success">Lesson set to inactive.</p>
+            </c:if>
+            <c:if test="${param.availability eq 'active'}">
+                <p role="status" class="mb-4 text-sm text-status-success">Lesson set to active.</p>
+            </c:if>
             <div class="overflow-x-auto border border-border-default rounded-xl">
                 <table class="w-full text-left text-sm text-text-secondary">
                     <thead class="bg-surface text-slate-700 text-xs font-bold border-b border-border-default">
@@ -49,6 +58,8 @@
                             <th class="px-5 py-4 w-14 text-center">#</th>
                             <th class="px-5 py-4 font-bold text-text-primary">Module</th>
                             <th class="px-5 py-4 font-bold text-text-primary">Lesson Title</th>
+                            <th class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">Status</th>
+                            <th class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">Duration</th>
                             <th class="px-5 py-4 text-center font-bold text-text-primary w-36">Action</th>
                         </tr>
                     </thead>
@@ -73,24 +84,39 @@
                                                             <span>${les.title}</span>
                                                         </div>
                                                     </td>
+                                                    <td class="px-5 py-4 text-center whitespace-nowrap">
+                                                        <span class="text-xs font-semibold capitalize ${les.publicationStatus eq 'published' ? 'text-status-success' : les.publicationStatus eq 'draft' ? 'text-status-warning' : les.publicationStatus eq 'decline' ? 'text-status-danger' : 'text-text-secondary'}">
+                                                            <c:out value="${les.publicationStatus}" />
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-5 py-4 text-center whitespace-nowrap text-xs">
+                                                        <c:choose>
+                                                            <c:when test="${not empty les.durationMinutes}">${les.durationMinutes} min</c:when>
+                                                            <c:otherwise>Not set</c:otherwise>
+                                                        </c:choose>
+                                                    </td>
                                                     <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
                                                         <a href="${pageContext.request.contextPath}/lessons/manage?action=edit&id=${les.id}&courseId=${course.id}"
                                                            class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
+                                                       <c:if test="${les.publicationStatus eq 'published' || les.publicationStatus eq 'archived'}">
                                                        <form action="${pageContext.request.contextPath}/lessons/manage"
                                                              method="post" class="inline-block">
-                                                           <input type="hidden" name="action" value="delete">
+                                                           <input type="hidden" name="action" value="${les.publicationStatus eq 'archived' ? 'activate' : 'deactivate'}">
                                                            <input type="hidden" name="id" value="${les.id}">
                                                            <input type="hidden" name="courseId" value="${course.id}">
-                                                           <input type="hidden" name="csrfToken" value="${sessionScope.lessonDeleteToken}">
+                                                           <input type="hidden" name="csrfToken" value="${sessionScope.lessonActionToken}">
+                                                           <input type="hidden" name="updatedAt" value="${les.updatedAt}">
                                                            <button type="submit"
-                                                                   class="inline-flex rounded-lg px-3 py-2 text-status-danger hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-brand-700"
-                                                                   data-confirm="Bạn có chắc chắn muốn xóa bài giảng này không? Hành động này không thể hoàn tác."
-                                                                   data-confirm-title="Xóa Bài Giảng"
-                                                                   data-confirm-btn="Xóa Bài Giảng"
-                                                                   data-confirm-type="danger">
-                                                               Delete
+                                                                   class="inline-flex items-center gap-2 rounded-lg px-3 py-2 ${les.publicationStatus eq 'archived' ? 'text-brand-700 hover:bg-brand-50' : 'text-status-danger hover:bg-surface'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+                                                                   data-confirm="${les.publicationStatus eq 'archived' ? 'Set this lesson active again?' : 'Set this lesson inactive? The lesson and learning progress will be preserved.'}"
+                                                                   data-confirm-title="${les.publicationStatus eq 'archived' ? 'Active Lesson' : 'Inactive Lesson'}"
+                                                                   data-confirm-type="${les.publicationStatus eq 'archived' ? 'success' : 'danger'}"
+                                                                   data-confirm-btn="${les.publicationStatus eq 'archived' ? 'Active' : 'Inactive'}">
+                                                               <i class="fa-solid ${les.publicationStatus eq 'archived' ? 'fa-toggle-on' : 'fa-toggle-off'}" aria-hidden="true"></i>
+                                                               ${les.publicationStatus eq 'archived' ? 'Active' : 'Inactive'}
                                                            </button>
                                                        </form>
+                                                       </c:if>
                                                     </td>
                                                 </tr>
                                                 <c:set var="globalIndex" value="${globalIndex + 1}" />
@@ -100,7 +126,7 @@
                                             <tr class="bg-surface/40">
                                                 <td class="px-5 py-3.5 text-center text-slate-300 text-xs">-</td>
                                                 <td class="px-5 py-3.5 font-semibold text-text-secondary text-xs">${module.title}</td>
-                                                <td colspan="2" class="px-5 py-3.5 text-xs text-text-secondary italic">
+                                                <td colspan="4" class="px-5 py-3.5 text-xs text-text-secondary italic">
                                                     Chưa có bài học nào trong chương này
                                                 </td>
                                             </tr>
@@ -110,7 +136,7 @@
                             </c:when>
                             <c:otherwise>
                                 <tr>
-                                    <td colspan="4" class="px-6 py-12 text-center text-text-secondary text-sm">
+                                    <td colspan="6" class="px-6 py-12 text-center text-text-secondary text-sm">
                                         <i class="fa-regular fa-folder-open text-4xl mb-3 block text-slate-300"></i>
                                         Khóa học này hiện chưa có module hoặc bài giảng nào.
                                     </td>

@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
 
 /**
  * Servlet handling Lesson administration & material uploads.
@@ -46,9 +47,9 @@ public class LessonServlet extends HttpServlet {
              return;
          }
          UUID expertId = user.getId();
-         if (req.getSession(false).getAttribute("lessonDeleteToken") == null) {
+         if (req.getSession(false).getAttribute("lessonActionToken") == null) {
              req.getSession(false).setAttribute(
-                     "lessonDeleteToken", UUID.randomUUID().toString());
+                     "lessonActionToken", UUID.randomUUID().toString());
          }
         String courseIdStr = req.getParameter("courseId");
         if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
@@ -83,6 +84,10 @@ public class LessonServlet extends HttpServlet {
             return;
         }
          if ("delete".equalsIgnoreCase(action)) {
+             resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer available.");
+             return;
+         }
+         if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
              resp.setHeader("Allow", "POST");
              resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
              return;
@@ -119,7 +124,11 @@ public class LessonServlet extends HttpServlet {
         UUID expertId = user.getId();
         String action = req.getParameter("action");
         if ("delete".equalsIgnoreCase(action)) {
-            Object token = req.getSession(false).getAttribute("lessonDeleteToken");
+            resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer available.");
+            return;
+        }
+        if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
+            Object token = req.getSession(false).getAttribute("lessonActionToken");
             if (!(token instanceof String expected)
                     || !expected.equals(req.getParameter("csrfToken"))) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -127,23 +136,30 @@ public class LessonServlet extends HttpServlet {
             }
             UUID lessonId;
             UUID courseId;
+            Timestamp updatedAt;
             try {
                 lessonId = UUID.fromString(req.getParameter("id"));
                 courseId = UUID.fromString(req.getParameter("courseId"));
+                updatedAt = Timestamp.valueOf(req.getParameter("updatedAt"));
             } catch (IllegalArgumentException | NullPointerException e) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
             try {
-                lessonService.requireCourseAccess(expertId, courseId);
-                lessonService.deleteLesson(expertId, lessonId);
+                boolean changed = lessonService.changeLessonAvailability(expertId, courseId, lessonId,
+                        updatedAt, "activate".equalsIgnoreCase(action));
+                if (!changed) {
+                    resp.sendError(HttpServletResponse.SC_CONFLICT, "Lesson status has changed. Reload and try again.");
+                    return;
+                }
             } catch (SecurityException e) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
             } catch (IllegalStateException e) {
-                throw new ServletException("Cannot delete lesson.", e);
+                throw new ServletException("Cannot change lesson availability.", e);
             }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + courseId);
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + courseId
+                    + "&availability=" + ("activate".equalsIgnoreCase(action) ? "active" : "inactive"));
             return;
         }
         if ("upload".equalsIgnoreCase(action)) {
@@ -166,12 +182,24 @@ public class LessonServlet extends HttpServlet {
             return;
         }
 
+        Object saveToken = req.getSession(false).getAttribute("lessonActionToken");
+        if (!(saveToken instanceof String expected)
+                || !expected.equals(req.getParameter("csrfToken"))) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         String idStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
         String title = req.getParameter("title");
         String content = req.getParameter("content");
         String orderIndexStr = req.getParameter("orderIndex");
+        String durationValue = req.getParameter("durationMinutes");
+        Integer durationMinutes = null;
+        try {
+            durationMinutes = Integer.valueOf(durationValue == null ? "" : durationValue.strip());
+        } catch (NumberFormatException ignored) {
+        }
         int orderIndex = 0;
         try {
             orderIndex = Integer.parseInt(orderIndexStr == null ? "" : orderIndexStr.trim());
@@ -185,6 +213,8 @@ public class LessonServlet extends HttpServlet {
             } catch (IllegalArgumentException ignored) {
             }
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
+            dto.setDurationMinutes(durationMinutes);
+            dto.setPublicationStatus("draft");
             Map<String, String> errors = lessonService.validateLesson(expertId, dto);
             boolean saved = errors.isEmpty() && lessonService.saveLesson(expertId, dto);
             if (!saved) {
@@ -204,7 +234,7 @@ public class LessonServlet extends HttpServlet {
                         .forward(req, resp);
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + (courseIdStr != null ? courseIdStr : ""));
+            resp.sendRedirect(req.getContextPath() + "/lessons/manage?submitted=true&courseId=" + (courseIdStr != null ? courseIdStr : ""));
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;

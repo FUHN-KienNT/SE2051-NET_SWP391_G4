@@ -102,7 +102,7 @@ public class EnrollmentServlet extends HttpServlet {
         }
 
         Course course =
-                courseService.getCourseDetailWithCurriculum(courseId);
+                courseService.getPublishedCourseCurriculum(courseId);
 
         if (course == null) {
             resp.sendRedirect(req.getContextPath() + "/courses");

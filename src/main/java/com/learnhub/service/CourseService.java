@@ -80,6 +80,21 @@ public class CourseService {
         return c;
     }
 
+    public Course getPublishedCourseCurriculum(UUID courseId) {
+        Course course = getCourseDetailWithCurriculum(courseId);
+        if (course != null && course.getModules() != null) {
+            int lessonCount = 0;
+            for (com.learnhub.entity.Module module : course.getModules()) {
+                module.setLessons(module.getLessons().stream()
+                        .filter(lesson -> "published".equals(lesson.getPublicationStatus()))
+                        .toList());
+                lessonCount += module.getLessons().size();
+            }
+            course.setLessonCount(lessonCount);
+        }
+        return course;
+    }
+
     public Registration processCourseRegistration(UUID userId, UUID courseId, UUID paymentMethodId) {
         Course course = courseDAO.findById(courseId);
         if (course == null) {

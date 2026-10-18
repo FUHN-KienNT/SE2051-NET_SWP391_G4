@@ -7,6 +7,8 @@ import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Module;
 import com.learnhub.entity.Lesson;
+import com.learnhub.entity.User;
+import com.learnhub.constant.AppConstants;
 import com.learnhub.util.CloudinaryClient;
 
 import java.io.InputStream;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.sql.Timestamp;
 
 /**
  * Service handling Lesson management and materials upload.
@@ -21,14 +24,14 @@ import java.util.LinkedHashMap;
  * - getLessons()
  * - getLesson()
  * - saveLesson()
- * - deleteLesson()
+ * - changeLessonAvailability()
  * - reorderLessons()
  * - attachMaterial()
  */
 public class LessonService {
     private final LessonDAO lessonDAO;
-    private final CourseDAO courseDAO = new CourseDAO();
-    private final ModuleDAO moduleDAO = new ModuleDAO();
+    private final CourseDAO courseDAO;
+    private final ModuleDAO moduleDAO;
 
     public void requireCourseAccess(UUID expertId, UUID courseId) {
         Course course = courseId == null ? null : courseDAO.findById(courseId);
@@ -56,22 +59,31 @@ public class LessonService {
     }
 
     public LessonService() {
-        this.lessonDAO = new LessonDAO();
+        this(new LessonDAO());
     }
 
     public LessonService(LessonDAO lessonDAO) {
+        this(lessonDAO, new CourseDAO(), new ModuleDAO());
+    }
+
+    public LessonService(LessonDAO lessonDAO, CourseDAO courseDAO, ModuleDAO moduleDAO) {
         this.lessonDAO = lessonDAO;
+        this.courseDAO = courseDAO;
+        this.moduleDAO = moduleDAO;
     }
 
     public LessonDTO getLesson(UUID expertId, UUID lessonId) {
         Lesson l = requireLessonAccess(expertId, lessonId);
         LessonDTO dto = new LessonDTO(l.getId(), l.getModuleId(), l.getTitle(), l.getContent(), l.getOrderIndex());
         dto.setMaterialUrl(l.getMaterialUrl());
+        dto.setDurationMinutes(l.getDurationMinutes());
+        dto.setPublicationStatus(l.getPublicationStatus());
         return dto;
     }
 
     public boolean saveLesson(UUID expertId, LessonDTO dto) {
         if (dto == null) return false;
+        dto.setPublicationStatus("draft");
         if (!validateLesson(expertId, dto).isEmpty()) return false;
         requireModuleAccess(expertId, dto.getModuleId());
         if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null) {
@@ -80,16 +92,31 @@ public class LessonService {
         Lesson lesson = new Lesson(dto.getId(), dto.getModuleId(),
                 dto.getTitle(), dto.getContent(), dto.getOrderIndex());
         lesson.setMaterialUrl(dto.getMaterialUrl());
+        lesson.setDurationMinutes(dto.getDurationMinutes());
+        lesson.setPublicationStatus("draft");
         return lessonDAO.save(lesson);
     }
 
-    public void deleteLesson(UUID expertId, UUID lessonId) {
-        requireLessonAccess(expertId, lessonId);
-        lessonDAO.delete(lessonId);
+    public boolean changeLessonAvailability(UUID expertId, UUID courseId, UUID lessonId,
+                                            Timestamp expectedUpdatedAt, boolean activate) {
+        requireCourseAccess(expertId, courseId);
+        Lesson lesson = requireLessonAccess(expertId, lessonId);
+        if (!courseId.equals(lesson.getCourseId())) {
+            throw new SecurityException("Lesson does not belong to this course.");
+        }
+        if (expectedUpdatedAt == null) throw new IllegalArgumentException("Missing lesson version.");
+        String expectedStatus = activate ? "archived" : "published";
+        String targetStatus = activate ? "published" : "archived";
+        if (!expectedStatus.equals(lesson.getPublicationStatus())) return false;
+        return lessonDAO.changeAvailability(expertId, courseId, lessonId,
+                expectedUpdatedAt, expectedStatus, targetStatus);
     }
 
     public Map<String, String> validateLesson(UUID expertId, LessonDTO dto) {
         Map<String, String> errors = new LinkedHashMap<>();
+        if (dto.getDurationMinutes() == null || dto.getDurationMinutes() < 1) {
+            errors.put("durationMinutes", "Estimated duration must be a whole number of minutes greater than zero.");
+        }
         if (dto.getModuleId() == null) {
             errors.put("moduleId", "Please select a valid module.");
         } else {
@@ -122,11 +149,37 @@ public class LessonService {
         }
     }
 
+    public record LessonReviewData(Course course, List<Lesson> lessons) {}
+
+    private void requireManager(User manager) {
+        if (manager == null || !AppConstants.Role.MANAGER.equalsIgnoreCase(manager.getRoleCode())) {
+            throw new SecurityException("Manager access required.");
+        }
+    }
+
+    public LessonReviewData getLessonsForReview(User manager, UUID courseId) {
+        requireManager(manager);
+        Course course = courseDAO.findById(courseId);
+        if (course == null) throw new IllegalArgumentException("Course not found.");
+        return new LessonReviewData(course, lessonDAO.findByCourseId(courseId));
+    }
+
+    public boolean reviewLesson(User manager, UUID courseId, UUID lessonId,
+                                Timestamp expectedUpdatedAt, String decision) {
+        requireManager(manager);
+        if (courseId == null || lessonId == null || expectedUpdatedAt == null
+                || !("published".equals(decision) || "decline".equals(decision))) {
+            throw new IllegalArgumentException("Invalid lesson review.");
+        }
+        return lessonDAO.reviewPublication(courseId, lessonId, expectedUpdatedAt, decision);
+    }
+
     public String attachMaterial(UUID expertId, UUID lessonId,
                                  InputStream fileStream, String filename) {
         Lesson lesson = requireLessonAccess(expertId, lessonId);
         String secureUrl = CloudinaryClient.uploadFile(fileStream, filename);
         lesson.setMaterialUrl(secureUrl);
+        lesson.setPublicationStatus("draft");
         lessonDAO.update(lesson);
         return secureUrl;
     }

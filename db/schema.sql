@@ -171,6 +171,9 @@ CREATE TABLE lesson (
     title       VARCHAR(255) NOT NULL,
     content     TEXT,
     order_index INTEGER NOT NULL DEFAULT 0,
+    duration_minutes INTEGER CONSTRAINT ck_lesson_duration_minutes CHECK (duration_minutes > 0),
+    status      VARCHAR(20) NOT NULL DEFAULT 'draft'
+                CONSTRAINT ck_lesson_publication_status CHECK (status IN ('published', 'draft', 'archived', 'decline')),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

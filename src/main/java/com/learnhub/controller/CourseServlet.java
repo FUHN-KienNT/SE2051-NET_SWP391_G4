@@ -156,7 +156,7 @@ public class CourseServlet extends HttpServlet {
         if (idStr != null) {
             try {
                 UUID courseId = UUID.fromString(idStr);
-                Course course = courseService.getCourseDetailWithCurriculum(courseId);
+                Course course = courseService.getPublishedCourseCurriculum(courseId);
                 if (course != null) {
                     req.setAttribute("course", course);
 
@@ -227,7 +227,7 @@ public class CourseServlet extends HttpServlet {
         catch (IllegalArgumentException | NullPointerException e) { resp.sendError(400); return; }
         ContinueLearningDTO progress = learningService.findEnrolledCourse(user.getId(), courseId);
         if (progress == null) { resp.sendError(403); return; }
-        Course course = courseService.getCourseDetailWithCurriculum(courseId);
+        Course course = courseService.getPublishedCourseCurriculum(courseId);
         if (course == null) { resp.sendError(404); return; }
         req.setAttribute("course", course);
         req.setAttribute("progress", progress);

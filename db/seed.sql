@@ -211,44 +211,44 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------
 -- 5. SEED LESSON (Bài học)
 -- ---------------------------------------------------------------------
-INSERT INTO lesson (id, module_id, title, content, order_index) VALUES
+INSERT INTO lesson (status, id, module_id, title, content, order_index) VALUES
     -- Lessons cho Module 1 (Course 1)
-    ('f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 
+    ('published', 'f0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001',
      'Bài 1: Giới thiệu Kiến trúc Web & Jakarta Servlet 6.0', 
      '<h3>Nội dung bài học:</h3><p>Trong bài học này chúng ta tìm hiểu kiến trúc Client-Server, cách Tomcat 10.1 tiếp nhận và điều phối HTTP Request qua Servlet Container.</p><ul><li>Vòng đời của Servlet: init(), service(), destroy()</li><li>Phân biệt GET vs POST</li><li>Cấu hình @WebServlet annotation</li></ul>', 1),
 
-    ('f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001', 
+    ('published', 'f0000000-0000-0000-0000-000000000002', 'e0000000-0000-0000-0000-000000000001',
      'Bài 2: HttpServletRequest, HttpServletResponse & RequestDispatcher', 
      '<h3>Đọc tham số và gửi phản hồi:</h3><p>Cách lấy tham số qua <code>req.getParameter()</code>, forward yêu cầu tới trang JSP và chuyển hướng bằng <code>resp.sendRedirect()</code>.</p>', 2),
 
-    ('f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001', 
+    ('published', 'f0000000-0000-0000-0000-000000000003', 'e0000000-0000-0000-0000-000000000001',
      'Bài 3: Tích hợp HikariCP Connection Pool kết nối PostgreSQL', 
      '<h3>Tối ưu hóa kết nối CSDL:</h3><p>Cấu hình connection pool hiệu năng cao HikariCP thay thế cho việc mở Connection thủ công gây nghẽn tài nguyên server.</p>', 3),
 
     -- Lessons cho Module 2 (Course 1)
-    ('f0000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000002', 
+    ('published', 'f0000000-0000-0000-0000-000000000004', 'e0000000-0000-0000-0000-000000000002',
      'Bài 4: Giới thiệu JSP & Expression Language (EL)', 
      '<p>Cú pháp Expression Language <code>${user.username}</code> giúp truy cập thuộc tính trong requestScope, sessionScope mà không cần nhúng mã scriptlet Java phức tạp.</p>', 1),
 
-    ('f0000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000002', 
+    ('published', 'f0000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000002',
      'Bài 5: JSTL Core Tags & Render Danh sách Động', 
      '<p>Sử dụng các thẻ <code>&lt;c:forEach&gt;</code>, <code>&lt;c:if&gt;</code>, <code>&lt;c:choose&gt;</code> để duyệt danh sách khóa học và hiển thị dữ liệu bảng linh hoạt.</p>', 2),
 
     -- Lessons cho Module 3 (Course 1)
-    ('f0000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-000000000003', 
+    ('published', 'f0000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-000000000003',
      'Bài 6: Quản lý Phiên Đăng nhập với HttpSession', 
      '<p>Tạo session khi đăng nhập thành công, lưu thông tin User và vô hiệu hóa session (Logout) an toàn với <code>session.invalidate()</code>.</p>', 1),
 
-    ('f0000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000003', 
+    ('published', 'f0000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-000000000003',
      'Bài 7: Xây dựng Authorization Filter & Phân quyền RBAC', 
      '<p>Cách cấu hình Filter chặn các URL <code>/admin/*</code>, <code>/expert/*</code> và kiểm tra quyền tương ứng dựa vào Role Code.</p>', 2),
 
     -- Lessons cho Module 1 (Course 2 - PostgreSQL)
-    ('f0000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-000000000004', 
+    ('published', 'f0000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-000000000004',
      'Bài 1: Kiến trúc Lưu trữ PostgreSQL & MVCC', 
      '<p>Khái niệm Multi-Version Concurrency Control (MVCC), Vacuuming và cách PostgreSQL xử lý ghi dữ liệu đồng thời không gây lock đọc.</p>', 1),
 
-    ('f0000000-0000-0000-0000-000000000009', 'e0000000-0000-0000-0000-000000000005', 
+    ('published', 'f0000000-0000-0000-0000-000000000009', 'e0000000-0000-0000-0000-000000000005',
      'Bài 2: Tối ưu Indexing B-Tree & Phân tích Query với EXPLAIN', 
      '<p>Cách nhận biết Sequential Scan, Index Scan, Bitmap Index Scan và chiến lược tạo Composite Index tối ưu cho mệnh đề WHERE và ORDER BY.</p>', 1)
 ON CONFLICT (id) DO NOTHING;

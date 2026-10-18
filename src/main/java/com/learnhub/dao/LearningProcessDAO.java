@@ -33,7 +33,7 @@ public class LearningProcessDAO {
                         WHERE cm.course_id = c.id) AS module_count,
                        (SELECT COUNT(*) FROM lesson cl
                         JOIN module lm ON cl.module_id = lm.id
-                        WHERE lm.course_id = c.id) AS lesson_count,
+                        WHERE lm.course_id = c.id AND cl.status = 'published') AS lesson_count,
                        l.id AS lesson_id,
                        l.title AS lesson_title,
                        m.title AS module_title
@@ -47,6 +47,7 @@ public class LearningProcessDAO {
                 LEFT JOIN setting s ON s.id = c.category_id
                 WHERE r.user_id = ?
                   AND r.status = 'enrolled'
+                  AND l.status = 'published'
                   AND (COALESCE(c.price, 0) <= 0
                        OR r.payment_status = 'paid')
                   AND (lp.status IS NULL OR lp.status <> 'completed')
@@ -101,12 +102,13 @@ public class LearningProcessDAO {
                         WHERE course_id = c.id) AS module_count,
                        (SELECT COUNT(*) FROM lesson l
                         JOIN module m ON m.id = l.module_id
-                        WHERE m.course_id = c.id) AS lesson_count,
+                        WHERE m.course_id = c.id AND l.status = 'published') AS lesson_count,
                        (SELECT COUNT(*) FROM learning_process lp
                         JOIN lesson l ON l.id = lp.lesson_id
                         JOIN module m ON m.id = l.module_id
                         WHERE lp.registration_id = r.id
                           AND lp.status = 'completed'
+                          AND l.status = 'published'
                           AND m.course_id = c.id) AS completed_count,
                        first_lesson.lesson_id,
                        first_lesson.lesson_title
@@ -119,6 +121,7 @@ public class LearningProcessDAO {
                     FROM lesson l
                     JOIN module m ON m.id = l.module_id
                     WHERE m.course_id = c.id
+                      AND l.status = 'published'
                     ORDER BY m.order_index, m.id, l.order_index, l.id
                     LIMIT 1
                 ) first_lesson ON TRUE
@@ -282,8 +285,11 @@ public class LearningProcessDAO {
     public int countCompletedLessons(UUID registrationId) {
         String sql = """
                 SELECT COUNT(*)
-                FROM learning_process
-                WHERE registration_id = ? AND status = 'completed'
+                FROM learning_process lp
+                JOIN lesson l ON l.id = lp.lesson_id
+                JOIN module m ON m.id = l.module_id
+                JOIN registration r ON r.id = lp.registration_id AND r.course_id = m.course_id
+                WHERE lp.registration_id = ? AND lp.status = 'completed' AND l.status = 'published'
                 """;
 
         try (Connection conn = DbConnection.getConnection();
@@ -307,7 +313,7 @@ public class LearningProcessDAO {
                 FROM lesson l
                 JOIN module m ON l.module_id = m.id
                 JOIN registration r ON m.course_id = r.course_id
-                WHERE r.id = ?
+                WHERE r.id = ? AND l.status = 'published'
                 """;
 
         try (Connection conn = DbConnection.getConnection();
@@ -363,7 +369,7 @@ public class LearningProcessDAO {
         SELECT gen_random_uuid(), r.id, l.id, 'completed', NOW()
         FROM registration r JOIN module m ON m.course_id = r.course_id
         JOIN lesson l ON l.module_id = m.id
-        WHERE r.id = ? AND l.id = ?
+        WHERE r.id = ? AND l.id = ? AND l.status = 'published'
         ON CONFLICT (registration_id, lesson_id)
         DO UPDATE SET status = 'completed',
             completed_at = COALESCE(learning_process.completed_at, EXCLUDED.completed_at)
@@ -384,7 +390,7 @@ public class LearningProcessDAO {
         FROM registration r JOIN module m ON m.course_id = r.course_id
         JOIN lesson l ON l.module_id = m.id
         LEFT JOIN learning_process lp ON lp.lesson_id = l.id AND lp.registration_id = r.id
-        WHERE r.id = ?
+        WHERE r.id = ? AND l.status = 'published'
         """;
         try (PreparedStatement ps = conn.prepareStatement(countsSql)) {
             ps.setObject(1, registrationId);

@@ -44,7 +44,17 @@ public class LearningProcessService {
     }
 
     public ContinueLearningDTO getContinueLearning(UUID userId) {
-        return learningProcessDAO.findContinueLearning(userId);
+        ContinueLearningDTO suggestion = learningProcessDAO.findContinueLearning(userId);
+        if (suggestion != null) {
+            getStudentCourses(userId).stream()
+                    .filter(course -> course.getCourseId().equals(suggestion.getCourseId()))
+                    .findFirst().ifPresent(course -> {
+                        suggestion.setProgressPercent(course.getProgressPercent());
+                        suggestion.setLessonCount(course.getLessonCount());
+                        suggestion.setCompletedLessonCount(course.getCompletedLessonCount());
+                    });
+        }
+        return suggestion;
     }
 
     public Registration findRegistration(UUID userId, UUID courseId) {
@@ -177,7 +187,7 @@ public class LearningProcessService {
                 UUID candidate = UUID.fromString(savedLessonValue);
 
                 Course curriculum =
-                        courseService.getCourseDetailWithCurriculum(
+                        courseService.getPublishedCourseCurriculum(
                                 selected.getCourseId()
                         );
 
@@ -210,7 +220,7 @@ public class LearningProcessService {
             UUID registrationId
     ) {
         Lesson lesson = lessonDAO.findById(lessonId);
-        if (lesson == null) return null;
+        if (lesson == null || !"published".equals(lesson.getPublicationStatus())) return null;
 
         LessonDTO dto = new LessonDTO(
                 lesson.getId(),
@@ -221,6 +231,8 @@ public class LearningProcessService {
         );
 
         dto.setMaterialUrl(lesson.getMaterialUrl());
+        dto.setDurationMinutes(lesson.getDurationMinutes());
+        dto.setPublicationStatus(lesson.getPublicationStatus());
 
         LearningProcess process =
                 learningProcessDAO.findByRegistrationAndLesson(
@@ -264,7 +276,8 @@ public class LearningProcessService {
         if (!isAccessibleRegistration(registration, course)) return false;
         return course.getModules().stream()
                 .flatMap(module -> module.getLessons().stream())
-                .anyMatch(lesson -> lesson.getId().equals(lessonId));
+                .anyMatch(lesson -> lesson.getId().equals(lessonId)
+                        && "published".equals(lesson.getPublicationStatus()));
     }
 
     public void markLessonComplete(UUID registrationId, UUID lessonId) {

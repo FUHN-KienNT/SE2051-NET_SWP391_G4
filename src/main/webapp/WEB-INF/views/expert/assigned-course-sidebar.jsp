@@ -4,6 +4,9 @@
 <section aria-labelledby="assignedCoursesHeading" class="mt-6 border-t border-border-default pt-4">
     <h2 id="assignedCoursesHeading" class="px-2 mb-3 text-sm font-bold text-text-primary">Assigned Courses</h2>
     <form method="GET" action="${pageContext.request.contextPath}/lessons/manage" role="search" aria-label="Search assigned courses" class="flex gap-2 mb-3">
+        <input type="hidden" name="sort" value="${lessonSort}">
+        <input type="hidden" name="direction" value="${lessonDirection}">
+        <input type="hidden" name="lessonStatus" value="${lessonStatus}">
         <input type="hidden" name="courseId" value="${course.id}">
         <label for="courseSearch" class="sr-only">Search assigned courses</label>
         <input id="courseSearch" name="courseSearch" type="search" value="${fn:escapeXml(courseSearch)}"
@@ -17,7 +20,7 @@
     <div class="flex items-center justify-between gap-2 px-2 mb-2 text-xs text-text-secondary">
         <span role="status">${courseTotal} ${courseTotal eq 1 ? 'course' : 'courses'}</span>
         <c:if test="${not empty courseSearch}">
-            <c:url var="clearCourseSearchUrl" value="/lessons/manage"><c:param name="courseId" value="${course.id}" /></c:url>
+            <c:url var="clearCourseSearchUrl" value="/lessons/manage"><c:param name="sort" value="${lessonSort}" /><c:param name="direction" value="${lessonDirection}" /><c:param name="lessonStatus" value="${lessonStatus}" /><c:param name="courseId" value="${course.id}" /></c:url>
             <a href="${fn:escapeXml(clearCourseSearchUrl)}" class="text-brand-700 underline rounded focus-visible:ring-2 focus-visible:ring-brand-700">Clear</a>
         </c:if>
     </div>
@@ -27,7 +30,7 @@
                 <c:set var="currentCourseListed" value="${false}" />
                 <c:forEach var="assignedCourse" items="${assignedCourses}">
                     <c:if test="${assignedCourse.id eq course.id}"><c:set var="currentCourseListed" value="${true}" /></c:if>
-                    <c:url var="assignedCourseUrl" value="/lessons/manage">
+                    <c:url var="assignedCourseUrl" value="/lessons/manage"><c:param name="sort" value="${lessonSort}" /><c:param name="direction" value="${lessonDirection}" /><c:param name="lessonStatus" value="${lessonStatus}" />
                         <c:param name="courseId" value="${assignedCourse.id}" />
                         <c:param name="courseSearch" value="${courseSearch}" />
                         <c:param name="coursePage" value="${coursePage}" />
@@ -41,6 +44,9 @@
                 </c:forEach>
             </nav>
             <form method="GET" action="${pageContext.request.contextPath}/lessons/manage" class="flex items-center gap-2 lg:hidden">
+        <input type="hidden" name="sort" value="${lessonSort}">
+        <input type="hidden" name="direction" value="${lessonDirection}">
+        <input type="hidden" name="lessonStatus" value="${lessonStatus}">
                 <input type="hidden" name="courseSearch" value="${fn:escapeXml(courseSearch)}">
                 <input type="hidden" name="coursePage" value="${coursePage}">
                 <label for="assignedCourseSelect" class="sr-only">Assigned course</label>
@@ -65,7 +71,7 @@
         <nav aria-label="Assigned course pages" class="mt-3 flex items-center justify-between gap-2 px-1 text-xs text-text-secondary">
             <c:choose>
                 <c:when test="${coursePage gt 1}">
-                    <c:url var="previousCoursePageUrl" value="/lessons/manage">
+                    <c:url var="previousCoursePageUrl" value="/lessons/manage"><c:param name="sort" value="${lessonSort}" /><c:param name="direction" value="${lessonDirection}" /><c:param name="lessonStatus" value="${lessonStatus}" />
                         <c:param name="courseId" value="${course.id}" /><c:param name="courseSearch" value="${courseSearch}" /><c:param name="coursePage" value="${coursePage - 1}" />
                     </c:url>
                     <a href="${fn:escapeXml(previousCoursePageUrl)}" aria-label="Previous course page" title="Previous course page" class="flex items-center justify-center w-9 h-9 rounded-lg border border-border-default hover:bg-surface-card focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
@@ -75,7 +81,7 @@
             <span>Page ${coursePage} / ${courseTotalPages}</span>
             <c:choose>
                 <c:when test="${coursePage lt courseTotalPages}">
-                    <c:url var="nextCoursePageUrl" value="/lessons/manage">
+                    <c:url var="nextCoursePageUrl" value="/lessons/manage"><c:param name="sort" value="${lessonSort}" /><c:param name="direction" value="${lessonDirection}" /><c:param name="lessonStatus" value="${lessonStatus}" />
                         <c:param name="courseId" value="${course.id}" /><c:param name="courseSearch" value="${courseSearch}" /><c:param name="coursePage" value="${coursePage + 1}" />
                     </c:url>
                     <a href="${fn:escapeXml(nextCoursePageUrl)}" aria-label="Next course page" title="Next course page" class="flex items-center justify-center w-9 h-9 rounded-lg border border-border-default hover:bg-surface-card focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>

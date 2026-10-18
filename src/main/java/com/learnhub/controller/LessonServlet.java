@@ -1,9 +1,7 @@
 package com.learnhub.controller;
 
 import com.learnhub.dto.LessonDTO;
-import com.learnhub.entity.Lesson;
 import com.learnhub.entity.Course;
-import com.learnhub.entity.Module;
 import com.learnhub.entity.User;
 import com.learnhub.constant.AppConstants;
 import com.learnhub.service.CourseService;
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import java.util.Map;
-import java.util.ArrayList;
 import java.util.List;
 import java.sql.Timestamp;
 
@@ -60,15 +57,6 @@ public class LessonServlet extends HttpServlet {
                 if (course != null) {
                     req.setAttribute("course", course);
                     req.setAttribute("modules", course.getModules());
-                    List<Lesson> allLessons = new ArrayList<>();
-                    if (course.getModules() != null) {
-                        for (Module m : course.getModules()) {
-                            if (m.getLessons() != null) {
-                                allLessons.addAll(m.getLessons());
-                            }
-                        }
-                    }
-                    req.setAttribute("lessons", allLessons);
                 }
             } catch (SecurityException e) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -109,6 +97,14 @@ public class LessonServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
         }
+        Course selectedCourse = (Course) req.getAttribute("course");
+        var lessonList = lessonService.buildLessonList(
+                selectedCourse == null ? List.of() : selectedCourse.getModules(),
+                req.getParameter("sort"), req.getParameter("direction"), req.getParameter("lessonStatus"));
+        req.setAttribute("lessonRows", lessonList.rows());
+        req.setAttribute("lessonSort", lessonList.sort());
+        req.setAttribute("lessonDirection", lessonList.direction());
+        req.setAttribute("lessonStatus", lessonList.status());
         int coursePage = 1;
         try {
             coursePage = Integer.parseInt(req.getParameter("coursePage"));

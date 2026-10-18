@@ -18,6 +18,10 @@ import java.util.UUID;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Service handling Lesson management and materials upload.
@@ -80,6 +84,57 @@ public class LessonService {
         dto.setDurationMinutes(l.getDurationMinutes());
         dto.setPublicationStatus(l.getPublicationStatus());
         return dto;
+    }
+
+    public record LessonListRow(Module module, Lesson lesson) {
+        public Module getModule() { return module; }
+        public Lesson getLesson() { return lesson; }
+    }
+
+    public record LessonListData(List<LessonListRow> rows, String sort,
+                                 String direction, String status) {}
+
+    public LessonListData buildLessonList(List<Module> modules, String sort,
+                                          String direction, String status) {
+        sort = "duration".equals(sort) ? "duration" : "module";
+        direction = "desc".equals(direction) ? "desc" : "asc";
+        status = status == null ? "" : status.strip().toLowerCase(Locale.ROOT);
+        if (!Set.of("draft", "decline", "published", "archived").contains(status)) status = "";
+        List<LessonListRow> rows = new ArrayList<>();
+        if (modules != null) {
+            for (Module module : modules) {
+                List<Lesson> lessons = module.getLessons();
+                if (lessons == null || lessons.isEmpty()) {
+                    if (status.isEmpty()) rows.add(new LessonListRow(module, null));
+                } else {
+                    for (Lesson lesson : lessons) {
+                        if (status.isEmpty() || status.equals(lesson.getPublicationStatus())) {
+                            rows.add(new LessonListRow(module, lesson));
+                        }
+                    }
+                }
+            }
+        }
+        Comparator<LessonListRow> moduleOrder = Comparator
+                .comparingInt((LessonListRow row) -> row.module().getOrderIndex())
+                .thenComparing(row -> row.module().getId(), Comparator.nullsLast(Comparator.naturalOrder()));
+        Comparator<LessonListRow> lessonOrder = Comparator
+                .comparingInt((LessonListRow row) -> row.lesson() == null ? 0 : row.lesson().getOrderIndex())
+                .thenComparing(row -> row.lesson() == null ? null : row.lesson().getId(),
+                        Comparator.nullsLast(Comparator.naturalOrder()));
+        Comparator<LessonListRow> order;
+        if ("duration".equals(sort)) {
+            Comparator<Integer> durationOrder = "desc".equals(direction)
+                    ? Comparator.reverseOrder() : Comparator.naturalOrder();
+            order = Comparator.comparing((LessonListRow row) -> row.lesson() == null
+                            ? null : row.lesson().getDurationMinutes(), Comparator.nullsLast(durationOrder))
+                    .thenComparing(moduleOrder).thenComparing(lessonOrder);
+        } else {
+            order = ("desc".equals(direction) ? moduleOrder.reversed() : moduleOrder)
+                    .thenComparing(lessonOrder);
+        }
+        rows.sort(order);
+        return new LessonListData(List.copyOf(rows), sort, direction, status);
     }
 
     public boolean saveLesson(UUID expertId, LessonDTO dto) {

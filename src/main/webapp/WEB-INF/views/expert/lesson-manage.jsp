@@ -37,26 +37,77 @@
             <c:if test="${param.availability eq 'active'}">
                 <p role="status" class="mb-4 text-sm text-status-success">Lesson set to active.</p>
             </c:if>
+            <form id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}/lessons/manage">
+                <input type="hidden" name="courseId" value="${course.id}">
+                <input type="hidden" name="courseSearch" value="${fn:escapeXml(courseSearch)}">
+                <input type="hidden" name="coursePage" value="${coursePage}">
+                <input type="hidden" name="sort" value="${lessonSort}">
+                <input type="hidden" name="direction" value="${lessonDirection}">
+                <noscript><button type="submit" class="mb-3 rounded-lg border border-border-default px-3 py-2 text-sm">Apply filter</button></noscript>
+            </form>
             <div class="overflow-x-auto border border-border-default rounded-xl">
                 <table class="w-full text-left text-sm text-text-secondary">
                     <thead class="bg-surface text-slate-700 text-xs font-bold border-b border-border-default">
                         <tr>
                             <th class="px-5 py-4 w-14 text-center">#</th>
-                            <th class="px-5 py-4 font-bold text-text-primary">Module</th>
+                            <c:url var="moduleSortUrl" value="/lessons/manage">
+                                <c:param name="courseId" value="${course.id}" />
+                                <c:param name="courseSearch" value="${courseSearch}" />
+                                <c:param name="coursePage" value="${coursePage}" />
+                                <c:param name="lessonStatus" value="${lessonStatus}" />
+                                <c:param name="sort" value="module" />
+                                <c:param name="direction" value="${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'desc' : 'asc'}" />
+                            </c:url>
+                            <th scope="col" aria-sort="${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'ascending' : 'descending') : 'none'}" class="px-5 py-4 font-bold text-text-primary ">
+                                <span class="inline-flex items-center gap-1">Module
+                                    <a href="${fn:escapeXml(moduleSortUrl)}" aria-label="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       title="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${lessonSort eq 'module' ? 'text-brand-700 bg-brand-50' : 'text-text-secondary hover:bg-surface-card'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                        <i class="fa-solid ${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}" aria-hidden="true"></i>
+                                    </a>
+                                </span>
+                            </th>
                             <th class="px-5 py-4 font-bold text-text-primary">Lesson Title</th>
-                            <th class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">Status</th>
-                            <th class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">Duration</th>
+                            <th scope="col" class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">
+                                <label for="lessonStatus" class="inline-flex items-center gap-2">Status <i class="fa-solid fa-filter ${empty lessonStatus ? 'text-text-secondary' : 'text-brand-700'}" aria-hidden="true"></i></label>
+                                <select id="lessonStatus" name="lessonStatus" form="lessonListFilters" aria-label="Filter lesson status" onchange="this.form.requestSubmit()"
+                                        class="block mt-1 mx-auto max-w-full rounded-lg border border-border-default bg-surface-card px-2 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                                    <option value="" ${empty lessonStatus ? 'selected' : ''}>All</option>
+                                    <option value="draft" ${lessonStatus eq 'draft' ? 'selected' : ''}>Draft</option>
+                                    <option value="decline" ${lessonStatus eq 'decline' ? 'selected' : ''}>Decline</option>
+                                    <option value="published" ${lessonStatus eq 'published' ? 'selected' : ''}>Published</option>
+                                    <option value="archived" ${lessonStatus eq 'archived' ? 'selected' : ''}>Archived</option>
+                                </select>
+                            </th>
+                            <c:url var="durationSortUrl" value="/lessons/manage">
+                                <c:param name="courseId" value="${course.id}" />
+                                <c:param name="courseSearch" value="${courseSearch}" />
+                                <c:param name="coursePage" value="${coursePage}" />
+                                <c:param name="lessonStatus" value="${lessonStatus}" />
+                                <c:param name="sort" value="duration" />
+                                <c:param name="direction" value="${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'desc' : 'asc'}" />
+                            </c:url>
+                            <th scope="col" aria-sort="${lessonSort eq 'duration' ? (lessonDirection eq 'asc' ? 'ascending' : 'descending') : 'none'}" class="px-5 py-4 font-bold text-text-primary text-center whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1">Duration
+                                    <a href="${fn:escapeXml(durationSortUrl)}" aria-label="Sort duration ${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       title="Sort duration ${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${lessonSort eq 'duration' ? 'text-brand-700 bg-brand-50' : 'text-text-secondary hover:bg-surface-card'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                        <i class="fa-solid ${lessonSort eq 'duration' ? (lessonDirection eq 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}" aria-hidden="true"></i>
+                                    </a>
+                                </span>
+                            </th>
                             <th class="px-5 py-4 text-center font-bold text-text-primary w-36">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border-default">
                         <c:choose>
-                            <c:when test="${not empty modules}">
+                            <c:when test="${not empty lessonRows}">
                                 <c:set var="globalIndex" value="1" />
-                                <c:forEach var="module" items="${modules}">
+                                <c:forEach var="lessonRow" items="${lessonRows}">
+                                    <c:set var="module" value="${lessonRow.module}" />
+                                    <c:set var="les" value="${lessonRow.lesson}" />
                                     <c:choose>
-                                        <c:when test="${not empty module.lessons}">
-                                            <c:forEach var="les" items="${module.lessons}">
+                                        <c:when test="${not empty les}">
                                                 <tr class="hover:bg-surface/80 transition-colors">
                                                     <td class="px-5 py-4 text-center font-bold text-text-secondary text-xs">
                                                         ${globalIndex}
@@ -105,8 +156,7 @@
                                                        </c:if>
                                                     </td>
                                                 </tr>
-                                                <c:set var="globalIndex" value="${globalIndex + 1}" />
-                                            </c:forEach>
+                                            <c:set var="globalIndex" value="${globalIndex + 1}" />
                                         </c:when>
                                         <c:otherwise>
                                             <tr class="bg-surface/40">
@@ -124,7 +174,10 @@
                                 <tr>
                                     <td colspan="6" class="px-6 py-12 text-center text-text-secondary text-sm">
                                         <i class="fa-regular fa-folder-open text-4xl mb-3 block text-slate-300"></i>
-                                        Khóa học này hiện chưa có module hoặc bài giảng nào.
+                                        <c:choose>
+                                            <c:when test="${not empty lessonStatus}">No lessons match the selected status.</c:when>
+                                            <c:otherwise>Khóa học này hiện chưa có module hoặc bài giảng nào.</c:otherwise>
+                                        </c:choose>
                                     </td>
                                 </tr>
                             </c:otherwise>

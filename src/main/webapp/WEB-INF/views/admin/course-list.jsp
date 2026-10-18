@@ -3,70 +3,15 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar (SDS Admin Layout) -->
-    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
-        <div>
-            <!-- Brand Logo -->
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
-                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
-                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
-            </a>
-
-            <nav class="space-y-1.5 text-sm font-medium">
-                <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-center text-slate-400"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <c:if test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
-                    <a href="${pageContext.request.contextPath}/admin/courses"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                        <i class="fa-solid fa-book-open w-5 text-center text-white"></i>
-                        <span>Course Management</span>
-                    </a>
-                </c:if>
-
-                <c:if test="${sessionScope.userRole eq 'admin' || sessionScope.userRole eq 'ROLE_ADMIN'}">
-                    <a href="${pageContext.request.contextPath}/admin/users"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
-                        <span>User Management</span>
-                    </a>
-
-                    <a href="${pageContext.request.contextPath}/admin/settings"
-                       class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                        <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
-                        <span>System Settings</span>
-                    </a>
-                </c:if>
-            </nav>
-        </div>
-
-        <!-- Current User Info & Back to Site -->
-        <div class="pt-6 border-t border-slate-800/80 mt-6">
-            <div class="flex items-center space-x-3 px-2 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
-                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
-                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Return to LearnHub</span>
-            </a>
-        </div>
-    </aside>
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="courses" />
+    </jsp:include>
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">
-        <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
             <!-- Success / Error Alert -->
             <c:if test="${not empty successMessage}">
@@ -75,7 +20,7 @@
                         <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
                         <span class="font-medium">${successMessage}</span>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss success message" class="rounded-lg p-2 text-status-success hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 </div>
             </c:if>
             <c:if test="${param.error eq 'status_failed'}">
@@ -84,7 +29,7 @@
                         <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
                         <span class="font-medium">Có lỗi xảy ra khi cập nhật trạng thái khóa học!</span>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss error message" class="rounded-lg p-2 text-status-danger hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 </div>
             </c:if>
             <c:if test="${param.error eq 'missing_title'}">
@@ -93,47 +38,52 @@
                         <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
                         <span class="font-medium">Vui lòng nhập tên khóa học!</span>
                     </div>
-                    <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss error message" class="rounded-lg p-2 text-status-danger hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 </div>
             </c:if>
 
             <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Course Management</h1>
-                    <p class="text-slate-500 text-sm mt-1">Manage, filter, and oversee all courses published on the LearnHub platform</p>
+                    <p class="mb-2 text-sm font-semibold text-brand-700">Management / Courses</p>
+                    <h1 class="text-3xl font-bold tracking-tight text-text-primary">Course management</h1>
+                    <p class="mt-2 text-sm text-text-secondary">Manage, filter, and oversee courses on LearnHub.</p>
                 </div>
                 <div>
-                    <a href="${pageContext.request.contextPath}/admin/course-detail?action=new" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm transition shadow-sm shadow-indigo-600/20 cursor-pointer">
-                        <i class="fa-solid fa-plus text-xs"></i>
-                        <span>+ Add New Course</span>
+                    <a href="${pageContext.request.contextPath}/admin/course-detail?action=new" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                        <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
+                        <span>Add new course</span>
                     </a>
                 </div>
             </div>
 
             <!-- Filter Bar (SDS 2.4.1) -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">
-                <form id="filterForm" action="${pageContext.request.contextPath}/admin/courses" method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
+            <div class="mb-6 rounded-xl border border-border-default bg-surface-card p-4 shadow-sm sm:p-6">
+                <form id="filterForm" action="${pageContext.request.contextPath}/admin/courses" method="get" class="grid grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-12">
                     <!-- Preserve Sorting and Page -->
                     <input type="hidden" name="sortBy" value="${sortBy}">
                     <input type="hidden" name="sortOrder" value="${sortOrder}">
 
                     <!-- Search Keyword -->
-                    <div class="lg:col-span-4 relative">
+                    <div class="relative xl:col-span-3">
+                        <label for="courseSearch" class="sr-only">Search courses</label>
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <input type="text"
+                               id="courseSearch"
                                name="search"
                                value="${search}"
                                placeholder="Search course title or instructor..."
                                title="Search Keyword: Filter courses by title, course code, or instructor name"
-                               class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                               class="w-full rounded-lg border border-border-default bg-surface-card py-2.5 pl-9 pr-3.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
                     </div>
 
                     <!-- Course Category Filter -->
-                    <div class="lg:col-span-3">
+                    <div class="xl:col-span-3">
+                        <label for="courseCategory" class="sr-only">Course category</label>
                         <select name="categoryId"
+                                id="courseCategory"
                                 title="Course Category"
-                                class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
                             <option value="">All Categories</option>
                             <c:forEach var="cat" items="${categories}">
                                 <option value="${cat.id}" ${selectedCategory eq cat.id.toString() ? 'selected' : ''}>${cat.name}</option>
@@ -142,10 +92,12 @@
                     </div>
 
                     <!-- Course Status Filter -->
-                    <div class="lg:col-span-2">
+                    <div class="xl:col-span-2">
+                        <label for="courseStatus" class="sr-only">Course status</label>
                         <select name="status"
+                                id="courseStatus"
                                 title="Course Status"
-                                class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
                             <option value="">All Statuses</option>
                             <option value="draft" ${selectedStatus eq 'draft' ? 'selected' : ''}>Draft</option>
                             <option value="published" ${selectedStatus eq 'published' ? 'selected' : ''}>Published</option>
@@ -154,10 +106,12 @@
                     </div>
 
                     <!-- Price Type Filter -->
-                    <div class="lg:col-span-2">
+                    <div class="xl:col-span-2">
+                        <label for="coursePriceType" class="sr-only">Price type</label>
                         <select name="priceType"
+                                id="coursePriceType"
                                 title="Price Type: Free or Paid"
-                                class="w-full px-3.5 py-2.5 bg-slate-50/50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
                             <option value="">All Prices</option>
                             <option value="free" ${selectedPriceType eq 'free' ? 'selected' : ''}>Free</option>
                             <option value="paid" ${selectedPriceType eq 'paid' ? 'selected' : ''}>Paid</option>
@@ -165,9 +119,9 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="lg:col-span-1 flex space-x-2">
+                    <div class="xl:col-span-2">
                         <button type="submit"
-                                class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm transition shadow-sm text-center">
+                                class="min-h-11 w-full rounded-lg bg-text-primary px-4 text-center text-sm font-semibold text-white hover:bg-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                             Filter
                         </button>
                     </div>
@@ -175,10 +129,14 @@
             </div>
 
             <!-- Course Table (SDS 2.4 / 2.4.1) -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <section class="overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm" aria-label="Course list">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border-default px-4 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-text-primary">Courses</h2>
+                    <span class="text-sm text-text-secondary"><strong class="font-semibold text-text-primary">${totalCourses}</strong> results</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
-                        <thead class="bg-slate-50/80 text-slate-500 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200 select-none">
+                    <table class="w-full min-w-max text-left text-sm text-text-secondary">
+                        <thead class="border-b border-border-default bg-surface text-xs font-semibold uppercase tracking-wide text-text-secondary">
                             <tr>
                                 <!-- Sortable: COURSE INFO -->
                                 <th class="px-6 py-4">
@@ -187,7 +145,7 @@
                                         <span>COURSE INFO</span>
                                         <c:choose>
                                             <c:when test="${sortBy eq 'title'}">
-                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-indigo-600 text-xs"></i>
+                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-brand-700 text-xs"></i>
                                             </c:when>
                                             <c:otherwise>
                                                 <i class="fa-solid fa-sort text-slate-300 text-xs"></i>
@@ -206,7 +164,7 @@
                                         <span>PRICE</span>
                                         <c:choose>
                                             <c:when test="${sortBy eq 'price'}">
-                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-indigo-600 text-xs"></i>
+                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-brand-700 text-xs"></i>
                                             </c:when>
                                             <c:otherwise>
                                                 <i class="fa-solid fa-sort text-slate-300 text-xs"></i>
@@ -222,7 +180,7 @@
                                         <span>TOTAL ENROLLED</span>
                                         <c:choose>
                                             <c:when test="${sortBy eq 'enrolled'}">
-                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-indigo-600 text-xs"></i>
+                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-brand-700 text-xs"></i>
                                             </c:when>
                                             <c:otherwise>
                                                 <i class="fa-solid fa-sort text-slate-300 text-xs"></i>
@@ -263,13 +221,13 @@
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center space-x-3.5">
                                                     <!-- Course Thumbnail / Box -->
-                                                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-indigo-50 to-blue-100 border border-slate-200 flex-shrink-0 flex items-center justify-center shadow-xs">
+                                                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-brand-50 border border-slate-200 flex-shrink-0 flex items-center justify-center shadow-xs">
                                                         <c:choose>
                                                             <c:when test="${not empty c.thumbnailUrl}">
                                                                 <img src="${c.thumbnailUrl}" alt="${c.title}" class="w-full h-full object-cover">
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="text-[11px] font-black tracking-wider text-indigo-700 uppercase">
+                                                                <span class="text-[11px] font-black tracking-wider text-brand-800 uppercase">
                                                                     ${fn:substring(c.title, 0, 4)}
                                                                 </span>
                                                             </c:otherwise>
@@ -279,7 +237,7 @@
                                                     <!-- Title & Instructor -->
                                                     <div class="min-w-0">
                                                         <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}"
-                                                           class="font-bold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1 block text-sm">
+                                                           class="font-bold text-slate-900 hover:text-brand-700 transition-colors line-clamp-1 block text-sm">
                                                             ${c.title}
                                                         </a>
                                                         <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
@@ -366,7 +324,7 @@
 
                                                 <!-- Edit action -->
                                                 <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}"
-                                                   class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer">
+                                                   class="text-xs font-bold text-brand-700 hover:text-brand-900 hover:underline cursor-pointer">
                                                     Edit
                                                 </a>
 
@@ -435,7 +393,7 @@
                             <c:forEach begin="1" end="${totalPages}" var="p">
                                 <c:choose>
                                     <c:when test="${p eq currentPage}">
-                                        <span class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold">${p}</span>
+                                        <span class="px-3 py-1.5 rounded-lg bg-brand-700 text-white font-bold">${p}</span>
                                     </c:when>
                                     <c:otherwise>
                                         <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${p}"
@@ -456,7 +414,7 @@
                         </div>
                     </c:if>
                 </div>
-            </div>
+            </section>
 
         </main>
     </div>
@@ -465,7 +423,7 @@
 <!-- ========================================================================= -->
 <!-- Modal: Create / Edit Course Form                                          -->
 <!-- ========================================================================= -->
-<div id="courseModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden transition-opacity">
+<div id="courseModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden transition-opacity">
     <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto transform transition-transform animate-scale-up">
         <!-- Modal Header -->
         <div class="flex items-center justify-between px-7 py-5 border-b border-slate-100">
@@ -473,7 +431,7 @@
                 <h3 id="modalTitle" class="text-xl font-black text-slate-900">Add New Course</h3>
                 <p id="modalSubtitle" class="text-xs text-slate-400 mt-0.5">Fill in the course details below</p>
             </div>
-            <button type="button" onclick="closeCourseModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer">
+            <button type="button" onclick="closeCourseModal()" aria-label="Close course form" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -485,7 +443,7 @@
 
             <!-- Title -->
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label for="courseTitleInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                     Course Title <span class="text-rose-500">*</span>
                 </label>
                 <input type="text"
@@ -493,20 +451,20 @@
                        name="title"
                        required
                        placeholder="e.g. Java Web Development with Servlets & JSP"
-                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
             </div>
 
             <!-- Grid: Category & Instructor -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Category -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    <label for="courseCategoryInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Category <span class="text-rose-500">*</span>
                     </label>
                     <select id="courseCategoryInput"
                             name="categoryId"
                             required
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-pointer">
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition cursor-pointer">
                         <option value="">Select Category</option>
                         <c:forEach var="cat" items="${categories}">
                             <option value="${cat.id}">${cat.name}</option>
@@ -516,12 +474,12 @@
 
                 <!-- Instructor -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    <label for="courseExpertInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Assigned Instructor
                     </label>
                     <select id="courseExpertInput"
                             name="expertId"
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-pointer">
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition cursor-pointer">
                         <option value="">Select Instructor</option>
                         <c:forEach var="inst" items="${instructors}">
                             <option value="${inst.id}">${inst.username} (${inst.email})</option>
@@ -534,7 +492,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Price -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    <label for="coursePriceInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Price (VND) <span class="text-xs text-slate-400 font-normal">(0 = Free)</span>
                     </label>
                     <div class="relative">
@@ -544,19 +502,19 @@
                                min="0"
                                step="1000"
                                placeholder="499000"
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                               class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                         <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₫</span>
                     </div>
                 </div>
 
                 <!-- Status -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    <label for="courseStatusInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                         Publication Status
                     </label>
                     <select id="courseStatusInput"
                             name="status"
-                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition cursor-pointer">
+                            class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition cursor-pointer">
                         <option value="draft">Draft (Bản nháp)</option>
                         <option value="published">Published (Công khai)</option>
                         <option value="archived">Archived (Lưu trữ / Tạm ẩn)</option>
@@ -566,26 +524,26 @@
 
             <!-- Thumbnail URL -->
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label for="courseThumbnailInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                     Thumbnail Image URL
                 </label>
                 <input type="url"
                        id="courseThumbnailInput"
                        name="thumbnailUrl"
                        placeholder="https://images.unsplash.com/..."
-                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
             </div>
 
             <!-- Description -->
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label for="courseDescriptionInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
                     Course Description
                 </label>
                 <textarea id="courseDescriptionInput"
                           name="description"
                           rows="4"
                           placeholder="Provide a comprehensive summary of what learners will achieve..."
-                          class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                          class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition"></textarea>
             </div>
 
             <!-- Modal Footer Actions -->
@@ -596,7 +554,7 @@
                     Cancel
                 </button>
                 <button type="submit"
-                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition cursor-pointer">
+                        class="px-6 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm shadow-md shadow-brand-700/20 transition cursor-pointer">
                     Save Course
                 </button>
             </div>
@@ -678,4 +636,4 @@
     })();
 </script>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

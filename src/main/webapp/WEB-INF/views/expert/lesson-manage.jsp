@@ -2,33 +2,16 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 flex flex-col lg:flex-row gap-6">
-    <aside class="w-full lg:w-52 shrink-0">
-        <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
-            <nav class="flex flex-wrap lg:flex-col p-2 gap-1">
-                <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 border-l-4 border-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-book-open text-brand-700 text-sm"></i>
-                    <span>Lesson</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-clipboard-question text-text-secondary text-sm"></i>
-                    <span>Quiz</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-list-check text-text-secondary text-sm"></i>
-                    <span>Question Bank</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="lessons" />
+    </jsp:include>
 
-    <div class="flex-1 min-w-0">
-        <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+            <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                             <a href="${pageContext.request.contextPath}/expert/dashboard"
                                class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-border-default bg-surface-card hover:bg-surface text-text-secondary hover:text-text-primary transition text-sm font-semibold shadow-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
@@ -147,7 +130,8 @@
                 </table>
             </div>
         </div>
-    </div>
-</main>
+    </main>
+</div>
+</div>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

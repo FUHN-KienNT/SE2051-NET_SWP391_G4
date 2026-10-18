@@ -5,6 +5,7 @@ import com.learnhub.dao.UserDAO;
 import com.learnhub.entity.User;
 import com.learnhub.service.ProfileService;
 import com.learnhub.service.UserService;
+import com.learnhub.util.PostLoginNavigation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -123,7 +124,7 @@ public class ProfileAccountServlet extends HttpServlet {
             HttpSession session = req.getSession(false);
             String redirect = (String) session.getAttribute("account.afterPasswordRedirect");
             session.removeAttribute("account.afterPasswordRedirect");
-            resp.sendRedirect(redirect != null ? redirect : req.getContextPath() + "/home");
+            resp.sendRedirect(PostLoginNavigation.destination(user, redirect, req.getContextPath()));
             return;
         }
         req.setAttribute("passwordError", switch (result) {

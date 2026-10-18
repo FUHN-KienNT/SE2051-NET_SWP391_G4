@@ -5,6 +5,7 @@ import com.learnhub.service.OAuthService.Provider;
 import com.learnhub.service.OAuthService.Profile;
 import com.learnhub.entity.User;
 import com.learnhub.util.FullNameUtil;
+import com.learnhub.util.PostLoginNavigation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,7 +15,6 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.SQLException;
@@ -44,7 +44,7 @@ public class OAuthServlet extends HttpServlet {
     }
 
     private void start(HttpServletRequest req, HttpServletResponse resp, Provider provider) throws IOException {
-        String redirect = safeRedirect(req.getParameter("redirect_uri"), req.getContextPath());
+        String redirect = PostLoginNavigation.safeLocalPath(req.getParameter("redirect_uri"), req.getContextPath());
         if (redirect == null) redirect = "";
         String state = OAuthService.newState();
         HttpSession session = req.getSession(true);
@@ -156,16 +156,13 @@ public class OAuthServlet extends HttpServlet {
         authenticated.setAttribute("currentUser", user);
         authenticated.setAttribute("userName", user.getUsername());
         authenticated.setAttribute("userRole", user.getRoleCode());
+        String destination = PostLoginNavigation.destination(user, redirect, req.getContextPath());
         if (user.isRequiresPasswordChange()) {
-            if (safeRedirect(redirect, req.getContextPath()) != null) {
-                authenticated.setAttribute("account.afterPasswordRedirect", redirect);
-            }
+            authenticated.setAttribute("account.afterPasswordRedirect", destination);
             resp.sendRedirect(req.getContextPath() + "/account/set-password");
             return;
         }
-        if (safeRedirect(redirect, req.getContextPath()) != null) resp.sendRedirect(redirect);
-        else if ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode())) resp.sendRedirect(req.getContextPath() + "/admin/users");
-        else resp.sendRedirect(req.getContextPath() + "/home");
+        resp.sendRedirect(destination);
     }
 
     private void fail(HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
@@ -180,13 +177,4 @@ public class OAuthServlet extends HttpServlet {
         private static final long serialVersionUID = 1L;
     }
 
-    private static String safeRedirect(String value, String contextPath) {
-        if (value == null || value.isBlank() || value.indexOf('\\') >= 0 || value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) return null;
-        try {
-            URI uri = URI.create(value);
-            if (uri.isAbsolute() || uri.getRawAuthority() != null || uri.getRawPath() == null || !uri.getRawPath().startsWith("/") || uri.getRawPath().startsWith("//")) return null;
-            if (!contextPath.isEmpty() && !uri.getRawPath().equals(contextPath) && !uri.getRawPath().startsWith(contextPath + "/")) return null;
-            return value;
-        } catch (IllegalArgumentException e) { return null; }
-    }
 }

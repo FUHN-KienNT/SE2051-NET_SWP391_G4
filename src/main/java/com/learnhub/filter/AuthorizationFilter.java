@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
  * - hasStudentRole(req)
  */
 @WebFilter(filterName = "AuthorizationFilter", urlPatterns = {
-        "/admin/*", "/expert/*", "/lessons/*", "/questions/*",
+        "/admin/*", "/manager/*", "/expert/*", "/lessons/*", "/questions/*",
         "/learn/*", "/quiz/*", "/learning-process/*",
         "/profile", "/account", "/account/*"
 })
@@ -51,6 +51,11 @@ public class AuthorizationFilter implements Filter {
             resp.sendRedirect(req.getContextPath()
                     + "/auth/login?error=unauthorized&redirect_uri="
                     + encodedUri);
+            return;
+        }
+
+        if (isUnder(path, "/manager") && !hasManagerRole(req)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
             return;
         }
 

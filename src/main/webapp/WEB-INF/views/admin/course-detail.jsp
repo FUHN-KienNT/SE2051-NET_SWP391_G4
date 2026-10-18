@@ -3,71 +3,19 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
-    <!-- Left Sidebar ( Admin Layout) -->
-    <aside class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex-shrink-0 flex flex-col justify-between p-5 select-none shadow-xl">
-        <div>
-            <!-- Brand Logo -->
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-3 px-3 py-4 mb-6 border-b border-slate-800/80">
-                <i class="fa-solid fa-dolphin text-2xl text-emerald-400"></i>
-                <span class="text-xl font-black text-white tracking-tight">LearnHub Admin</span>
-            </a>
-
-            <!-- Navigation Links with Unified Icons -->
-            <nav class="space-y-1.5 text-sm font-medium">
-                <a href="${pageContext.request.contextPath}/admin/dashboard"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gauge-high w-5 text-slate-400"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/courses"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 transition-all">
-                    <i class="fa-solid fa-book-open w-5 text-white"></i>
-                    <span>Course Management</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/users"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-users w-5 text-slate-400"></i>
-                    <span>User Management</span>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/admin/settings"
-                   class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
-                    <i class="fa-solid fa-gear w-5 text-slate-400"></i>
-                    <span>System Settings</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Current User Info & Back to Site -->
-        <div class="pt-6 border-t border-slate-800/80 mt-6">
-            <div class="flex items-center space-x-3 px-2 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
-                    ${fn:substring(sessionScope.currentUser.username, 0, 1)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-white truncate">${sessionScope.currentUser.username}</p>
-                    <p class="text-[11px] text-slate-400 truncate">${sessionScope.currentUser.email}</p>
-                </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/home" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white px-2 py-1 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Return to LearnHub</span>
-            </a>
-        </div>
-    </aside>
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="courses" />
+    </jsp:include>
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">
-        <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-5xl w-full mx-auto">
+        <main class="w-full max-w-5xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
             <!-- Breadcrumbs -->
             <div class="mb-5 flex items-center space-x-2 text-xs text-slate-400">
-                <a href="${pageContext.request.contextPath}/admin/courses" class="hover:text-indigo-600 transition flex items-center gap-1">
+                <a href="${pageContext.request.contextPath}/admin/courses" class="hover:text-brand-700 transition flex items-center gap-1">
                     <i class="fa-solid fa-book-open"></i>
                     <span>Courses</span>
                 </a>
@@ -150,7 +98,7 @@
                                value="${course.title}"
                                required
                                placeholder="e.g. Java Web Development with Servlets & JSP"
-                               class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-2xs">
+                               class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 bg-white shadow-2xs">
                     </div>
 
                     <!-- Row 1: Category & Price (VND) -->
@@ -163,7 +111,7 @@
                             <div class="relative">
                                 <select name="categoryId"
                                         required
-                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer appearance-none">
+                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 cursor-pointer appearance-none">
                                     <option value="">Select Category</option>
                                     <c:forEach var="cat" items="${categories}">
                                         <option value="${cat.id}" ${course.categoryId eq cat.id ? 'selected' : ''}>
@@ -186,7 +134,7 @@
                                    step="1000"
                                    value="<fmt:formatNumber value='${course.price != null ? course.price : 0}' pattern='#'/>"
                                    placeholder="499000"
-                                   class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">
+                                   class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 shadow-2xs">
                         </div>
                     </div>
 
@@ -199,7 +147,7 @@
                             </label>
                             <div class="relative">
                                 <select name="status"
-                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer appearance-none">
+                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 cursor-pointer appearance-none">
                                     <option value="draft" ${course.status eq 'draft' ? 'selected' : ''}>Draft</option>
                                     <option value="published" ${course.status eq 'published' ? 'selected' : ''}>Published</option>
                                     <option value="archived" ${course.status eq 'archived' ? 'selected' : ''}>Archived</option>
@@ -240,7 +188,7 @@
                             </label>
                             <div class="relative">
                                 <select name="expertId"
-                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer appearance-none">
+                                        class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 cursor-pointer appearance-none">
                                     <option value="">Select Instructor</option>
                                     <c:forEach var="inst" items="${instructors}">
                                         <option value="${inst.id}" ${course.expertId eq inst.id ? 'selected' : ''}>
@@ -261,7 +209,7 @@
                         <textarea name="description"
                                   rows="4"
                                   placeholder="Comprehensive course covering Jakarta Servlets, JSP, JDBC database integration with PostgreSQL, and MVC architectural patterns."
-                                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs">${course.description}</textarea>
+                                  class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 shadow-2xs">${course.description}</textarea>
                     </div>
 
                     <!-- Curriculum & Sections Management (SDS Requirement) -->
@@ -270,7 +218,7 @@
                             <div class="flex items-center justify-between mb-4">
                                 <div>
                                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                                        <i class="fa-solid fa-layer-group text-indigo-600"></i>
+                                        <i class="fa-solid fa-layer-group text-brand-700"></i>
                                         <span>Curriculum & Sections (${fn:length(course.modules)} modules)</span>
                                     </h2>
                                     <p class="text-xs text-slate-500 mt-0.5">Inspect and organize course sections, lesson lists, and attached quiz assessments</p>
@@ -286,7 +234,7 @@
                                         </c:when>
                                         <c:otherwise>
                                     <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${course.id}"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition">
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-brand-700 hover:text-brand-900 bg-brand-50 hover:bg-brand-100 rounded-xl transition">
                                         <i class="fa-solid fa-book-open text-xs"></i>
                                         <span>Manage Lessons</span>
                                     </a>
@@ -314,7 +262,7 @@
                                             <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-4">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
-                                                        <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">
+                                                        <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-800 flex items-center justify-center font-bold text-xs">
                                                             ${status.count}
                                                         </span>
                                                         <h3 class="text-xs font-bold text-slate-900">${courseModule.title}</h3>
@@ -397,7 +345,7 @@
                                 Back to List
                             </a>
                             <button type="submit"
-                                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-600/20 transition cursor-pointer">
+                                    class="px-6 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm shadow-md shadow-brand-700/20 transition cursor-pointer">
                                 Save Changes
                             </button>
                         </div>
@@ -408,4 +356,4 @@
     </div>
 </div>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

@@ -20,10 +20,9 @@ import java.io.IOException;
  * - filterMetricsByDateRange()  — accepts ?dateRange=today|week|month
  * - viewRecentSystemLogs()      — passes recent audit_log entries to view
  *
- * URL: /admin/dashboard
- * Roles allowed: admin, manager
+ * URLs: /admin/dashboard (Admin), /manager/dashboard (Manager)
  */
-@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
+@WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard", "/manager/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
     private final DashboardService dashboardService = new DashboardService();
@@ -35,28 +34,19 @@ public class AdminDashboardServlet extends HttpServlet {
         // ── Role guard ─────────────────────────────────────────────────────────
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=/admin/dashboard");
+            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=" + req.getContextPath() + req.getServletPath());
             return;
         }
 
         User currentUser = (User) session.getAttribute("currentUser");
-        String userRole = (String) session.getAttribute("userRole");
-        String roleCode = currentUser != null ? currentUser.getRoleCode() : userRole;
-        String roleName = currentUser != null ? currentUser.getRoleName() : "";
-
-        boolean isAuthorized = "ROLE_ADMIN".equalsIgnoreCase(userRole)
-                || "ROLE_MANAGER".equalsIgnoreCase(userRole)
-                || "admin".equalsIgnoreCase(userRole)
-                || "manager".equalsIgnoreCase(userRole)
-                || "ROLE_ADMIN".equalsIgnoreCase(roleCode)
-                || "ROLE_MANAGER".equalsIgnoreCase(roleCode)
-                || "admin".equalsIgnoreCase(roleCode)
-                || "manager".equalsIgnoreCase(roleCode)
-                || "Administrator".equalsIgnoreCase(roleName)
-                || "Manager".equalsIgnoreCase(roleName)
-                || "Admin".equalsIgnoreCase(roleName);
-
-        if (!isAuthorized) {
+        String roleCode = currentUser.getRoleCode();
+        boolean manager = "ROLE_MANAGER".equalsIgnoreCase(roleCode);
+        boolean managerPage = "/manager/dashboard".equals(req.getServletPath());
+        if (!managerPage && manager) {
+            resp.sendRedirect(req.getContextPath() + "/manager/dashboard");
+            return;
+        }
+        if (managerPage ? !manager : !"ROLE_ADMIN".equalsIgnoreCase(roleCode)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -72,7 +62,8 @@ public class AdminDashboardServlet extends HttpServlet {
 
         // ── Forward to JSP ────────────────────────────────────────────────────
         req.setAttribute("dashboard", dashboard);
-        req.setAttribute("pageTitle", "Admin Dashboard – LearnHub");
+        req.setAttribute("pageTitle", managerPage
+                ? "Manager dashboard – LearnHub" : "Admin dashboard – LearnHub");
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);
     }
 }

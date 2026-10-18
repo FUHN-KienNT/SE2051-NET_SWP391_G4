@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  * - Publish / Unpublish Course
  * - Back to List navigation
  */
-@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/courses", "/admin/course-status", "/admin/course-detail"})
+@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/courses", "/manager/courses", "/admin/course-status", "/admin/course-detail"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 2, // 2MB
         maxFileSize = 1024 * 1024 * 20,      // 20MB
@@ -136,7 +136,7 @@ public class AdminCourseServlet extends HttpServlet {
         req.setAttribute("pageSize", pageSize);
         req.setAttribute("totalPages", Math.max(1, totalPages));
         req.setAttribute("totalCourses", totalCourses);
-        req.setAttribute("pageTitle", "Course Management – LearnHub Admin");
+        req.setAttribute("pageTitle", "Course management – LearnHub");
 
         // Flash parameters
         if ("true".equals(req.getParameter("status_success"))) {

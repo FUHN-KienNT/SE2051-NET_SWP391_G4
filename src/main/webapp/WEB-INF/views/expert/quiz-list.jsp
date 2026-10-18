@@ -1,34 +1,15 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 flex flex-col md:flex-row gap-6">
-    <!-- Sidebar -->
-    <aside class="w-full md:w-52 shrink-0">
-        <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
-            <nav class="flex flex-col p-1.5 gap-1">
-                <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary rounded-lg transition border-l-4 border-transparent">
-                    <i class="fa-solid fa-book-open text-text-secondary text-sm"></i>
-                    <span>Lesson</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 rounded-lg border-l-4 border-brand-700">
-                    <i class="fa-solid fa-clipboard-question text-brand-700 text-sm"></i>
-                    <span>Quiz</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-                   class="flex items-center space-x-2.5 px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary rounded-lg transition border-l-4 border-transparent">
-                    <i class="fa-solid fa-list-check text-text-secondary text-sm"></i>
-                    <span>Question Bank</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="quiz" />
+    </jsp:include>
 
-    <div class="flex-1 min-w-0">
-        <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
+    <div class="flex-1 flex flex-col min-w-0">
+        <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+            <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
             <!-- Header bar with Create Quiz at TOP -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-border-default">
                 <div class="flex items-center space-x-3">
@@ -249,7 +230,8 @@
                 </table>
             </div>
         </div>
-    </div>
-</main>
+    </main>
+</div>
+</div>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

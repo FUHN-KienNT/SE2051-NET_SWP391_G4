@@ -3,23 +3,25 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
-
-<div class="min-h-[calc(100vh-64px)] flex flex-col md:flex-row bg-[#f8fafc]">
+<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
+        <jsp:param name="activeSection" value="dashboard" />
+    </jsp:include>
     
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0">
-        <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <c:choose>
-                            <c:when test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
-                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Manager Dashboard</h1>
-                                <p class="text-slate-500 text-sm mt-1">Tổng quan về hệ thống khóa học</p>
+                            <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
+                                <p class="mb-2 text-sm font-semibold text-brand-700">Manager workspace</p>
+                                <h1 class="text-3xl font-bold tracking-tight text-text-primary">Manager dashboard</h1>
+                                <p class="mt-2 text-sm text-text-secondary">Tổng quan về hệ thống khóa học</p>
                             </c:when>
                             <c:otherwise>
                                 <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Admin Dashboard</h1>
@@ -30,52 +32,27 @@
             </div>
 
             <c:choose>
-                <c:when test="${sessionScope.userRole eq 'manager' || sessionScope.userRole eq 'ROLE_MANAGER'}">
+                <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
                     <!-- Manager Metrics -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-[#e8f5e9] text-[#047857] flex items-center justify-center text-xl font-bold">
-                                <i class="fa-solid fa-book-open"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold uppercase text-slate-500">TỔNG SỐ KHÓA HỌC</p>
-                                <h3 class="text-2xl font-bold text-slate-800">
-                                    <fmt:formatNumber value="${dashboard.activeCourses != null ? dashboard.activeCourses : 0}" type="number"/>
-                                </h3>
-                            </div>
+                    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="rounded-xl border border-border-default bg-surface-card p-6 shadow-sm">
+                            <p class="text-sm font-medium text-text-secondary">Khóa học đang hoạt động</p>
+                            <p class="mt-3 text-3xl font-bold text-text-primary"><fmt:formatNumber value="${dashboard.activeCourses}" type="number"/></p>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                                <i class="fa-solid fa-server"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold uppercase text-slate-500">TRẠNG THÁI HỆ THỐNG</p>
-                                <h3 class="text-2xl font-bold text-emerald-600">Đang hoạt động</h3>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-[#e8f5e9] text-[#047857] flex items-center justify-center text-xl font-bold">
-                                <i class="fa-solid fa-user-tie"></i>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold uppercase text-slate-500">PHÂN QUYỀN</p>
-                                <h3 class="text-xl font-bold text-slate-800">Manager</h3>
-                            </div>
+                        <div class="rounded-xl border border-border-default bg-surface-card p-6 shadow-sm">
+                            <p class="text-sm font-medium text-text-secondary">Tổng lượt ghi danh</p>
+                            <p class="mt-3 text-3xl font-bold text-text-primary"><fmt:formatNumber value="${dashboard.totalEnrollments}" type="number"/></p>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <h2 class="font-bold text-slate-800 text-lg min-w-0">Quản lý nhanh (Quick Access)</h2>
+                    <div class="flex flex-col gap-5 rounded-xl border border-border-default bg-surface-card p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-text-primary">Quản lý khóa học</h2>
+                            <p class="mt-1 text-sm text-text-secondary">Xem danh sách, lọc và cập nhật khóa học.</p>
                         </div>
-                        <div class="overflow-x-auto p-8 text-center text-slate-500 text-sm py-12">
-                            <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3 block"></i>
-                            <p class="mb-4">Truy cập vào trang quản lý khóa học để xem danh sách chi tiết.</p>
-                            <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex items-center gap-2 px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm transition">
-                                <i class="fa-solid fa-arrow-right"></i>
-                                Đi tới Quản lý khóa học
-                            </a>
-                        </div>
+                        <a href="${pageContext.request.contextPath}/admin/courses" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                            Đi tới khóa học <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -282,4 +259,4 @@
     </div>
 </div>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

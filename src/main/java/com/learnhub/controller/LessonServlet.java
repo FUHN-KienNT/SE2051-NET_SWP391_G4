@@ -109,6 +109,18 @@ public class LessonServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
         }
+        int coursePage = 1;
+        try {
+            coursePage = Integer.parseInt(req.getParameter("coursePage"));
+        } catch (NumberFormatException ignored) {
+        }
+        var navigation = courseService.getAssignedCourseNavigation(
+                expertId, req.getParameter("courseSearch"), coursePage);
+        req.setAttribute("assignedCourses", navigation.courses());
+        req.setAttribute("courseSearch", navigation.search());
+        req.setAttribute("coursePage", navigation.page());
+        req.setAttribute("courseTotalPages", navigation.totalPages());
+        req.setAttribute("courseTotal", navigation.totalCourses());
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
 

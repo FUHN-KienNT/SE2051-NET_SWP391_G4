@@ -183,6 +183,20 @@ public class CourseService {
         return settingDAO.findActiveCategories();
     }
 
+    public record AssignedCourseNavigation(List<Course> courses, String search,
+                                           int page, int totalPages, int totalCourses) {}
+
+    public AssignedCourseNavigation getAssignedCourseNavigation(UUID expertId, String search, int page) {
+        String keyword = search == null ? "" : search.strip();
+        if (expertId == null) return new AssignedCourseNavigation(List.of(), keyword, 1, 1, 0);
+        int pageSize = 8;
+        int total = countAssignedCourses(expertId, null, keyword);
+        int totalPages = Math.max(1, (int) Math.ceil(total / (double) pageSize));
+        page = Math.max(1, Math.min(page, totalPages));
+        List<Course> courses = getAssignedCourses(expertId, page, pageSize, keyword);
+        return new AssignedCourseNavigation(courses, keyword, page, totalPages, total);
+    }
+
     public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize) {
         return getAssignedCourses(expertId, page, pageSize, "");
     }

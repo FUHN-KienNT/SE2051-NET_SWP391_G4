@@ -155,6 +155,9 @@
                 </div>
             </c:if>
 
+            <c:if test="${isExpert and param.activeSection eq 'lessons' and courseTotal ne null}">
+                <jsp:include page="/WEB-INF/views/expert/assigned-course-sidebar.jsp" />
+            </c:if>
         </nav>
     </div>
 

@@ -25,6 +25,9 @@
                                 <span>Create Lesson</span>
                             </a>
                         </div>
+            <c:if test="${not empty course}">
+                <p class="mb-6 text-sm font-semibold text-text-primary break-words"><c:out value="${course.title}" /></p>
+            </c:if>
             <c:if test="${param.submitted eq 'true'}">
                 <p role="status" class="mb-4 text-sm text-status-success">Lesson submitted for Manager review.</p>
             </c:if>

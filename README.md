@@ -147,13 +147,16 @@ psql -U postgres -d learnhub -f db/schema.sql
 psql -U postgres -d learnhub -f db/seed.sql
 ```
 
-For an existing database, run this migration **before** deploying the updated WAR:
+For an existing database, run these migrations **before** deploying the updated WAR:
 
 ```bash
 psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/2026-10-17-add-user-full-name.sql
+psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/2026-10-17-require-google-password.sql
 ```
 
 The one-time migration fills existing users' `full_name` from `username` and then requires a nonblank value. Users can edit their name on the Account page. Fresh databases already have this column in `db/schema.sql` and `db/seed.sql`.
+
+New Google accounts must set a LearnHub password after their first Google sign-in. The random password stored during account creation is never shown to the user. Existing accounts keep their current password flow; the second migration adds the required database flag with a default of `false`.
 
 Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
 

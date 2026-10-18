@@ -26,7 +26,7 @@ public class UserDAO {
 
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -45,7 +45,7 @@ public class UserDAO {
 
     public User findById(UUID id) {
         if (id == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -67,7 +67,7 @@ public class UserDAO {
     /** Legacy lookup used for login by either email or username. */
     public User findByEmail(String email) {
         if (email == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -90,7 +90,7 @@ public class UserDAO {
     public List<User> findUsers(String search, UUID roleId, String status, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
                 "s.name as role_name, s.code as role_code " +
                 "FROM \"user\" u " +
                 "LEFT JOIN setting s ON u.role_id = s.id WHERE 1=1 ");
@@ -262,7 +262,7 @@ public class UserDAO {
     }
 
     public boolean updatePassword(UUID userId, String newHashedPassword) {
-        String sql = "UPDATE \"user\" SET password = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newHashedPassword);
@@ -275,7 +275,7 @@ public class UserDAO {
     }
 
     public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
-        String sql = "UPDATE \"user\" SET password = ?, updated_at = NOW() WHERE id = ? AND password = ?";
+        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ? AND password = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newHash);
@@ -288,9 +288,24 @@ public class UserDAO {
         }
     }
 
+    public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
+        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() " +
+                "WHERE id = ? AND password = ? AND requires_password_change = TRUE AND status = 'active'";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newHash);
+            ps.setObject(2, userId);
+            ps.setString(3, currentHash);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.setInitialPassword", e);
+            return false;
+        }
+    }
+
     public List<User> findInstructors() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "JOIN setting s ON u.role_id = s.id " +
@@ -315,6 +330,7 @@ public class UserDAO {
         u.setFullName(rs.getString("full_name"));
         u.setEmail(rs.getString("email"));
         u.setPassword(rs.getString("password"));
+        u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));
         u.setRoleId((UUID) rs.getObject("role_id"));
         u.setStatus(rs.getString("status"));
         u.setCreatedAt(rs.getTimestamp("created_at"));

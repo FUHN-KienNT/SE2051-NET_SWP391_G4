@@ -57,6 +57,14 @@ class UserServiceAccountTest {
             return true;
         }
 
+        @Override
+        public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
+            if (!user.isRequiresPasswordChange() || !currentHash.equals(user.getPassword())) return false;
+            savedHash = newHash;
+            user.setPassword(newHash);
+            user.setRequiresPasswordChange(false);
+            return true;
+        }
     }
 
     @Test
@@ -111,5 +119,25 @@ class UserServiceAccountTest {
                 service.updateOwnProfile(userId, "  Alex_2  ", "  Nguyễn Văn A  "));
         assertEquals("Alex_2", dao.savedUsername);
         assertEquals("Nguyễn Văn A", dao.savedFullName);
+    }
+
+    @Test
+    void newGoogleAccountCanSetPasswordOnlyWhileSetupIsRequired() {
+        AccountDao dao = new AccountDao();
+        UserService service = new UserService(dao, new SettingDAO());
+        UUID userId = dao.user.getId();
+
+        assertEquals(UserService.PasswordChangeResult.FAILED,
+                service.setInitialPassword(userId, "new-password"));
+        dao.user.setRequiresPasswordChange(true);
+        assertEquals(UserService.PasswordChangeResult.INVALID_NEW,
+                service.setInitialPassword(userId, "short"));
+        assertEquals(UserService.PasswordChangeResult.SAME_PASSWORD,
+                service.setInitialPassword(userId, "current-password"));
+        assertEquals(UserService.PasswordChangeResult.SUCCESS,
+                service.setInitialPassword(userId, "new-password"));
+        assertTrue(PasswordHashUtil.checkPassword("new-password", dao.savedHash));
+        assertEquals(UserService.PasswordChangeResult.FAILED,
+                service.setInitialPassword(userId, "another-password"));
     }
 }

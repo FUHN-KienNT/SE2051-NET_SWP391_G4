@@ -88,6 +88,7 @@ CREATE TABLE "user" (
     full_name  VARCHAR(255) NOT NULL,
     email      VARCHAR(255) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
+    requires_password_change BOOLEAN NOT NULL DEFAULT FALSE,
     role_id    UUID NOT NULL REFERENCES setting (id),
     status     user_status NOT NULL DEFAULT 'active',
     google_user_id VARCHAR(255),

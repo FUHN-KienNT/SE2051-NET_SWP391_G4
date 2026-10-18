@@ -109,7 +109,7 @@ public class OAuthService {
                 User user = null;
                 boolean foundByProvider = false;
                 String linkedProviderId = null;
-                String userSelect = "SELECT u.id,u.username,u.full_name,u.email,u.password,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
+                String userSelect = "SELECT u.id,u.username,u.full_name,u.email,u.password,u.requires_password_change,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
                 try (PreparedStatement ps = conn.prepareStatement(userSelect + "WHERE u." + providerColumn + "=? FOR UPDATE OF u")) {
                     ps.setString(1, profile.id());
                     try (ResultSet rs = ps.executeQuery()) {
@@ -162,11 +162,12 @@ public class OAuthService {
         }
         User user = new User(); user.setId(UUID.randomUUID()); user.setUsername(username); user.setFullName(fullName); user.setEmail(email);
         user.setPassword(PasswordHashUtil.hashPassword(UUID.randomUUID().toString() + newState())); user.setRoleId(roleId); user.setStatus("active");
+        user.setRequiresPasswordChange(provider == Provider.GOOGLE);
         String googleId = provider == Provider.GOOGLE ? profile.id() : null;
         String githubId = provider == Provider.GITHUB ? profile.id() : null;
-        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO \"user\"(id,username,full_name,email,password,role_id,status,google_user_id,github_user_id) VALUES(?,?,?,?,?,?,'active',?,?)")) {
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO \"user\"(id,username,full_name,email,password,role_id,status,google_user_id,github_user_id,requires_password_change) VALUES(?,?,?,?,?,?,'active',?,?,?)")) {
             ps.setObject(1,user.getId()); ps.setString(2,user.getUsername()); ps.setString(3,fullName); ps.setString(4,email); ps.setString(5,user.getPassword()); ps.setObject(6,roleId);
-            ps.setString(7,googleId); ps.setString(8,githubId); ps.executeUpdate();
+            ps.setString(7,googleId); ps.setString(8,githubId); ps.setBoolean(9,user.isRequiresPasswordChange()); ps.executeUpdate();
         }
         try (PreparedStatement ps = conn.prepareStatement("SELECT s.name role_name,s.code role_code FROM setting s WHERE s.id=?")) {
             ps.setObject(1,roleId); try (ResultSet rs=ps.executeQuery()) { if(rs.next()) { user.setRoleName(rs.getString(1)); user.setRoleCode(rs.getString(2)); } }
@@ -176,6 +177,7 @@ public class OAuthService {
 
     private static User readUser(ResultSet rs) throws SQLException {
         User u = new User(); u.setId((UUID)rs.getObject("id")); u.setUsername(rs.getString("username")); u.setFullName(rs.getString("full_name")); u.setEmail(rs.getString("email")); u.setPassword(rs.getString("password"));
+        u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));
         u.setRoleId((UUID)rs.getObject("role_id")); u.setStatus(rs.getString("status")); u.setRoleName(rs.getString("role_name")); u.setRoleCode(rs.getString("role_code")); return u;
     }
     private String send(HttpRequest request) throws IOException, InterruptedException {

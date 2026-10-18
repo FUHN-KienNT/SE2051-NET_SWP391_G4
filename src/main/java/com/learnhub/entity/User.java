@@ -12,6 +12,7 @@ public class User implements Serializable {
     private String fullName;
     private String email;
     private String password;
+    private boolean requiresPasswordChange;
     private UUID roleId;
     private String status;
     private Timestamp createdAt;
@@ -49,6 +50,9 @@ public class User implements Serializable {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public boolean isRequiresPasswordChange() { return requiresPasswordChange; }
+    public void setRequiresPasswordChange(boolean requiresPasswordChange) { this.requiresPasswordChange = requiresPasswordChange; }
 
     public UUID getRoleId() { return roleId; }
     public void setRoleId(UUID roleId) { this.roleId = roleId; }

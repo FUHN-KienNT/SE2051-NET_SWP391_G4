@@ -134,6 +134,24 @@ public class UserService {
                 ? PasswordChangeResult.SUCCESS : PasswordChangeResult.FAILED;
     }
 
+    public PasswordChangeResult setInitialPassword(UUID userId, String newPassword) {
+        if (userId == null || newPassword == null || newPassword.length() < 8
+                || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
+            return PasswordChangeResult.INVALID_NEW;
+        }
+        User user = userDAO.findById(userId);
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())
+                || !user.isRequiresPasswordChange()) {
+            return PasswordChangeResult.FAILED;
+        }
+        if (PasswordHashUtil.checkPassword(newPassword, user.getPassword())) {
+            return PasswordChangeResult.SAME_PASSWORD;
+        }
+        String newHash = PasswordHashUtil.hashPassword(newPassword);
+        return userDAO.setInitialPassword(userId, user.getPassword(), newHash)
+                ? PasswordChangeResult.SUCCESS : PasswordChangeResult.FAILED;
+    }
+
     public boolean toggleStatus(UUID userId, String status) {
         if (userId == null) return false;
         return userDAO.updateStatus(userId, status);

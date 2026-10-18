@@ -18,7 +18,7 @@ import java.security.MessageDigest;
 import java.util.UUID;
 
 @WebServlet(name = "ProfileAccountServlet", urlPatterns = {
-        "/profile", "/account", "/account/profile", "/account/password"
+        "/profile", "/account", "/account/profile", "/account/password", "/account/set-password"
 })
 public class ProfileAccountServlet extends HttpServlet {
     private static final String CSRF_TOKEN = "account.csrfToken";
@@ -41,6 +41,7 @@ public class ProfileAccountServlet extends HttpServlet {
                 req.getRequestDispatcher("/WEB-INF/views/profile/index.jsp").forward(req, resp);
             }
             case "/account" -> showAccount(req, resp, user);
+            case "/account/set-password" -> showSetPassword(req, resp, user);
             default -> resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
@@ -58,6 +59,7 @@ public class ProfileAccountServlet extends HttpServlet {
         switch (req.getServletPath()) {
             case "/account/profile" -> updateProfile(req, resp, user);
             case "/account/password" -> changePassword(req, resp, user);
+            case "/account/set-password" -> setInitialPassword(req, resp, user);
             default -> resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
@@ -86,6 +88,50 @@ public class ProfileAccountServlet extends HttpServlet {
         req.setAttribute("csrfToken", session.getAttribute(CSRF_TOKEN));
         req.setAttribute("profileUser", user);
         req.getRequestDispatcher("/WEB-INF/views/profile/account.jsp").forward(req, resp);
+    }
+
+    private void showSetPassword(HttpServletRequest req, HttpServletResponse resp, User user)
+            throws ServletException, IOException {
+        if (!user.isRequiresPasswordChange()) {
+            resp.sendRedirect(req.getContextPath() + "/account");
+            return;
+        }
+        HttpSession session = req.getSession(false);
+        if (session.getAttribute(CSRF_TOKEN) == null) {
+            session.setAttribute(CSRF_TOKEN, UUID.randomUUID().toString());
+        }
+        req.setAttribute("csrfToken", session.getAttribute(CSRF_TOKEN));
+        req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
+    }
+
+    private void setInitialPassword(HttpServletRequest req, HttpServletResponse resp, User user)
+            throws ServletException, IOException {
+        if (!user.isRequiresPasswordChange()) {
+            resp.sendRedirect(req.getContextPath() + "/account");
+            return;
+        }
+        String newPassword = req.getParameter("newPassword");
+        if (newPassword == null || !newPassword.equals(req.getParameter("confirmPassword"))) {
+            req.setAttribute("passwordError", "New passwords do not match.");
+            showSetPassword(req, resp, user);
+            return;
+        }
+        UserService.PasswordChangeResult result = userService.setInitialPassword(user.getId(), newPassword);
+        if (result == UserService.PasswordChangeResult.SUCCESS) {
+            req.changeSessionId();
+            refreshSessionUser(req, user.getId());
+            HttpSession session = req.getSession(false);
+            String redirect = (String) session.getAttribute("account.afterPasswordRedirect");
+            session.removeAttribute("account.afterPasswordRedirect");
+            resp.sendRedirect(redirect != null ? redirect : req.getContextPath() + "/home");
+            return;
+        }
+        req.setAttribute("passwordError", switch (result) {
+            case INVALID_NEW -> "Use at least 8 characters and no more than 72 bytes.";
+            case SAME_PASSWORD -> "Choose a different password.";
+            default -> "Could not set your password. Please try again.";
+        });
+        showSetPassword(req, resp, user);
     }
 
     private void updateProfile(HttpServletRequest req, HttpServletResponse resp, User user)

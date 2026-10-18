@@ -156,6 +156,13 @@ public class OAuthServlet extends HttpServlet {
         authenticated.setAttribute("currentUser", user);
         authenticated.setAttribute("userName", user.getUsername());
         authenticated.setAttribute("userRole", user.getRoleCode());
+        if (user.isRequiresPasswordChange()) {
+            if (safeRedirect(redirect, req.getContextPath()) != null) {
+                authenticated.setAttribute("account.afterPasswordRedirect", redirect);
+            }
+            resp.sendRedirect(req.getContextPath() + "/account/set-password");
+            return;
+        }
         if (safeRedirect(redirect, req.getContextPath()) != null) resp.sendRedirect(redirect);
         else if ("ROLE_ADMIN".equalsIgnoreCase(user.getRoleCode())) resp.sendRedirect(req.getContextPath() + "/admin/users");
         else resp.sendRedirect(req.getContextPath() + "/home");

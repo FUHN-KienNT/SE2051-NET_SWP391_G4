@@ -33,16 +33,10 @@ public class HomeServlet extends HttpServlet {
             continueLearning = learningService.getContinueLearning(user.getId());
             req.setAttribute("continueLearning", continueLearning);
         }
-        List<CourseDTO> featuredCourses = courseService.searchPublicCourses("", null, 1, continueLearning == null ? 6 : 7);
-        if (continueLearning != null) {
-            ContinueLearningDTO current = continueLearning;
-            featuredCourses.removeIf(course -> course.getId().equals(current.getCourseId()));
-            if (featuredCourses.size() > 6) {
-                featuredCourses = featuredCourses.subList(0, 6);
-            }
-        }
+        List<CourseDTO> popularCourses = courseService.getPopularPublicCourses(
+                continueLearning == null ? null : continueLearning.getCourseId(), 6);
         List<Setting> categories = courseService.getActiveCategories();
-        req.setAttribute("featuredCourses", featuredCourses);
+        req.setAttribute("popularCourses", popularCourses);
         req.setAttribute("categories", categories);
         req.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(req, resp);
     }

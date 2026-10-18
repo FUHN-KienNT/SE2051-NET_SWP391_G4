@@ -65,6 +65,44 @@ public class CourseDAO {
         return list;
     }
 
+    public List<Course> findPopularPublishedCourses(UUID excludedCourseId, int limit) {
+        List<Course> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
+                "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
+                "s.name AS category_name, u.username AS expert_name, " +
+                "(SELECT COUNT(*) FROM registration r WHERE r.course_id = c.id " +
+                "AND r.status IN ('enrolled', 'completed') " +
+                "AND (c.price <= 0 OR r.payment_status = 'paid')) AS enrolled_count, " +
+                "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) AS module_count, " +
+                "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) AS lesson_count " +
+                "FROM course c " +
+                "LEFT JOIN setting s ON c.category_id = s.id " +
+                "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
+                "WHERE c.status = 'published' ");
+        if (excludedCourseId != null) {
+            sql.append("AND c.id <> ? ");
+        }
+        sql.append("ORDER BY enrolled_count DESC, c.created_at DESC, c.id ASC LIMIT ?");
+
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int parameterIndex = 1;
+            if (excludedCourseId != null) {
+                ps.setObject(parameterIndex++, excludedCourseId);
+            }
+            ps.setInt(parameterIndex, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToCourse(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.findPopularPublishedCourses: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
     public int countPublishedCourses(String search, UUID categoryId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM course c WHERE c.status = 'published' ");
         List<Object> params = new ArrayList<>();

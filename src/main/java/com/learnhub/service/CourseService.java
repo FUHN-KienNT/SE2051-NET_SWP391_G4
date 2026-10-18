@@ -53,16 +53,28 @@ public class CourseService {
 
         List<CourseDTO> dtos = new ArrayList<>();
         for (Course c : courses) {
-            CourseDTO dto = new CourseDTO(
-                    c.getId(), c.getTitle(), c.getDescription(), c.getPrice(),
-                    c.getThumbnailUrl(), c.getStatus(), c.getCategoryId(),
-                    c.getCategoryName(), c.getExpertName()
-            );
-            dto.setModuleCount(c.getModuleCount());
-            dto.setLessonCount(c.getLessonCount());
-            dtos.add(dto);
+            dtos.add(toCourseDTO(c));
         }
         return dtos;
+    }
+
+    public List<CourseDTO> getPopularPublicCourses(UUID excludedCourseId, int limit) {
+        List<CourseDTO> dtos = new ArrayList<>();
+        for (Course course : courseDAO.findPopularPublishedCourses(excludedCourseId, limit)) {
+            dtos.add(toCourseDTO(course));
+        }
+        return dtos;
+    }
+
+    private CourseDTO toCourseDTO(Course course) {
+        CourseDTO dto = new CourseDTO(
+                course.getId(), course.getTitle(), course.getDescription(), course.getPrice(),
+                course.getThumbnailUrl(), course.getStatus(), course.getCategoryId(),
+                course.getCategoryName(), course.getExpertName()
+        );
+        dto.setModuleCount(course.getModuleCount());
+        dto.setLessonCount(course.getLessonCount());
+        return dto;
     }
 
     public int countPublicCourses(String search, UUID categoryId) {

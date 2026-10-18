@@ -110,20 +110,20 @@
         </div>
     </section>
 
-    <section aria-labelledby="featured-heading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+    <section aria-labelledby="popular-heading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
                 <div>
                     <p class="text-sm font-semibold text-brand-700 mb-2"><c:choose><c:when test="${empty sessionScope.currentUser}">Start exploring</c:when><c:otherwise>Discover more</c:otherwise></c:choose></p>
-                    <h2 id="featured-heading" class="text-2xl sm:text-3xl font-bold text-text-primary"><c:choose><c:when test="${empty sessionScope.currentUser}">Featured courses</c:when><c:otherwise>Explore more courses</c:otherwise></c:choose></h2>
+                    <h2 id="popular-heading" class="text-2xl sm:text-3xl font-bold text-text-primary">Popular courses</h2>
                     <p class="mt-2 text-text-secondary">Find a course that fits your interests and your schedule.</p>
                 </div>
                 <a href="${pageContext.request.contextPath}/courses" class="inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-brand-700 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">View all courses <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             </div>
             <c:choose>
-                <c:when test="${not empty featuredCourses}">
+                <c:when test="${not empty popularCourses}">
                     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <c:forEach var="course" items="${featuredCourses}">
+                        <c:forEach var="course" items="${popularCourses}">
                             <a href="${pageContext.request.contextPath}/courses?action=detail&amp;id=${course.id}" class="group flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm hover:shadow-md hover:border-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                 <div class="relative h-44 bg-brand-50 flex items-center justify-center overflow-hidden">
                                     <i class="fa-solid fa-book-open text-4xl text-brand-700" aria-hidden="true"></i>
@@ -146,8 +146,8 @@
                 <c:otherwise>
                     <div class="rounded-xl border border-border-default bg-surface px-6 py-12 text-center">
                         <i class="fa-solid fa-book-open text-3xl text-brand-700" aria-hidden="true"></i>
-                        <h3 class="mt-4 text-lg font-bold text-text-primary">No featured courses yet</h3>
-                        <p class="mt-2 text-sm text-text-secondary">Explore the catalog for courses available now.</p>
+                        <h3 class="mt-4 text-lg font-bold text-text-primary">No courses available yet</h3>
+                        <p class="mt-2 text-sm text-text-secondary">Check back soon for new courses.</p>
                         <a href="${pageContext.request.contextPath}/courses" class="inline-flex mt-5 rounded-lg bg-brand-700 px-5 py-3 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Browse all courses</a>
                     </div>
                 </c:otherwise>

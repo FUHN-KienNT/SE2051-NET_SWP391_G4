@@ -3,15 +3,10 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="min-h-screen flex flex-col bg-surface lg:flex-row">
-    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
-        <jsp:param name="activeSection" value="settings" />
-    </jsp:include>
-
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0">
-        <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+<div class="min-h-[calc(100vh-64px)] bg-[#f8fafc]">
+    <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
 
             <!-- Flash Alert -->
             <c:if test="${not empty successMessage}">
@@ -285,7 +280,6 @@
             </div>
 
         </main>
-    </div>
 </div>
 
-<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

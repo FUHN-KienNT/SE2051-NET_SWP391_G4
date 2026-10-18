@@ -23,7 +23,6 @@ public class UserDTO implements Serializable {
     public UserDTO(UUID id, String username, String email, UUID roleId, String roleName, String status) {
         this.id = id;
         this.username = username;
-        this.fullName = username;
         this.email = email;
         this.roleId = roleId;
         this.roleName = roleName;
@@ -36,11 +35,8 @@ public class UserDTO implements Serializable {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    public String getFullName() { return fullName != null ? fullName : username; }
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-        if (this.username == null) this.username = fullName;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }

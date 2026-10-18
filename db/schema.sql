@@ -85,6 +85,7 @@ CREATE INDEX idx_setting_type ON setting (type);
 CREATE TABLE "user" (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username   VARCHAR(255) NOT NULL,
+    full_name  VARCHAR(255) NOT NULL,
     email      VARCHAR(255) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     role_id    UUID NOT NULL REFERENCES setting (id),
@@ -93,6 +94,7 @@ CREATE TABLE "user" (
     github_user_id VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT user_full_name_not_blank CHECK (full_name ~ '[^[:space:]]'),
     CONSTRAINT uq_user_google_user_id UNIQUE (google_user_id),
     CONSTRAINT uq_user_github_user_id UNIQUE (github_user_id)
 );

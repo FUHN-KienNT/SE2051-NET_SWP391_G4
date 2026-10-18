@@ -90,18 +90,22 @@ public class ProfileAccountServlet extends HttpServlet {
 
     private void updateProfile(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
-        String requested = req.getParameter("username");
-        UserService.UsernameUpdateResult result = userService.updateOwnUsername(user.getId(), requested);
-        if (result == UserService.UsernameUpdateResult.SUCCESS) {
+        String requestedUsername = req.getParameter("username");
+        String requestedFullName = req.getParameter("fullName");
+        UserService.ProfileUpdateResult result = userService.updateOwnProfile(
+                user.getId(), requestedUsername, requestedFullName);
+        if (result == UserService.ProfileUpdateResult.SUCCESS) {
             refreshSessionUser(req, user.getId());
             resp.sendRedirect(req.getContextPath() + "/account?updated=profile");
             return;
         }
-        req.setAttribute("enteredUsername", requested);
+        req.setAttribute("enteredUsername", requestedUsername);
+        req.setAttribute("enteredFullName", requestedFullName);
         req.setAttribute("profileError", switch (result) {
-            case INVALID -> "Use 3–255 letters, numbers, dots, underscores, or hyphens.";
+            case INVALID_USERNAME -> "Use 3–255 letters, numbers, dots, underscores, or hyphens for your username.";
+            case INVALID_FULL_NAME -> "Enter a full name using letters, spaces, apostrophes, hyphens, or periods (up to 255 characters).";
             case TAKEN -> "This username is already in use.";
-            default -> "Could not save your username. Please try again.";
+            default -> "Could not save your profile. Please try again.";
         });
         showAccount(req, resp, user);
     }

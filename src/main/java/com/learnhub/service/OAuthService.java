@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.learnhub.entity.User;
 import com.learnhub.util.DbConnection;
+import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
 
 import java.io.IOException;
@@ -27,6 +28,9 @@ import java.util.UUID;
 public class OAuthService {
     public enum Provider { GOOGLE, GITHUB }
     public record Profile(String id, String email, String name) {}
+    public static final class FullNameRequiredException extends SQLException {
+        public FullNameRequiredException() { super("A full name is required to create an account"); }
+    }
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
@@ -55,7 +59,8 @@ public class OAuthService {
         String endpoint = provider == Provider.GOOGLE ? "https://accounts.google.com/o/oauth2/v2/auth" : "https://github.com/login/oauth/authorize";
         String scope = provider == Provider.GOOGLE ? "openid email profile" : "read:user user:email";
         return endpoint + "?client_id=" + enc(clientId) + "&redirect_uri=" + enc(callbackSetting(provider))
-                + "&response_type=code&scope=" + enc(scope) + "&state=" + enc(state);
+                + "&response_type=code&scope=" + enc(scope) + "&state=" + enc(state)
+                + (provider == Provider.GITHUB ? "&prompt=select_account" : "");
     }
 
     public Profile fetchProfile(Provider provider, String code) throws IOException, InterruptedException {
@@ -73,7 +78,7 @@ public class OAuthService {
                     .header("Authorization", "Bearer " + accessToken).GET().build();
             JsonObject user = json(send(userRequest));
             if (!user.has("email_verified") || !user.get("email_verified").getAsBoolean()) throw new IOException("Verified email required");
-            return new Profile(required(user, "sub"), required(user, "email"), optional(user, "name", optional(user, "given_name", "Google user")));
+            return new Profile(required(user, "sub"), required(user, "email"), optional(user, "name", null));
         }
 
         HttpRequest userRequest = HttpRequest.newBuilder(URI.create("https://api.github.com/user"))
@@ -91,7 +96,7 @@ public class OAuthService {
             }
         }
         if (email == null) throw new IOException("Verified email required");
-        return new Profile(required(user, "id"), email, optional(user, "name", optional(user, "login", "GitHub user")));
+        return new Profile(required(user, "id"), email, optional(user, "name", null));
     }
 
     public User resolveAccount(Provider provider, Profile profile) throws SQLException {
@@ -104,7 +109,7 @@ public class OAuthService {
                 User user = null;
                 boolean foundByProvider = false;
                 String linkedProviderId = null;
-                String userSelect = "SELECT u.id,u.username,u.email,u.password,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
+                String userSelect = "SELECT u.id,u.username,u.full_name,u.email,u.password,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
                 try (PreparedStatement ps = conn.prepareStatement(userSelect + "WHERE u." + providerColumn + "=? FOR UPDATE OF u")) {
                     ps.setString(1, profile.id());
                     try (ResultSet rs = ps.executeQuery()) {
@@ -122,7 +127,9 @@ public class OAuthService {
                 }
                 if (user != null && !"active".equalsIgnoreCase(user.getStatus())) throw new SQLException("Account inactive");
                 if (user == null) {
-                    user = createUser(conn, profile, email, provider);
+                    String fullName = FullNameUtil.normalizeOrNull(profile.name());
+                    if (fullName == null) throw new FullNameRequiredException();
+                    user = createUser(conn, profile, fullName, email, provider);
                 } else if (!foundByProvider) {
                     if (linkedProviderId != null && !linkedProviderId.equals(profile.id())) {
                         throw new SQLException("A different account from this provider is already linked");
@@ -144,8 +151,8 @@ public class OAuthService {
         }
     }
 
-    private User createUser(Connection conn, Profile profile, String email, Provider provider) throws Exception {
-        String base = profile.name() == null ? "learner" : profile.name().trim().replaceAll("[^\\p{L}\\p{N}._-]", "_");
+    private User createUser(Connection conn, Profile profile, String fullName, String email, Provider provider) throws Exception {
+        String base = fullName.replaceAll("[^\\p{L}\\p{N}._-]", "_");
         if (base.isBlank()) base = "learner";
         String username = base.length() > 220 ? base.substring(0, 220) : base;
         UUID roleId;
@@ -153,13 +160,13 @@ public class OAuthService {
             if (!rs.next()) throw new SQLException("Student role is not configured");
             roleId = (UUID) rs.getObject(1);
         }
-        User user = new User(); user.setId(UUID.randomUUID()); user.setUsername(username); user.setEmail(email);
+        User user = new User(); user.setId(UUID.randomUUID()); user.setUsername(username); user.setFullName(fullName); user.setEmail(email);
         user.setPassword(PasswordHashUtil.hashPassword(UUID.randomUUID().toString() + newState())); user.setRoleId(roleId); user.setStatus("active");
         String googleId = provider == Provider.GOOGLE ? profile.id() : null;
         String githubId = provider == Provider.GITHUB ? profile.id() : null;
-        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO \"user\"(id,username,email,password,role_id,status,google_user_id,github_user_id) VALUES(?,?,?,?,?,'active',?,?)")) {
-            ps.setObject(1,user.getId()); ps.setString(2,user.getUsername()); ps.setString(3,email); ps.setString(4,user.getPassword()); ps.setObject(5,roleId);
-            ps.setString(6,googleId); ps.setString(7,githubId); ps.executeUpdate();
+        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO \"user\"(id,username,full_name,email,password,role_id,status,google_user_id,github_user_id) VALUES(?,?,?,?,?,?,'active',?,?)")) {
+            ps.setObject(1,user.getId()); ps.setString(2,user.getUsername()); ps.setString(3,fullName); ps.setString(4,email); ps.setString(5,user.getPassword()); ps.setObject(6,roleId);
+            ps.setString(7,googleId); ps.setString(8,githubId); ps.executeUpdate();
         }
         try (PreparedStatement ps = conn.prepareStatement("SELECT s.name role_name,s.code role_code FROM setting s WHERE s.id=?")) {
             ps.setObject(1,roleId); try (ResultSet rs=ps.executeQuery()) { if(rs.next()) { user.setRoleName(rs.getString(1)); user.setRoleCode(rs.getString(2)); } }
@@ -168,7 +175,7 @@ public class OAuthService {
     }
 
     private static User readUser(ResultSet rs) throws SQLException {
-        User u = new User(); u.setId((UUID)rs.getObject("id")); u.setUsername(rs.getString("username")); u.setEmail(rs.getString("email")); u.setPassword(rs.getString("password"));
+        User u = new User(); u.setId((UUID)rs.getObject("id")); u.setUsername(rs.getString("username")); u.setFullName(rs.getString("full_name")); u.setEmail(rs.getString("email")); u.setPassword(rs.getString("password"));
         u.setRoleId((UUID)rs.getObject("role_id")); u.setStatus(rs.getString("status")); u.setRoleName(rs.getString("role_name")); u.setRoleCode(rs.getString("role_code")); return u;
     }
     private String send(HttpRequest request) throws IOException, InterruptedException {

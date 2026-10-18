@@ -54,33 +54,33 @@ INSERT INTO setting (id, type, code, name, description, status, sort_order) VALU
     ('a0000000-0000-0000-0000-000000000004', 'role', 'ROLE_STUDENT', 'Student',              'Học viên tham gia các khóa học và làm bài tập đánh giá', TRUE, 4)
 ON CONFLICT (type, code) DO NOTHING;
 
-INSERT INTO "user" (id, username, email, password, role_id, status) VALUES
+INSERT INTO "user" (id, username, full_name, email, password, role_id, status) VALUES
     -- 1 Admin (admin / admin)
-    ('c0000000-0000-0000-0000-000000000001', 'admin',     'admin@learnhub.com',    '$2a$10$Sdt.YtiEjO5Kr5V.oEIs/uyme2cDi65wo/sHUL5J546JTjZpnWVRC', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_ADMIN' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000001', 'admin',     'admin', 'admin@learnhub.com',    '$2a$10$Sdt.YtiEjO5Kr5V.oEIs/uyme2cDi65wo/sHUL5J546JTjZpnWVRC', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_ADMIN' LIMIT 1), 'active'),
 
     -- 2 Managers (manager / manager, manager2 / manager2)
-    ('c0000000-0000-0000-0000-000000000002', 'manager',   'manager@learnhub.com',  '$2a$10$AQYzTX/07vmJ11M8kVevCeG09zAFD3Y6EVCkdIrIcsnHuJ9O0fylK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_MANAGER' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000003', 'manager2',  'manager2@learnhub.com', '$2a$10$WkWgNDWJ/YkDYCpcHV7lbuVcuMCEeH.CL6fe0RVPyZnt1bsTRJZJ.', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_MANAGER' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000002', 'manager',   'manager', 'manager@learnhub.com',  '$2a$10$AQYzTX/07vmJ11M8kVevCeG09zAFD3Y6EVCkdIrIcsnHuJ9O0fylK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_MANAGER' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000003', 'manager2',  'manager2', 'manager2@learnhub.com', '$2a$10$WkWgNDWJ/YkDYCpcHV7lbuVcuMCEeH.CL6fe0RVPyZnt1bsTRJZJ.', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_MANAGER' LIMIT 1), 'active'),
 
     -- 4 Experts / Instructors (expert / expert, expert2 / expert2, ...)
-    ('c0000000-0000-0000-0000-000000000004', 'expert',    'expert@learnhub.com',   '$2a$10$Amt4fLTJ2n2n/h.GEXf3lu9pro6uozD8si3FknTwDiBxJ0Q6lmGfK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000005', 'expert2',   'expert2@learnhub.com',  '$2a$10$GahzmDxReLJIg0dSmHc0ius8inJJW6Yx4tM0uX0vjOiVPNA3/ClxG', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000006', 'expert3',   'expert3@learnhub.com',  '$2a$10$3zIF/X.cI5PGiT/RxG8XveEmTZw9OCTwri0rnUkXuUaT9vuLWaCTO', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000007', 'expert4',   'expert4@learnhub.com',  '$2a$10$ll2khekvXIiqgp4NsaFQRObxp3/LoHO99rkhF6hVpxRxuvezJPVC.', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000004', 'expert',    'expert', 'expert@learnhub.com',   '$2a$10$Amt4fLTJ2n2n/h.GEXf3lu9pro6uozD8si3FknTwDiBxJ0Q6lmGfK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000005', 'expert2',   'expert2', 'expert2@learnhub.com',  '$2a$10$GahzmDxReLJIg0dSmHc0ius8inJJW6Yx4tM0uX0vjOiVPNA3/ClxG', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000006', 'expert3',   'expert3', 'expert3@learnhub.com',  '$2a$10$3zIF/X.cI5PGiT/RxG8XveEmTZw9OCTwri0rnUkXuUaT9vuLWaCTO', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000007', 'expert4',   'expert4', 'expert4@learnhub.com',  '$2a$10$ll2khekvXIiqgp4NsaFQRObxp3/LoHO99rkhF6hVpxRxuvezJPVC.', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_EXPERT' LIMIT 1), 'active'),
 
     -- 8 Students (student / student, student2 / student2, ...)
-    ('c0000000-0000-0000-0000-000000000008', 'student',   'student@learnhub.com',  '$2a$10$ujsHGpMf9v0mE/QQtFLgGuVuhBBGo9CupXp4Dn6tsBdjyFSMncGvO', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000009', 'student2',  'student2@learnhub.com', '$2a$10$kG6.9HLENo9arUiveoQu.uBED657ES5Cx5jE1Nzscf8B1bT.CbIfK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000010', 'student3',  'student3@learnhub.com', '$2a$10$IncS/j/.pNruMXdFxbNhxub/HA.5bg6n9s7VhMjrE/pmxLcz6y3zy', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000011', 'student4',  'student4@learnhub.com', '$2a$10$uvdiL6YTHA1/B1bNSh84uuNgImBgGnExPgFwPV1IyJFAASlB90aBi', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000012', 'student5',  'student5@learnhub.com', '$2a$10$Mnx9fQz.gNa2Q/hCCz5zmenXDlYF.if3.7TaWqVOejUNx95rELkxK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000013', 'student6',  'student6@learnhub.com', '$2a$10$0edRofpWrPXF85O8WGAeaub8RB9/AxWawKEj71pPHXDjisxqLOZ.W', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000014', 'student7',  'student7@learnhub.com', '$2a$10$TR13q4kGjZg1nqOOjTCLB.21DvaEz8YPUa8oi3qI.3SBxzNpUfg2S', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
-    ('c0000000-0000-0000-0000-000000000015', 'student8',  'student8@learnhub.com', '$2a$10$qIrXEEG4/EdxpCYiOLAkp.GeeA272AZnh5VFgUNZoihL/yCjuDwKG', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000008', 'student',   'student', 'student@learnhub.com',  '$2a$10$ujsHGpMf9v0mE/QQtFLgGuVuhBBGo9CupXp4Dn6tsBdjyFSMncGvO', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000009', 'student2',  'student2', 'student2@learnhub.com', '$2a$10$kG6.9HLENo9arUiveoQu.uBED657ES5Cx5jE1Nzscf8B1bT.CbIfK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000010', 'student3',  'student3', 'student3@learnhub.com', '$2a$10$IncS/j/.pNruMXdFxbNhxub/HA.5bg6n9s7VhMjrE/pmxLcz6y3zy', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000011', 'student4',  'student4', 'student4@learnhub.com', '$2a$10$uvdiL6YTHA1/B1bNSh84uuNgImBgGnExPgFwPV1IyJFAASlB90aBi', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000012', 'student5',  'student5', 'student5@learnhub.com', '$2a$10$Mnx9fQz.gNa2Q/hCCz5zmenXDlYF.if3.7TaWqVOejUNx95rELkxK', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000013', 'student6',  'student6', 'student6@learnhub.com', '$2a$10$0edRofpWrPXF85O8WGAeaub8RB9/AxWawKEj71pPHXDjisxqLOZ.W', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000014', 'student7',  'student7', 'student7@learnhub.com', '$2a$10$TR13q4kGjZg1nqOOjTCLB.21DvaEz8YPUa8oi3qI.3SBxzNpUfg2S', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
+    ('c0000000-0000-0000-0000-000000000015', 'student8',  'student8', 'student8@learnhub.com', '$2a$10$qIrXEEG4/EdxpCYiOLAkp.GeeA272AZnh5VFgUNZoihL/yCjuDwKG', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'active'),
 
     -- Inactive & Banned test accounts
-    ('c0000000-0000-0000-0000-000000000016', 'inactive',  'inactive@learnhub.com', '$2a$10$eu4KnFl9QzuD.jwM6Q58O.l/7fIyFCuieKJCC.69WiUnZEHsm9ZIC', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'inactive'),
-    ('c0000000-0000-0000-0000-000000000017', 'banned',    'banned@learnhub.com',   '$2a$10$v1OxBlBlLquJKeBXy7ydROU.3jayw6i9JUYxiiYEbVm.7NtNpI08i', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'banned')
+    ('c0000000-0000-0000-0000-000000000016', 'inactive',  'inactive', 'inactive@learnhub.com', '$2a$10$eu4KnFl9QzuD.jwM6Q58O.l/7fIyFCuieKJCC.69WiUnZEHsm9ZIC', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'inactive'),
+    ('c0000000-0000-0000-0000-000000000017', 'banned',    'banned', 'banned@learnhub.com',   '$2a$10$v1OxBlBlLquJKeBXy7ydROU.3jayw6i9JUYxiiYEbVm.7NtNpI08i', (SELECT id FROM setting WHERE type = 'role' AND code = 'ROLE_STUDENT' LIMIT 1), 'banned')
 ON CONFLICT (id) DO UPDATE SET 
     username = EXCLUDED.username,
     email = EXCLUDED.email,

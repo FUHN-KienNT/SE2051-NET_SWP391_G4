@@ -5,6 +5,7 @@ import com.learnhub.dao.UserDAO;
 import com.learnhub.dto.UserDTO;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
+import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
  */
 public class UserService {
     public enum UsernameUpdateResult { SUCCESS, INVALID, TAKEN, FAILED }
+    public enum ProfileUpdateResult { SUCCESS, INVALID_USERNAME, INVALID_FULL_NAME, TAKEN, FAILED }
     public enum PasswordChangeResult { SUCCESS, INVALID_CURRENT, INVALID_NEW, SAME_PASSWORD, FAILED }
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
@@ -96,6 +98,19 @@ public class UserService {
                 ? UsernameUpdateResult.SUCCESS : UsernameUpdateResult.FAILED;
     }
 
+    public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername, String requestedFullName) {
+        if (userId == null || requestedUsername == null) return ProfileUpdateResult.INVALID_USERNAME;
+        String username = requestedUsername.trim();
+        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) return ProfileUpdateResult.INVALID_USERNAME;
+        String fullName = FullNameUtil.normalizeOrNull(requestedFullName);
+        if (fullName == null) return ProfileUpdateResult.INVALID_FULL_NAME;
+        User user = userDAO.findById(userId);
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return ProfileUpdateResult.FAILED;
+        if (userDAO.isIdentityTakenByOther(userId, username)) return ProfileUpdateResult.TAKEN;
+        return userDAO.updateOwnProfile(userId, username, fullName)
+                ? ProfileUpdateResult.SUCCESS : ProfileUpdateResult.FAILED;
+    }
+
     public PasswordChangeResult changeOwnPassword(UUID userId, String currentPassword,
                                                    String newPassword) {
         if (userId == null || currentPassword == null || newPassword == null) {
@@ -149,17 +164,14 @@ public class UserService {
     }
 
     /** Called only after the email verification code has been accepted. */
-    public User registerVerified(String name, String email, String passwordHash) {
-        if (email == null || passwordHash == null || name == null || !passwordHash.startsWith("$2")) return null;
+    public User registerVerified(String username, String fullName, String email, String passwordHash) {
+        if (email == null || passwordHash == null || username == null || !passwordHash.startsWith("$2")) return null;
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
-        String normalizedName = name.trim();
-        if (normalizedEmail.isEmpty() || normalizedName.isEmpty()) return null;
-        if (userDAO.findByEmail(normalizedEmail) != null) {
-            return null;
-        }
-        if (userDAO.findByEmail(normalizedName) != null) {
-            return null;
-        }
+        String normalizedName = username.trim();
+        String normalizedFullName = FullNameUtil.normalizeOrNull(fullName);
+        if (normalizedEmail.isEmpty() || normalizedName.isEmpty() || normalizedFullName == null) return null;
+        // Availability was checked before sending the code; check again after verification.
+        if (isRegistrationIdentityTaken(normalizedName, normalizedEmail)) return null;
 
         Setting studentRole = null;
         List<Setting> roles = settingDAO.findAllRoles();
@@ -174,6 +186,7 @@ public class UserService {
         User newUser = new User();
         newUser.setId(UUID.randomUUID());
         newUser.setUsername(normalizedName);
+        newUser.setFullName(normalizedFullName);
         newUser.setEmail(normalizedEmail);
         newUser.setPassword(passwordHash);
         newUser.setRoleId(roleId);
@@ -185,6 +198,7 @@ public class UserService {
         return null;
     }
 
+    /** Checks whether either registration identifier is already in use. */
     public boolean isRegistrationIdentityTaken(String name, String email) {
         return userDAO.findByEmail(email) != null || userDAO.findByEmail(name) != null;
     }
@@ -203,7 +217,7 @@ public class UserService {
         UserDTO dto = new UserDTO();
         dto.setId(u.getId());
         dto.setUsername(u.getUsername());
-        dto.setFullName(u.getUsername());
+        dto.setFullName(u.getFullName());
         dto.setEmail(u.getEmail());
         dto.setRoleId(u.getRoleId());
         dto.setRoleName(u.getRoleName());

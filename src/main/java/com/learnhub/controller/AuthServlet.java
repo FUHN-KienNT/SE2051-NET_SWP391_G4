@@ -3,6 +3,7 @@ package com.learnhub.controller;
 import com.learnhub.entity.User;
 import com.learnhub.service.UserService;
 import com.learnhub.util.EmailUtil;
+import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -136,14 +137,19 @@ public class AuthServlet extends HttpServlet {
 
     private void register(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String username = trim(req.getParameter("username"));
+        String enteredFullName = req.getParameter("fullName");
+        String fullName = FullNameUtil.normalizeOrNull(enteredFullName);
         String email = trim(req.getParameter("email")).toLowerCase(Locale.ROOT);
         String password = req.getParameter("password");
         String confirmation = req.getParameter("confirmPassword");
         req.setAttribute("username", username);
+        req.setAttribute("fullName", enteredFullName);
         req.setAttribute("email", email);
 
         String error = null;
-        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$") || email.length() > 255 ||
+        if (fullName == null) {
+            error = "Enter a full name using letters, spaces, apostrophes, hyphens, or periods (up to 255 characters).";
+        } else if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$") || email.length() > 255 ||
                 !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             error = "Enter a valid username and email address.";
         } else if (password == null || password.length() < 8 || password.length() > 72 ||
@@ -164,13 +170,13 @@ public class AuthServlet extends HttpServlet {
         synchronized (session) {
             PendingRegistration previous = (PendingRegistration) session.getAttribute(PENDING_REGISTRATION);
             if (previous != null && previous.getEmail().equals(email) && !previous.canResend(Instant.now())) {
-                previous.updateDetails(username, PasswordHashUtil.hashPassword(password));
+                previous.updateDetails(username, fullName, PasswordHashUtil.hashPassword(password));
                 resp.sendRedirect(req.getContextPath() + "/auth/verify-email?wait=1");
                 return;
             }
             String code = newCode();
             PendingRegistration candidate = new PendingRegistration(
-                    username, email, PasswordHashUtil.hashPassword(password), code, Instant.now());
+                    username, fullName, email, PasswordHashUtil.hashPassword(password), code, Instant.now());
             if (!sendVerificationCode(email, code)) {
                 req.setAttribute("errorMessage", "We could not send the verification email. Please try again later.");
                 req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
@@ -196,7 +202,7 @@ public class AuthServlet extends HttpServlet {
             VerificationResult result = pending.checkCode(req.getParameter("code"), Instant.now());
             if (result == VerificationResult.VALID) {
                 User registered = userService.registerVerified(
-                        pending.getUsername(), pending.getEmail(), pending.getPasswordHash());
+                        pending.getUsername(), pending.getFullName(), pending.getEmail(), pending.getPasswordHash());
                 if (registered != null) {
                     session.removeAttribute(PENDING_REGISTRATION);
                     resp.sendRedirect(req.getContextPath() + "/auth/login?verified=success");
@@ -272,25 +278,29 @@ public class AuthServlet extends HttpServlet {
         private static final int MAX_ATTEMPTS = 5;
 
         private String username;
+        private String fullName;
         private final String email;
         private String passwordHash;
         private String codeHash;
         private Instant sentAt;
         private int failedAttempts;
 
-        private PendingRegistration(String username, String email, String passwordHash, String code, Instant now) {
+        private PendingRegistration(String username, String fullName, String email, String passwordHash, String code, Instant now) {
             this.username = username;
+            this.fullName = fullName;
             this.email = email;
             this.passwordHash = passwordHash;
             replaceCode(code, now);
         }
 
         private String getUsername() { return username; }
+        private String getFullName() { return fullName; }
         private String getEmail() { return email; }
         private String getPasswordHash() { return passwordHash; }
 
-        private void updateDetails(String username, String passwordHash) {
+        private void updateDetails(String username, String fullName, String passwordHash) {
             this.username = username;
+            this.fullName = fullName;
             this.passwordHash = passwordHash;
         }
 

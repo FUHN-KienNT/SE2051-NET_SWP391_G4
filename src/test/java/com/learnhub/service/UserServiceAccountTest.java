@@ -16,11 +16,13 @@ class UserServiceAccountTest {
         final User user = new User();
         boolean taken;
         String savedUsername;
+        String savedFullName;
         String savedHash;
 
         AccountDao() {
             user.setId(UUID.randomUUID());
             user.setUsername("Alex");
+            user.setFullName("Alex Nguyen");
             user.setStatus("active");
             user.setPassword(PasswordHashUtil.hashPassword("current-password"));
         }
@@ -42,11 +44,19 @@ class UserServiceAccountTest {
         }
 
         @Override
+        public boolean updateOwnProfile(UUID userId, String username, String fullName) {
+            savedUsername = username;
+            savedFullName = fullName;
+            return true;
+        }
+
+        @Override
         public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
             if (!currentHash.equals(user.getPassword())) return false;
             savedHash = newHash;
             return true;
         }
+
     }
 
     @Test
@@ -80,5 +90,26 @@ class UserServiceAccountTest {
         assertEquals(UserService.PasswordChangeResult.SUCCESS,
                 service.changeOwnPassword(userId, "current-password", "new-password"));
         assertTrue(PasswordHashUtil.checkPassword("new-password", dao.savedHash));
+    }
+
+    @Test
+    void ownProfileRequiresFullNameAndKeepsItSeparateFromUsername() {
+        AccountDao dao = new AccountDao();
+        UserService service = new UserService(dao, new SettingDAO());
+        UUID userId = dao.user.getId();
+        assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
+                service.updateOwnProfile(userId, "Alex", "  \t  "));
+        assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
+                service.updateOwnProfile(userId, "Alex", "a".repeat(256)));
+        assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
+                service.updateOwnProfile(userId, "Alex", "Nguyễn abc@123"));
+        dao.taken = true;
+        assertEquals(UserService.ProfileUpdateResult.TAKEN,
+                service.updateOwnProfile(userId, "Other", "Nguyễn Văn A"));
+        dao.taken = false;
+        assertEquals(UserService.ProfileUpdateResult.SUCCESS,
+                service.updateOwnProfile(userId, "  Alex_2  ", "  Nguyễn Văn A  "));
+        assertEquals("Alex_2", dao.savedUsername);
+        assertEquals("Nguyễn Văn A", dao.savedFullName);
     }
 }

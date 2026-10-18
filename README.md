@@ -147,6 +147,14 @@ psql -U postgres -d learnhub -f db/schema.sql
 psql -U postgres -d learnhub -f db/seed.sql
 ```
 
+For an existing database, run this migration **before** deploying the updated WAR:
+
+```bash
+psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/2026-10-17-add-user-full-name.sql
+```
+
+The one-time migration fills existing users' `full_name` from `username` and then requires a nonblank value. Users can edit their name on the Account page. Fresh databases already have this column in `db/schema.sql` and `db/seed.sql`.
+
 Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
 
 ### Social sign-in (Google and GitHub)
@@ -161,7 +169,7 @@ GITHUB_CLIENT_SECRET
 GITHUB_REDIRECT_URI
 ```
 
-Register each redirect URI in its provider's OAuth application settings. For a local deployment at `http://localhost:8080/learnhub`, use `http://localhost:8080/learnhub/auth/oauth/google/callback` and `http://localhost:8080/learnhub/auth/oauth/github/callback`. Google needs the `openid`, `email`, and `profile` scopes; GitHub needs `read:user` and `user:email`. For an existing database, add nullable `google_user_id` and `github_user_id` columns with unique constraints to the `user` table before enabling social sign-in. A new database gets the provider ID columns from `db/schema.sql`.
+Register each redirect URI in its provider's OAuth application settings. For a local deployment at `http://localhost:8080/learnhub`, use `http://localhost:8080/learnhub/auth/oauth/google/callback` and `http://localhost:8080/learnhub/auth/oauth/github/callback`. Google needs the `openid`, `email`, and `profile` scopes; GitHub needs `read:user` and `user:email`. New users whose provider does not supply a usable display name must enter one on LearnHub before their account is created. For an existing database, add nullable `google_user_id` and `github_user_id` columns with unique constraints to the `user` table before enabling social sign-in. A new database gets the provider ID columns from `db/schema.sql`.
 
 ### Email verification for password sign-up
 

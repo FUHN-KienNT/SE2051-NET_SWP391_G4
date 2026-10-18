@@ -11,7 +11,7 @@
         <div>
             <p class="text-sm font-semibold uppercase tracking-wide text-brand-700 mb-2">Settings</p>
             <h1 class="text-3xl font-bold text-text-primary">Account</h1>
-            <p class="mt-2 text-sm text-text-secondary">Manage your username and keep your account secure.</p>
+        <p class="mt-2 text-sm text-text-secondary">Manage your name and username, and keep your account secure.</p>
         </div>
         <a href="${pageContext.request.contextPath}/profile"
            class="inline-flex items-center gap-2 rounded-lg border border-border-default bg-surface-card px-4 py-2.5 text-sm font-semibold text-text-primary hover:border-brand-700 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
@@ -22,7 +22,7 @@
     <c:if test="${param.updated eq 'profile' || param.updated eq 'password'}">
         <p role="status" class="mb-6 rounded-xl border border-brand-100 bg-brand-50 p-4 text-sm font-medium text-status-success">
             <c:choose>
-                <c:when test="${param.updated eq 'profile'}">Your username has been updated.</c:when>
+                <c:when test="${param.updated eq 'profile'}">Your profile has been updated.</c:when>
                 <c:otherwise>Your password has been changed.</c:otherwise>
             </c:choose>
         </p>
@@ -34,10 +34,11 @@
             <p class="mt-1 text-sm text-text-secondary">Your email is linked to this account and cannot be changed here.</p>
             <div class="my-6 flex items-center gap-4">
                 <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-50 text-2xl font-bold uppercase text-brand-700" aria-hidden="true">
-                    <c:out value="${fn:substring(profileUser.username, 0, 1)}" />
+                    <c:out value="${fn:substring(profileUser.fullName, 0, 1)}" />
                 </div>
                 <div class="min-w-0">
-                    <p class="font-semibold text-text-primary break-words"><c:out value="${profileUser.username}" /></p>
+                    <p class="font-semibold text-text-primary break-words"><c:out value="${profileUser.fullName}" /></p>
+                    <p class="mt-1 text-sm text-text-secondary break-words"><c:out value="${profileUser.username}" /></p>
                     <p class="mt-1 text-sm text-text-secondary">Your initial is shown in place of a profile photo.</p>
                 </div>
             </div>
@@ -49,13 +50,19 @@
                 <input type="hidden" name="csrfToken" value="${fn:escapeXml(csrfToken)}">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
+                        <label for="account-full-name" class="mb-2 block text-sm font-semibold text-text-primary">Full name</label>
+                        <input id="account-full-name" name="fullName" type="text" maxlength="255" required autocomplete="name"
+                               value="${fn:escapeXml(enteredFullName != null ? enteredFullName : profileUser.fullName)}"
+                               class="w-full rounded-lg border border-border-default bg-surface px-3 py-2.5 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                    </div>
+                    <div>
                         <label for="account-username" class="mb-2 block text-sm font-semibold text-text-primary">Username</label>
                         <input id="account-username" name="username" type="text" minlength="3" maxlength="255" required autocomplete="username"
                                value="${fn:escapeXml(enteredUsername != null ? enteredUsername : profileUser.username)}"
                                class="w-full rounded-lg border border-border-default bg-surface px-3 py-2.5 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                         <p class="mt-2 text-xs text-text-secondary">3–255 letters, numbers, dots, underscores, or hyphens.</p>
                     </div>
-                    <div>
+                    <div class="sm:col-span-2">
                         <label for="account-email" class="mb-2 block text-sm font-semibold text-text-primary">Email</label>
                         <input id="account-email" type="email" readonly aria-readonly="true" value="${fn:escapeXml(profileUser.email)}"
                                class="w-full rounded-lg border border-border-default bg-surface px-3 py-2.5 text-base text-text-secondary">

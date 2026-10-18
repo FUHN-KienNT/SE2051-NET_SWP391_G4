@@ -9,6 +9,7 @@ public class User implements Serializable {
 
     private UUID id;
     private String username;
+    private String fullName;
     private String email;
     private String password;
     private UUID roleId;
@@ -40,8 +41,8 @@ public class User implements Serializable {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    public String getFullName() { return username; }
-    public void setFullName(String fullName) { this.username = fullName; }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }

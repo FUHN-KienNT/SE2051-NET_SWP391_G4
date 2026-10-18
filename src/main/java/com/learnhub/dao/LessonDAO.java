@@ -308,6 +308,7 @@ public class LessonDAO {
         return 0;
     }
 
+    // A non-positive limit loads the complete review queue.
     public List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> findCoursesAwaitingReview(int limit) {
         List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> list = new ArrayList<>();
         String sql = "SELECT c.id as course_id, c.title as course_title, s.name as category_name, " +
@@ -319,10 +320,10 @@ public class LessonDAO {
                      "LEFT JOIN setting s ON c.category_id = s.id " +
                      "WHERE l.status = 'draft' " +
                      "GROUP BY c.id, c.title, s.name, u.username " +
-                     "ORDER BY pending_count DESC, c.title ASC LIMIT ?";
+                     "ORDER BY pending_count DESC, c.title ASC" + (limit > 0 ? " LIMIT ?" : "");
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
+            if (limit > 0) ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem(

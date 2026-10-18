@@ -33,7 +33,14 @@ public class LessonReviewServlet extends HttpServlet {
         User manager = requireManager(req, resp);
         if (manager == null) return;
         try {
-            UUID courseId = UUID.fromString(req.getParameter("courseId"));
+            String courseIdParam = req.getParameter("courseId");
+            if (courseIdParam == null || courseIdParam.isBlank()) {
+                req.setAttribute("pendingCourses", lessonService.getCoursesAwaitingReview(manager));
+                req.setAttribute("pageTitle", "Lesson Review - LearnHub");
+                req.getRequestDispatcher("/WEB-INF/views/admin/lesson-review-list.jsp").forward(req, resp);
+                return;
+            }
+            UUID courseId = UUID.fromString(courseIdParam);
             var data = lessonService.getLessonsForReview(manager, courseId);
             if (req.getSession().getAttribute("lessonReviewToken") == null) {
                 req.getSession().setAttribute("lessonReviewToken", UUID.randomUUID().toString());

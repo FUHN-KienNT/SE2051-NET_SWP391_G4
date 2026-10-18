@@ -4,6 +4,7 @@ import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dto.LessonDTO;
+import com.learnhub.dto.ManagerDashboardDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Module;
 import com.learnhub.entity.Lesson;
@@ -221,6 +222,11 @@ public class LessonService {
         Course course = courseDAO.findById(courseId);
         if (course == null) throw new IllegalArgumentException("Course not found.");
         return new LessonReviewData(course, lessonDAO.findByCourseId(courseId));
+    }
+
+    public List<ManagerDashboardDTO.PendingReviewItem> getCoursesAwaitingReview(User manager) {
+        requireManager(manager);
+        return lessonDAO.findCoursesAwaitingReview(0);
     }
 
     public boolean reviewLesson(User manager, UUID courseId, UUID lessonId,

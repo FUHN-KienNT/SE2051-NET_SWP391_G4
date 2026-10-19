@@ -50,7 +50,7 @@
                     <p class="mt-2 text-sm text-text-secondary">Manage, filter, and oversee courses on LearnHub.</p>
                 </div>
                 <div>
-                    <a href="${pageContext.request.contextPath}/admin/course-detail?action=new" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                    <a href="${pageContext.request.contextPath}/manager/course-detail?action=new" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                         <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
                         <span>Add new course</span>
                     </a>
@@ -59,7 +59,7 @@
 
             <!-- Filter Bar (SDS 2.4.1) -->
             <div class="mb-6 rounded-xl border border-border-default bg-surface-card p-4 shadow-sm sm:p-6">
-                <form id="filterForm" action="${pageContext.request.contextPath}/admin/courses" method="get" class="grid grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-12">
+                <form id="filterForm" action="${pageContext.request.contextPath}/manager/courses" method="get" class="grid grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-12">
                     <!-- Preserve Sorting and Page -->
                     <input type="hidden" name="sortBy" value="${sortBy}">
                     <input type="hidden" name="sortOrder" value="${sortOrder}">
@@ -206,7 +206,7 @@
                                                 <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
                                                 <p class="text-base font-semibold text-slate-700">No courses found</p>
                                                 <p class="text-xs text-slate-400 mt-1">Try adjusting your keyword, category, or status filter.</p>
-                                                <a href="${pageContext.request.contextPath}/admin/courses" class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+                                                <a href="${pageContext.request.contextPath}/manager/courses" class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
                                                     Reset all filters
                                                 </a>
                                             </div>
@@ -236,7 +236,7 @@
 
                                                     <!-- Title & Instructor -->
                                                     <div class="min-w-0">
-                                                        <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}"
+                                                        <a href="${pageContext.request.contextPath}/manager/course-detail?id=${c.id}"
                                                            class="font-bold text-slate-900 hover:text-brand-700 transition-colors line-clamp-1 block text-sm">
                                                             ${c.title}
                                                         </a>
@@ -323,7 +323,7 @@
                                                 </a>
 
                                                 <!-- Edit action -->
-                                                <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}"
+                                                <a href="${pageContext.request.contextPath}/manager/course-detail?id=${c.id}"
                                                    class="text-xs font-bold text-brand-700 hover:text-brand-900 hover:underline cursor-pointer">
                                                     Edit
                                                 </a>
@@ -331,7 +331,7 @@
                                                 <!-- Toggle Status (Archive / Publish) -->
                                                 <c:choose>
                                                     <c:when test="${c.status eq 'published'}">
-                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline">
+                                                        <form action="${pageContext.request.contextPath}/manager/course-status" method="post" class="inline">
                                                             <input type="hidden" name="courseId" value="${c.id}">
                                                             <input type="hidden" name="status" value="archived">
                                                             <button type="submit" 
@@ -345,7 +345,7 @@
                                                         </form>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <form action="${pageContext.request.contextPath}/admin/course-status" method="post" class="inline">
+                                                        <form action="${pageContext.request.contextPath}/manager/course-status" method="post" class="inline">
                                                             <input type="hidden" name="courseId" value="${c.id}">
                                                             <input type="hidden" name="status" value="published">
                                                             <button type="submit" 
@@ -437,7 +437,7 @@
         </div>
 
         <!-- Modal Form -->
-        <form action="${pageContext.request.contextPath}/admin/courses" method="post" class="p-7 space-y-4">
+        <form action="${pageContext.request.contextPath}/manager/courses" method="post" class="p-7 space-y-4">
             <input type="hidden" name="action" value="save">
             <input type="hidden" id="courseId" name="id" value="">
 
@@ -591,7 +591,7 @@
 
     function openEditModalFromRow(id) {
         // Fetch course JSON
-        fetch('${pageContext.request.contextPath}/admin/courses?action=get-json&id=' + encodeURIComponent(id))
+        fetch('${pageContext.request.contextPath}/manager/courses?action=get-json&id=' + encodeURIComponent(id))
             .then(res => res.json())
             .then(data => {
                 if (data.error) {

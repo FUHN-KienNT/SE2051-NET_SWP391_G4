@@ -63,7 +63,7 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-2.5">
-                    <a href="${pageContext.request.contextPath}/admin/course-detail?action=new"
+                    <a href="${pageContext.request.contextPath}/manager/course-detail?action=new"
                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-700 hover:bg-brand-800 text-white shadow-xs transition cursor-pointer">
                         <i class="fa-solid fa-plus text-xs"></i>
                         <span>Create Course</span>
@@ -337,7 +337,7 @@
                     <div class="flex items-center gap-2 text-xs">
                         <span class="text-text-secondary">Catalog preview:</span>
                         <strong class="text-text-primary">${fn:length(dashboard.courses)} of ${dashboard.totalCatalogCourses} courses</strong>
-                        <a href="${pageContext.request.contextPath}/admin/courses" class="ml-2 font-bold text-brand-700 hover:text-brand-800 underline">View Full Table →</a>
+                        <a href="${pageContext.request.contextPath}/manager/courses" class="ml-2 font-bold text-brand-700 hover:text-brand-800 underline">View Full Table →</a>
                     </div>
                 </div>
 
@@ -433,7 +433,7 @@
                                                     Assign Expert
                                                 </button>
                                                 <span class="text-border-default">|</span>
-                                                <a href="${pageContext.request.contextPath}/admin/course-detail?id=${c.id}"
+                                                <a href="${pageContext.request.contextPath}/manager/course-detail?id=${c.id}"
                                                    class="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer">
                                                     Edit Info
                                                 </a>

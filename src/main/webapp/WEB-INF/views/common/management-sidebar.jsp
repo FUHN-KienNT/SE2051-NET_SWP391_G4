@@ -38,7 +38,7 @@
             <c:if test="${isManager}">
                 <div class="border-t border-border-default pt-4">
                     <p class="management-sidebar-heading mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Content &amp; Review</p>
-                    <a href="${pageContext.request.contextPath}/admin/courses"
+                    <a href="${pageContext.request.contextPath}/manager/courses"
                        class="management-sidebar-link flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${param.activeSection eq 'courses' ? 'border-brand-100 bg-brand-50 font-semibold text-brand-900' : 'border-transparent text-text-secondary hover:bg-surface hover:text-text-primary'}"
                        aria-label="Courses" aria-current="${param.activeSection eq 'courses' ? 'page' : 'false'}" title="Courses">
                         <i class="fa-solid fa-book-open w-5 text-center" aria-hidden="true"></i>

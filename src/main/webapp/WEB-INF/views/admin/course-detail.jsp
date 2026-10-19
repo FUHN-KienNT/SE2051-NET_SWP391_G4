@@ -15,7 +15,7 @@
 
             <!-- Breadcrumbs -->
             <div class="mb-5 flex items-center space-x-2 text-xs text-slate-400">
-                <a href="${pageContext.request.contextPath}/admin/courses" class="hover:text-brand-700 transition flex items-center gap-1">
+                <a href="${pageContext.request.contextPath}/manager/courses" class="hover:text-brand-700 transition flex items-center gap-1">
                     <i class="fa-solid fa-book-open"></i>
                     <span>Courses</span>
                 </a>
@@ -77,7 +77,7 @@
 
                 <!-- Form to update course attributes -->
                 <form id="courseDetailForm"
-                      action="${pageContext.request.contextPath}/admin/course-detail"
+                      action="${pageContext.request.contextPath}/manager/course-detail"
                       method="post"
                       enctype="multipart/form-data"
                       class="pt-6 space-y-6">
@@ -320,7 +320,7 @@
                                 <c:choose>
                                     <c:when test="${course.status eq 'published'}">
                                         <button type="submit"
-                                                formaction="${pageContext.request.contextPath}/admin/course-detail?action=unpublish&id=${course.id}"
+                                                formaction="${pageContext.request.contextPath}/manager/course-detail?action=unpublish&id=${course.id}"
                                                 class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
                                             <i class="fa-solid fa-eye-slash text-xs"></i>
                                             <span>Unpublish Course</span>
@@ -328,7 +328,7 @@
                                     </c:when>
                                     <c:otherwise>
                                         <button type="submit"
-                                                formaction="${pageContext.request.contextPath}/admin/course-detail?action=publish&id=${course.id}"
+                                                formaction="${pageContext.request.contextPath}/manager/course-detail?action=publish&id=${course.id}"
                                                 class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
                                             <i class="fa-solid fa-globe text-xs"></i>
                                             <span>Publish Course</span>
@@ -340,7 +340,7 @@
 
                         <!-- Right Actions: Back to List & Save Changes -->
                         <div class="flex items-center space-x-3">
-                            <a href="${pageContext.request.contextPath}/admin/courses"
+                            <a href="${pageContext.request.contextPath}/manager/courses"
                                class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-sm transition shadow-2xs">
                                 Back to List
                             </a>

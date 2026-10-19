@@ -57,13 +57,14 @@ public final class PostLoginNavigation {
         boolean expert = AppConstants.Role.EXPERT.equalsIgnoreCase(role);
         boolean student = AppConstants.Role.STUDENT.equalsIgnoreCase(role);
 
+        if (isUnder(path, "/manager/courses") || isUnder(path, "/manager/course-status")
+                || isUnder(path, "/manager/course-detail")) return manager || expert;
         if (isUnder(path, "/manager")) return manager;
         if (isUnder(path, "/admin/dashboard") || isUnder(path, "/admin/users")
                 || isUnder(path, "/admin/user-detail") || isUnder(path, "/admin/user-status")
-                || isUnder(path, "/admin/reset-password")) return admin;
+                || isUnder(path, "/admin/reset-password") || isUnder(path, "/admin/settings")
+                || isUnder(path, "/admin/setting-detail") || isUnder(path, "/admin/setting-status")) return admin;
         if (isUnder(path, "/admin/lesson-review")) return manager;
-        if (isUnder(path, "/admin/courses") || isUnder(path, "/admin/course-status")
-                || isUnder(path, "/admin/course-detail")) return manager || expert;
         if (isUnder(path, "/admin")) return admin || manager;
         if (isUnder(path, "/expert") || isUnder(path, "/lessons")
                 || isUnder(path, "/questions") || isUnder(path, "/quiz/manage")

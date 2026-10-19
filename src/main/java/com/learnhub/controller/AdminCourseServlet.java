@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Servlet handling Course Management & Course Detail for Administrator and Experts.
+ * Servlet handling Course Management & Course Detail for Managers and Experts.
  * Implements methods specified in SDS Course Management (2.4, 2.4.1):
  * - View Course List & Course Detail
  * - Update Course Info (Title, Category, Price, Status, Cloudinary Thumbnail, Description)
@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  * - Publish / Unpublish Course
  * - Back to List navigation
  */
-@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/admin/courses", "/manager/courses", "/admin/course-status", "/admin/course-detail"})
+@WebServlet(name = "AdminCourseServlet", urlPatterns = {"/manager/courses", "/manager/course-status", "/manager/course-detail"})
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 2, // 2MB
         maxFileSize = 1024 * 1024 * 20,      // 20MB
@@ -57,14 +57,14 @@ public class AdminCourseServlet extends HttpServlet {
 
         String role = (String) session.getAttribute("userRole");
         if (!isAuthorizedRole(currentUser, role)) {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Administrator or Manager privileges required.");
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager or Expert privileges required.");
             return;
         }
 
         String path = req.getServletPath();
         String action = req.getParameter("action");
 
-        if ("/admin/course-detail".equals(path)) {
+        if ("/manager/course-detail".equals(path)) {
             handleCourseDetail(req, resp);
             return;
         }
@@ -147,7 +147,7 @@ public class AdminCourseServlet extends HttpServlet {
                 course = new Course();
                 course.setStatus("draft");
             } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=course_not_found");
+                resp.sendRedirect(req.getContextPath() + "/manager/courses?error=course_not_found");
                 return;
             }
         }
@@ -193,12 +193,12 @@ public class AdminCourseServlet extends HttpServlet {
 
         if ("publish".equalsIgnoreCase(action) || "unpublish".equalsIgnoreCase(action)) {
             handlePublishToggle(req, resp, currentUser, "publish".equalsIgnoreCase(action));
-        } else if ("/admin/course-status".equals(path) || "status".equalsIgnoreCase(action)) {
+        } else if ("/manager/course-status".equals(path) || "status".equalsIgnoreCase(action)) {
             handleChangeStatus(req, resp, currentUser);
-        } else if ("save".equalsIgnoreCase(action) || "/admin/course-detail".equals(path)) {
+        } else if ("save".equalsIgnoreCase(action) || "/manager/course-detail".equals(path)) {
             handleSaveCourse(req, resp, currentUser);
         } else {
-            resp.sendRedirect(req.getContextPath() + "/admin/courses");
+            resp.sendRedirect(req.getContextPath() + "/manager/courses");
         }
     }
 
@@ -218,7 +218,7 @@ public class AdminCourseServlet extends HttpServlet {
                                 (publish ? "Published" : "Unpublished") + " course: " + course.getTitle(),
                                 "SUCCESS"
                         );
-                        resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + courseId + "&status_success=true");
+                        resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + courseId + "&status_success=true");
                         return;
                     }
                 }
@@ -226,7 +226,7 @@ public class AdminCourseServlet extends HttpServlet {
                 LOGGER.log(Level.SEVERE, "Error toggling course publication status: " + e.getMessage(), e);
             }
         }
-        resp.sendRedirect(req.getContextPath() + "/admin/courses?error=status_failed");
+        resp.sendRedirect(req.getContextPath() + "/manager/courses?error=status_failed");
     }
 
     private void handleChangeStatus(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
@@ -249,7 +249,7 @@ public class AdminCourseServlet extends HttpServlet {
                                 "Đổi trạng thái khóa học '" + course.getTitle() + "' sang: " + status,
                                 "SUCCESS"
                         );
-                        resp.sendRedirect(req.getContextPath() + "/admin/courses?status_success=true");
+                        resp.sendRedirect(req.getContextPath() + "/manager/courses?status_success=true");
                         return;
                     }
                 }
@@ -257,7 +257,7 @@ public class AdminCourseServlet extends HttpServlet {
                 LOGGER.log(Level.SEVERE, "Error updating course status: " + e.getMessage(), e);
             }
         }
-        resp.sendRedirect(req.getContextPath() + "/admin/courses?error=status_failed");
+        resp.sendRedirect(req.getContextPath() + "/manager/courses?error=status_failed");
     }
 
     private void handleSaveCourse(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
@@ -270,13 +270,13 @@ public class AdminCourseServlet extends HttpServlet {
         String expertIdStr = req.getParameter("expertId");
         String status = req.getParameter("status");
 
-        boolean isDetailRequest = "/admin/course-detail".equals(req.getServletPath()) || "detail".equalsIgnoreCase(req.getParameter("source"));
+        boolean isDetailRequest = "/manager/course-detail".equals(req.getServletPath()) || "detail".equalsIgnoreCase(req.getParameter("source"));
 
         if (title == null || title.trim().isEmpty()) {
             if (isDetailRequest && idStr != null && !idStr.isBlank()) {
-                resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + idStr + "&error=missing_title");
+                resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + idStr + "&error=missing_title");
             } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=missing_title");
+                resp.sendRedirect(req.getContextPath() + "/manager/courses?error=missing_title");
             }
             return;
         }
@@ -375,15 +375,15 @@ public class AdminCourseServlet extends HttpServlet {
 
         if (result) {
             if (isDetailRequest && savedId != null) {
-                resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + savedId + "&save_success=true");
+                resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + savedId + "&save_success=true");
             } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?save_success=true");
+                resp.sendRedirect(req.getContextPath() + "/manager/courses?save_success=true");
             }
         } else {
             if (isDetailRequest && idStr != null && !idStr.isBlank()) {
-                resp.sendRedirect(req.getContextPath() + "/admin/course-detail?id=" + idStr + "&error=save_failed");
+                resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + idStr + "&error=save_failed");
             } else {
-                resp.sendRedirect(req.getContextPath() + "/admin/courses?error=save_failed");
+                resp.sendRedirect(req.getContextPath() + "/manager/courses?error=save_failed");
             }
         }
     }
@@ -430,13 +430,10 @@ public class AdminCourseServlet extends HttpServlet {
         String rName = user.getRoleName() != null ? user.getRoleName() : "";
         String sRole = role != null ? role : "";
 
-        return "ROLE_ADMIN".equalsIgnoreCase(rCode)
-                || "ROLE_MANAGER".equalsIgnoreCase(rCode)
+        return "ROLE_MANAGER".equalsIgnoreCase(rCode)
                 || "ROLE_EXPERT".equalsIgnoreCase(rCode)
-                || "admin".equalsIgnoreCase(sRole)
                 || "manager".equalsIgnoreCase(sRole)
                 || "expert".equalsIgnoreCase(sRole)
-                || "Administrator".equalsIgnoreCase(rName)
                 || "Manager".equalsIgnoreCase(rName);
     }
 }

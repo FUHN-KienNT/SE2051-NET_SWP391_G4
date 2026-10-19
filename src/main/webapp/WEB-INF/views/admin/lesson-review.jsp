@@ -7,7 +7,7 @@
 
 <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
     <div class="flex flex-wrap items-center gap-4 mb-6">
-        <a href="${pageContext.request.contextPath}/admin/course-detail?id=${course.id}"
+        <a href="${pageContext.request.contextPath}/manager/course-detail?id=${course.id}"
            class="inline-flex items-center gap-2 px-3 py-2 border border-border-default rounded-lg text-sm text-text-secondary hover:bg-surface-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
             <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Course Detail
         </a>

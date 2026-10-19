@@ -29,7 +29,7 @@ class PostLoginNavigationTest {
     @Test
     void managerAlwaysStartsAtDashboardAfterLogin() {
         assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER,
-                "/learnhub/admin/courses?status=draft"));
+                "/learnhub/manager/courses?status=draft"));
         assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER,
                 "/manager/dashboard?period=quarter"));
     }
@@ -41,6 +41,14 @@ class PostLoginNavigationTest {
         assertEquals("/learnhub/admin/dashboard", destination(AppConstants.Role.ADMIN, "/manager/dashboard"));
         assertEquals("/learnhub/expert/dashboard", destination(AppConstants.Role.EXPERT, "/admin/dashboard"));
         assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "/expert/dashboard"));
+    }
+
+    @Test
+    void courseDeepLinksAllowExpertButRejectAdmin() {
+        for (String path : new String[]{"/manager/courses", "/manager/course-detail", "/manager/course-status"}) {
+            assertEquals(CONTEXT + path + "?id=123", destination(AppConstants.Role.EXPERT, path + "?id=123"));
+            assertEquals(CONTEXT + "/admin/dashboard", destination(AppConstants.Role.ADMIN, path));
+        }
     }
 
     @Test

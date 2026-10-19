@@ -54,39 +54,39 @@ public class AuthorizationFilter implements Filter {
             return;
         }
 
-        if (isUnder(path, "/manager") && !hasManagerRole(req)) {
+        boolean isCourseManagement = isUnder(path, "/manager/courses")
+                || isUnder(path, "/manager/course-status")
+                || isUnder(path, "/manager/course-detail");
+        if (isCourseManagement && !hasManagerRole(req) && !hasExpertRole(req)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Access denied: Manager or Expert privileges required for course management.");
+            return;
+        }
+
+        if (isUnder(path, "/manager") && !isCourseManagement && !hasManagerRole(req)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
             return;
         }
 
         // Administration URLs
         if (isUnder(path, "/admin")) {
-            boolean isCourseManagement = isUnder(path, "/admin/courses")
-                    || isUnder(path, "/admin/course-status")
-                    || isUnder(path, "/admin/course-detail");
             boolean isUserManagement = isUnder(path, "/admin/users")
                     || isUnder(path, "/admin/user-list");
+            boolean isSettingsManagement = isUnder(path, "/admin/settings")
+                    || isUnder(path, "/admin/setting-detail")
+                    || isUnder(path, "/admin/setting-status");
                     
-            if (isCourseManagement) {
-                // Course management: Allowed for Manager and Expert
-                if (!hasManagerRole(req) && !hasExpertRole(req)) {
-                    resp.sendError(
-                            HttpServletResponse.SC_FORBIDDEN,
-                            "Access denied: Manager or Expert privileges required for course management."
-                    );
-                    return;
-                }
-            } else if (isUserManagement) {
-                // User management: Allowed ONLY for Admin
+            if (isUserManagement || isSettingsManagement) {
+                // User and system settings management: Allowed ONLY for Admin
                 if (!hasOnlyAdminRole(req)) {
                     resp.sendError(
                             HttpServletResponse.SC_FORBIDDEN,
-                            "Access denied: Administrator privileges required for user management."
+                            "Access denied: Administrator privileges required."
                     );
                     return;
                 }
             } else {
-                // Other admin routes (Dashboard, Settings, etc.): Admin or Manager
+                // Other admin routes: Admin or Manager
                 if (!hasAdminRole(req)) {
                     resp.sendError(
                             HttpServletResponse.SC_FORBIDDEN,

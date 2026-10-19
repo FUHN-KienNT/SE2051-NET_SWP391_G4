@@ -381,13 +381,9 @@ public class AdminSettingServlet extends HttpServlet {
         String sRole = role != null ? role : "";
 
         return "ROLE_ADMIN".equalsIgnoreCase(rCode)
-                || "ROLE_MANAGER".equalsIgnoreCase(rCode)
                 || "admin".equalsIgnoreCase(sRole)
-                || "manager".equalsIgnoreCase(sRole)
                 || "ROLE_ADMIN".equalsIgnoreCase(sRole)
-                || "ROLE_MANAGER".equalsIgnoreCase(sRole)
                 || "Administrator".equalsIgnoreCase(rName)
-                || "Manager".equalsIgnoreCase(rName)
                 || "Admin".equalsIgnoreCase(rName);
     }
 }

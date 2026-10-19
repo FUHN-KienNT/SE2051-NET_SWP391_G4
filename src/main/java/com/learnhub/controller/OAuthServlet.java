@@ -150,19 +150,8 @@ public class OAuthServlet extends HttpServlet {
     }
 
     private void signIn(HttpServletRequest req, HttpServletResponse resp, User user, String redirect) throws IOException {
-        HttpSession authenticated = req.getSession(true);
-        authenticated.removeAttribute(PENDING_PROFILE);
-        req.changeSessionId();
-        authenticated.setAttribute("currentUser", user);
-        authenticated.setAttribute("userName", user.getUsername());
-        authenticated.setAttribute("userRole", user.getRoleCode());
-        String destination = PostLoginNavigation.destination(user, redirect, req.getContextPath());
-        if (user.isRequiresPasswordChange()) {
-            authenticated.setAttribute("account.afterPasswordRedirect", destination);
-            resp.sendRedirect(req.getContextPath() + "/account/set-password");
-            return;
-        }
-        resp.sendRedirect(destination);
+        req.getSession(true).removeAttribute(PENDING_PROFILE);
+        ControllerSupport.signIn(req, resp, user, redirect);
     }
 
     private void fail(HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {

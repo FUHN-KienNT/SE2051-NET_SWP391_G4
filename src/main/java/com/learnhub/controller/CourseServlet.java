@@ -14,7 +14,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -62,15 +61,9 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void handleExpertDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
-            String redirectUri = req.getRequestURI();
-            if (req.getQueryString() != null) {
-                redirectUri += "?" + req.getQueryString();
-            }
-            String encodedUri = java.net.URLEncoder.encode(redirectUri, "UTF-8");
-            resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login&redirect_uri=" + encodedUri);
+            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), "must_login");
             return;
         }
         UUID expertId = currentUser.getId();
@@ -118,13 +111,7 @@ public class CourseServlet extends HttpServlet {
         }
 
         String pageStr = req.getParameter("page");
-        UUID categoryId = null;
-        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
-            try {
-                categoryId = UUID.fromString(categoryIdStr.trim());
-            } catch (Exception ignored) {
-            }
-        }
+        UUID categoryId = ControllerSupport.optionalUuid(categoryIdStr);
         int page = 1;
         int pageSize = 9;
         if (pageStr != null) {
@@ -161,8 +148,7 @@ public class CourseServlet extends HttpServlet {
                     req.setAttribute("course", course);
 
                     // Kiểm tra user đã đăng ký khóa học chưa
-                    HttpSession session = req.getSession(false);
-                    User user = session == null ? null : (User) session.getAttribute("currentUser");
+                    User user = ControllerSupport.currentUser(req);
                     if (user != null && AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())
                             && learningService.findEnrolledCourse(user.getId(), courseId) != null) {
                         resp.sendRedirect(req.getContextPath() + "/learn/course?id=" + courseId);
@@ -185,15 +171,9 @@ public class CourseServlet extends HttpServlet {
     }
 
     private void handleCourseRegister(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
-            String redirectUri = req.getRequestURI();
-            if (req.getQueryString() != null) {
-                redirectUri += "?" + req.getQueryString();
-            }
-            String encodedUri = java.net.URLEncoder.encode(redirectUri, "UTF-8");
-            resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login&redirect_uri=" + encodedUri);
+            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), "must_login");
             return;
         }
         String courseIdStr = req.getParameter("courseId");
@@ -216,8 +196,7 @@ public class CourseServlet extends HttpServlet {
     }
     private void handleMyCourseDetail(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        User user = session == null ? null : (User) session.getAttribute("currentUser");
+        User user = ControllerSupport.currentUser(req);
         if (user == null) { resp.sendRedirect(req.getContextPath() + "/auth/login"); return; }
         if (!AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())) {
             resp.sendError(403); return;

@@ -49,13 +49,9 @@ public class AdminCourseServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
-            String redirectUri = req.getRequestURI();
-            if (req.getQueryString() != null) {
-                redirectUri += "?" + req.getQueryString();
-            }
-            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=" + java.net.URLEncoder.encode(redirectUri, "UTF-8"));
+            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), null);
             return;
         }
 
@@ -88,15 +84,8 @@ public class AdminCourseServlet extends HttpServlet {
         String priceType = req.getParameter("priceType");
         String sortBy = req.getParameter("sortBy");
         String sortOrder = req.getParameter("sortOrder");
-        String pageStr = req.getParameter("page");
 
-        UUID categoryId = null;
-        if (categoryIdStr != null && !categoryIdStr.isBlank()) {
-            try {
-                categoryId = UUID.fromString(categoryIdStr.trim());
-            } catch (Exception ignored) {
-            }
-        }
+        UUID categoryId = ControllerSupport.optionalUuid(categoryIdStr);
 
         if (sortBy == null || sortBy.isBlank()) {
             sortBy = "created_at";
@@ -105,14 +94,8 @@ public class AdminCourseServlet extends HttpServlet {
             sortOrder = "desc";
         }
 
-        int page = 1;
+        int page = ControllerSupport.pageNumber(req.getParameter("page"));
         int pageSize = 10;
-        if (pageStr != null && !pageStr.isBlank()) {
-            try {
-                page = Math.max(1, Integer.parseInt(pageStr.trim()));
-            } catch (NumberFormatException ignored) {
-            }
-        }
 
         List<Course> courses = courseService.getCoursesForManagement(
                 search, categoryId, status, priceType, sortBy, sortOrder, page, pageSize
@@ -193,7 +176,7 @@ public class AdminCourseServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
@@ -325,21 +308,9 @@ public class AdminCourseServlet extends HttpServlet {
             }
         }
 
-        UUID categoryId = null;
-        if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
-            try {
-                categoryId = UUID.fromString(categoryIdStr.trim());
-            } catch (Exception ignored) {
-            }
-        }
+        UUID categoryId = ControllerSupport.optionalUuid(categoryIdStr);
 
-        UUID expertId = null;
-        if (expertIdStr != null && !expertIdStr.trim().isEmpty()) {
-            try {
-                expertId = UUID.fromString(expertIdStr.trim());
-            } catch (Exception ignored) {
-            }
-        }
+        UUID expertId = ControllerSupport.optionalUuid(expertIdStr);
 
         if (status == null || status.isBlank()) {
             status = "draft";

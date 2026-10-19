@@ -2,7 +2,6 @@ package com.learnhub.controller;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.learnhub.constant.AppConstants;
 import com.learnhub.entity.Notification;
 import com.learnhub.entity.User;
 import com.learnhub.service.NotificationService;
@@ -33,7 +32,7 @@ public class NotificationServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         prepareResponse(resp);
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
         if (user == null) {
             error(resp, HttpServletResponse.SC_UNAUTHORIZED, "Phiên đăng nhập đã hết hạn.");
             return;
@@ -76,7 +75,7 @@ public class NotificationServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         prepareResponse(resp);
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
         if (user == null) {
             error(resp, HttpServletResponse.SC_UNAUTHORIZED, "Phiên đăng nhập đã hết hạn.");
             return;
@@ -121,12 +120,6 @@ public class NotificationServlet extends HttpServlet {
             LOGGER.log(Level.SEVERE, "Could not update notifications", e);
             error(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể cập nhật thông báo.");
         }
-    }
-
-    private User currentUser(HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-        Object account = session == null ? null : session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
-        return account instanceof User ? (User) account : null;
     }
 
     private String csrfToken(HttpSession session) {

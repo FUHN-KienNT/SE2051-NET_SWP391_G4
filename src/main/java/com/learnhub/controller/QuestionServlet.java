@@ -1,6 +1,5 @@
 package com.learnhub.controller;
 
-import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.entity.Course;
@@ -15,7 +14,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.*;
@@ -40,19 +38,13 @@ public class QuestionServlet extends HttpServlet {
     private final ModuleDAO moduleDAO =
             new ModuleDAO();
 
-    private User currentUser(HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-        if (session == null) return null;
-        return (User) session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
-    }
-
     @Override
     protected void doGet(
             HttpServletRequest req,
             HttpServletResponse resp)
             throws ServletException, IOException {
 
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
         if (user == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -60,8 +52,8 @@ public class QuestionServlet extends HttpServlet {
 
         String path = req.getServletPath();
 
-        UUID courseId = parseUUID(req.getParameter("courseId"));
-        UUID moduleId = parseUUID(req.getParameter("moduleId"));
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
 
         List<Course> courses = courseDAO.findByExpertId(user.getId());
         req.setAttribute("courses", courses);
@@ -84,7 +76,7 @@ public class QuestionServlet extends HttpServlet {
             String id = req.getParameter("id");
 
             if (id != null && !id.isBlank()) {
-                UUID questionId = parseUUID(id);
+                UUID questionId = ControllerSupport.optionalUuid(id);
                 if (questionId != null) {
                     Question question = service.get(questionId);
                     if (question != null) {
@@ -125,7 +117,7 @@ public class QuestionServlet extends HttpServlet {
          */
         String action = req.getParameter("action");
         if ("delete".equalsIgnoreCase(action) || "hide".equalsIgnoreCase(action)) {
-            UUID questionId = parseUUID(req.getParameter("id"));
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
             boolean ok = service.hide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
@@ -137,7 +129,7 @@ public class QuestionServlet extends HttpServlet {
         }
 
         if ("unhide".equalsIgnoreCase(action)) {
-            UUID questionId = parseUUID(req.getParameter("id"));
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
             boolean ok = service.unhide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
@@ -166,7 +158,7 @@ public class QuestionServlet extends HttpServlet {
 
         req.setCharacterEncoding("UTF-8");
 
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
         if (user == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -178,8 +170,8 @@ public class QuestionServlet extends HttpServlet {
         // IMPORT FROM DOCS / TEXT
         // =====================================================
         if ("import_docs".equalsIgnoreCase(action)) {
-            UUID courseId = parseUUID(req.getParameter("courseId"));
-            UUID moduleId = parseUUID(req.getParameter("moduleId"));
+            UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+            UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
             String status = req.getParameter("status");
             if (status == null || status.isBlank()) {
                 status = "public";
@@ -199,12 +191,12 @@ public class QuestionServlet extends HttpServlet {
         // =====================================================
         // SAVE SINGLE QUESTION
         // =====================================================
-        UUID courseId = parseUUID(req.getParameter("courseId"));
-        UUID moduleId = parseUUID(req.getParameter("moduleId"));
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
         req.setAttribute("courseId", courseId != null ? courseId.toString() : "");
         req.setAttribute("moduleId", moduleId);
 
-        UUID questionId = parseUUID(req.getParameter("id"));
+        UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
 
         String content = req.getParameter("content");
         String type = req.getParameter("type");
@@ -268,8 +260,8 @@ public class QuestionServlet extends HttpServlet {
             String status,
             String errorMsg) throws ServletException, IOException {
 
-        User user = currentUser(req);
-        UUID courseId = parseUUID(req.getParameter("courseId"));
+        User user = ControllerSupport.currentUser(req);
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         Question question = new Question(questionId, content, type);
         question.setModuleId(moduleId);
@@ -322,15 +314,6 @@ public class QuestionServlet extends HttpServlet {
         req.getRequestDispatcher(
                 "/WEB-INF/views/expert/question-detail.jsp"
         ).forward(req, resp);
-    }
-
-    private static UUID parseUUID(String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            return UUID.fromString(value.trim());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
     }
 
     private static String courseSuffix(UUID courseId) {

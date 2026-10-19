@@ -2,7 +2,6 @@ package com.learnhub.controller;
 
 import com.learnhub.constant.AppConstants;
 import com.learnhub.dto.ContinueLearningDTO;
-import com.learnhub.dto.CourseDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
@@ -16,8 +15,6 @@ import jakarta.servlet.http.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @WebServlet(
@@ -53,33 +50,6 @@ public class EnrollmentServlet extends HttpServlet {
         handleEnrollmentPage(req, resp);
     }
 
-    private User getCurrentUser(HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-
-        Object account = session == null
-                ? null
-                : session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
-
-        return account instanceof User ? (User) account : null;
-    }
-
-    private void redirectToLogin(
-            HttpServletRequest req,
-            HttpServletResponse resp,
-            String target
-    ) throws IOException {
-
-        String encoded = URLEncoder.encode(
-                target, StandardCharsets.UTF_8
-        );
-
-        resp.sendRedirect(
-                req.getContextPath()
-                        + "/auth/login?error=must_login&redirect_uri="
-                        + encoded
-        );
-    }
-
     private void handleEnrollmentPage(
             HttpServletRequest req,
             HttpServletResponse resp
@@ -109,15 +79,11 @@ public class EnrollmentServlet extends HttpServlet {
             return;
         }
 
-        User user = getCurrentUser(req);
+        User user = ControllerSupport.currentUser(req);
 
         if (user == null) {
-            redirectToLogin(
-                    req,
-                    resp,
-                    req.getContextPath()
-                            + "/enrollment?courseId=" + courseId
-            );
+            ControllerSupport.redirectToLogin(req, resp, req.getContextPath()
+                            + "/enrollment?courseId=" + courseId, "must_login");
             return;
         }
 
@@ -171,9 +137,9 @@ public class EnrollmentServlet extends HttpServlet {
     }
 
     private void handleMyEnrollments(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        User user = getCurrentUser(req);
+        User user = ControllerSupport.currentUser(req);
         if (user == null) {
-            redirectToLogin(req, resp, req.getContextPath() + "/my-enrollments");
+            ControllerSupport.redirectToLogin(req, resp, req.getContextPath() + "/my-enrollments", "must_login");
             return;
         }
         if (!AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())) {
@@ -250,17 +216,13 @@ public class EnrollmentServlet extends HttpServlet {
             HttpServletResponse resp
     ) throws ServletException, IOException {
 
-        User user = getCurrentUser(req);
+        User user = ControllerSupport.currentUser(req);
         String courseIdValue = req.getParameter("courseId");
 
         if (user == null) {
-            redirectToLogin(
-                    req,
-                    resp,
-                    req.getContextPath()
+            ControllerSupport.redirectToLogin(req, resp, req.getContextPath()
                             + "/enrollment?courseId="
-                            + (courseIdValue == null ? "" : courseIdValue)
-            );
+                            + (courseIdValue == null ? "" : courseIdValue), "must_login");
             return;
         }
 

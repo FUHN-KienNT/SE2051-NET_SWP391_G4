@@ -40,13 +40,9 @@ public class AdminSettingServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
-            String redirectUri = req.getRequestURI();
-            if (req.getQueryString() != null) {
-                redirectUri += "?" + req.getQueryString();
-            }
-            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=" + java.net.URLEncoder.encode(redirectUri, "UTF-8"));
+            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), null);
             return;
         }
 
@@ -74,7 +70,6 @@ public class AdminSettingServlet extends HttpServlet {
         String status = req.getParameter("status");
         String sortBy = req.getParameter("sortBy");
         String sortOrder = req.getParameter("sortOrder");
-        String pageStr = req.getParameter("page");
 
         if (sortBy == null || sortBy.isBlank()) {
             sortBy = "order";
@@ -83,14 +78,8 @@ public class AdminSettingServlet extends HttpServlet {
             sortOrder = "asc";
         }
 
-        int page = 1;
+        int page = ControllerSupport.pageNumber(req.getParameter("page"));
         int pageSize = 10;
-        if (pageStr != null && !pageStr.isBlank()) {
-            try {
-                page = Math.max(1, Integer.parseInt(pageStr.trim()));
-            } catch (NumberFormatException ignored) {
-            }
-        }
 
         int offset = (page - 1) * pageSize;
         List<Setting> settings = settingDAO.findSettings(search, type, status, sortBy, sortOrder, offset, pageSize);
@@ -123,21 +112,9 @@ public class AdminSettingServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/setting-list.jsp").forward(req, resp);
     }
 
-    private static final java.util.Set<String> CORE_ROLES = java.util.Set.of(
-            "ROLE_ADMIN", "ROLE_STUDENT", "ROLE_MANAGER", "ROLE_EXPERT",
-            "admin", "student", "manager", "expert"
-    );
-
     private boolean isRoleSetting(Setting setting) {
         if (setting == null) return false;
         return "role".equalsIgnoreCase(setting.getType());
-    }
-
-    private boolean isProtectedCoreSetting(Setting setting) {
-        if (setting == null) return false;
-        String type = setting.getType();
-        String code = setting.getCode();
-        return "role".equalsIgnoreCase(type) && (code == null || CORE_ROLES.contains(code.trim()) || true);
     }
 
     private void handleShowDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -157,7 +134,7 @@ public class AdminSettingServlet extends HttpServlet {
 
         req.setAttribute("setting", setting);
         req.setAttribute("types", getSettingTypes(setting));
-        req.setAttribute("isProtected", isProtectedCoreSetting(setting));
+        req.setAttribute("isProtected", isRoleSetting(setting));
         req.setAttribute("pageTitle", setting != null
                 ? "Setting Detail - " + setting.getCode() + " – LearnHub Admin"
                 : "Add New Setting – LearnHub Admin");
@@ -185,7 +162,7 @@ public class AdminSettingServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
-        User currentUser = session != null ? (User) session.getAttribute("currentUser") : null;
+        User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
@@ -219,7 +196,7 @@ public class AdminSettingServlet extends HttpServlet {
                 boolean newStatus = Boolean.parseBoolean(statusStr.trim());
                 Setting setting = settingDAO.findById(id);
                 if (setting != null) {
-                    if (isProtectedCoreSetting(setting) && !newStatus) {
+                    if (isRoleSetting(setting) && !newStatus) {
                         resp.sendRedirect(req.getContextPath() + "/admin/settings?error=core_role_protected");
                         return;
                     }
@@ -277,17 +254,7 @@ public class AdminSettingServlet extends HttpServlet {
             status = true; // Roles are strictly active
         }
 
-        boolean protectedSetting = isRole || (existing != null && isProtectedCoreSetting(existing));
-
-        // Role protection: prevent deactivation
-        if (protectedSetting && !status) {
-            req.setAttribute("errorMessage", "Vai trò hệ thống luôn ở trạng thái Active, không thể chuyển sang Inactive.");
-            req.setAttribute("setting", existing);
-            req.setAttribute("types", getSettingTypes(existing));
-            req.setAttribute("isProtected", true);
-            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
-            return;
-        }
+        boolean protectedSetting = isRole;
 
         String resolvedCode = (code != null && !code.trim().isEmpty())
                 ? code.trim()

@@ -14,7 +14,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.Map;
@@ -106,7 +105,6 @@ public class LearningProcessServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
 
         List<Lesson> orderedLessons = course.getModules().stream()
                 .flatMap(module -> module.getLessons().stream())

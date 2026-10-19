@@ -2,34 +2,38 @@ package com.learnhub.controller;
 
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.entity.Registration;
+import com.learnhub.entity.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Handles Online Payment screen (VietQR / SePay checkout page)
- * and AJAX status polling check.
+ * Payment pages: VietQR / SePay checkout, status polling, and student history.
  * URL: /payment/checkout
  * Action:
  * - GET /payment/checkout?regId=... -> Renders checkout.jsp (VietQR code)
  * - GET /payment/checkout?action=check-status&regId=... -> Returns JSON { "status": "paid"|"pending" }
  * - POST /payment/checkout?action=mock-pay&regId=... -> Demo trigger to simulate successful transfer
  */
-@WebServlet(name = "PaymentCheckoutServlet", urlPatterns = {"/payment/checkout"})
-public class PaymentCheckoutServlet extends HttpServlet {
-    private static final Logger LOGGER = Logger.getLogger(PaymentCheckoutServlet.class.getName());
+@WebServlet(name = "PaymentServlet", urlPatterns = {"/payment/checkout", "/my-payments", "/payment/history"})
+public class PaymentServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(PaymentServlet.class.getName());
     private final RegistrationDAO registrationDAO = new RegistrationDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!"/payment/checkout".equals(req.getServletPath())) {
+            showHistory(req, resp);
+            return;
+        }
         String action = req.getParameter("action");
         String regIdStr = req.getParameter("regId");
 
@@ -91,6 +95,10 @@ public class PaymentCheckoutServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (!"/payment/checkout".equals(req.getServletPath())) {
+            super.doPost(req, resp);
+            return;
+        }
         String action = req.getParameter("action");
         String regIdStr = req.getParameter("regId");
 
@@ -112,5 +120,22 @@ public class PaymentCheckoutServlet extends HttpServlet {
         }
 
         doGet(req, resp);
+    }
+
+    private void showHistory(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        User currentUser = ControllerSupport.currentUser(req);
+
+        if (currentUser == null) {
+            ControllerSupport.redirectToLogin(req, resp, req.getContextPath() + "/my-payments", "must_login");
+            return;
+        }
+
+        // Lấy toàn bộ danh sách đăng ký & thanh toán của học viên này
+        List<Registration> payments = registrationDAO.findByUserId(currentUser.getId());
+
+        req.setAttribute("payments", payments);
+        req.setAttribute("pageTitle", "Lịch sử thanh toán - LearnHub");
+        req.getRequestDispatcher("/WEB-INF/views/courses/payment-history.jsp").forward(req, resp);
     }
 }

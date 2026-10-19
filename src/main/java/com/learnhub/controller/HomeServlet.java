@@ -11,7 +11,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,8 +25,7 @@ public class HomeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        User user = session != null ? (User) session.getAttribute("currentUser") : null;
+        User user = ControllerSupport.currentUser(req);
         ContinueLearningDTO continueLearning = null;
         if (user != null) {
             continueLearning = learningService.getContinueLearning(user.getId());

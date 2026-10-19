@@ -4,7 +4,6 @@ import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dao.QuestionDAO;
-import com.learnhub.entity.Course;
 import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
@@ -16,7 +15,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -35,47 +33,20 @@ import java.util.UUID;
         }
 )
 public class QuizManagementServlet extends HttpServlet {
+    private final QuizManagementService service = new QuizManagementService();
 
-    private final QuizManagementService service =
-            new QuizManagementService();
+    private final ModuleDAO moduleDAO = new ModuleDAO();
 
-    private final ModuleDAO moduleDAO =
-            new ModuleDAO();
+    private final QuestionDAO questionDAO = new QuestionDAO();
 
-    private final QuestionDAO questionDAO =
-            new QuestionDAO();
-
-    private final CourseDAO courseDAO =
-            new CourseDAO();
-
-    // =========================================================
-    // CURRENT USER
-    // =========================================================
-
-    private User currentUser(HttpServletRequest req) {
-
-        HttpSession session = req.getSession(false);
-
-        if (session == null) {
-            return null;
-        }
-
-        return (User) session.getAttribute(
-                AppConstants.SessionKey.CURRENT_USER
-        );
-    }
-
-    // =========================================================
-    // GET
-    // =========================================================
+    private final CourseDAO courseDAO = new CourseDAO();
 
     @Override
     protected void doGet(
             HttpServletRequest req,
             HttpServletResponse resp)
             throws ServletException, IOException {
-
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
 
         if (user == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -84,94 +55,47 @@ public class QuizManagementServlet extends HttpServlet {
 
         String path = req.getServletPath();
 
-        // =====================================================
-        // QUIZ DETAIL
-        // =====================================================
-
         if ("/quiz/detail".equals(path)) {
-
             handleDetailGet(req, resp, user);
             return;
         }
 
-        // =====================================================
-        // QUIZ LIST
-        // =====================================================
-
         handleListGet(req, resp, user);
     }
-
-    // =========================================================
-    // QUIZ DETAIL GET
-    // =========================================================
 
     private void handleDetailGet(
             HttpServletRequest req,
             HttpServletResponse resp,
             User user)
             throws ServletException, IOException {
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
-        UUID courseId =
-                parseUUID(req.getParameter("courseId"));
+        loadCourseOptions(req, user, courseId);
 
-        List<Course> courses = courseDAO.findByExpertId(user.getId());
-        req.setAttribute("courses", courses);
+        List<Question> questions = questionDAO.search(null, null, null, null, null);
 
-        Course course = courseId == null
-                ? null
-                : courseDAO.findById(courseId);
+        List<UUID> selectedQuestionIds = new ArrayList<>();
 
-        List<Module> modules;
-
-        if (courseId != null) {
-            modules = moduleDAO.findByCourseId(courseId);
-        } else {
-            modules = moduleDAO.findByExpertId(user.getId());
-        }
-
-        List<Question> questions =
-                questionDAO.search(null, null, null, null, null);
-
-        List<UUID> selectedQuestionIds =
-                new ArrayList<>();
-
-        req.setAttribute("course", course);
-        req.setAttribute("courseId", courseId);
-        req.setAttribute("modules", modules);
         req.setAttribute("questions", questions);
-        req.setAttribute(
-                "selectedQuestionIds",
-                selectedQuestionIds
-        );
+        req.setAttribute("selectedQuestionIds", selectedQuestionIds);
 
-        UUID defaultFilterModuleId = parseUUID(req.getParameter("moduleId"));
-
-        // -----------------------------------------------------
-        // EDIT EXISTING QUIZ
-        // -----------------------------------------------------
+        UUID defaultFilterModuleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
 
         String id = req.getParameter("id");
 
         if (id != null && !id.isBlank()) {
-
-            UUID quizId = parseUUID(id);
+            UUID quizId = ControllerSupport.optionalUuid(id);
 
             if (quizId != null) {
-
                 Quiz quiz = service.get(quizId);
 
                 if (quiz != null) {
-
                     req.setAttribute("quiz", quiz);
                     defaultFilterModuleId = quiz.getModuleId();
 
-                    selectedQuestionIds =
-                            service.getQuestionIds(quizId);
+                    selectedQuestionIds = service.getQuestionIds(quizId);
 
-                    req.setAttribute(
-                            "selectedQuestionIds",
-                            selectedQuestionIds
-                    );
+                    req.setAttribute("selectedQuestionIds", selectedQuestionIds);
 
                     /*
                      * If courseId was not supplied when opening
@@ -179,38 +103,15 @@ public class QuizManagementServlet extends HttpServlet {
                      * the quiz's module.
                      */
                     if (courseId == null) {
-
-                        Module module =
-                                moduleDAO.findById(
-                                        quiz.getModuleId()
-                                );
+                        Module module = moduleDAO.findById(quiz.getModuleId());
 
                         if (module != null) {
+                            courseId = module.getCourseId();
+                            req.setAttribute("courseId", courseId);
 
-                            courseId =
-                                    module.getCourseId();
+                            req.setAttribute("course", courseDAO.findById(courseId));
 
-                            course =
-                                    courseDAO.findById(
-                                            courseId
-                                    );
-
-                            req.setAttribute(
-                                    "courseId",
-                                    courseId
-                            );
-
-                            req.setAttribute(
-                                    "course",
-                                    course
-                            );
-
-                            req.setAttribute(
-                                    "modules",
-                                    moduleDAO.findByCourseId(
-                                            courseId
-                                    )
-                            );
+                            req.setAttribute("modules", moduleDAO.findByCourseId(courseId));
                         }
                     }
                 }
@@ -218,247 +119,109 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         // Ẩn các câu hỏi đã ẩn (trừ câu đang nằm sẵn trong quiz đang sửa)
-        req.setAttribute(
-                "questions",
-                filterHidden(questions, selectedQuestionIds)
-        );
+        req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
 
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/expert/quiz-detail.jsp"
-        ).forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
     }
-
-    // =========================================================
-    // QUIZ LIST GET
-    // =========================================================
 
     private void handleListGet(
             HttpServletRequest req,
             HttpServletResponse resp,
             User user)
             throws ServletException, IOException {
+        String keyword = req.getParameter("keyword");
 
-        String keyword =
-                req.getParameter("keyword");
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
-        UUID courseId =
-                parseUUID(req.getParameter("courseId"));
+        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
 
-        UUID moduleId =
-                parseUUID(req.getParameter("moduleId"));
+        String status = req.getParameter("status");
 
-        String status =
-                req.getParameter("status");
+        loadCourseOptions(req, user, courseId);
 
-        List<Course> courses = courseDAO.findByExpertId(user.getId());
-        req.setAttribute("courses", courses);
+        req.setAttribute("keyword", keyword == null ? "" : keyword);
 
-        Course course = courseId == null
-                ? null
-                : courseDAO.findById(courseId);
+        req.setAttribute("moduleId", moduleId);
 
-        List<Module> modules;
-
-        if (courseId != null) {
-            modules =
-                    moduleDAO.findByCourseId(courseId);
-        } else {
-            modules =
-                    moduleDAO.findByExpertId(user.getId());
-        }
-
-        req.setAttribute(
-                "keyword",
-                keyword == null ? "" : keyword
-        );
-
-        req.setAttribute(
-                "moduleId",
-                moduleId
-        );
-
-        req.setAttribute(
-                "courseId",
-                courseId
-        );
-
-        req.setAttribute(
-                "status",
-                status == null ? "" : status
-        );
-
-        req.setAttribute(
-                "course",
-                course
-        );
-
-        req.setAttribute(
-                "modules",
-                modules
-        );
-
-        // =====================================================
-        // HIDE / UNHIDE / DELETE
-        // =====================================================
+        req.setAttribute("status", status == null ? "" : status);
 
         String action = req.getParameter("action");
         if ("delete".equalsIgnoreCase(action) || "hide".equalsIgnoreCase(action)) {
+            UUID quizId = ControllerSupport.optionalUuid(req.getParameter("id"));
 
-            UUID quizId =
-                    parseUUID(req.getParameter("id"));
+            boolean ok = service.hide(user.getId(), quizId);
 
-            boolean ok =
-                    service.hide(
-                            user.getId(),
-                            quizId
-                    );
-
-            StringBuilder redirect =
-                    new StringBuilder(
-                            req.getContextPath()
-                                    + "/quiz/manage?hidden="
-                                    + ok
-                    );
-
-            if (courseId != null) {
-                redirect.append(
-                        "&courseId="
-                ).append(courseId);
-            }
-
-            resp.sendRedirect(
-                    redirect.toString()
-            );
+            redirectToList(req, resp, courseId, "hidden=" + ok);
 
             return;
         }
 
         if ("unhide".equalsIgnoreCase(action)) {
-            UUID quizId = parseUUID(req.getParameter("id"));
+            UUID quizId = ControllerSupport.optionalUuid(req.getParameter("id"));
             boolean ok = service.unhide(user.getId(), quizId);
 
-            StringBuilder redirect =
-                    new StringBuilder(
-                            req.getContextPath()
-                                    + "/quiz/manage?unhidden="
-                                    + ok
-                    );
-
-            if (courseId != null) {
-                redirect.append("&courseId=").append(courseId);
-            }
-
-            resp.sendRedirect(redirect.toString());
+            redirectToList(req, resp, courseId, "unhidden=" + ok);
             return;
         }
 
-        req.setAttribute(
-                "quizzes",
-                service.findByExpert(
-                        user.getId(),
-                        keyword,
-                        moduleId,
-                        courseId,
-                        status
-                )
-        );
+        req.setAttribute("quizzes", service.findByExpert(user.getId(), keyword, moduleId, courseId, status));
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/expert/quiz-list.jsp"
-        ).forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/expert/quiz-list.jsp").forward(req, resp);
     }
-
-    // =========================================================
-    // POST
-    // =========================================================
 
     @Override
     protected void doPost(
             HttpServletRequest req,
             HttpServletResponse resp)
             throws ServletException, IOException {
-
         req.setCharacterEncoding("UTF-8");
 
-        User user = currentUser(req);
+        User user = ControllerSupport.currentUser(req);
 
         if (user == null) {
-            resp.sendError(
-                    HttpServletResponse.SC_UNAUTHORIZED
-            );
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // -----------------------------------------------------
-        // Read submitted data
-        // -----------------------------------------------------
+        UUID id = ControllerSupport.optionalUuid(req.getParameter("id"));
 
-        UUID id =
-                parseUUID(req.getParameter("id"));
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
-        UUID courseId =
-                parseUUID(req.getParameter("courseId"));
+        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
 
-        UUID moduleId =
-                parseUUID(req.getParameter("moduleId"));
+        String title = req.getParameter("title");
 
-        String title =
-                req.getParameter("title");
-
-        String status =
-                req.getParameter("status");
+        String status = req.getParameter("status");
         if (status == null || status.isBlank()) {
             status = AppConstants.QuizStatus.PUBLISHED;
         }
 
-        String imageUrl =
-                req.getParameter("imageUrl");
+        String imageUrl = req.getParameter("imageUrl");
 
-        Integer timeLimit =
-                parseInteger(
-                        req.getParameter("timeLimit")
-                );
+        Integer timeLimit = parseInteger(req.getParameter("timeLimit"));
 
-        BigDecimal passScore =
-                parseBigDecimal(
-                        req.getParameter("passScore")
-                );
+        BigDecimal passScore = parseBigDecimal(req.getParameter("passScore"));
 
-        // -----------------------------------------------------
-        // Read selected questions
-        // -----------------------------------------------------
+        List<UUID> questionIds = new ArrayList<>();
 
-        List<UUID> questionIds =
-                new ArrayList<>();
-
-        String[] rawQuestionIds =
-                req.getParameterValues("questionId");
+        String[] rawQuestionIds = req.getParameterValues("questionId");
 
         if (rawQuestionIds != null) {
-
             for (String raw : rawQuestionIds) {
-
-                UUID questionId =
-                        parseUUID(raw);
+                UUID questionId = ControllerSupport.optionalUuid(raw);
 
                 if (questionId != null
                         && !questionIds.contains(questionId)) {
-
                     questionIds.add(questionId);
                 }
             }
         }
 
-        // =====================================================
-        // SAVE
-        // =====================================================
-
         // Không cho thêm câu hỏi đã ẩn vào quiz
         // (câu đã ẩn nhưng đang có sẵn trong quiz thì được giữ lại)
-        List<UUID> oldQuestionIds =
-                id == null
+        List<UUID> oldQuestionIds = id == null
                         ? new ArrayList<>()
                         : service.getQuestionIds(id);
 
@@ -476,57 +239,21 @@ public class QuizManagementServlet extends HttpServlet {
 
         questionIds.removeAll(rejectedIds);
 
-        String errorMessage =
-                "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
 
         if (!rejectedIds.isEmpty()) {
             errorMessage =
                     "Không thể thêm câu hỏi đã ẩn vào Quiz. Các câu hỏi đó đã được bỏ chọn.";
         }
 
-        boolean ok =
-                rejectedIds.isEmpty()
-                        && service.save(
-                        user.getId(),
-                        id,
-                        moduleId,
-                        title,
-                        timeLimit,
-                        passScore,
-                        status,
-                        imageUrl,
-                        questionIds
-                );
-
-        // =====================================================
-        // SUCCESS
-        // =====================================================
+        boolean ok = rejectedIds.isEmpty() && service.save(user.getId(), id, moduleId, title,
+                timeLimit, passScore, status, imageUrl, questionIds);
 
         if (ok) {
-
-            StringBuilder redirect =
-                    new StringBuilder(
-                            req.getContextPath()
-                                    + "/quiz/manage?saved=true"
-                    );
-
-            if (courseId != null) {
-
-                redirect.append(
-                        "&courseId="
-                ).append(courseId);
-            }
-
-            resp.sendRedirect(
-                    redirect.toString()
-            );
+            redirectToList(req, resp, courseId, "saved=true");
 
             return;
         }
-
-        // =====================================================
-        // SAVE FAILED
-        // =====================================================
 
         Quiz formQuiz = new Quiz();
 
@@ -545,91 +272,34 @@ public class QuizManagementServlet extends HttpServlet {
             );
         }
 
-        req.setAttribute(
-                "quiz",
-                formQuiz
-        );
+        req.setAttribute("quiz", formQuiz);
 
-        req.setAttribute(
-                "selectedQuestionIds",
-                questionIds
-        );
+        req.setAttribute("selectedQuestionIds", questionIds);
 
-        req.setAttribute(
-                "error",
-                errorMessage
-        );
+        req.setAttribute("error", errorMessage);
 
-        // -----------------------------------------------------
-        // Reload course/modules/questions
-        // -----------------------------------------------------
+        loadCourseOptions(req, user, courseId);
 
-        List<Course> courses = courseDAO.findByExpertId(user.getId());
-        req.setAttribute("courses", courses);
-
-        Course course = courseId == null
-                ? null
-                : courseDAO.findById(courseId);
-
-        List<Module> modules;
-
-        if (courseId != null) {
-
-            modules =
-                    moduleDAO.findByCourseId(courseId);
-
-        } else {
-
-            modules =
-                    moduleDAO.findByExpertId(user.getId());
-        }
-
-        req.setAttribute(
-                "courseId",
-                courseId
-        );
-
-        req.setAttribute(
-                "course",
-                course
-        );
-
-        req.setAttribute(
-                "modules",
-                modules
-        );
-
-        req.setAttribute(
-                "questions",
-                filterHidden(
-                        questionDAO.search(null, null, null, null, null),
-                        questionIds
-                )
-        );
+        req.setAttribute("questions", filterHidden(
+                questionDAO.search(null, null, null, null, null), questionIds));
 
         req.setAttribute("defaultFilterModuleId", moduleId);
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/expert/quiz-detail.jsp"
-        ).forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
     }
 
-    // =========================================================
-    // PARSE HELPERS
-    // =========================================================
+    private void loadCourseOptions(HttpServletRequest req, User user, UUID courseId) {
+        req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
+        req.setAttribute("courseId", courseId);
+        req.setAttribute("course", courseId == null ? null : courseDAO.findById(courseId));
+        req.setAttribute("modules", courseId == null
+                ? moduleDAO.findByExpertId(user.getId()) : moduleDAO.findByCourseId(courseId));
+    }
 
-    private UUID parseUUID(String value) {
-
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-
-        try {
-            return UUID.fromString(value.trim());
-
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+    private void redirectToList(HttpServletRequest req, HttpServletResponse resp, UUID courseId, String result)
+            throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/quiz/manage?" + result
+                + (courseId == null ? "" : "&courseId=" + courseId));
     }
 
     /**
@@ -639,7 +309,6 @@ public class QuizManagementServlet extends HttpServlet {
     private List<Question> filterHidden(
             List<Question> all,
             List<UUID> selectedIds) {
-
         List<Question> result = new ArrayList<>();
 
         for (Question q : all) {
@@ -654,7 +323,6 @@ public class QuizManagementServlet extends HttpServlet {
     }
 
     private Integer parseInteger(String value) {
-
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -668,7 +336,6 @@ public class QuizManagementServlet extends HttpServlet {
     }
 
     private BigDecimal parseBigDecimal(String value) {
-
         if (value == null || value.isBlank()) {
             return new BigDecimal("5.0");
         }

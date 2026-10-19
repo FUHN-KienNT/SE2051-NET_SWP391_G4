@@ -53,7 +53,6 @@ public class UserServlet extends HttpServlet {
         String search = req.getParameter("search");
         String roleIdStr = req.getParameter("roleId");
         String status = req.getParameter("status");
-        String pageStr = req.getParameter("page");
 
         List<Setting> roles = userService.getAllRoles();
         UUID roleId = null;
@@ -81,11 +80,8 @@ public class UserServlet extends HttpServlet {
             status = null;
         }
 
-        int page = 1;
+        int page = ControllerSupport.pageNumber(req.getParameter("page"));
         int pageSize = 10;
-        if (pageStr != null && !pageStr.isBlank()) {
-            try { page = Math.max(1, Integer.parseInt(pageStr.trim())); } catch (NumberFormatException ignored) {}
-        }
 
         List<UserDTO> users = userService.getUserList(search, roleId, status, page, pageSize);
         int totalUsers = userService.countUsers(search, roleId, status);

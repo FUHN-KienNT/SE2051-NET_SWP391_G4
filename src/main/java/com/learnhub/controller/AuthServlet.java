@@ -5,7 +5,6 @@ import com.learnhub.service.UserService;
 import com.learnhub.util.EmailUtil;
 import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
-import com.learnhub.util.PostLoginNavigation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -119,20 +118,8 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        HttpSession session = req.getSession(true);
-        req.changeSessionId();
-        session.removeAttribute(PENDING_REGISTRATION);
-        session.setAttribute("currentUser", user);
-        session.setAttribute("userName", user.getUsername());
-        session.setAttribute("userRole", user.getRoleCode());
-
-        String destination = PostLoginNavigation.destination(user, req.getParameter("redirect_uri"), req.getContextPath());
-        if (user.isRequiresPasswordChange()) {
-            session.setAttribute("account.afterPasswordRedirect", destination);
-            resp.sendRedirect(req.getContextPath() + "/account/set-password");
-            return;
-        }
-        resp.sendRedirect(destination);
+        req.getSession(true).removeAttribute(PENDING_REGISTRATION);
+        ControllerSupport.signIn(req, resp, user, req.getParameter("redirect_uri"));
     }
 
     private void register(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

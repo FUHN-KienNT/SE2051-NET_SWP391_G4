@@ -1,6 +1,5 @@
 package com.learnhub.controller;
 
-import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dao.QuestionDAO;
 import com.learnhub.dao.QuizDAO;
@@ -21,7 +20,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -46,16 +44,10 @@ public class QuizServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HttpSession session = req.getSession(false);
-        User user = session != null ? (User) session.getAttribute("currentUser") : null;
+        User user = ControllerSupport.currentUser(req);
 
         if (user == null) {
-            String redirectUri = req.getRequestURI();
-            if (req.getQueryString() != null) {
-                redirectUri += "?" + req.getQueryString();
-            }
-            String encodedUri = java.net.URLEncoder.encode(redirectUri, "UTF-8");
-            resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login&redirect_uri=" + encodedUri);
+            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), "must_login");
             return;
         }
 
@@ -115,7 +107,7 @@ public class QuizServlet extends HttpServlet {
                     Registration registration = course != null
                             ? learningService.findRegistration(user.getId(), course.getId()) : null;
 
-                    if (!canStudy(registration, course)) {
+                    if (!learningService.isAccessibleRegistration(registration, course)) {
                         resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Course access denied.");
                         return;
                     }
@@ -170,24 +162,11 @@ public class QuizServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/courses");
     }
 
-    private boolean canStudy(Registration registration, Course course) {
-        if (registration == null || course == null) return false;
-
-        boolean active = "enrolled".equalsIgnoreCase(registration.getStatus())
-                || "completed".equalsIgnoreCase(registration.getStatus());
-        if (!active) return false;
-
-        boolean paidCourse = course.getPrice() != null
-                && course.getPrice().compareTo(BigDecimal.ZERO) > 0;
-        return !paidCourse || "paid".equalsIgnoreCase(registration.getPaymentStatus());
-    }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Bấm nút "Bắt đầu làm bài" ở màn hình giới thiệu: tạo lượt làm bài rồi redirect sang trang làm bài
         if ("/quiz/take".equals(req.getServletPath())) {
-            HttpSession session = req.getSession(false);
-            User user = session != null ? (User) session.getAttribute("currentUser") : null;
+            User user = ControllerSupport.currentUser(req);
             if (user == null) {
                 resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login");
                 return;

@@ -1,0 +1,54 @@
+.management-sidebar {
+    transition: width 200ms ease;
+}
+
+@media (min-width: 1024px) {
+    .management-sidebar[data-collapsed="true"] {
+        width: 5rem;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-heading,
+    .management-sidebar[data-collapsed="true"] .management-sidebar-course-list,
+    .management-sidebar[data-collapsed="true"] .management-sidebar-profile-copy {
+        display: none;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-brand,
+    .management-sidebar[data-collapsed="true"] .management-sidebar-link,
+    .management-sidebar[data-collapsed="true"] .management-sidebar-profile {
+        justify-content: center;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-link {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-account {
+        flex-direction: column;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-profile,
+    .management-sidebar[data-collapsed="true"] .management-sidebar-signout {
+        width: 100%;
+        flex: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .management-sidebar {
+        transition: none;
+    }
+}

@@ -98,13 +98,24 @@ public class LessonServlet extends HttpServlet {
             return;
         }
         Course selectedCourse = (Course) req.getAttribute("course");
-        var lessonList = lessonService.buildLessonList(
-                selectedCourse == null ? List.of() : selectedCourse.getModules(),
-                req.getParameter("sort"), req.getParameter("direction"), req.getParameter("lessonStatus"));
+        LessonService.LessonListData lessonList;
+        try {
+            String moduleFilter = req.getParameter("lessonModuleId");
+            UUID moduleId = moduleFilter == null || moduleFilter.isBlank()
+                    ? null : UUID.fromString(moduleFilter.strip());
+            lessonList = lessonService.buildLessonList(
+                    selectedCourse == null ? List.of() : selectedCourse.getModules(),
+                    req.getParameter("sort"), req.getParameter("direction"),
+                    req.getParameter("lessonStatus"), moduleId);
+        } catch (IllegalArgumentException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid lesson module filter.");
+            return;
+        }
         req.setAttribute("lessonRows", lessonList.rows());
         req.setAttribute("lessonSort", lessonList.sort());
         req.setAttribute("lessonDirection", lessonList.direction());
         req.setAttribute("lessonStatus", lessonList.status());
+        req.setAttribute("lessonModuleId", lessonList.moduleId());
         int coursePage = 1;
         try {
             coursePage = Integer.parseInt(req.getParameter("coursePage"));

@@ -93,17 +93,22 @@ public class LessonService {
     }
 
     public record LessonListData(List<LessonListRow> rows, String sort,
-                                 String direction, String status) {}
+                                 String direction, String status, UUID moduleId) {}
 
     public LessonListData buildLessonList(List<Module> modules, String sort,
-                                          String direction, String status) {
+                                          String direction, String status, UUID moduleId) {
         sort = "duration".equals(sort) ? "duration" : "module";
-        direction = "desc".equals(direction) ? "desc" : "asc";
+        direction = "duration".equals(sort) && "desc".equals(direction) ? "desc" : "asc";
         status = status == null ? "" : status.strip().toLowerCase(Locale.ROOT);
         if (!Set.of("draft", "decline", "published", "archived").contains(status)) status = "";
+        if (moduleId != null && (modules == null || modules.stream()
+                .noneMatch(module -> moduleId.equals(module.getId())))) {
+            throw new IllegalArgumentException("Module does not belong to the selected course.");
+        }
         List<LessonListRow> rows = new ArrayList<>();
         if (modules != null) {
             for (Module module : modules) {
+                if (moduleId != null && !moduleId.equals(module.getId())) continue;
                 List<Lesson> lessons = module.getLessons();
                 if (lessons == null || lessons.isEmpty()) {
                     if (status.isEmpty()) rows.add(new LessonListRow(module, null));
@@ -131,11 +136,10 @@ public class LessonService {
                             ? null : row.lesson().getDurationMinutes(), Comparator.nullsLast(durationOrder))
                     .thenComparing(moduleOrder).thenComparing(lessonOrder);
         } else {
-            order = ("desc".equals(direction) ? moduleOrder.reversed() : moduleOrder)
-                    .thenComparing(lessonOrder);
+            order = moduleOrder.thenComparing(lessonOrder);
         }
         rows.sort(order);
-        return new LessonListData(List.copyOf(rows), sort, direction, status);
+        return new LessonListData(List.copyOf(rows), sort, direction, status, moduleId);
     }
 
     public boolean saveLesson(UUID expertId, LessonDTO dto) {

@@ -50,24 +50,17 @@
                     <thead class="bg-surface text-slate-700 text-xs font-bold border-b border-border-default">
                         <tr>
                             <th class="px-5 py-4 w-14 text-center">#</th>
-                            <c:url var="moduleSortUrl" value="/lessons/manage">
-                                <c:param name="courseId" value="${course.id}" />
-                                <c:param name="courseSearch" value="${courseSearch}" />
-                                <c:param name="coursePage" value="${coursePage}" />
-                                <c:param name="lessonStatus" value="${lessonStatus}" />
-                                <c:param name="sort" value="module" />
-                                <c:param name="direction" value="${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'desc' : 'asc'}" />
-                            </c:url>
-                            <th scope="col" aria-sort="${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'ascending' : 'descending') : 'none'}" class="px-5 py-4 font-bold text-text-primary ">
-                                <span class="inline-flex items-center gap-1">Module
-                                    <a href="${fn:escapeXml(moduleSortUrl)}" aria-label="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
-                                       title="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
-                                       class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${lessonSort eq 'module' ? 'text-brand-700 bg-brand-50' : 'text-text-secondary hover:bg-surface-card'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
-                                        <i class="fa-solid ${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}" aria-hidden="true"></i>
-                                    </a>
-                                </span>
+                            <th scope="col" class="px-5 py-4 font-bold text-text-primary">
+                                <label for="lessonModuleId" class="inline-flex items-center gap-2">Module <i class="fa-solid fa-filter ${empty lessonModuleId ? 'text-text-secondary' : 'text-brand-700'}" aria-hidden="true"></i></label>
+                                <select id="lessonModuleId" name="lessonModuleId" form="lessonListFilters" aria-label="Filter lesson module" onchange="this.form.requestSubmit()"
+                                        class="block mt-1 w-48 max-w-full rounded-lg border border-border-default bg-surface-card px-2 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                                    <option value="" ${empty lessonModuleId ? 'selected' : ''}>All</option>
+                                    <c:forEach var="filterModule" items="${modules}">
+                                        <option value="${filterModule.id}" ${filterModule.id eq lessonModuleId ? 'selected' : ''}><c:out value="${filterModule.title}" /></option>
+                                    </c:forEach>
+                                </select>
                             </th>
-                            <th class="px-5 py-4 font-bold text-text-primary">Lesson Title</th>
+                            <th class="min-w-64 px-5 py-4 font-bold text-text-primary">Lesson Title</th>
                             <th scope="col" class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">
                                 <label for="lessonStatus" class="inline-flex items-center gap-2">Status <i class="fa-solid fa-filter ${empty lessonStatus ? 'text-text-secondary' : 'text-brand-700'}" aria-hidden="true"></i></label>
                                 <select id="lessonStatus" name="lessonStatus" form="lessonListFilters" aria-label="Filter lesson status" onchange="this.form.requestSubmit()"
@@ -80,17 +73,18 @@
                                 </select>
                             </th>
                             <c:url var="durationSortUrl" value="/lessons/manage">
+                                <c:param name="lessonModuleId" value="${lessonModuleId}" />
                                 <c:param name="courseId" value="${course.id}" />
                                 <c:param name="courseSearch" value="${courseSearch}" />
                                 <c:param name="coursePage" value="${coursePage}" />
                                 <c:param name="lessonStatus" value="${lessonStatus}" />
-                                <c:param name="sort" value="duration" />
+                                <c:param name="sort" value="${lessonSort eq 'duration' and lessonDirection eq 'desc' ? 'module' : 'duration'}" />
                                 <c:param name="direction" value="${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'desc' : 'asc'}" />
                             </c:url>
                             <th scope="col" aria-sort="${lessonSort eq 'duration' ? (lessonDirection eq 'asc' ? 'ascending' : 'descending') : 'none'}" class="px-5 py-4 font-bold text-text-primary text-center whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1">Duration
-                                    <a href="${fn:escapeXml(durationSortUrl)}" aria-label="Sort duration ${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
-                                       title="Sort duration ${lessonSort eq 'duration' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                    <a href="${fn:escapeXml(durationSortUrl)}" aria-label="${lessonSort eq 'duration' and lessonDirection eq 'desc' ? 'Reset duration sort' : (lessonSort eq 'duration' ? 'Sort duration descending' : 'Sort duration ascending')}"
+                                       title="${lessonSort eq 'duration' and lessonDirection eq 'desc' ? 'Reset duration sort' : (lessonSort eq 'duration' ? 'Sort duration descending' : 'Sort duration ascending')}"
                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${lessonSort eq 'duration' ? 'text-brand-700 bg-brand-50' : 'text-text-secondary hover:bg-surface-card'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                         <i class="fa-solid ${lessonSort eq 'duration' ? (lessonDirection eq 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}" aria-hidden="true"></i>
                                     </a>
@@ -176,7 +170,7 @@
                                     <td colspan="6" class="px-6 py-12 text-center text-text-secondary text-sm">
                                         <i class="fa-regular fa-folder-open text-4xl mb-3 block text-slate-300"></i>
                                         <c:choose>
-                                            <c:when test="${not empty lessonStatus}">No lessons match the selected status.</c:when>
+                                            <c:when test="${not empty lessonStatus or not empty lessonModuleId}">No lessons match the selected filters.</c:when>
                                             <c:otherwise>Khóa học này hiện chưa có module hoặc bài giảng nào.</c:otherwise>
                                         </c:choose>
                                     </td>

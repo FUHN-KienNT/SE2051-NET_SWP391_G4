@@ -101,7 +101,7 @@ public class LessonDAO {
         String lockSql = "SELECT id FROM module WHERE id = ? FOR UPDATE";
         String insertSql = "INSERT INTO lesson "
                 + "(id, module_id, title, content, order_index, duration_minutes, status, created_at, updated_at) "
-                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?::lesson_status, NOW(), NOW())";
+                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -182,7 +182,7 @@ public class LessonDAO {
                     throw new SQLException("Order index is outside the module.");
                 target.add(lesson.getOrderIndex() - 1, lesson.getId());
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?::lesson_status, updated_at=NOW() WHERE id=? AND module_id=?")) {
+                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
                     ps.setObject(1, newModule); ps.setString(2, lesson.getTitle());
                     ps.setString(3, lesson.getContent()); ps.setInt(4, lesson.getOrderIndex());
                     ps.setObject(5, lesson.getDurationMinutes(), Types.INTEGER);
@@ -228,8 +228,8 @@ public class LessonDAO {
 
     public boolean changeAvailability(UUID expertId, UUID courseId, UUID lessonId,
                                       Timestamp expectedUpdatedAt, String expectedStatus, String targetStatus) {
-        String sql = "UPDATE lesson SET status=?::lesson_status, updated_at=NOW() "
-                + "WHERE id=? AND status=?::lesson_status AND updated_at=? "
+        String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
+                + "WHERE id=? AND status=? AND updated_at=? "
                 + "AND module_id IN (SELECT m.id FROM module m JOIN course c ON c.id=m.course_id "
                 + "WHERE c.id=? AND c.expert_id=?)";
         try (Connection conn = DbConnection.getConnection();
@@ -260,7 +260,7 @@ public class LessonDAO {
 
     public boolean reviewPublication(UUID courseId, UUID lessonId,
                                      Timestamp expectedUpdatedAt, String status) {
-        String sql = "UPDATE lesson SET status=?::lesson_status, updated_at=NOW() "
+        String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
                 + "WHERE id=? AND status='draft' AND updated_at=? "
                 + "AND module_id IN (SELECT id FROM module WHERE course_id=?)";
         try (Connection conn = DbConnection.getConnection();

@@ -1,7 +1,6 @@
 ﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
 <main class="flex-grow py-10 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
     <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl">
@@ -49,7 +48,7 @@
                 <a href="${pageContext.request.contextPath}/admin/users" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition">
                     Hủy bỏ
                 </a>
-                <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md transition">
+                <button type="submit" class="px-6 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl text-sm shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                     Lưu thông tin
                 </button>
             </div>

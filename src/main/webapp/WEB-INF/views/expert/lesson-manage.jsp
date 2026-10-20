@@ -144,10 +144,11 @@
                                                            <input type="hidden" name="csrfToken" value="${sessionScope.lessonActionToken}">
                                                            <input type="hidden" name="updatedAt" value="${les.updatedAt}">
                                                            <button type="submit"
-                                                                   class="inline-flex items-center gap-2 rounded-lg px-3 py-2 ${les.publicationStatus eq 'archived' ? 'text-brand-700 hover:bg-brand-50' : 'text-status-danger hover:bg-surface'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+                                                                   class="inline-flex items-center gap-2 rounded-lg px-3 py-2 ${les.publicationStatus eq 'archived' ? 'text-brand-700 hover:bg-brand-50 focus-visible:ring-brand-700' : 'text-status-danger hover:bg-rose-50 focus-visible:ring-status-danger'} focus-visible:outline-none focus-visible:ring-2"
                                                                    data-confirm="${les.publicationStatus eq 'archived' ? 'Set this lesson active again?' : 'Set this lesson inactive? The lesson and learning progress will be preserved.'}"
                                                                    data-confirm-title="${les.publicationStatus eq 'archived' ? 'Active Lesson' : 'Inactive Lesson'}"
                                                                    data-confirm-type="${les.publicationStatus eq 'archived' ? 'success' : 'danger'}"
+                                                                   data-confirm-cancel="Cancel"
                                                                    data-confirm-btn="${les.publicationStatus eq 'archived' ? 'Active' : 'Inactive'}">
                                                                <i class="fa-solid ${les.publicationStatus eq 'archived' ? 'fa-toggle-on' : 'fa-toggle-off'}" aria-hidden="true"></i>
                                                                ${les.publicationStatus eq 'archived' ? 'Active' : 'Inactive'}

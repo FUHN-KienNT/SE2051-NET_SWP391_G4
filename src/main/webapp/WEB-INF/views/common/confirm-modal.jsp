@@ -1,29 +1,29 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!-- LearnHub Global Confirmation Web Modal -->
 <div id="lhConfirmModal" 
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" 
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text-primary/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200"
      role="dialog" 
      aria-modal="true" 
      aria-labelledby="lhConfirmTitle">
-    <div id="lhConfirmCard" class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200">
+    <div id="lhConfirmCard" class="bg-surface-card rounded-2xl max-w-md w-full p-6 shadow-2xl border border-border-default transform scale-95 transition-transform duration-200">
         <div class="flex items-start space-x-4">
-            <div id="lhConfirmIconContainer" class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-xl shadow-xs">
+            <div id="lhConfirmIconContainer" class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-status-danger flex items-center justify-center shrink-0 text-xl shadow-xs">
                 <i id="lhConfirmIcon" class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <h3 id="lhConfirmTitle" class="text-lg font-bold text-slate-900 leading-snug">Xác nhận</h3>
-                <p id="lhConfirmMessage" class="text-sm text-slate-600 mt-1.5 leading-relaxed">Bạn có chắc chắn muốn thực hiện thao tác này không?</p>
+                <h3 id="lhConfirmTitle" class="text-lg font-bold text-text-primary leading-snug">Xác nhận</h3>
+                <p id="lhConfirmMessage" class="text-sm text-text-secondary mt-1.5 leading-relaxed">Bạn có chắc chắn muốn thực hiện thao tác này không?</p>
             </div>
         </div>
         <div class="mt-6 flex items-center justify-end space-x-3">
             <button type="button" 
                     id="lhConfirmCancelBtn" 
-                    class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer">
+                    class="px-4 py-2.5 rounded-xl border border-border-default bg-surface-card hover:bg-surface text-text-primary font-semibold text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 cursor-pointer">
                 Hủy bỏ
             </button>
             <button type="button" 
                     id="lhConfirmOkBtn" 
-                    class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 cursor-pointer">
+                    class="px-5 py-2.5 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white font-bold text-sm transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-danger focus-visible:ring-offset-2 cursor-pointer">
                 Xác nhận
             </button>
         </div>
@@ -54,17 +54,17 @@
 
         const type = options.type || 'danger';
         if (type === 'danger') {
-            iconContainer.className = 'w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-xl shadow-xs';
+            iconContainer.className = 'w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-status-danger flex items-center justify-center shrink-0 text-xl shadow-xs';
             iconEl.className = 'fa-solid fa-triangle-exclamation';
-            okBtn.className = 'px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 cursor-pointer';
+            okBtn.className = 'px-5 py-2.5 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white font-bold text-sm transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-danger focus-visible:ring-offset-2 cursor-pointer';
         } else if (type === 'warning') {
-            iconContainer.className = 'w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0 text-xl shadow-xs';
+            iconContainer.className = 'w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-status-warning flex items-center justify-center shrink-0 text-xl shadow-xs';
             iconEl.className = 'fa-solid fa-circle-exclamation';
-            okBtn.className = 'px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm transition shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 cursor-pointer';
+            okBtn.className = 'px-5 py-2.5 rounded-xl bg-status-warning hover:bg-status-warning/90 text-white font-bold text-sm transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-status-warning focus-visible:ring-offset-2 cursor-pointer';
         } else {
-            iconContainer.className = 'w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xl shadow-xs';
+            iconContainer.className = 'w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 text-brand-700 flex items-center justify-center shrink-0 text-xl shadow-xs';
             iconEl.className = 'fa-solid fa-circle-check';
-            okBtn.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer';
+            okBtn.className = 'px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 cursor-pointer';
         }
 
         pendingAction = options.onConfirm || null;
@@ -133,12 +133,14 @@
             const message = trigger.getAttribute('data-confirm') || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
             const title = trigger.getAttribute('data-confirm-title') || 'Xác nhận';
             const confirmText = trigger.getAttribute('data-confirm-btn') || 'Xác nhận';
+            const cancelText = trigger.getAttribute('data-confirm-cancel');
             const type = trigger.getAttribute('data-confirm-type') || 'danger';
 
             showConfirmModal({
                 title: title,
                 message: message,
                 confirmText: confirmText,
+                cancelText: cancelText,
                 type: type,
                 onConfirm: function() {
                     if (trigger.tagName === 'A') {

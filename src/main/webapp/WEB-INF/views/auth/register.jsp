@@ -48,7 +48,7 @@
                 <input type="hidden" name="redirect_uri" value="${fn:escapeXml(param.redirect_uri)}">
                 <div>
                     <label for="fullName" class="block text-xs font-semibold text-slate-600 mb-1.5">Full name</label>
-                    <input id="fullName" name="fullName" type="text" required maxlength="255" autocomplete="name" value="${fn:escapeXml(fullName != null ? fullName : param.fullName)}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all" placeholder="Your full name">
+                    <input id="fullName" name="fullName" type="text" required maxlength="255" autocomplete="name" value="${fn:escapeXml(fullName != null ? fullName : param.fullName)}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all" placeholder="Nguyen Van A">
                 </div>
                 <div>
                     <label for="username" class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>

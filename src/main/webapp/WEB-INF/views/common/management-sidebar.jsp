@@ -10,10 +10,9 @@
 
 <aside id="managementSidebar" data-collapsed="false" class="management-sidebar relative z-40 flex w-full shrink-0 flex-col border-b border-border-default bg-surface-card shadow-sm lg:min-h-screen lg:w-64 lg:rounded-r-2xl lg:border-b-0 lg:border-r" aria-label="Management workspace">
     <div>
-        <div class="flex items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
-            <a href="${pageContext.request.contextPath}${dashboardPath}" class="management-sidebar-brand inline-flex min-w-0 items-center gap-3 rounded-lg text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="LearnHub dashboard" title="LearnHub dashboard">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-700"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></span>
-                <span class="management-sidebar-label truncate text-base font-bold">LearnHub</span>
+        <div class="management-sidebar-header flex items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
+            <a href="${pageContext.request.contextPath}/home" class="management-sidebar-brand inline-flex min-w-0 items-center rounded-lg text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="LearnHub home" title="LearnHub home">
+                <span class="whitespace-nowrap text-2xl font-bold tracking-tight">LearnHub</span>
             </a>
             <button type="button" id="managementMenuButton" class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 lg:hidden" aria-label="Open management menu" aria-controls="managementNavigation" aria-expanded="false">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -135,12 +134,16 @@
         const menuButton = document.getElementById('managementMenuButton');
         const collapseButton = document.getElementById('managementCollapseButton');
         const collapseIcon = document.getElementById('managementCollapseIcon');
+        const brand = sidebar && sidebar.querySelector('.management-sidebar-brand');
         const navigation = document.getElementById('managementNavigation');
         const footer = document.getElementById('managementSidebarFooter');
-        if (!sidebar || !menuButton || !collapseButton || !collapseIcon || !navigation || !footer) return;
+        if (!sidebar || !menuButton || !collapseButton || !collapseIcon || !brand || !navigation || !footer) return;
 
         function setCollapsed(collapsed) {
             sidebar.dataset.collapsed = String(collapsed);
+            brand.style.display = collapsed && window.matchMedia('(min-width: 1024px)').matches
+                ? 'none'
+                : 'inline-flex';
             collapseButton.setAttribute('aria-expanded', String(!collapsed));
             collapseButton.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
             collapseButton.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
@@ -158,6 +161,10 @@
             const collapsed = sidebar.dataset.collapsed !== 'true';
             setCollapsed(collapsed);
             try { localStorage.setItem('learnhub-management-sidebar-collapsed', String(collapsed)); } catch (error) { /* Storage can be disabled. */ }
+        });
+
+        window.addEventListener('resize', function () {
+            setCollapsed(sidebar.dataset.collapsed === 'true');
         });
 
         menuButton.addEventListener('click', function () {

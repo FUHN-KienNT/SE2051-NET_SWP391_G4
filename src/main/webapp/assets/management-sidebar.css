@@ -7,6 +7,15 @@
         width: 5rem;
     }
 
+    .management-sidebar[data-collapsed="true"] .management-sidebar-header {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-brand {
+        display: none;
+    }
+
     .management-sidebar[data-collapsed="true"] .management-sidebar-label {
         position: absolute;
         width: 1px;

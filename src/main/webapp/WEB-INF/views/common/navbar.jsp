@@ -16,9 +16,7 @@
                 
                 <c:choose>
                     <c:when test="${not empty sessionScope.currentUser and sessionScope.currentUser.roleCode eq 'ROLE_ADMIN'}">
-                        <a href="${pageContext.request.contextPath}/admin/users" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">User</a>
                         <a href="${pageContext.request.contextPath}/admin/dashboard" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">Dashboard</a>
-                        <a href="${pageContext.request.contextPath}/admin/settings" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">Setting</a>
                     </c:when>
                     
                     <c:otherwise>
@@ -28,7 +26,6 @@
                             <c:choose>
                                 <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
                                     <a href="${pageContext.request.contextPath}/manager/dashboard" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">Dashboard</a>
-                                    <a href="${pageContext.request.contextPath}/admin/courses" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">Manage Courses</a>
                                 </c:when>
                                 <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_EXPERT'}">
                                     <a href="${pageContext.request.contextPath}/expert/dashboard" class="block rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 md:p-0 md:hover:bg-transparent">Dashboard</a>
@@ -80,7 +77,7 @@
                                 </a>
                                 <a href="${pageContext.request.contextPath}/my-payments"
                                    class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-emerald-600 transition-colors">
-                                    <i class="fa-solid fa-receipt w-5 text-slate-400"></i>Lịch sử thanh toán
+                                    <i class="fa-solid fa-receipt w-5 text-slate-400"></i>Payment History
                                 </a>
                             </c:if>
                             <div class="border-t border-slate-50 my-1"></div>

@@ -1,6 +1,9 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
+
+<div class="min-h-[calc(100vh-64px)] bg-[#f8fafc]">
 
 <main class="flex-grow py-10 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
     <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl">
@@ -55,4 +58,5 @@
         </form>
     </div>
 </main>
+</div>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

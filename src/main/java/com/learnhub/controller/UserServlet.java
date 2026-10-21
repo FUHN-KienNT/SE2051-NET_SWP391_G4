@@ -3,6 +3,7 @@ package com.learnhub.controller;
 import com.learnhub.dto.UserDTO;
 import com.learnhub.entity.Setting;
 import com.learnhub.service.UserService;
+import com.learnhub.util.PaginationHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -82,10 +83,28 @@ public class UserServlet extends HttpServlet {
 
         int page = ControllerSupport.pageNumber(req.getParameter("page"));
         int pageSize = 10;
+        String pageSizeParam = req.getParameter("pageSize");
+        if (pageSizeParam != null && !pageSizeParam.trim().isEmpty()) {
+            try {
+                int parsed = Integer.parseInt(pageSizeParam.trim());
+                if (parsed == 10 || parsed == 20 || parsed == 50) {
+                    pageSize = parsed;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+
+        int totalUsers = userService.countUsers(search, roleId, status);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalUsers / pageSize));
+        if (page > totalPages) {
+            page = totalPages;
+        }
 
         List<UserDTO> users = userService.getUserList(search, roleId, status, page, pageSize);
-        int totalUsers = userService.countUsers(search, roleId, status);
-        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
+        List<String> pageNumbers = PaginationHelper.getPageNumbers(page, totalPages);
+
+
 
         req.setAttribute("users", users);
         req.setAttribute("roles", roles);
@@ -96,7 +115,8 @@ public class UserServlet extends HttpServlet {
         req.setAttribute("currentPage", page);
         req.setAttribute("pageSize", pageSize);
         req.setAttribute("totalUsers", totalUsers);
-        req.setAttribute("totalPages", Math.max(1, totalPages));
+        req.setAttribute("totalPages", totalPages);
+        req.setAttribute("pageNumbers", pageNumbers);
 
         req.getRequestDispatcher("/WEB-INF/views/admin/user-list.jsp").forward(req, resp);
     }

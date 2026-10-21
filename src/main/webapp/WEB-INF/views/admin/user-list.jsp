@@ -3,13 +3,10 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
+<jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<div class="flex min-h-screen flex-col bg-surface lg:flex-row">
-    <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
-        <jsp:param name="activeSection" value="users" />
-    </jsp:include>
-    <div class="flex min-w-0 flex-1 flex-col">
-    <main class="mx-auto w-full max-w-7xl flex-grow px-4 py-8 sm:px-6 lg:px-8">
+<div class="min-h-[calc(100vh-64px)] bg-[#f8fafc]">
+    <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div>
@@ -31,6 +28,7 @@
             <!-- Filter & Search Bar -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-6">
                 <form action="${pageContext.request.contextPath}/admin/users" method="get" class="flex flex-col md:flex-row gap-3">
+                    <input type="hidden" name="pageSize" value="${pageSize}">
                     <!-- Search Field -->
                     <div class="relative flex-1">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
@@ -187,61 +185,112 @@
 
                 <!-- Pagination Footer -->
                 <c:if test="${totalUsers > 0}">
-                    <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/40">
-                        <div class="text-xs text-slate-500 font-medium">
-                            Hiển thị <span class="font-bold text-slate-800">${(currentPage - 1) * pageSize + 1}</span> -
-                            <span class="font-bold text-slate-800">${currentPage * pageSize gt totalUsers ? totalUsers : currentPage * pageSize}</span>
-                            trên tổng số <span class="font-bold text-slate-800">${totalUsers}</span> người dùng
+                    <div class="px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/40">
+                        <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-medium">
+                            <div>
+                                Hiển thị <span class="font-bold text-slate-800">${(currentPage - 1) * pageSize + 1}</span> -
+                                <span class="font-bold text-slate-800">${currentPage * pageSize gt totalUsers ? totalUsers : currentPage * pageSize}</span>
+                                trên tổng số <span class="font-bold text-slate-800">${totalUsers}</span> người dùng
+                            </div>
+
+                            <!-- Page Size Selector -->
+                            <div class="flex items-center gap-1.5 border-l border-slate-200 pl-4">
+                                <span>Hiển thị:</span>
+                                <select onchange="location.href=this.value"
+                                        class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#047857] cursor-pointer">
+                                    <option value="${pageContext.request.contextPath}/admin/users?page=1&pageSize=10&search=${search}&roleId=${roleId}&status=${selectedStatus}" ${pageSize eq 10 ? 'selected' : ''}>10 / trang</option>
+                                    <option value="${pageContext.request.contextPath}/admin/users?page=1&pageSize=20&search=${search}&roleId=${roleId}&status=${selectedStatus}" ${pageSize eq 20 ? 'selected' : ''}>20 / trang</option>
+                                    <option value="${pageContext.request.contextPath}/admin/users?page=1&pageSize=50&search=${search}&roleId=${roleId}&status=${selectedStatus}" ${pageSize eq 50 ? 'selected' : ''}>50 / trang</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="flex items-center space-x-1.5">
-                            <!-- Prev Page -->
+                        <!-- Pagination Controls -->
+                        <div class="flex items-center space-x-1 select-none">
+                            <!-- First Page Button (<<) -->
                             <c:choose>
                                 <c:when test="${currentPage gt 1}">
-                                    <a href="${pageContext.request.contextPath}/admin/users?page=${currentPage - 1}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
-                                       class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                                        <span>Trước</span>
+                                    <a href="${pageContext.request.contextPath}/admin/users?page=1&pageSize=${pageSize}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
+                                       class="rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center justify-center w-8 h-8"
+                                       title="Trang đầu">
+                                        <i class="fa-solid fa-angles-left text-[11px]"></i>
                                     </a>
                                 </c:when>
                                 <c:otherwise>
-                                    <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-400 cursor-not-allowed inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                                        <span>Trước</span>
+                                    <span class="rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed inline-flex items-center justify-center w-8 h-8"
+                                          title="Trang đầu">
+                                        <i class="fa-solid fa-angles-left text-[11px]"></i>
                                     </span>
                                 </c:otherwise>
                             </c:choose>
 
-                            <!-- Page Numbers -->
-                            <c:forEach begin="1" end="${totalPages}" var="p">
+                            <!-- Prev Page Button (< Trước) -->
+                            <c:choose>
+                                <c:when test="${currentPage gt 1}">
+                                    <a href="${pageContext.request.contextPath}/admin/users?page=${currentPage - 1}&pageSize=${pageSize}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
+                                       class="px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1 h-8">
+                                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                                        <span class="hidden sm:inline">Trước</span>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="px-2.5 rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed inline-flex items-center gap-1 h-8">
+                                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                                        <span class="hidden sm:inline">Trước</span>
+                                    </span>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <!-- Dynamic Page Numbers with Ellipsis -->
+                            <c:forEach var="p" items="${pageNumbers}">
                                 <c:choose>
-                                    <c:when test="${p eq currentPage}">
-                                        <span class="px-3 py-1.5 rounded-lg bg-[#047857] text-white font-black text-xs shadow-xs">
+                                    <c:when test="${p eq '...'}">
+                                        <span class="px-2 text-xs font-bold text-slate-400 select-none self-center">...</span>
+                                    </c:when>
+                                    <c:when test="${p eq currentPage.toString()}">
+                                        <span class="min-w-[32px] h-8 px-2.5 flex items-center justify-center rounded-lg bg-[#047857] text-white font-bold text-xs shadow-xs">
                                             ${p}
                                         </span>
                                     </c:when>
                                     <c:otherwise>
-                                        <a href="${pageContext.request.contextPath}/admin/users?page=${p}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
-                                           class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition">
+                                        <a href="${pageContext.request.contextPath}/admin/users?page=${p}&pageSize=${pageSize}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
+                                           class="min-w-[32px] h-8 px-2.5 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition">
                                             ${p}
                                         </a>
                                     </c:otherwise>
                                 </c:choose>
                             </c:forEach>
 
-                            <!-- Next Page -->
+                            <!-- Next Page Button (Sau >) -->
                             <c:choose>
                                 <c:when test="${currentPage lt totalPages}">
-                                    <a href="${pageContext.request.contextPath}/admin/users?page=${currentPage + 1}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
-                                       class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1">
-                                        <span>Sau</span>
+                                    <a href="${pageContext.request.contextPath}/admin/users?page=${currentPage + 1}&pageSize=${pageSize}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
+                                       class="px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1 h-8">
+                                        <span class="hidden sm:inline">Sau</span>
                                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
                                     </a>
                                 </c:when>
                                 <c:otherwise>
-                                    <span class="px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-400 cursor-not-allowed inline-flex items-center gap-1">
-                                        <span>Sau</span>
+                                    <span class="px-2.5 rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed inline-flex items-center gap-1 h-8">
+                                        <span class="hidden sm:inline">Sau</span>
                                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                    </span>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <!-- Last Page Button (>>) -->
+                            <c:choose>
+                                <c:when test="${currentPage lt totalPages}">
+                                    <a href="${pageContext.request.contextPath}/admin/users?page=${totalPages}&pageSize=${pageSize}&search=${search}&roleId=${roleId}&status=${selectedStatus}"
+                                       class="rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition inline-flex items-center justify-center w-8 h-8"
+                                       title="Trang cuối">
+                                        <i class="fa-solid fa-angles-right text-[11px]"></i>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="rounded-lg border border-slate-200 bg-slate-100 text-xs font-bold text-slate-300 cursor-not-allowed inline-flex items-center justify-center w-8 h-8"
+                                          title="Trang cuối">
+                                        <i class="fa-solid fa-angles-right text-[11px]"></i>
                                     </span>
                                 </c:otherwise>
                             </c:choose>
@@ -250,7 +299,6 @@
                 </c:if>
             </div>
         </main>
-    </div>
 </div>
 
-<jsp:include page="/WEB-INF/views/common/management-footer.jsp" />
+<jsp:include page="/WEB-INF/views/common/footer.jsp" />

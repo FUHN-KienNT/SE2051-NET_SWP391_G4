@@ -28,7 +28,9 @@ import java.sql.Timestamp;
  * - showLessonDetail()
  * - saveAndRedirect()
  */
-@WebServlet(name = "LessonServlet", urlPatterns = {"/lessons/manage", "/lessons/upload"})
+@WebServlet(name = "LessonServlet", urlPatterns = {
+        "/expert/lessons", "/expert/lessons/create", "/expert/lessons/edit", "/expert/lessons/upload"
+})
 @MultipartConfig(maxFileSize = 50 * 1024 * 1024)
 public class LessonServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
@@ -65,8 +67,9 @@ public class LessonServlet extends HttpServlet {
                 throw new ServletException("Lesson operation failed.", e);
             }
         }
+        String path = req.getServletPath();
         String action = req.getParameter("action");
-        if ("create".equalsIgnoreCase(action)) {
+        if ("/expert/lessons/create".equals(path)) {
             req.setAttribute("defaultOrderIndex", 1);
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
@@ -80,7 +83,7 @@ public class LessonServlet extends HttpServlet {
              resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
              return;
          }
-        if ("edit".equalsIgnoreCase(action)) {
+        if ("/expert/lessons/edit".equals(path)) {
             String lessonIdStr = req.getParameter("id");
             if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
                 try {
@@ -177,7 +180,7 @@ public class LessonServlet extends HttpServlet {
             } catch (IllegalStateException e) {
                 throw new ServletException("Cannot change lesson availability.", e);
             }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?courseId=" + courseId
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId
                     + "&availability=" + ("activate".equalsIgnoreCase(action) ? "active" : "inactive"));
             return;
         }
@@ -197,7 +200,7 @@ public class LessonServlet extends HttpServlet {
                     throw new ServletException("Lesson operation failed.", e);
                 }
             }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?id=" + req.getParameter("lessonId") + "&uploaded=true");
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?id=" + req.getParameter("lessonId") + "&uploaded=true");
             return;
         }
 
@@ -253,7 +256,7 @@ public class LessonServlet extends HttpServlet {
                         .forward(req, resp);
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/lessons/manage?submitted=true&courseId=" + (courseIdStr != null ? courseIdStr : ""));
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?submitted=true&courseId=" + (courseIdStr != null ? courseIdStr : ""));
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;

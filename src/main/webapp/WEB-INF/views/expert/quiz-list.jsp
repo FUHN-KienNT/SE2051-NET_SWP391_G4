@@ -22,7 +22,7 @@
                 </div>
 
                 <!-- Create Quiz Button at Top -->
-                <a href="${pageContext.request.contextPath}/quiz/detail?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/quizzes/detail?courseId=${courseId}"
                    class="inline-flex items-center justify-center px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-sm transition shadow-sm space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                     <i class="fa-solid fa-plus text-xs"></i>
                     <span>Create Quiz</span>
@@ -50,7 +50,7 @@
             </c:if>
 
             <!-- Filters: Course, Module, Keyword, Status -->
-            <form method="get" action="${pageContext.request.contextPath}/quiz/manage" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <form method="get" action="${pageContext.request.contextPath}/expert/quizzes" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <!-- Course Filter -->
                 <div>
                     <label class="block text-xs font-semibold text-text-secondary mb-1">Khóa học</label>
@@ -188,21 +188,21 @@
 
                                         <!-- Action -->
                                         <td class="px-4 py-3.5 text-center space-x-2 text-xs font-semibold whitespace-nowrap">
-                                            <a href="${pageContext.request.contextPath}/quiz/detail?id=${q.id}&courseId=${courseId}"
+                                            <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
                                                class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-surface border border-border-default text-brand-700 hover:bg-brand-50 transition">
                                                 <i class="fa-solid fa-pen-to-square mr-1"></i>Sửa
                                             </a>
 
                                             <c:choose>
                                                 <c:when test="${q.hidden}">
-                                                    <a href="${pageContext.request.contextPath}/quiz/manage?action=unhide&id=${q.id}&courseId=${courseId}"
+                                                    <a href="${pageContext.request.contextPath}/expert/quizzes?action=unhide&id=${q.id}&courseId=${courseId}"
                                                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-emerald-50 text-status-success border border-emerald-200 hover:bg-emerald-100 transition"
                                                        title="Bỏ ẩn để hiển thị lại quiz">
                                                         <i class="fa-solid fa-eye mr-1"></i>Hiện
                                                     </a>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <a href="${pageContext.request.contextPath}/quiz/manage?action=hide&id=${q.id}&courseId=${courseId}"
+                                                    <a href="${pageContext.request.contextPath}/expert/quizzes?action=hide&id=${q.id}&courseId=${courseId}"
                                                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 transition"
                                                        data-confirm="Bạn có chắc chắn muốn ẩn quiz này không? Học viên sẽ không thấy bài thi này nữa, nhưng bài nộp cũ sẽ được bảo toàn."
                                                        data-confirm-title="Ẩn Quiz"

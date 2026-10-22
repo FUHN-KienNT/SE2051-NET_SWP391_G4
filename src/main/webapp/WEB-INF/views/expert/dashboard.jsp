@@ -113,7 +113,7 @@
                                         </c:choose>
                                     </td>
                                     <td class="px-6 py-4 text-right whitespace-nowrap">
-                                        <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${c.id}"
+                                        <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${c.id}"
                                            class="inline-flex items-center px-3.5 py-1.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-xs transition shadow-sm space-x-1 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                             <i class="fa-solid fa-pen-to-square text-xs mr-1"></i>
                                             <span>Manage Content</span>

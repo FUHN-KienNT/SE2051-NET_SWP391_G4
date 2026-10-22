@@ -233,14 +233,14 @@
                                             </a>
                                         </c:when>
                                         <c:otherwise>
-                                    <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${course.id}"
+                                    <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-brand-700 hover:text-brand-900 bg-brand-50 hover:bg-brand-100 rounded-xl transition">
                                         <i class="fa-solid fa-book-open text-xs"></i>
                                         <span>Manage Lessons</span>
                                     </a>
                                         </c:otherwise>
                                     </c:choose>
-                                    <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${course.id}"
+                                    <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${course.id}"
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-xl transition">
                                         <i class="fa-solid fa-list-check text-xs"></i>
                                         <span>Manage Quizzes</span>

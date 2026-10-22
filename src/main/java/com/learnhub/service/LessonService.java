@@ -98,7 +98,7 @@ public class LessonService {
     public LessonListData buildLessonList(List<Module> modules, String sort,
                                           String direction, String status, UUID moduleId) {
         sort = "duration".equals(sort) ? "duration" : "module";
-        direction = "duration".equals(sort) && "desc".equals(direction) ? "desc" : "asc";
+        direction = "desc".equals(direction) ? "desc" : "asc";
         status = status == null ? "" : status.strip().toLowerCase(Locale.ROOT);
         if (!Set.of("draft", "decline", "published", "archived").contains(status)) status = "";
         if (moduleId != null && (modules == null || modules.stream()
@@ -136,7 +136,8 @@ public class LessonService {
                             ? null : row.lesson().getDurationMinutes(), Comparator.nullsLast(durationOrder))
                     .thenComparing(moduleOrder).thenComparing(lessonOrder);
         } else {
-            order = moduleOrder.thenComparing(lessonOrder);
+            order = ("desc".equals(direction) ? moduleOrder.reversed() : moduleOrder)
+                    .thenComparing(lessonOrder);
         }
         rows.sort(order);
         return new LessonListData(List.copyOf(rows), sort, direction, status, moduleId);

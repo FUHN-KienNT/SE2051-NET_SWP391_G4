@@ -66,9 +66,7 @@ public final class PostLoginNavigation {
                 || isUnder(path, "/admin/setting-detail") || isUnder(path, "/admin/setting-status")) return admin;
         if (isUnder(path, "/admin/lesson-review")) return manager;
         if (isUnder(path, "/admin")) return admin || manager;
-        if (isUnder(path, "/expert") || isUnder(path, "/lessons")
-                || isUnder(path, "/questions") || isUnder(path, "/quiz/manage")
-                || isUnder(path, "/quiz/detail")) return expert;
+        if (isUnder(path, "/expert")) return expert;
         if (isUnder(path, "/my-enrollments") || isUnder(path, "/learn")
                 || isUnder(path, "/learning-process") || isUnder(path, "/enroll")
                 || isUnder(path, "/enrollment")) return student;

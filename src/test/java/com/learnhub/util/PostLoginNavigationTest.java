@@ -22,6 +22,12 @@ class PostLoginNavigationTest {
     void preservesAllowedDeepLinksAndQueryStrings() {
         assertEquals("/learnhub/admin/users?page=2", destination(AppConstants.Role.ADMIN, "/admin/users?page=2"));
         assertEquals("/learnhub/expert/dashboard", destination(AppConstants.Role.EXPERT, "/expert/dashboard"));
+        assertEquals("/learnhub/expert/lessons/edit?id=lesson&courseId=course",
+                destination(AppConstants.Role.EXPERT, "/expert/lessons/edit?id=lesson&courseId=course"));
+        assertEquals("/learnhub/expert/questions/detail?id=question",
+                destination(AppConstants.Role.EXPERT, "/expert/questions/detail?id=question"));
+        assertEquals("/learnhub/expert/quizzes/detail?id=quiz",
+                destination(AppConstants.Role.EXPERT, "/expert/quizzes/detail?id=quiz"));
         assertEquals("/learnhub/my-enrollments?registered=success", destination(AppConstants.Role.STUDENT,
                 "/my-enrollments?registered=success"));
     }
@@ -41,6 +47,7 @@ class PostLoginNavigationTest {
         assertEquals("/learnhub/admin/dashboard", destination(AppConstants.Role.ADMIN, "/manager/dashboard"));
         assertEquals("/learnhub/expert/dashboard", destination(AppConstants.Role.EXPERT, "/admin/dashboard"));
         assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "/expert/dashboard"));
+        assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "/expert/lessons"));
     }
 
     @Test

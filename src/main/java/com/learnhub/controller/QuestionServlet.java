@@ -25,8 +25,8 @@ import java.util.*;
 @WebServlet(
         name = "QuestionServlet",
         urlPatterns = {
-            "/questions/manage",
-            "/questions/detail"
+            "/expert/questions",
+            "/expert/questions/detail"
         }
 )
 public class QuestionServlet extends HttpServlet {
@@ -71,7 +71,7 @@ public class QuestionServlet extends HttpServlet {
         /*
          * QUESTION DETAIL
          */
-        if ("/questions/detail".equals(path)) {
+        if ("/expert/questions/detail".equals(path)) {
 
             String id = req.getParameter("id");
 
@@ -121,7 +121,7 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.hide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?hidden="
+                    + "/expert/questions?hidden="
                     + ok
                     + courseSuffix(courseId)
             );
@@ -133,7 +133,7 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.unhide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?unhidden="
+                    + "/expert/questions?unhidden="
                     + ok
                     + courseSuffix(courseId)
             );
@@ -182,7 +182,7 @@ public class QuestionServlet extends HttpServlet {
 
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?imported=" + count
+                    + "/expert/questions?imported=" + count
                     + courseSuffix(courseId)
             );
             return;
@@ -235,7 +235,7 @@ public class QuestionServlet extends HttpServlet {
         if (ok) {
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?saved=true"
+                    + "/expert/questions?saved=true"
                     + courseSuffix(courseId)
             );
             return;

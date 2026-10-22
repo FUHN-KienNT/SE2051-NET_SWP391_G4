@@ -50,6 +50,24 @@ class AuthorizationFilterManagerTest {
     }
 
     @Test
+    void expertContentRoutesRequireExpertForReadingAndWriting() throws Exception {
+        for (String path : new String[]{"/expert/lessons", "/expert/lessons/create",
+                "/expert/lessons/edit", "/expert/lessons/upload", "/expert/questions",
+                "/expert/questions/detail", "/expert/quizzes", "/expert/quizzes/detail"}) {
+            for (String method : new String[]{"GET", "POST"}) {
+                for (String role : new String[]{AppConstants.Role.ADMIN, AppConstants.Role.MANAGER,
+                        AppConstants.Role.EXPERT, AppConstants.Role.STUDENT}) {
+                    Exchange exchange = new Exchange(role, path, method);
+                    new AuthorizationFilter().doFilter(exchange.request, exchange.response, exchange.chain);
+                    boolean allowed = AppConstants.Role.EXPERT.equals(role);
+                    assertEquals(allowed, exchange.chainCalled.get(), role + " " + method + " " + path);
+                    assertEquals(allowed ? 0 : HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
+                }
+            }
+        }
+    }
+
+    @Test
     void managerCanOpenManagerDashboard() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.MANAGER);
         new AuthorizationFilter().doFilter(exchange.request, exchange.response, exchange.chain);

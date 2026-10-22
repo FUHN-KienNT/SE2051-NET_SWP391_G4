@@ -33,7 +33,7 @@
                     </button>
 
                     <!-- Create Question Button -->
-                    <a href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}"
+                    <a href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}"
                        class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition">
                         <i class="fa-solid fa-plus mr-2 text-xs"></i>
                         <span>Tạo câu hỏi mới</span>
@@ -74,7 +74,7 @@
             </c:if>
 
             <!-- Filter Toolbar: Course, Module, Type, Status, Keyword -->
-            <form method="get" action="${pageContext.request.contextPath}/questions/manage" class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+            <form method="get" action="${pageContext.request.contextPath}/expert/questions" class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <!-- Course Filter -->
                     <div>
@@ -131,7 +131,7 @@
                         <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition">
                             <i class="fa-solid fa-filter mr-1.5"></i>Lọc câu hỏi
                         </button>
-                        <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                        <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}"
                            class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition">
                             Đặt lại
                         </a>
@@ -223,7 +223,7 @@
                                             </span>
                                         </td>
                                         <td class="px-5 py-4 text-center space-x-2 text-xs font-semibold whitespace-nowrap">
-                                            <a href="${pageContext.request.contextPath}/questions/detail?id=${q.id}&courseId=${courseId}"
+                                            <a href="${pageContext.request.contextPath}/expert/questions/detail?id=${q.id}&courseId=${courseId}"
                                                class="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-emerald-700 hover:bg-emerald-50 font-bold transition">
                                                 <i class="fa-solid fa-pen mr-1 text-[10px]"></i>Sửa
                                             </a>
@@ -231,7 +231,7 @@
                                             <!-- Soft Hide / Unhide Action -->
                                             <c:choose>
                                                 <c:when test="${q.status eq 'hidden'}">
-                                                    <a href="${pageContext.request.contextPath}/questions/manage?action=unhide&id=${q.id}&courseId=${courseId}"
+                                                    <a href="${pageContext.request.contextPath}/expert/questions?action=unhide&id=${q.id}&courseId=${courseId}"
                                                        class="inline-flex items-center px-2.5 py-1 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold transition"
                                                        title="Khôi phục hiển thị câu hỏi">
                                                         <i class="fa-solid fa-eye mr-1 text-[10px]"></i>Hiện
@@ -286,7 +286,7 @@
             </button>
         </div>
 
-        <form method="post" action="${pageContext.request.contextPath}/questions/manage" class="p-6 space-y-4">
+        <form method="post" action="${pageContext.request.contextPath}/expert/questions" class="p-6 space-y-4">
             <input type="hidden" name="action" value="import_docs">
             <input type="hidden" name="courseId" value="${courseId}">
 
@@ -404,7 +404,7 @@ function handleFileUpload(event) {
 }
 
 function confirmHideQuestion(questionId, courseId) {
-    let url = '${pageContext.request.contextPath}/questions/manage?action=hide&id=' + questionId;
+    let url = '${pageContext.request.contextPath}/expert/questions?action=hide&id=' + questionId;
     if (courseId) {
         url += '&courseId=' + courseId;
     }

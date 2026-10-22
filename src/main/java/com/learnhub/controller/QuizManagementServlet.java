@@ -28,8 +28,8 @@ import java.util.UUID;
 @WebServlet(
         name = "QuizManagementServlet",
         urlPatterns = {
-                "/quiz/manage",
-                "/quiz/detail"
+                "/expert/quizzes",
+                "/expert/quizzes/detail"
         }
 )
 public class QuizManagementServlet extends HttpServlet {
@@ -55,7 +55,7 @@ public class QuizManagementServlet extends HttpServlet {
 
         String path = req.getServletPath();
 
-        if ("/quiz/detail".equals(path)) {
+        if ("/expert/quizzes/detail".equals(path)) {
             handleDetailGet(req, resp, user);
             return;
         }
@@ -298,7 +298,7 @@ public class QuizManagementServlet extends HttpServlet {
 
     private void redirectToList(HttpServletRequest req, HttpServletResponse resp, UUID courseId, String result)
             throws IOException {
-        resp.sendRedirect(req.getContextPath() + "/quiz/manage?" + result
+        resp.sendRedirect(req.getContextPath() + "/expert/quizzes?" + result
                 + (courseId == null ? "" : "&courseId=" + courseId));
     }
 

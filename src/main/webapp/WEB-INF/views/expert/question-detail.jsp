@@ -9,17 +9,17 @@
     <aside class="w-full lg:w-52 shrink-0">
         <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
             <nav class="flex flex-wrap lg:flex-col p-2 gap-1">
-                <a href="${pageContext.request.contextPath}/lessons/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${courseId}"
                    class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                     <i class="fa-solid fa-book-open text-text-secondary text-sm"></i>
                     <span>Lesson</span>
                 </a>
-                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}"
                    class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                     <i class="fa-solid fa-clipboard-question text-text-secondary text-sm"></i>
                     <span>Quiz</span>
                 </a>
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}"
                    class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 border-l-4 border-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                     <i class="fa-solid fa-list-check text-brand-700 text-sm"></i>
                     <span>Question Bank</span>
@@ -34,7 +34,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
                 <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                    <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}" class="hover:underline">Question Bank</a>
+                    <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}" class="hover:underline">Question Bank</a>
                     <span>/</span>
                     <span class="text-slate-500">${empty question ? 'Create Question' : 'Edit Question'}</span>
                 </div>
@@ -44,11 +44,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2.5">
-                <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}"
                    class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-clipboard-question mr-1.5 text-slate-500"></i>Quản lý Quiz
                 </a>
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}"
                    class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-arrow-left mr-1.5 text-slate-500"></i>Danh sách câu hỏi
                 </a>
@@ -62,7 +62,7 @@
             </div>
         </c:if>
 
-        <form method="post" action="${pageContext.request.contextPath}/questions/detail" id="questionForm" class="space-y-6">
+        <form method="post" action="${pageContext.request.contextPath}/expert/questions/detail" id="questionForm" class="space-y-6">
             <input type="hidden" name="id" value="${question.id}">
 
             <!-- CARD 1: Basic Classification & Status -->
@@ -350,7 +350,7 @@
 
             <!-- Bottom Action Buttons -->
             <div class="flex items-center justify-between pt-2">
-                <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}"
                    class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm bg-white hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-arrow-left mr-2 text-slate-400"></i>Quay lại danh sách
                 </a>

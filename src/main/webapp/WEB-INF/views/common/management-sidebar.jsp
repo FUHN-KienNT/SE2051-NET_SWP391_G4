@@ -57,13 +57,13 @@
                 <c:set var="courseQuery" value="${not empty targetCourseId ? '?courseId='.concat(targetCourseId) : ''}" />
                 <div class="border-t border-border-default pt-4">
                     <p class="management-sidebar-heading mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">Content Authoring</p>
-                    <a href="${pageContext.request.contextPath}/questions/manage${courseQuery}"
+                    <a href="${pageContext.request.contextPath}/expert/questions${courseQuery}"
                        class="management-sidebar-link flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${param.activeSection eq 'questions' ? 'border-brand-100 bg-brand-50 font-semibold text-brand-900' : 'border-transparent text-text-secondary hover:bg-surface hover:text-text-primary'}"
                        aria-label="Question Bank" aria-current="${param.activeSection eq 'questions' ? 'page' : 'false'}" title="Question Bank">
                         <i class="fa-solid fa-clipboard-question w-5 text-center" aria-hidden="true"></i>
                         <span class="management-sidebar-label">Question Bank</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/quiz/manage${courseQuery}"
+                    <a href="${pageContext.request.contextPath}/expert/quizzes${courseQuery}"
                        class="management-sidebar-link flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${param.activeSection eq 'quiz' || param.activeSection eq 'quizzes' ? 'border-brand-100 bg-brand-50 font-semibold text-brand-900' : 'border-transparent text-text-secondary hover:bg-surface hover:text-text-primary'}"
                        aria-label="Quizzes and Exams" aria-current="${param.activeSection eq 'quiz' || param.activeSection eq 'quizzes' ? 'page' : 'false'}" title="Quizzes and Exams">
                         <i class="fa-solid fa-list-check w-5 text-center" aria-hidden="true"></i>

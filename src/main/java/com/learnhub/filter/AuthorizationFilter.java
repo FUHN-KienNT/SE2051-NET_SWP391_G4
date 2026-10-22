@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
  * - hasStudentRole(req)
  */
 @WebFilter(filterName = "AuthorizationFilter", urlPatterns = {
-        "/admin/*", "/manager/*", "/expert/*", "/lessons/*", "/questions/*",
+        "/admin/*", "/manager/*", "/expert/*",
         "/learn/*", "/quiz/*", "/learning-process/*",
         "/profile", "/account", "/account/*"
 })
@@ -98,11 +98,7 @@ public class AuthorizationFilter implements Filter {
         }
 
         // Only Expert can manage lessons, questions and quizzes.
-        boolean expertOnly = isUnder(path, "/expert")
-                || isUnder(path, "/lessons")
-                || isUnder(path, "/questions")
-                || isUnder(path, "/quiz/manage")
-                || isUnder(path, "/quiz/detail");
+        boolean expertOnly = isUnder(path, "/expert");
 
         if (expertOnly && !hasExpertRole(req)) {
             resp.sendError(

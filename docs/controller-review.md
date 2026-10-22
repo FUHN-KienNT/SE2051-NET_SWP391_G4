@@ -2,7 +2,7 @@
 
 Đã đọc toàn bộ 24 Servlet và đối chiếu mapping, filter phân quyền, các service liên quan.
 Sau chỉnh sửa còn 22 Servlet và một helper package-private `ControllerSupport`.
-Mọi URL cũ được giữ nguyên; không đổi JSP, database hoặc cấu hình filter.
+Các URL quản lý nội dung dành riêng cho Expert đã chuyển sang `/expert/`; các URL cũ không còn mapping. URL khóa học dùng chung `/manager/courses` được giữ nguyên.
 
 ## Các thay đổi
 
@@ -28,14 +28,14 @@ Mọi URL cũ được giữ nguyên; không đổi JSP, database hoặc cấu h
 | HomeServlet | `(context root)`, `/home`, `/index` |
 | LearningProcessServlet | `/learn/lesson`, `/learn/complete` |
 | LessonReviewServlet | `/admin/lesson-review` |
-| LessonServlet | `/lessons/manage`, `/lessons/upload` |
+| LessonServlet | `/expert/lessons`, `/expert/lessons/create`, `/expert/lessons/edit`, `/expert/lessons/upload` |
 | ManagerDashboardServlet | `/manager/dashboard` |
 | NotificationServlet | `/notifications`, `/notifications/read`, `/notifications/read-all` |
 | OAuthServlet | `/auth/oauth/google`, `/auth/oauth/google/callback`, `/auth/oauth/github`, `/auth/oauth/github/callback`, `/auth/oauth/complete-profile` |
 | PaymentServlet | `/payment/checkout`, `/my-payments`, `/payment/history` |
 | ProfileAccountServlet | `/profile`, `/account`, `/account/profile`, `/account/password`, `/account/set-password` |
-| QuestionServlet | `/questions/manage`, `/questions/detail` |
-| QuizManagementServlet | `/quiz/manage`, `/quiz/detail` |
+| QuestionServlet | `/expert/questions`, `/expert/questions/detail` |
+| QuizManagementServlet | `/expert/quizzes`, `/expert/quizzes/detail` |
 | QuizServlet | `/quiz`, `/quiz/take`, `/quiz/submit`, `/quiz/history`, `/quiz/view`, `/quiz/info` |
 | SePayWebhookServlet | `/api/payment/sepay-webhook` |
 | UserServlet | `/admin/users`, `/admin/user-detail`, `/admin/user-status`, `/admin/reset-password` |

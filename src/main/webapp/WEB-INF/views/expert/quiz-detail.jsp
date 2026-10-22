@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                <a href="${pageContext.request.contextPath}/quiz/manage" class="hover:underline">Quiz Management</a>
+                <a href="${pageContext.request.contextPath}/expert/quizzes" class="hover:underline">Quiz Management</a>
                 <span>/</span>
                 <span class="text-slate-500">${empty quiz ? 'Create Quiz' : 'Edit Quiz'}</span>
             </div>
@@ -18,13 +18,13 @@
             </c:if>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition">
+            <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition">
                 <i class="fa-solid fa-list-check mr-2 text-slate-500"></i>Ngân hàng câu hỏi
             </a>
-            <a href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition">
+            <a href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition">
                 <i class="fa-solid fa-plus mr-2"></i>Tạo câu hỏi mới
             </a>
-            <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition">
+            <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-slate-400"></i>Danh sách Quiz
             </a>
         </div>
@@ -37,7 +37,7 @@
         </div>
     </c:if>
 
-    <form method="post" action="${pageContext.request.contextPath}/quiz/detail" id="quizForm" class="space-y-6">
+    <form method="post" action="${pageContext.request.contextPath}/expert/quizzes/detail" id="quizForm" class="space-y-6">
         <input type="hidden" name="id" value="${quiz.id}">
 
         <!-- SECTION 1: Quiz Basic Info -->
@@ -266,7 +266,7 @@
                     <div class="text-center py-12 text-slate-400 text-sm">
                         <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
                         Chưa có câu hỏi nào trong Question Bank.
-                        <a class="text-emerald-700 font-bold hover:underline" href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}">
+                        <a class="text-emerald-700 font-bold hover:underline" href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}">
                             Tạo câu hỏi đầu tiên
                         </a>.
                     </div>
@@ -281,7 +281,7 @@
 
         <!-- Bottom Action Buttons -->
         <div class="flex items-center justify-between pt-2">
-            <a href="${pageContext.request.contextPath}/quiz/manage?courseId=${courseId}" class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm bg-white hover:bg-slate-50 shadow-sm transition">
+            <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}" class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm bg-white hover:bg-slate-50 shadow-sm transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-slate-400"></i>Quay lại danh sách
             </a>
             <div class="flex items-center gap-3">

@@ -19,7 +19,7 @@
                                 <span>Quay lại</span>
                             </a>
                             <h1 class="text-xl sm:text-2xl font-bold text-text-primary">Lesson List</h1>
-                            <a href="${pageContext.request.contextPath}/lessons/manage?action=create&courseId=${course.id}"
+                            <a href="${pageContext.request.contextPath}/expert/lessons/create?courseId=${course.id}"
                                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg text-sm transition focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                 <i class="fa-solid fa-plus text-xs" aria-hidden="true"></i>
                                 <span>Create Lesson</span>
@@ -37,7 +37,7 @@
             <c:if test="${param.availability eq 'active'}">
                 <p role="status" class="mb-4 text-sm text-status-success">Lesson set to active.</p>
             </c:if>
-            <form id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}/lessons/manage">
+            <form id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}/expert/lessons">
                 <input type="hidden" name="courseId" value="${course.id}">
                 <input type="hidden" name="courseSearch" value="${fn:escapeXml(courseSearch)}">
                 <input type="hidden" name="coursePage" value="${coursePage}">
@@ -50,7 +50,7 @@
                     <thead class="bg-surface text-slate-700 text-xs font-bold border-b border-border-default">
                         <tr>
                             <th class="px-5 py-4 w-14 text-center">#</th>
-                            <th scope="col" class="px-5 py-4 font-bold text-text-primary">
+                            <th scope="col" aria-sort="${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'ascending' : 'descending') : 'none'}" class="px-5 py-4 font-bold text-text-primary">
                                 <label for="lessonModuleId" class="inline-flex items-center gap-2">Module <i class="fa-solid fa-filter ${empty lessonModuleId ? 'text-text-secondary' : 'text-brand-700'}" aria-hidden="true"></i></label>
                                 <select id="lessonModuleId" name="lessonModuleId" form="lessonListFilters" aria-label="Filter lesson module" onchange="this.form.requestSubmit()"
                                         class="block mt-1 w-48 max-w-full rounded-lg border border-border-default bg-surface-card px-2 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
@@ -59,6 +59,22 @@
                                         <option value="${filterModule.id}" ${filterModule.id eq lessonModuleId ? 'selected' : ''}><c:out value="${filterModule.title}" /></option>
                                     </c:forEach>
                                 </select>
+                            <c:url var="moduleSortUrl" value="/expert/lessons">
+                                <c:param name="courseId" value="${course.id}" />
+                                <c:param name="courseSearch" value="${courseSearch}" />
+                                <c:param name="coursePage" value="${coursePage}" />
+                                <c:param name="lessonStatus" value="${lessonStatus}" />
+                                <c:param name="lessonModuleId" value="${lessonModuleId}" />
+                                <c:param name="sort" value="module" />
+                                <c:param name="direction" value="${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'desc' : 'asc'}" />
+                            </c:url>
+                                <span class="inline-flex items-center gap-1">
+                                    <a href="${fn:escapeXml(moduleSortUrl)}" aria-label="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       title="Sort module ${lessonSort eq 'module' and lessonDirection eq 'asc' ? 'descending' : 'ascending'}"
+                                       class="inline-flex items-center justify-center w-8 h-8 rounded-lg ${lessonSort eq 'module' ? 'text-brand-700 bg-brand-50' : 'text-text-secondary hover:bg-surface-card'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                        <i class="fa-solid ${lessonSort eq 'module' ? (lessonDirection eq 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}" aria-hidden="true"></i>
+                                    </a>
+                                </span>
                             </th>
                             <th class="min-w-64 px-5 py-4 font-bold text-text-primary">Lesson Title</th>
                             <th scope="col" class="px-5 py-4 text-center font-bold text-text-primary whitespace-nowrap">
@@ -72,7 +88,7 @@
                                     <option value="archived" ${lessonStatus eq 'archived' ? 'selected' : ''}>Archived</option>
                                 </select>
                             </th>
-                            <c:url var="durationSortUrl" value="/lessons/manage">
+                            <c:url var="durationSortUrl" value="/expert/lessons">
                                 <c:param name="lessonModuleId" value="${lessonModuleId}" />
                                 <c:param name="courseId" value="${course.id}" />
                                 <c:param name="courseSearch" value="${courseSearch}" />
@@ -127,10 +143,10 @@
                                                         </c:choose>
                                                     </td>
                                                     <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
-                                                        <a href="${pageContext.request.contextPath}/lessons/manage?action=edit&id=${les.id}&courseId=${course.id}"
+                                                        <a href="${pageContext.request.contextPath}/expert/lessons/edit?id=${les.id}&courseId=${course.id}"
                                                            class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
                                                        <c:if test="${les.publicationStatus eq 'published' || les.publicationStatus eq 'archived'}">
-                                                       <form action="${pageContext.request.contextPath}/lessons/manage"
+                                                       <form action="${pageContext.request.contextPath}/expert/lessons"
                                                              method="post" class="inline-block">
                                                            <input type="hidden" name="action" value="${les.publicationStatus eq 'archived' ? 'activate' : 'deactivate'}">
                                                            <input type="hidden" name="id" value="${les.id}">

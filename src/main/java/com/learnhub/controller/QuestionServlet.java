@@ -7,6 +7,7 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.QuestionOption;
 import com.learnhub.entity.User;
+import com.learnhub.service.CourseService;
 import com.learnhub.service.QuestionService;
 
 import jakarta.servlet.ServletException;
@@ -25,8 +26,8 @@ import java.util.*;
 @WebServlet(
         name = "QuestionServlet",
         urlPatterns = {
-            "/questions/manage",
-            "/questions/detail"
+                "/questions/manage",
+                "/questions/detail"
         }
 )
 public class QuestionServlet extends HttpServlet {
@@ -35,6 +36,7 @@ public class QuestionServlet extends HttpServlet {
             new QuestionService();
     private final CourseDAO courseDAO =
             new CourseDAO();
+    private final CourseService courseService = new CourseService();
     private final ModuleDAO moduleDAO =
             new ModuleDAO();
 
@@ -66,7 +68,22 @@ public class QuestionServlet extends HttpServlet {
         }
         req.setAttribute("modules", modules);
         req.setAttribute("courseId", courseId != null ? courseId.toString() : "");
+        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
+
+        // Match Lesson List and Quiz List: show searchable assigned courses in the sidebar.
+        int coursePage = 1;
+        try {
+            coursePage = Integer.parseInt(req.getParameter("coursePage"));
+        } catch (NumberFormatException ignored) {
+        }
+        var navigation = courseService.getAssignedCourseNavigation(
+                user.getId(), req.getParameter("courseSearch"), coursePage);
+        req.setAttribute("assignedCourses", navigation.courses());
+        req.setAttribute("courseSearch", navigation.search());
+        req.setAttribute("coursePage", navigation.page());
+        req.setAttribute("courseTotalPages", navigation.totalPages());
+        req.setAttribute("courseTotal", navigation.totalCourses());
 
         /*
          * QUESTION DETAIL
@@ -121,9 +138,9 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.hide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?hidden="
-                    + ok
-                    + courseSuffix(courseId)
+                            + "/questions/manage?hidden="
+                            + ok
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -133,9 +150,9 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.unhide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?unhidden="
-                    + ok
-                    + courseSuffix(courseId)
+                            + "/questions/manage?unhidden="
+                            + ok
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -182,8 +199,8 @@ public class QuestionServlet extends HttpServlet {
 
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?imported=" + count
-                    + courseSuffix(courseId)
+                            + "/questions/manage?imported=" + count
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -194,6 +211,7 @@ public class QuestionServlet extends HttpServlet {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
         req.setAttribute("courseId", courseId != null ? courseId.toString() : "");
+        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
 
         UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
@@ -210,7 +228,7 @@ public class QuestionServlet extends HttpServlet {
         if (wordCount > QuestionService.MAX_WORDS_QUESTION_CONTENT) {
             forwardWithError(req, resp, questionId, moduleId, content, type, status,
                     "Nội dung câu hỏi quá dài (" + wordCount + " từ). Giới hạn tối đa là "
-                    + QuestionService.MAX_WORDS_QUESTION_CONTENT + " từ.");
+                            + QuestionService.MAX_WORDS_QUESTION_CONTENT + " từ.");
             return;
         }
 
@@ -235,8 +253,8 @@ public class QuestionServlet extends HttpServlet {
         if (ok) {
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/questions/manage?saved=true"
-                    + courseSuffix(courseId)
+                            + "/questions/manage?saved=true"
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -246,8 +264,8 @@ public class QuestionServlet extends HttpServlet {
          */
         forwardWithError(req, resp, questionId, moduleId, content, type, status,
                 "Không thể lưu câu hỏi. Vui lòng kiểm tra lại: Single choice cần đúng 1 đáp án; "
-                + "Multiple choice cần ít nhất 1 đáp án đúng và tối thiểu 2 lựa chọn; "
-                + "Điền vào chỗ trống cần ít nhất 1 từ khóa đáp án.");
+                        + "Multiple choice cần ít nhất 1 đáp án đúng và tối thiểu 2 lựa chọn; "
+                        + "Điền vào chỗ trống cần ít nhất 1 từ khóa đáp án.");
     }
 
     private void forwardWithError(

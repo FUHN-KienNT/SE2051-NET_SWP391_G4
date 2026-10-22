@@ -8,6 +8,7 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
 import com.learnhub.entity.User;
+import com.learnhub.service.CourseService;
 import com.learnhub.service.QuizManagementService;
 
 import jakarta.servlet.ServletException;
@@ -34,6 +35,7 @@ import java.util.UUID;
 )
 public class QuizManagementServlet extends HttpServlet {
     private final QuizManagementService service = new QuizManagementService();
+    private final CourseService courseService = new CourseService();
 
     private final ModuleDAO moduleDAO = new ModuleDAO();
 
@@ -136,10 +138,29 @@ public class QuizManagementServlet extends HttpServlet {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (courseId != null && moduleId != null) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m == null || !courseId.equals(m.getCourseId())) {
+                moduleId = null;
+            }
+        }
 
         String status = req.getParameter("status");
 
         loadCourseOptions(req, user, courseId);
+
+        int coursePage = 1;
+        try {
+            coursePage = Integer.parseInt(req.getParameter("coursePage"));
+        } catch (NumberFormatException ignored) {
+        }
+        var navigation = courseService.getAssignedCourseNavigation(
+                user.getId(), req.getParameter("courseSearch"), coursePage);
+        req.setAttribute("assignedCourses", navigation.courses());
+        req.setAttribute("courseSearch", navigation.search());
+        req.setAttribute("coursePage", navigation.page());
+        req.setAttribute("courseTotalPages", navigation.totalPages());
+        req.setAttribute("courseTotal", navigation.totalCourses());
 
         req.setAttribute("keyword", keyword == null ? "" : keyword);
 
@@ -190,6 +211,12 @@ public class QuizManagementServlet extends HttpServlet {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (courseId != null && moduleId != null) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m == null || !courseId.equals(m.getCourseId())) {
+                moduleId = null;
+            }
+        }
 
         String title = req.getParameter("title");
 

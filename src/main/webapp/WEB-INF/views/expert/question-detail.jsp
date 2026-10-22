@@ -419,8 +419,15 @@
 
             // Update radio vs checkbox
             const wantedInputType = (type === 'single_choice') ? 'radio' : 'checkbox';
-            document.querySelectorAll('#choiceRows .correct-box').forEach(box => {
+            const correctBoxes = Array.from(document.querySelectorAll('#choiceRows .correct-box'));
+            let keptSingleAnswer = false;
+            correctBoxes.forEach(box => {
                 box.type = wantedInputType;
+                box.name = 'correctIndex';
+                if (wantedInputType === 'radio' && box.checked) {
+                    if (keptSingleAnswer) box.checked = false;
+                    else keptSingleAnswer = true;
+                }
             });
             renumberChoices();
         }
@@ -450,9 +457,23 @@
     function renumberChoices() {
         document.querySelectorAll('#choiceRows .choice-row').forEach((row, idx) => {
             const box = row.querySelector('.correct-box');
-            if (box) box.value = idx;
+            if (box) {
+                box.name = 'correctIndex';
+                box.value = String(idx);
+            }
         });
     }
+
+    // Keep the selected-answer index aligned with optionText order on every submit.
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                renumberChoices();
+            });
+        }
+        renumberChoices();
+    });
 
     function addOptionRow() {
         const rowsContainer = document.getElementById('choiceRows');

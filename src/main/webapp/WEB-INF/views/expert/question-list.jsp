@@ -11,138 +11,129 @@
     <div class="flex-1 flex flex-col min-w-0">
         <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
-            <!-- Header with Top Actions -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-                <div>
-                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                        <a href="${pageContext.request.contextPath}/expert/dashboard" class="hover:underline">Dashboard</a>
-                        <span>/</span>
-                        <span class="text-slate-500">Question Bank</span>
+                <!-- Header with Top Actions -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div>
+                        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
+                            <a href="${pageContext.request.contextPath}/expert/dashboard" class="hover:underline">Dashboard</a>
+                            <span>/</span>
+                            <span class="text-slate-500">Question Bank</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-black text-slate-900">Ngân hàng câu hỏi</h1>
+                        <p class="text-xs text-slate-500 mt-1">Quản lý câu hỏi trắc nghiệm và điền vào chỗ trống cho các kỳ kiểm tra.</p>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900">Ngân hàng câu hỏi</h1>
-                    <p class="text-xs text-slate-500 mt-1">Quản lý câu hỏi trắc nghiệm và điền vào chỗ trống cho các kỳ kiểm tra.</p>
+
+                    <!-- TOP ACTIONS -->
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Import Docs Button -->
+                        <button type="button" onclick="openImportModal()"
+                                class="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl shadow-sm transition">
+                            <i class="fa-solid fa-file-import text-emerald-600 mr-2"></i>
+                            <span>Import từ Docs / File</span>
+                        </button>
+
+                        <!-- Create Question Button -->
+                        <a href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}"
+                           class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition">
+                            <i class="fa-solid fa-plus mr-2 text-xs"></i>
+                            <span>Tạo câu hỏi mới</span>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- TOP ACTIONS -->
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <!-- Import Docs Button -->
-                    <button type="button" onclick="openImportModal()"
-                            class="inline-flex items-center px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl shadow-sm transition">
-                        <i class="fa-solid fa-file-import text-emerald-600 mr-2"></i>
-                        <span>Import từ Docs / File</span>
-                    </button>
-
-                    <!-- Create Question Button -->
-                    <a href="${pageContext.request.contextPath}/questions/detail?courseId=${courseId}"
-                       class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition">
-                        <i class="fa-solid fa-plus mr-2 text-xs"></i>
-                        <span>Tạo câu hỏi mới</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Feedback Alerts -->
-            <c:if test="${param.saved == 'true'}">
+                <!-- Feedback Alerts -->
+                <c:if test="${param.saved == 'true'}">
                 <div class="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-2.5">
                     <i class="fa-solid fa-circle-check text-emerald-600"></i>
                     <span>Lưu câu hỏi thành công!</span>
                 </div>
-            </c:if>
-            <c:if test="${param.imported != null}">
+                </c:if>
+                <c:if test="${param.imported != null}">
                 <div class="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-2.5">
                     <i class="fa-solid fa-circle-check text-emerald-600"></i>
                     <span>Đã import thành công <strong>${param.imported}</strong> câu hỏi vào ngân hàng câu hỏi!</span>
                 </div>
-            </c:if>
-            <c:if test="${param.hidden == 'true'}">
+                </c:if>
+                <c:if test="${param.hidden == 'true'}">
                 <div class="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold flex items-center gap-2.5">
                     <i class="fa-solid fa-eye-slash text-amber-600"></i>
                     <span>Đã ẩn câu hỏi. Lịch sử làm bài thi của học viên được bảo toàn an toàn.</span>
                 </div>
-            </c:if>
-            <c:if test="${param.unhidden == 'true'}">
+                </c:if>
+                <c:if test="${param.unhidden == 'true'}">
                 <div class="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-2.5">
                     <i class="fa-solid fa-eye text-emerald-600"></i>
                     <span>Đã khôi phục hiển thị câu hỏi thành công.</span>
                 </div>
-            </c:if>
-            <c:if test="${param.deleted == 'false'}">
+                </c:if>
+                <c:if test="${param.deleted == 'false'}">
                 <div class="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-2.5">
                     <i class="fa-solid fa-circle-xmark text-rose-600"></i>
                     <span>Không thể thực hiện thao tác. Vui lòng kiểm tra lại.</span>
                 </div>
-            </c:if>
+                </c:if>
 
-            <!-- Filter Toolbar: Course, Module, Type, Status, Keyword -->
-            <form method="get" action="${pageContext.request.contextPath}/questions/manage" class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <!-- Course Filter -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Khóa học</label>
-                        <select name="courseId" id="filterCourseSelect" onchange="onFilterCourseChange(this.value)" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                            <option value="">-- Tất cả khóa học --</option>
-                            <c:forEach var="c" items="${courses}">
-                                <option value="${c.id}" ${courseId eq c.id.toString() ? 'selected' : ''}>${c.title}</option>
-                            </c:forEach>
-                        </select>
+                <!-- Filter Toolbar: Course, Module, Type, Status, Keyword -->
+                <form method="get" action="${pageContext.request.contextPath}/questions/manage" class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <input type="hidden" name="courseId" value="${courseId}">
+
+                        <!-- Module Filter -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Chương / Module</label>
+                            <select name="moduleId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="">-- Tất cả Module --</option>
+                                <c:forEach var="m" items="${modules}">
+                                    <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <!-- Question Type Filter -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Loại câu hỏi</label>
+                            <select name="type" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="">-- Tất cả loại câu hỏi --</option>
+                                <option value="fill_in_blank" ${type eq 'fill_in_blank' or type eq 'text' ? 'selected' : ''}>Điền vào chỗ trống</option>
+                                <option value="single_choice" ${type eq 'single_choice' ? 'selected' : ''}>Một đáp án (Single choice)</option>
+                                <option value="multiple_choice" ${type eq 'multiple_choice' ? 'selected' : ''}>Nhiều đáp án (Multiple choice)</option>
+                            </select>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Trạng thái</label>
+                            <select name="status" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="public" ${status eq 'public' ? 'selected' : ''}>Công khai (Public)</option>
+                                <option value="draft" ${status eq 'draft' ? 'selected' : ''}>Bản nháp (Draft)</option>
+                                <option value="hidden" ${status eq 'hidden' ? 'selected' : ''}>Đã ẩn (Hidden)</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Module Filter -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Chương / Module</label>
-                        <select name="moduleId" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                            <option value="">-- Tất cả Module --</option>
-                            <c:forEach var="m" items="${modules}">
-                                <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
-                            </c:forEach>
-                        </select>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-1 items-center">
+                        <div class="relative flex-1 w-full">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                            <input name="keyword" value="${keyword}" placeholder="Tìm kiếm nội dung câu hỏi..."
+                                   class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                            <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition">
+                                <i class="fa-solid fa-filter mr-1.5"></i>Lọc câu hỏi
+                            </button>
+                            <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
+                               class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition">
+                                Đặt lại
+                            </a>
+                        </div>
                     </div>
+                </form>
 
-                    <!-- Question Type Filter -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Loại câu hỏi</label>
-                        <select name="type" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                            <option value="">-- Tất cả loại câu hỏi --</option>
-                            <option value="fill_in_blank" ${type eq 'fill_in_blank' or type eq 'text' ? 'selected' : ''}>Điền vào chỗ trống</option>
-                            <option value="single_choice" ${type eq 'single_choice' ? 'selected' : ''}>Một đáp án (Single choice)</option>
-                            <option value="multiple_choice" ${type eq 'multiple_choice' ? 'selected' : ''}>Nhiều đáp án (Multiple choice)</option>
-                        </select>
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Trạng thái</label>
-                        <select name="status" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                            <option value="">-- Tất cả trạng thái --</option>
-                            <option value="public" ${status eq 'public' ? 'selected' : ''}>Công khai (Public)</option>
-                            <option value="draft" ${status eq 'draft' ? 'selected' : ''}>Bản nháp (Draft)</option>
-                            <option value="hidden" ${status eq 'hidden' ? 'selected' : ''}>Đã ẩn (Hidden)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row gap-3 pt-1 items-center">
-                    <div class="relative flex-1 w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                        <input name="keyword" value="${keyword}" placeholder="Tìm kiếm nội dung câu hỏi..."
-                               class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                        <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition">
-                            <i class="fa-solid fa-filter mr-1.5"></i>Lọc câu hỏi
-                        </button>
-                        <a href="${pageContext.request.contextPath}/questions/manage?courseId=${courseId}"
-                           class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition">
-                            Đặt lại
-                        </a>
-                    </div>
-                </div>
-            </form>
-
-            <!-- Question Data Table -->
-            <div class="mt-6 overflow-x-auto border border-slate-200 rounded-2xl">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50 text-slate-700 text-xs font-bold border-b border-slate-200">
+                <!-- Question Data Table -->
+                <div class="mt-6 overflow-x-auto border border-slate-200 rounded-2xl">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 text-slate-700 text-xs font-bold border-b border-slate-200">
                         <tr>
                             <th class="px-5 py-4 w-12 text-center">#</th>
                             <th class="px-5 py-4 font-bold text-slate-800">Nội dung câu hỏi</th>
@@ -152,8 +143,8 @@
                             <th class="px-5 py-4 text-center font-bold text-slate-800">Đáp án</th>
                             <th class="px-5 py-4 text-center font-bold text-slate-800 w-36">Thao tác</th>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
                         <c:choose>
                             <c:when test="${not empty questions}">
                                 <c:forEach var="q" items="${questions}" varStatus="s">
@@ -161,7 +152,7 @@
                                         <td class="px-5 py-4 text-center font-bold text-slate-400 text-xs">${s.count}</td>
                                         <td class="px-5 py-4 max-w-md">
                                             <div class="font-semibold text-slate-900 leading-snug line-clamp-2">
-                                                ${q.content}
+                                                    ${q.content}
                                             </div>
                                         </td>
                                         <td class="px-5 py-4">
@@ -219,7 +210,7 @@
                                         </td>
                                         <td class="px-5 py-4 text-center font-bold text-slate-700 text-xs">
                                             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold">
-                                                ${q.options.size()}
+                                                    ${q.options.size()}
                                             </span>
                                         </td>
                                         <td class="px-5 py-4 text-center space-x-2 text-xs font-semibold whitespace-nowrap">
@@ -259,9 +250,9 @@
                                 </tr>
                             </c:otherwise>
                         </c:choose>
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
         </main>
     </div>
 </div>
@@ -374,47 +365,47 @@ Câu 2: Điền vào chỗ trống: HTML viết tắt của từ gì?
 </div>
 
 <script>
-function onFilterCourseChange(courseId) {
-    const currentUrl = new URL(window.location.href);
-    if (courseId) {
-        currentUrl.searchParams.set('courseId', courseId);
-    } else {
-        currentUrl.searchParams.delete('courseId');
+    function onFilterCourseChange(courseId) {
+        const currentUrl = new URL(window.location.href);
+        if (courseId) {
+            currentUrl.searchParams.set('courseId', courseId);
+        } else {
+            currentUrl.searchParams.delete('courseId');
+        }
+        currentUrl.searchParams.delete('moduleId'); // reset module when course changes
+        window.location.href = currentUrl.toString();
     }
-    currentUrl.searchParams.delete('moduleId'); // reset module when course changes
-    window.location.href = currentUrl.toString();
-}
 
-function openImportModal() {
-    document.getElementById('importModal').classList.remove('hidden');
-}
-
-function closeImportModal() {
-    document.getElementById('importModal').classList.add('hidden');
-}
-
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('docTextInput').value = e.target.result;
-    };
-    reader.readAsText(file);
-}
-
-function confirmHideQuestion(questionId, courseId) {
-    let url = '${pageContext.request.contextPath}/questions/manage?action=hide&id=' + questionId;
-    if (courseId) {
-        url += '&courseId=' + courseId;
+    function openImportModal() {
+        document.getElementById('importModal').classList.remove('hidden');
     }
-    document.getElementById('confirmHideLink').href = url;
-    document.getElementById('hideConfirmModal').classList.remove('hidden');
-}
 
-function closeHideModal() {
-    document.getElementById('hideConfirmModal').classList.add('hidden');
-}
+    function closeImportModal() {
+        document.getElementById('importModal').classList.add('hidden');
+    }
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('docTextInput').value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+
+    function confirmHideQuestion(questionId, courseId) {
+        let url = '${pageContext.request.contextPath}/questions/manage?action=hide&id=' + questionId;
+        if (courseId) {
+            url += '&courseId=' + courseId;
+        }
+        document.getElementById('confirmHideLink').href = url;
+        document.getElementById('hideConfirmModal').classList.remove('hidden');
+    }
+
+    function closeHideModal() {
+        document.getElementById('hideConfirmModal').classList.add('hidden');
+    }
 </script>
 
 <jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Expert Quiz List / Detail controller.
@@ -71,33 +73,19 @@ public class QuizManagementServlet extends HttpServlet {
             User user)
             throws ServletException, IOException {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
-
-        loadCourseOptions(req, user, courseId);
-
-        List<Question> questions = questionDAO.search(null, null, null, null, null);
-
-        List<UUID> selectedQuestionIds = new ArrayList<>();
-
-        req.setAttribute("questions", questions);
-        req.setAttribute("selectedQuestionIds", selectedQuestionIds);
-
         UUID defaultFilterModuleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        List<UUID> selectedQuestionIds = new ArrayList<>();
+        Quiz quiz = null;
 
         String id = req.getParameter("id");
-
         if (id != null && !id.isBlank()) {
             UUID quizId = ControllerSupport.optionalUuid(id);
-
             if (quizId != null) {
-                Quiz quiz = service.get(quizId);
-
+                quiz = service.get(quizId);
                 if (quiz != null) {
                     req.setAttribute("quiz", quiz);
                     defaultFilterModuleId = quiz.getModuleId();
-
                     selectedQuestionIds = service.getQuestionIds(quizId);
-
-                    req.setAttribute("selectedQuestionIds", selectedQuestionIds);
 
                     /*
                      * If courseId was not supplied when opening
@@ -106,15 +94,38 @@ public class QuizManagementServlet extends HttpServlet {
                      */
                     if (courseId == null) {
                         Module module = moduleDAO.findById(quiz.getModuleId());
-
                         if (module != null) {
                             courseId = module.getCourseId();
-                            req.setAttribute("courseId", courseId);
-
-                            req.setAttribute("course", courseDAO.findById(courseId));
-
-                            req.setAttribute("modules", moduleDAO.findByCourseId(courseId));
                         }
+                    }
+                }
+            }
+        }
+
+        if (courseId == null && defaultFilterModuleId != null) {
+            Module module = moduleDAO.findById(defaultFilterModuleId);
+            if (module != null) {
+                courseId = module.getCourseId();
+            }
+        }
+
+        loadCourseOptions(req, user, courseId);
+
+        List<Question> questions = (courseId != null)
+                ? questionDAO.search(null, null, null, courseId, null)
+                : questionDAO.search(null, null, null, null, null);
+
+        if (!selectedQuestionIds.isEmpty()) {
+            Set<UUID> loadedIds = new HashSet<>();
+            for (Question q : questions) {
+                loadedIds.add(q.getId());
+            }
+            for (UUID qId : selectedQuestionIds) {
+                if (!loadedIds.contains(qId)) {
+                    Question extra = questionDAO.findById(qId);
+                    if (extra != null) {
+                        questions.add(extra);
+                        loadedIds.add(qId);
                     }
                 }
             }
@@ -122,7 +133,7 @@ public class QuizManagementServlet extends HttpServlet {
 
         // Ẩn các câu hỏi đã ẩn (trừ câu đang nằm sẵn trong quiz đang sửa)
         req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
-
+        req.setAttribute("selectedQuestionIds", selectedQuestionIds);
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
 
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
@@ -307,8 +318,27 @@ public class QuizManagementServlet extends HttpServlet {
 
         loadCourseOptions(req, user, courseId);
 
-        req.setAttribute("questions", filterHidden(
-                questionDAO.search(null, null, null, null, null), questionIds));
+        List<Question> questions = (courseId != null)
+                ? questionDAO.search(null, null, null, courseId, null)
+                : questionDAO.search(null, null, null, null, null);
+
+        if (!questionIds.isEmpty()) {
+            Set<UUID> loadedIds = new HashSet<>();
+            for (Question q : questions) {
+                loadedIds.add(q.getId());
+            }
+            for (UUID qId : questionIds) {
+                if (!loadedIds.contains(qId)) {
+                    Question extra = questionDAO.findById(qId);
+                    if (extra != null) {
+                        questions.add(extra);
+                        loadedIds.add(qId);
+                    }
+                }
+            }
+        }
+
+        req.setAttribute("questions", filterHidden(questions, questionIds));
 
         req.setAttribute("defaultFilterModuleId", moduleId);
 

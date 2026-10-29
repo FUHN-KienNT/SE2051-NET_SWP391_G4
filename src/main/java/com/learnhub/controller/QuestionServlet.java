@@ -21,7 +21,7 @@ import java.util.*;
 
 /**
  * Expert Question Bank:
- * list, create, edit, hide and import questions.
+ * list, create, edit and hide questions.
  */
 @WebServlet(
         name = "QuestionServlet",
@@ -182,28 +182,6 @@ public class QuestionServlet extends HttpServlet {
         }
 
         String action = req.getParameter("action");
-
-        // =====================================================
-        // IMPORT FROM DOCS / TEXT
-        // =====================================================
-        if ("import_docs".equalsIgnoreCase(action)) {
-            UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
-            UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
-            String status = req.getParameter("status");
-            if (status == null || status.isBlank()) {
-                status = "public";
-            }
-            String docText = req.getParameter("docText");
-
-            int count = service.importFromDocument(moduleId, status, docText);
-
-            resp.sendRedirect(
-                    req.getContextPath()
-                            + "/questions/manage?imported=" + count
-                            + courseSuffix(courseId)
-            );
-            return;
-        }
 
         // =====================================================
         // SAVE SINGLE QUESTION

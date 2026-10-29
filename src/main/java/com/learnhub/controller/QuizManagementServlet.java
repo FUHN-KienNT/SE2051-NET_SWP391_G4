@@ -277,14 +277,20 @@ public class QuizManagementServlet extends HttpServlet {
 
         questionIds.removeAll(rejectedIds);
 
-        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+        int titleWords = (title == null) ? 0 : com.learnhub.service.QuestionService.countWords(title);
+        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề (tối đa 120 từ), thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+        if (title == null || title.trim().isEmpty()) {
+            errorMessage = "Tên bài kiểm tra không được để trống.";
+        } else if (titleWords > 120) {
+            errorMessage = "Tên bài kiểm tra không được vượt quá 120 từ (hiện tại: " + titleWords + " từ).";
+        }
 
         if (!rejectedIds.isEmpty()) {
             errorMessage =
                     "Không thể thêm câu hỏi đã ẩn vào Quiz. Các câu hỏi đó đã được bỏ chọn.";
         }
 
-        boolean ok = rejectedIds.isEmpty() && service.save(user.getId(), id, moduleId, title,
+        boolean ok = rejectedIds.isEmpty() && (titleWords <= 120) && service.save(user.getId(), id, moduleId, title,
                 timeLimit, passScore, status, imageUrl, questionIds);
 
         if (ok) {

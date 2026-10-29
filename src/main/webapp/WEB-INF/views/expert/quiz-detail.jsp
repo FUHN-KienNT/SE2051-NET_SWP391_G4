@@ -39,6 +39,7 @@
 
     <form method="post" action="${pageContext.request.contextPath}/quiz/detail" id="quizForm" class="space-y-6">
         <input type="hidden" name="id" value="${quiz.id}">
+        <input type="hidden" name="courseId" id="courseIdInput" value="${courseId}">
 
         <!-- SECTION 1: Quiz Basic Info -->
         <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
@@ -56,28 +57,25 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <!-- Quiz Title -->
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-slate-800 mb-2">
-                        Tên bài kiểm tra <span class="text-rose-500">*</span>
-                    </label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-bold text-slate-800">
+                            Tên bài kiểm tra <span class="text-rose-500">*</span>
+                        </label>
+                        <span id="quizTitleWordCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200">
+                            <span id="quizTitleWordCount">0</span>/120 từ
+                        </span>
+                    </div>
                     <input name="title" id="quizTitleInput" value="${quiz.title}" required maxlength="255"
-                           oninput="verifyQuiz()"
+                           oninput="onQuizTitleChange(); verifyQuiz();"
                            placeholder="ví dụ: Kiểm tra tổng kết Chương 1 - Lập trình Servlet & JSP"
                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    <p id="quizTitleWordAlert" class="hidden text-xs text-rose-600 font-semibold mt-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        Tên bài kiểm tra không được vượt quá 120 từ.
+                    </p>
                 </div>
 
-                <!-- Course & Module Selection -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-2">
-                        Khóa học
-                    </label>
-                    <select name="courseId" id="courseSelect" onchange="onCourseChange(this.value)" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        <option value="">-- Chọn khóa học --</option>
-                        <c:forEach var="c" items="${courses}">
-                            <option value="${c.id}" ${(courseId eq c.id or quiz.courseId eq c.id) ? 'selected' : ''}>${c.title}</option>
-                        </c:forEach>
-                    </select>
-                </div>
-
+                <!-- Module Selection (course is already chosen in the sidebar) -->
                 <div>
                     <label class="block text-sm font-bold text-slate-800 mb-2">
                         Chương / Module <span class="text-rose-500">*</span>
@@ -103,20 +101,78 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 mb-2">
-                        Ảnh đại diện Quiz (Image URL)
-                    </label>
-                    <div class="flex items-center gap-3">
-                        <div class="relative flex-1">
-                            <input name="imageUrl" id="imageUrlInput" value="${quiz.imageUrl}" placeholder="https://images.unsplash.com/photo-..."
-                                   oninput="updateImagePreview(this.value)"
-                                   class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        </div>
-                        <div class="w-12 h-12 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                <div class="md:col-span-2">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-bold text-slate-800">
+                            Ảnh đại diện bài kiểm tra (Image URL)
+                        </label>
+                        <button type="button" onclick="toggleGoogleImageGuide()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold inline-flex items-center gap-1 transition">
+                            <i class="fa-solid fa-circle-question text-xs"></i>
+                            <span>Cách lấy link ảnh từ Google</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start gap-4">
+                        <div class="w-20 h-20 rounded-2xl border border-slate-200 bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative group">
                             <img id="imagePreview" src="${empty quiz.imageUrl ? 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80' : quiz.imageUrl}"
-                                 alt="Preview" class="w-full h-full object-cover"
+                                 alt="Preview" referrerpolicy="no-referrer" class="w-full h-full object-cover"
                                  onerror="this.src='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="flex-1 w-full space-y-2">
+                            <div class="relative">
+                                <input name="imageUrl" id="imageUrlInput" value="${quiz.imageUrl}"
+                                       placeholder="Dán link ảnh trực tiếp (https://...) hoặc link Google Images..."
+                                       oninput="onImageUrlInput(this.value)"
+                                       class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                                <span class="absolute right-3.5 top-3.5 flex items-center">
+                                    <i id="imageStatusIcon" class="fa-solid fa-image text-slate-400 text-sm"></i>
+                                </span>
+                            </div>
+
+                            <!-- Live status line & auto-clean alert -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs px-1">
+                                <span id="imageStatusText" class="text-slate-500 text-[11px] font-medium">Chưa chọn ảnh (dùng ảnh mặc định)</span>
+                                <span id="googleExtractedNotice" class="hidden text-emerald-700 font-semibold text-[11px] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Đã tự động trích xuất link ảnh gốc từ Google!
+                                </span>
+                            </div>
+
+                            <!-- Preset buttons -->
+                            <div class="pt-1 flex flex-wrap items-center gap-1.5">
+                                <span class="text-[11px] font-bold text-slate-400 mr-1">Gợi ý ảnh mẫu:</span>
+                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80')"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                    💻 Công nghệ
+                                </button>
+                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80')"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                    📐 Toán học
+                                </button>
+                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&auto=format&fit=crop&q=80')"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                    🌐 Ngoại ngữ
+                                </button>
+                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=600&auto=format&fit=crop&q=80')"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                    🔬 Khoa học
+                                </button>
+                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&auto=format&fit=crop&q=80')"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                    📚 Tổng quan
+                                </button>
+                            </div>
+
+                            <!-- Google Image Guide Card (collapsible) -->
+                            <div id="googleImageGuide" class="hidden p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 space-y-1.5 mt-2">
+                                <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                                    <i class="fa-brands fa-google text-amber-600"></i>
+                                    <span>Hướng dẫn lấy link ảnh từ Google:</span>
+                                </div>
+                                <ol class="list-decimal list-inside space-y-1 text-[11px] leading-relaxed text-amber-900">
+                                    <li>Nhấp vào ảnh trên Google để ảnh mở to ở bảng xem bên phải.</li>
+                                    <li>Nhấp chuột phải vào ảnh to đó &rarr; chọn <strong>"Sao chép địa chỉ hình ảnh"</strong> (<em>Copy image address</em> / <em>Copy image link</em>).</li>
+                                    <li><span class="text-rose-700 font-bold">⚠️ Lưu ý quan trọng:</span> Không chọn <em>"Sao chép địa chỉ liên kết"</em> (<em>Copy link address</em>) vì đó là link trang web Google, không phải link file ảnh.</li>
+                                </ol>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,12 +226,14 @@
                     <!-- Quick Random Selector Toolbar -->
                     <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl p-1 gap-1.5 shadow-sm">
                         <span class="text-xs font-bold text-indigo-900 pl-2 hidden sm:inline">Số câu:</span>
-                        <input type="number" id="quickRandomCount" min="1" max="100" value="10"
-                               title="Số lượng câu hỏi muốn random"
-                               class="w-12 text-center py-1 text-xs font-bold bg-white border border-indigo-200 rounded-lg text-indigo-900 outline-none focus:ring-1 focus:ring-indigo-500">
+                        <input type="number" id="quickRandomCount" min="1" max="10" value="10"
+                               oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
+                               title="Số lượng câu hỏi muốn random (tối đa bằng số câu trong chương)"
+                               class="w-14 text-center py-1 text-xs font-bold bg-white border border-indigo-200 rounded-lg text-indigo-900 outline-none focus:ring-1 focus:ring-indigo-500">
+                        <span id="quickRandomMaxHint" class="text-[11px] font-semibold text-indigo-700 pr-1 hidden sm:inline"></span>
                         <button type="button" onclick="quickRandomQuestions()" id="btnQuickRandom"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold rounded-lg transition shadow-sm"
-                                title="Bấm 1 nút để tự động chọn ngẫu nhiên câu hỏi trong khóa học">
+                                title="Tự động chọn ngẫu nhiên câu hỏi trong chương này">
                             <i class="fa-solid fa-dice text-xs"></i>
                             <span>Random câu hỏi</span>
                         </button>
@@ -318,7 +376,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="verifyChecklist">
                 <div class="flex items-center gap-2" id="chkQuizTitle">
                     <i class="fa-solid fa-circle-check text-slate-300"></i>
-                    <span class="text-slate-600">Tên bài kiểm tra không rỗng</span>
+                    <span class="text-slate-600">Tên bài kiểm tra không rỗng và &le; 120 từ</span>
                 </div>
                 <div class="flex items-center gap-2" id="chkQuizScore">
                     <i class="fa-solid fa-circle-check text-slate-300"></i>
@@ -378,8 +436,8 @@
             <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-3 text-xs text-indigo-900">
                 <i class="fa-solid fa-circle-info text-indigo-600 mt-0.5 text-sm"></i>
                 <div>
-                    <span class="font-bold">Khóa học áp dụng: </span>
-                    <span id="modalCourseScopeName" class="font-semibold text-indigo-800">Đang tải...</span>
+                    <span class="font-bold">Chương / Module áp dụng: </span>
+                    <span id="modalModuleScopeName" class="font-semibold text-indigo-800">Đang tải...</span>
                     <div class="text-[11px] text-indigo-700/80 mt-0.5" id="modalPoolInfo">Đang tính toán số lượng câu hỏi khả dụng...</div>
                 </div>
             </div>
@@ -390,9 +448,10 @@
                     Số lượng câu hỏi muốn chọn <span class="text-rose-500">*</span>
                 </label>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="modalRandomCount" min="1" max="100" value="10"
+                    <input type="number" id="modalRandomCount" min="1" max="10" value="10"
+                           oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
                            class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-sm text-slate-900 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 transition">
-                    <span class="text-xs font-bold text-slate-500">câu</span>
+                    <span id="modalMaxHint" class="text-xs font-bold text-slate-500">câu</span>
                 </div>
                 <!-- Quick number buttons -->
                 <div class="flex flex-wrap items-center gap-1.5 mt-2">
@@ -402,28 +461,22 @@
                     <button type="button" onclick="setModalCount(15)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-slate-700 transition">15</button>
                     <button type="button" onclick="setModalCount(20)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-slate-700 transition">20</button>
                     <button type="button" onclick="setModalCount(30)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-slate-700 transition">30</button>
-                    <button type="button" onclick="setModalCount('all')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-slate-700 transition">Tất cả</button>
+                    <button type="button" onclick="setModalCount('all')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-slate-700 transition">Toàn bộ chương</button>
                 </div>
             </div>
 
             <!-- Scope Selection -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Phạm vi câu hỏi</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-indigo-50/30 cursor-pointer transition">
-                        <input type="radio" name="modalScope" value="course" checked class="mt-0.5 accent-indigo-600">
-                        <div>
-                            <div class="font-bold text-slate-800">Toàn bộ khóa học</div>
-                            <div class="text-[11px] text-slate-500">Lấy ngẫu nhiên từ mọi module trong khóa</div>
-                        </div>
-                    </label>
-                    <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-indigo-50/30 cursor-pointer transition">
-                        <input type="radio" name="modalScope" value="module" class="mt-0.5 accent-indigo-600">
-                        <div>
-                            <div class="font-bold text-slate-800">Chỉ trong module đang chọn</div>
-                            <div class="text-[11px] text-slate-500">Giới hạn trong module của quiz</div>
-                        </div>
-                    </label>
+                <div class="p-3 rounded-xl border border-indigo-200 bg-indigo-50/40 text-xs">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-folder-tree text-indigo-600"></i>
+                        <span class="font-bold text-slate-800">Trong chương / module này (đã được phân loại)</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Chỉ random ngẫu nhiên các câu hỏi thuộc chương / module đã chọn cho bài kiểm tra.
+                    </p>
+                    <input type="hidden" name="modalScope" id="modalScope" value="module">
                 </div>
             </div>
 
@@ -471,12 +524,131 @@
 </div>
 
 <script>
+    function toggleGoogleImageGuide() {
+        const guide = document.getElementById('googleImageGuide');
+        if (guide) {
+            guide.classList.toggle('hidden');
+        }
+    }
+
+    function extractCleanImageUrl(rawUrl) {
+        if (!rawUrl) return '';
+        let url = rawUrl.trim();
+
+        // Case 1: Google Images search result link with imgurl parameter
+        // e.g. https://www.google.com/imgres?imgurl=https%3A%2F%2Fexample.com%2Fphoto.jpg&imgrefurl=...
+        if (url.includes('google.com/imgres') || url.includes('/imgres?')) {
+            try {
+                const u = new URL(url);
+                const actual = u.searchParams.get('imgurl');
+                if (actual) return decodeURIComponent(actual);
+            } catch (e) {}
+        }
+
+        // Case 2: Google redirect link with url parameter
+        // e.g. https://www.google.com/url?sa=i&url=https%3A%2F%2F...
+        if (url.includes('google.com/url') && url.includes('url=')) {
+            try {
+                const u = new URL(url);
+                const actual = u.searchParams.get('url');
+                if (actual) return decodeURIComponent(actual);
+            } catch (e) {}
+        }
+
+        return url;
+    }
+
+    function onImageUrlInput(val) {
+        const cleaned = extractCleanImageUrl(val);
+        const input = document.getElementById('imageUrlInput');
+        const notice = document.getElementById('googleExtractedNotice');
+
+        if (cleaned !== (val || '').trim()) {
+            if (input) input.value = cleaned;
+            if (notice) notice.classList.remove('hidden');
+        } else {
+            if (notice) notice.classList.add('hidden');
+        }
+
+        updateImagePreview(cleaned);
+    }
+
+    function selectPresetImage(url) {
+        const input = document.getElementById('imageUrlInput');
+        if (input) {
+            input.value = url;
+            onImageUrlInput(url);
+        }
+    }
+
     function updateImagePreview(url) {
         const preview = document.getElementById('imagePreview');
-        if (url && url.trim().length > 0) {
-            preview.src = url.trim();
-        } else {
+        const statusText = document.getElementById('imageStatusText');
+        const statusIcon = document.getElementById('imageStatusIcon');
+        if (!preview) return;
+
+        const trimmed = (url || '').trim();
+        if (!trimmed) {
             preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
+            if (statusText) statusText.textContent = 'Chưa chọn ảnh (dùng ảnh mặc định)';
+            if (statusIcon) statusIcon.className = 'fa-solid fa-image text-slate-400 text-sm';
+            return;
+        }
+
+        if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+            preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
+            if (statusText) statusText.textContent = 'Đường link phải bắt đầu bằng http:// hoặc https://';
+            if (statusIcon) statusIcon.className = 'fa-solid fa-triangle-exclamation text-amber-500 text-sm';
+            return;
+        }
+
+        if (statusText) statusText.textContent = 'Đang kiểm tra kết nối ảnh...';
+        if (statusIcon) statusIcon.className = 'fa-solid fa-spinner fa-spin text-indigo-500 text-sm';
+
+        const testImg = new Image();
+        testImg.referrerPolicy = 'no-referrer';
+        testImg.onload = function() {
+            preview.src = trimmed;
+            if (statusText) statusText.textContent = 'Ảnh hợp lệ và tải thành công!';
+            if (statusIcon) statusIcon.className = 'fa-solid fa-circle-check text-emerald-600 text-sm';
+        };
+        testImg.onerror = function() {
+            preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
+            if (statusText) statusText.textContent = 'Không tải được ảnh từ link này (web chặn xem ngoài hoặc link sai).';
+            if (statusIcon) statusIcon.className = 'fa-solid fa-circle-xmark text-rose-500 text-sm';
+        };
+        testImg.src = trimmed;
+    }
+
+    const MAX_QUIZ_TITLE_WORDS = 120;
+
+    function countWords(str) {
+        if (!str) return 0;
+        const trimmed = str.trim();
+        if (!trimmed) return 0;
+        return trimmed.split(/\s+/).length;
+    }
+
+    function onQuizTitleChange() {
+        const titleInput = document.getElementById('quizTitleInput');
+        const title = (titleInput ? titleInput.value : '').trim();
+        const words = countWords(title);
+        const wordCountSpan = document.getElementById('quizTitleWordCount');
+        const badge = document.getElementById('quizTitleWordCountBadge');
+        const alertBox = document.getElementById('quizTitleWordAlert');
+
+        if (wordCountSpan) wordCountSpan.textContent = words;
+
+        if (words > MAX_QUIZ_TITLE_WORDS) {
+            if (badge) {
+                badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-300';
+            }
+            if (alertBox) alertBox.classList.remove('hidden');
+        } else {
+            if (badge) {
+                badge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200';
+            }
+            if (alertBox) alertBox.classList.add('hidden');
         }
     }
 
@@ -486,14 +658,10 @@
             moduleFilter.value = selectedModuleId;
             filterQuestions();
         }
+        syncRandomCountsWithModule();
+        const initialImgUrl = document.getElementById('imageUrlInput') ? document.getElementById('imageUrlInput').value : '';
+        if (initialImgUrl) updateImagePreview(initialImgUrl);
         verifyQuiz();
-    }
-
-    function onCourseChange(courseId) {
-        if (!courseId) return;
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('courseId', courseId);
-        window.location.href = currentUrl.toString();
     }
 
     function onQuestionCheckChange(checkbox) {
@@ -597,7 +765,8 @@
     function verifyQuiz() {
         const titleInput = document.getElementById('quizTitleInput');
         const title = (titleInput ? titleInput.value : '').trim();
-        const isTitleValid = title.length > 0 && title.length <= 255;
+        const titleWords = countWords(title);
+        const isTitleValid = title.length > 0 && title.length <= 255 && titleWords <= MAX_QUIZ_TITLE_WORDS;
 
         const moduleSelect = document.getElementById('quizModuleSelect');
         const moduleId = (moduleSelect ? moduleSelect.value : '').trim();
@@ -632,9 +801,9 @@
     // RANDOM QUESTIONS FEATURE (TỰ ĐỘNG CHỌN NGẪU NHIÊN CÂU HỎI)
     // =========================================================
     function getResolvedCourseId() {
-        const courseSelect = document.getElementById('courseSelect');
-        if (courseSelect && courseSelect.value) {
-            return courseSelect.value.trim();
+        const courseInput = document.getElementById('courseIdInput');
+        if (courseInput && courseInput.value) {
+            return courseInput.value.trim();
         }
         // Fallback: examine module select option's data-course
         const modSelect = document.getElementById('quizModuleSelect');
@@ -651,22 +820,126 @@
     }
 
     function getResolvedCourseTitle() {
-        const courseSelect = document.getElementById('courseSelect');
-        if (courseSelect && courseSelect.selectedIndex >= 0) {
-            const text = courseSelect.options[courseSelect.selectedIndex].text;
-            if (text && !text.includes('--')) {
-                return text.trim();
-            }
-        }
         return '${not empty course ? course.title : ""}';
     }
 
-    function quickRandomQuestions() {
-        const input = document.getElementById('quickRandomCount');
-        let count = parseInt(input ? input.value : 10, 10);
-        if (isNaN(count) || count <= 0) count = 10;
+    function getAvailableQuestionsCountInModule(moduleId) {
+        if (!moduleId) return 0;
+        const items = document.querySelectorAll('.question-item');
+        let count = 0;
+        items.forEach(function(item) {
+            if ((item.getAttribute('data-module') || '').trim() === moduleId) {
+                count++;
+            }
+        });
+        return count;
+    }
 
-        executeRandomSelection(count, 'course', true);
+    function syncRandomCountsWithModule() {
+        const modSelect = document.getElementById('quizModuleSelect');
+        const selectedMod = modSelect ? modSelect.value.trim() : '';
+        const count = getAvailableQuestionsCountInModule(selectedMod);
+        const quickInput = document.getElementById('quickRandomCount');
+        const modalInput = document.getElementById('modalRandomCount');
+
+        const maxBadge = document.getElementById('quickRandomMaxHint');
+        if (maxBadge) {
+            if (!selectedMod) {
+                maxBadge.textContent = '(Chưa chọn chương)';
+            } else {
+                maxBadge.textContent = '(Tối đa: ' + count + ')';
+            }
+        }
+
+        const modalScopeElem = document.getElementById('modalModuleScopeName');
+        if (modalScopeElem) {
+            if (modSelect && modSelect.selectedIndex > 0) {
+                modalScopeElem.textContent = modSelect.options[modSelect.selectedIndex].text;
+            } else {
+                modalScopeElem.textContent = 'Chưa chọn chương / module';
+            }
+        }
+
+        const modalPoolInfo = document.getElementById('modalPoolInfo');
+        const modalMaxHint = document.getElementById('modalMaxHint');
+        if (modalPoolInfo) {
+            if (!selectedMod) {
+                modalPoolInfo.textContent = 'Vui lòng chọn Chương / Module ở trên để xác định số câu hỏi khả dụng.';
+            } else {
+                modalPoolInfo.textContent = 'Có ' + count + ' câu hỏi trong chương này đã được phân loại.';
+            }
+        }
+        if (modalMaxHint) {
+            modalMaxHint.textContent = 'câu (Tối đa: ' + count + ', Tối thiểu: 1)';
+        }
+
+        if (count > 0) {
+            if (quickInput) {
+                quickInput.min = 1;
+                quickInput.max = count;
+                let val = parseInt(quickInput.value, 10);
+                if (isNaN(val) || val < 1) quickInput.value = 1;
+                else if (val > count) quickInput.value = count;
+            }
+            if (modalInput) {
+                modalInput.min = 1;
+                modalInput.max = count;
+                let val = parseInt(modalInput.value, 10);
+                if (isNaN(val) || val < 1) modalInput.value = 1;
+                else if (val > count) modalInput.value = count;
+            }
+        } else {
+            if (quickInput) {
+                quickInput.min = 0;
+                quickInput.max = 0;
+                quickInput.value = 0;
+            }
+            if (modalInput) {
+                modalInput.min = 0;
+                modalInput.max = 0;
+                modalInput.value = 0;
+            }
+        }
+    }
+
+    function validateRandomInput(input) {
+        const modSelect = document.getElementById('quizModuleSelect');
+        const selectedMod = modSelect ? modSelect.value.trim() : '';
+        const count = getAvailableQuestionsCountInModule(selectedMod);
+        if (count === 0) {
+            input.value = 0;
+            return;
+        }
+        let val = parseInt(input.value, 10);
+        if (isNaN(val) || val < 1) {
+            input.value = 1;
+        } else if (val > count) {
+            input.value = count;
+        }
+    }
+
+    function quickRandomQuestions() {
+        const modSelect = document.getElementById('quizModuleSelect');
+        const selectedModuleId = modSelect ? modSelect.value.trim() : '';
+        if (!selectedModuleId) {
+            alert('Vui lòng chọn Chương / Module trước khi tạo câu hỏi ngẫu nhiên.');
+            if (modSelect) modSelect.focus();
+            return;
+        }
+
+        const maxCount = getAvailableQuestionsCountInModule(selectedModuleId);
+        if (maxCount === 0) {
+            showToast('Chương này hiện chưa có câu hỏi nào trong ngân hàng câu hỏi.', 'warning');
+            return;
+        }
+
+        const input = document.getElementById('quickRandomCount');
+        let count = parseInt(input ? input.value : maxCount, 10);
+        if (isNaN(count) || count < 1) count = 1;
+        if (count > maxCount) count = maxCount;
+        if (input) input.value = count;
+
+        executeRandomSelection(count, 'module', true);
     }
 
     function executeRandomSelection(requestedCount, scope, replaceExisting) {
@@ -765,32 +1038,9 @@
         const modal = document.getElementById('randomModal');
         if (!modal) return;
 
-        const targetCourseId = getResolvedCourseId();
-        const courseTitle = getResolvedCourseTitle();
-        const scopeNameElem = document.getElementById('modalCourseScopeName');
-        const poolInfoElem = document.getElementById('modalPoolInfo');
-
-        if (scopeNameElem) {
-            scopeNameElem.textContent = courseTitle || 'Khóa học hiện tại';
-        }
-
-        const items = Array.from(document.querySelectorAll('.question-item'));
-        const courseItems = items.filter(item => {
-            const cId = (item.getAttribute('data-course') || '').trim();
-            return !targetCourseId || !cId || cId === targetCourseId;
-        });
-
-        if (poolInfoElem) {
-            poolInfoElem.textContent = 'Có ' + courseItems.length + ' câu hỏi trong ngân hàng của khóa học này.';
-        }
-
-        // Sync modal count from quick input
-        const quickCount = document.getElementById('quickRandomCount');
-        const modalCount = document.getElementById('modalRandomCount');
-        if (quickCount && modalCount) {
-            modalCount.value = quickCount.value || 10;
-        }
-
+        syncRandomCountsWithModule();
+        const initialImgUrl = document.getElementById('imageUrlInput') ? document.getElementById('imageUrlInput').value : '';
+        if (initialImgUrl) updateImagePreview(initialImgUrl);
         modal.classList.remove('hidden');
     }
 
@@ -803,35 +1053,52 @@
         const input = document.getElementById('modalRandomCount');
         if (!input) return;
 
+        const modSelect = document.getElementById('quizModuleSelect');
+        const selectedMod = modSelect ? modSelect.value.trim() : '';
+        const maxCount = getAvailableQuestionsCountInModule(selectedMod);
+        if (maxCount === 0) {
+            input.value = 0;
+            return;
+        }
+
         if (val === 'all') {
-            const targetCourseId = getResolvedCourseId();
-            const items = Array.from(document.querySelectorAll('.question-item'));
-            const courseItems = items.filter(item => {
-                const cId = (item.getAttribute('data-course') || '').trim();
-                return !targetCourseId || !cId || cId === targetCourseId;
-            });
-            input.value = courseItems.length || 10;
+            input.value = maxCount;
         } else {
-            input.value = val;
+            let num = parseInt(val, 10);
+            if (isNaN(num) || num < 1) num = 1;
+            if (num > maxCount) num = maxCount;
+            input.value = num;
         }
     }
 
     function applyModalRandom() {
-        const countInput = document.getElementById('modalRandomCount');
-        let count = parseInt(countInput ? countInput.value : 10, 10);
-        if (isNaN(count) || count <= 0) count = 10;
+        const modSelect = document.getElementById('quizModuleSelect');
+        const selectedMod = modSelect ? modSelect.value.trim() : '';
+        if (!selectedMod) {
+            alert('Vui lòng chọn Chương / Module trước khi tạo câu hỏi ngẫu nhiên.');
+            if (modSelect) modSelect.focus();
+            return;
+        }
 
-        const scopeRadio = document.querySelector('input[name="modalScope"]:checked');
-        const scope = scopeRadio ? scopeRadio.value : 'course';
+        const maxCount = getAvailableQuestionsCountInModule(selectedMod);
+        if (maxCount === 0) {
+            showToast('Chương này hiện chưa có câu hỏi nào trong ngân hàng câu hỏi.', 'warning');
+            return;
+        }
+
+        const countInput = document.getElementById('modalRandomCount');
+        let count = parseInt(countInput ? countInput.value : maxCount, 10);
+        if (isNaN(count) || count < 1) count = 1;
+        if (count > maxCount) count = maxCount;
+        if (countInput) countInput.value = count;
 
         const modeRadio = document.querySelector('input[name="modalMode"]:checked');
         const replaceExisting = modeRadio ? modeRadio.value === 'replace' : true;
 
-        // Also update quick input for convenience
         const quickInput = document.getElementById('quickRandomCount');
         if (quickInput) quickInput.value = count;
 
-        executeRandomSelection(count, scope, replaceExisting);
+        executeRandomSelection(count, 'module', replaceExisting);
     }
 
     // Toast helper
@@ -870,6 +1137,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         filterQuestions();
         updateSelectedCount();
+        onQuizTitleChange();
+        syncRandomCountsWithModule();
+        const initialImgUrl = document.getElementById('imageUrlInput') ? document.getElementById('imageUrlInput').value : '';
+        if (initialImgUrl) updateImagePreview(initialImgUrl);
         verifyQuiz();
 
         const form = document.getElementById('quizForm');
@@ -879,6 +1150,14 @@
                     const titleInput = document.getElementById('quizTitleInput');
                     if (!titleInput || !titleInput.value.trim()) {
                         alert('Vui lòng nhập tên bài kiểm tra.');
+                        if (titleInput) titleInput.focus();
+                        e.preventDefault();
+                        return;
+                    }
+
+                    const titleWords = countWords(titleInput.value);
+                    if (titleWords > MAX_QUIZ_TITLE_WORDS) {
+                        alert('Tên bài kiểm tra quá dài (' + titleWords + ' từ). Vui lòng giới hạn tối đa 120 từ.');
                         if (titleInput) titleInput.focus();
                         e.preventDefault();
                         return;

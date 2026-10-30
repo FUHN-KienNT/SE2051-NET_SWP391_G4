@@ -8,6 +8,7 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
 import com.learnhub.entity.User;
+import com.learnhub.service.CourseService;
 import com.learnhub.service.QuizManagementService;
 
 import jakarta.servlet.ServletException;
@@ -21,6 +22,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Expert Quiz List / Detail controller.
@@ -34,6 +37,7 @@ import java.util.UUID;
 )
 public class QuizManagementServlet extends HttpServlet {
     private final QuizManagementService service = new QuizManagementService();
+    private final CourseService courseService = new CourseService();
 
     private final ModuleDAO moduleDAO = new ModuleDAO();
 
@@ -69,33 +73,19 @@ public class QuizManagementServlet extends HttpServlet {
             User user)
             throws ServletException, IOException {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
-
-        loadCourseOptions(req, user, courseId);
-
-        List<Question> questions = questionDAO.search(null, null, null, null, null);
-
-        List<UUID> selectedQuestionIds = new ArrayList<>();
-
-        req.setAttribute("questions", questions);
-        req.setAttribute("selectedQuestionIds", selectedQuestionIds);
-
         UUID defaultFilterModuleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        List<UUID> selectedQuestionIds = new ArrayList<>();
+        Quiz quiz = null;
 
         String id = req.getParameter("id");
-
         if (id != null && !id.isBlank()) {
             UUID quizId = ControllerSupport.optionalUuid(id);
-
             if (quizId != null) {
-                Quiz quiz = service.get(quizId);
-
+                quiz = service.get(quizId);
                 if (quiz != null) {
                     req.setAttribute("quiz", quiz);
                     defaultFilterModuleId = quiz.getModuleId();
-
                     selectedQuestionIds = service.getQuestionIds(quizId);
-
-                    req.setAttribute("selectedQuestionIds", selectedQuestionIds);
 
                     /*
                      * If courseId was not supplied when opening
@@ -104,15 +94,38 @@ public class QuizManagementServlet extends HttpServlet {
                      */
                     if (courseId == null) {
                         Module module = moduleDAO.findById(quiz.getModuleId());
-
                         if (module != null) {
                             courseId = module.getCourseId();
-                            req.setAttribute("courseId", courseId);
-
-                            req.setAttribute("course", courseDAO.findById(courseId));
-
-                            req.setAttribute("modules", moduleDAO.findByCourseId(courseId));
                         }
+                    }
+                }
+            }
+        }
+
+        if (courseId == null && defaultFilterModuleId != null) {
+            Module module = moduleDAO.findById(defaultFilterModuleId);
+            if (module != null) {
+                courseId = module.getCourseId();
+            }
+        }
+
+        loadCourseOptions(req, user, courseId);
+
+        List<Question> questions = (courseId != null)
+                ? questionDAO.search(null, null, null, courseId, null)
+                : questionDAO.search(null, null, null, null, null);
+
+        if (!selectedQuestionIds.isEmpty()) {
+            Set<UUID> loadedIds = new HashSet<>();
+            for (Question q : questions) {
+                loadedIds.add(q.getId());
+            }
+            for (UUID qId : selectedQuestionIds) {
+                if (!loadedIds.contains(qId)) {
+                    Question extra = questionDAO.findById(qId);
+                    if (extra != null) {
+                        questions.add(extra);
+                        loadedIds.add(qId);
                     }
                 }
             }
@@ -120,7 +133,7 @@ public class QuizManagementServlet extends HttpServlet {
 
         // Ẩn các câu hỏi đã ẩn (trừ câu đang nằm sẵn trong quiz đang sửa)
         req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
-
+        req.setAttribute("selectedQuestionIds", selectedQuestionIds);
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
 
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
@@ -136,10 +149,29 @@ public class QuizManagementServlet extends HttpServlet {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (courseId != null && moduleId != null) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m == null || !courseId.equals(m.getCourseId())) {
+                moduleId = null;
+            }
+        }
 
         String status = req.getParameter("status");
 
         loadCourseOptions(req, user, courseId);
+
+        int coursePage = 1;
+        try {
+            coursePage = Integer.parseInt(req.getParameter("coursePage"));
+        } catch (NumberFormatException ignored) {
+        }
+        var navigation = courseService.getAssignedCourseNavigation(
+                user.getId(), req.getParameter("courseSearch"), coursePage);
+        req.setAttribute("assignedCourses", navigation.courses());
+        req.setAttribute("courseSearch", navigation.search());
+        req.setAttribute("coursePage", navigation.page());
+        req.setAttribute("courseTotalPages", navigation.totalPages());
+        req.setAttribute("courseTotal", navigation.totalCourses());
 
         req.setAttribute("keyword", keyword == null ? "" : keyword);
 
@@ -190,6 +222,12 @@ public class QuizManagementServlet extends HttpServlet {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (courseId != null && moduleId != null) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m == null || !courseId.equals(m.getCourseId())) {
+                moduleId = null;
+            }
+        }
 
         String title = req.getParameter("title");
 
@@ -239,14 +277,20 @@ public class QuizManagementServlet extends HttpServlet {
 
         questionIds.removeAll(rejectedIds);
 
-        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề, thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+        int titleWords = (title == null) ? 0 : com.learnhub.service.QuestionService.countWords(title);
+        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề (tối đa 120 từ), thời gian, điểm đạt (0-10) và các câu hỏi được chọn.";
+        if (title == null || title.trim().isEmpty()) {
+            errorMessage = "Tên bài kiểm tra không được để trống.";
+        } else if (titleWords > 120) {
+            errorMessage = "Tên bài kiểm tra không được vượt quá 120 từ (hiện tại: " + titleWords + " từ).";
+        }
 
         if (!rejectedIds.isEmpty()) {
             errorMessage =
                     "Không thể thêm câu hỏi đã ẩn vào Quiz. Các câu hỏi đó đã được bỏ chọn.";
         }
 
-        boolean ok = rejectedIds.isEmpty() && service.save(user.getId(), id, moduleId, title,
+        boolean ok = rejectedIds.isEmpty() && (titleWords <= 120) && service.save(user.getId(), id, moduleId, title,
                 timeLimit, passScore, status, imageUrl, questionIds);
 
         if (ok) {
@@ -280,8 +324,27 @@ public class QuizManagementServlet extends HttpServlet {
 
         loadCourseOptions(req, user, courseId);
 
-        req.setAttribute("questions", filterHidden(
-                questionDAO.search(null, null, null, null, null), questionIds));
+        List<Question> questions = (courseId != null)
+                ? questionDAO.search(null, null, null, courseId, null)
+                : questionDAO.search(null, null, null, null, null);
+
+        if (!questionIds.isEmpty()) {
+            Set<UUID> loadedIds = new HashSet<>();
+            for (Question q : questions) {
+                loadedIds.add(q.getId());
+            }
+            for (UUID qId : questionIds) {
+                if (!loadedIds.contains(qId)) {
+                    Question extra = questionDAO.findById(qId);
+                    if (extra != null) {
+                        questions.add(extra);
+                        loadedIds.add(qId);
+                    }
+                }
+            }
+        }
+
+        req.setAttribute("questions", filterHidden(questions, questionIds));
 
         req.setAttribute("defaultFilterModuleId", moduleId);
 

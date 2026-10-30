@@ -82,7 +82,7 @@
                         <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
                             Estimated Duration (minutes) <span class="text-status-danger">*</span>
                         </label>
-                        <input type="number" id="durationMinutes" name="durationMinutes" min="1" max="2147483647" step="1" required
+                        <input type="number" id="durationMinutes" name="durationMinutes" min="1" max="1440" step="1" required
                                data-error="${fn:escapeXml(fieldErrors.durationMinutes)}"
                                value="${lesson != null ? lesson.durationMinutes : ''}"
                                class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">

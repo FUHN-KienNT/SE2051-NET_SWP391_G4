@@ -179,8 +179,9 @@ public class LessonService {
 
     public Map<String, String> validateLesson(UUID expertId, LessonDTO dto) {
         Map<String, String> errors = new LinkedHashMap<>();
-        if (dto.getDurationMinutes() == null || dto.getDurationMinutes() < 1) {
-            errors.put("durationMinutes", "Estimated duration must be a whole number of minutes greater than zero.");
+        if (dto.getDurationMinutes() == null || dto.getDurationMinutes() < 1
+                || dto.getDurationMinutes() > 1440) {
+            errors.put("durationMinutes", "Estimated duration must be a whole number of minutes between 1 and 1440.");
         }
         if (dto.getModuleId() == null) {
             errors.put("moduleId", "Please select a valid module.");

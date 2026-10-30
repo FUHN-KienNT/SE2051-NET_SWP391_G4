@@ -135,6 +135,14 @@ public class QuizManagementService {
         title = title.trim();
 
         // -----------------------------------------------------
+        // Title word limit: max 120 words
+        // -----------------------------------------------------
+
+        if (QuestionService.countWords(title) > 120) {
+            return false;
+        }
+
+        // -----------------------------------------------------
         // Time Limit
         // -----------------------------------------------------
 

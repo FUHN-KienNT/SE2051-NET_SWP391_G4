@@ -74,11 +74,7 @@ public class LessonServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
             return;
         }
-         if ("delete".equalsIgnoreCase(action)) {
-             resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer available.");
-             return;
-         }
-         if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
+        if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
              resp.setHeader("Allow", "POST");
              resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
              return;
@@ -145,10 +141,6 @@ public class LessonServlet extends HttpServlet {
         }
         UUID expertId = user.getId();
         String action = req.getParameter("action");
-        if ("delete".equalsIgnoreCase(action)) {
-            resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer available.");
-            return;
-        }
         if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
             Object token = req.getSession(false).getAttribute("lessonActionToken");
             if (!(token instanceof String expected)

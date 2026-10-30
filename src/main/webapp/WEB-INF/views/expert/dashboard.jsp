@@ -18,7 +18,6 @@
             </div>
         </div>
     </div>
-    <!-- Stats Quick Cards -->
     <div class="bg-surface-card rounded-xl border border-border-default shadow-sm overflow-hidden">
             <div class="p-4 sm:p-6 border-b border-border-default flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div class="min-w-0">
@@ -107,7 +106,7 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-surface text-text-secondary whitespace-nowrap">
-                                                    ${c.status}
+                                                    ● ${c.status}
                                                 </span>
                                             </c:otherwise>
                                         </c:choose>

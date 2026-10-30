@@ -208,13 +208,6 @@ public class LessonService {
         return errors;
     }
 
-    public void reorderLessons(UUID moduleId, List<UUID> orderedIds) {
-        if (orderedIds == null) return;
-        for (int i = 0; i < orderedIds.size(); i++) {
-            lessonDAO.updateOrderIndex(orderedIds.get(i), i + 1);
-        }
-    }
-
     public record LessonReviewData(Course course, List<Lesson> lessons) {}
 
     private void requireManager(User manager) {

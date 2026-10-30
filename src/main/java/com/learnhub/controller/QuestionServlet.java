@@ -26,8 +26,8 @@ import java.util.*;
 @WebServlet(
         name = "QuestionServlet",
         urlPatterns = {
-                "/expert/questions",
-                "/expert/questions/detail"
+            "/expert/questions",
+            "/expert/questions/detail"
         }
 )
 public class QuestionServlet extends HttpServlet {
@@ -138,9 +138,9 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.hide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                            + "/expert/questions?hidden="
-                            + ok
-                            + courseSuffix(courseId)
+                    + "/expert/questions?hidden="
+                    + ok
+                    + courseSuffix(courseId)
             );
             return;
         }
@@ -150,9 +150,9 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.unhide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                            + "/expert/questions?unhidden="
-                            + ok
-                            + courseSuffix(courseId)
+                    + "/expert/questions?unhidden="
+                    + ok
+                    + courseSuffix(courseId)
             );
             return;
         }
@@ -182,6 +182,28 @@ public class QuestionServlet extends HttpServlet {
         }
 
         String action = req.getParameter("action");
+
+        // =====================================================
+        // IMPORT FROM DOCS / TEXT
+        // =====================================================
+        if ("import_docs".equalsIgnoreCase(action)) {
+            UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+            UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+            String status = req.getParameter("status");
+            if (status == null || status.isBlank()) {
+                status = "public";
+            }
+            String docText = req.getParameter("docText");
+
+            int count = service.importFromDocument(moduleId, status, docText);
+
+            resp.sendRedirect(
+                    req.getContextPath()
+                    + "/expert/questions?imported=" + count
+                    + courseSuffix(courseId)
+            );
+            return;
+        }
 
         // =====================================================
         // SAVE SINGLE QUESTION
@@ -231,8 +253,8 @@ public class QuestionServlet extends HttpServlet {
         if (ok) {
             resp.sendRedirect(
                     req.getContextPath()
-                            + "/expert/questions?saved=true"
-                            + courseSuffix(courseId)
+                    + "/expert/questions?saved=true"
+                    + courseSuffix(courseId)
             );
             return;
         }

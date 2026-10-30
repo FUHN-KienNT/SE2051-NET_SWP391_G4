@@ -26,6 +26,7 @@
                     <!-- TOP ACTIONS -->
                     <div class="flex flex-wrap items-center gap-2.5">
 
+                        <button type="button" onclick="openImportModal()" class="inline-flex items-center px-4 py-2.5 bg-white border border-border-default hover:bg-surface text-text-primary font-semibold rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-file-import mr-2" aria-hidden="true"></i>Import từ Docs / File</button>
                         <!-- Create Question Button -->
                         <a href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}"
                            class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition">
@@ -61,6 +62,7 @@
                 </div>
                 </c:if>
 
+                <c:if test="${param.imported != null}"><div role="status" class="mt-4 p-4 rounded-xl bg-brand-50 text-brand-900">Đã import thành công ${param.imported} câu hỏi vào ngân hàng câu hỏi!</div></c:if>
                 <!-- Filter Toolbar: Course, Module, Type, Status, Keyword -->
                 <form method="get" action="${pageContext.request.contextPath}/expert/questions" class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -266,7 +268,99 @@
     </div>
 </div>
 
+<div id="importModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-file-import"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-lg text-slate-900">Import câu hỏi từ Docs / File văn bản</h3>
+                    <p class="text-xs text-slate-500">Tạo hàng loạt câu hỏi trắc nghiệm hoặc điền vào chỗ trống nhanh chóng.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="post" action="${pageContext.request.contextPath}/expert/questions" class="p-6 space-y-4">
+            <input type="hidden" name="action" value="import_docs">
+            <input type="hidden" name="courseId" value="${courseId}">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Chương / Module áp dụng <span class="text-rose-500">*</span></label>
+                    <select name="moduleId" required class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">-- Chọn module --</option>
+                        <c:forEach var="m" items="${modules}">
+                            <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${not empty m.courseTitle}">[${m.courseTitle}] </c:if>${m.title}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Trạng thái tạo</label>
+                    <select name="status" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="public">Công khai (Public)</option>
+                        <option value="draft">Bản nháp (Draft)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- File Upload / Paste Helper -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700">Tải file văn bản (.txt, .docx dạng text) hoặc dán trực tiếp bên dưới</label>
+                    <label class="text-xs font-bold text-emerald-700 hover:underline cursor-pointer">
+                        <i class="fa-solid fa-upload mr-1"></i>Chọn file
+                        <input type="file" id="docFileInput" accept=".txt,.text,.md,.doc" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+                <textarea id="docTextInput" name="docText" rows="9" required
+                          placeholder="Dán nội dung câu hỏi vào đây theo mẫu:
+
+Câu 1: Servlet trong Java là gì?
+A. Một class Java mở rộng chức năng của máy chủ
+*B. Một giao diện lập trình
+C. Một giao thức mạng
+D. Một cơ sở dữ liệu
+
+Câu 2: Điền vào chỗ trống: HTML viết tắt của từ gì?
+Đáp án: HyperText Markup Language, HTML"
+                          class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition leading-relaxed"></textarea>
+            </div>
+
+            <!-- Formatting hint -->
+            <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 space-y-1">
+                <div class="font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb text-emerald-600"></i>Quy tắc định dạng:
+                </div>
+                <p>• Bắt đầu câu hỏi bằng <code>Câu 1:</code>, <code>Question 1:</code> hoặc <code>1.</code></p>
+                <p>• Trắc nghiệm: Bắt đầu đáp án bằng <code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code> Thêm dấu <code>*</code> trước đáp án đúng (ví dụ: <code>*B. Đáp án đúng</code>).</p>
+                <p>• Điền vào chỗ trống: Thêm dòng <code>Đáp án: từ_khóa_1, từ_khóa_2</code></p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeImportModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">Hủy bỏ</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition">
+                    <i class="fa-solid fa-check mr-1.5"></i>Bắt đầu Import
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) { document.getElementById('docTextInput').value = e.target.result; };
+        reader.readAsText(file);
+    }
+    function openImportModal() { document.getElementById("importModal").classList.remove("hidden"); }
+    function closeImportModal() { document.getElementById("importModal").classList.add("hidden"); }
     function onFilterCourseChange(courseId) {
         const currentUrl = new URL(window.location.href);
         if (courseId) {

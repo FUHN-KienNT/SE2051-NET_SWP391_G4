@@ -3,6 +3,8 @@ package com.learnhub.service;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.ModuleDAO;
+import com.learnhub.dao.QuizDAO;
+import com.learnhub.entity.Quiz;
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.dto.ManagerDashboardDTO;
 import com.learnhub.entity.Course;
@@ -12,6 +14,7 @@ import com.learnhub.entity.User;
 import com.learnhub.constant.AppConstants;
 import com.learnhub.util.CloudinaryClient;
 import com.learnhub.util.LessonHtml;
+import com.learnhub.util.YouTubeVideo;
 
 import java.io.InputStream;
 import java.util.List;
@@ -38,6 +41,7 @@ public class LessonService {
     private final LessonDAO lessonDAO;
     private final CourseDAO courseDAO;
     private final ModuleDAO moduleDAO;
+    private final QuizDAO quizDAO;
 
     public void requireCourseAccess(UUID expertId, UUID courseId) {
         Course course = courseId == null ? null : courseDAO.findById(courseId);
@@ -73,9 +77,14 @@ public class LessonService {
     }
 
     public LessonService(LessonDAO lessonDAO, CourseDAO courseDAO, ModuleDAO moduleDAO) {
+        this(lessonDAO, courseDAO, moduleDAO, new QuizDAO());
+    }
+
+    public LessonService(LessonDAO lessonDAO, CourseDAO courseDAO, ModuleDAO moduleDAO, QuizDAO quizDAO) {
         this.lessonDAO = lessonDAO;
         this.courseDAO = courseDAO;
         this.moduleDAO = moduleDAO;
+        this.quizDAO = quizDAO;
     }
 
     public LessonDTO getLesson(UUID expertId, UUID lessonId) {
@@ -84,6 +93,9 @@ public class LessonService {
         dto.setMaterialUrl(l.getMaterialUrl());
         dto.setDurationMinutes(l.getDurationMinutes());
         dto.setPublicationStatus(l.getPublicationStatus());
+        dto.setType(l.getType());
+        dto.setVideoUrl(l.getVideoUrl());
+        dto.setQuizId(l.getQuizId());
         return dto;
     }
 
@@ -147,7 +159,9 @@ public class LessonService {
         if (dto == null) return false;
         dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
         if (!validateLesson(expertId, dto).isEmpty()) return false;
-        dto.setContent(LessonHtml.sanitize(dto.getContent()));
+        dto.setContent("quiz".equals(dto.getType()) ? "" : LessonHtml.sanitize(dto.getContent()));
+        dto.setVideoUrl("video".equals(dto.getType()) ? dto.getVideoUrl().strip() : null);
+        if (!"quiz".equals(dto.getType())) dto.setQuizId(null);
         requireModuleAccess(expertId, dto.getModuleId());
         if (dto.getId() != null && lessonDAO.findById(dto.getId()) != null) {
             requireLessonAccess(expertId, dto.getId());
@@ -156,6 +170,9 @@ public class LessonService {
                 dto.getTitle(), dto.getContent(), dto.getOrderIndex());
         lesson.setMaterialUrl(dto.getMaterialUrl());
         lesson.setDurationMinutes(dto.getDurationMinutes());
+        lesson.setType(dto.getType());
+        lesson.setVideoUrl(dto.getVideoUrl());
+        lesson.setQuizId(dto.getQuizId());
         lesson.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
         return lessonDAO.save(lesson);
     }
@@ -195,7 +212,20 @@ public class LessonService {
         } else if (dto.getTitle().codePointCount(0, dto.getTitle().length()) > 255) {
             errors.put("title", "Lesson title must not exceed 255 characters.");
         }
-        if (!LessonHtml.hasText(dto.getContent()))
+        if (!Set.of("content", "video", "quiz").contains(dto.getType() == null ? "" : dto.getType())) {
+            errors.put("type", "Please select a valid lesson type.");
+        }
+        if ("video".equals(dto.getType()) && YouTubeVideo.videoId(dto.getVideoUrl()) == null) {
+            errors.put("videoUrl", "Please enter a valid YouTube video URL.");
+        }
+        if ("quiz".equals(dto.getType())) {
+            Quiz quiz = quizDAO.findById(dto.getQuizId());
+            if (quiz == null || !java.util.Objects.equals(dto.getModuleId(), quiz.getModuleId())
+                    || !quiz.isPublished()) {
+                errors.put("quizId", "Please select a published quiz from the selected module.");
+            }
+        }
+        if ("content".equals(dto.getType()) && !LessonHtml.hasText(dto.getContent()))
             errors.put("content", "Please enter lesson content.");
         if (dto.getOrderIndex() < 1) {
             errors.put("orderIndex", "Order index must be a whole number greater than or equal to 1.");

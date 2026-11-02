@@ -58,7 +58,15 @@
 
                 <div class="p-6 sm:p-8 space-y-6">
 
-                    <c:if test="${not empty lesson.materialUrl}">
+                    <c:if test="${lesson.type eq 'video' and not empty videoEmbedUrl}">
+                        <div class="aspect-video overflow-hidden rounded-xl border border-border-default bg-surface-inverse">
+                            <iframe src="${fn:escapeXml(videoEmbedUrl)}" title="${fn:escapeXml(lesson.title)}"
+                                    class="w-full h-full border-0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-sm text-text-secondary">Video tự phát ở chế độ tắt tiếng. Bạn có thể bật âm thanh trong trình phát.</p>
+                    </c:if>
+                    <c:if test="${lesson.type ne 'video' and not empty lesson.materialUrl}">
                         <div class="aspect-video overflow-hidden rounded-xl border border-border-default bg-surface">
                             <iframe src="${fn:escapeXml(lesson.materialUrl)}"
                                     title="${fn:escapeXml(lesson.title)}"
@@ -83,7 +91,7 @@
                             <div class="lesson-content text-text-primary leading-relaxed break-words">${lessonHtml:sanitize(lesson.content)}</div>
                         </c:when>
 
-                        <c:when test="${empty lesson.materialUrl}">
+                        <c:when test="${empty lesson.materialUrl and lesson.type ne 'video'}">
                             <p class="text-text-secondary">
                                 Bài học chưa có nội dung.
                             </p>
@@ -136,48 +144,6 @@
                     </c:choose>
                 </footer>
             </article>
-
-            <%-- Direct Quiz Link under Lesson --%>
-            <c:set var="currentModule" value="${null}" />
-            <c:forEach items="${course.modules}" var="moduleItem">
-                <c:if test="${not empty lesson and moduleItem.id eq lesson.moduleId}">
-                    <c:set var="currentModule" value="${moduleItem}" />
-                </c:if>
-            </c:forEach>
-
-            <c:if test="${not empty currentModule and not empty currentModule.quizzes}">
-                <div class="mt-6 p-6 rounded-xl border border-brand-200 bg-brand-50/50 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-start gap-3.5">
-                        <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold shrink-0 mt-0.5">
-                            <i class="fa-solid fa-clipboard-question text-lg"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-brand-700">Ôn tập kiến thức</p>
-                            <h3 class="text-base font-bold text-text-primary mt-0.5">Bài kiểm tra ôn tập của chương này</h3>
-                            <div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-text-secondary">
-                                <c:forEach var="qz" items="${currentModule.quizzes}" varStatus="qst">
-                                    <span class="font-medium text-slate-700">
-                                        <i class="fa-solid fa-circle-check text-brand-600 mr-1"></i>${qz.title} (${qz.questionCount} câu hỏi)
-                                    </span>
-                                </c:forEach>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                        <c:forEach var="qz" items="${currentModule.quizzes}" varStatus="qst">
-                            <c:url value="/quiz" var="directQuizUrl">
-                                <c:param name="quizId" value="${qz.id}" />
-                                <c:param name="courseId" value="${course.id}" />
-                            </c:url>
-                            <a href="${fn:escapeXml(directQuizUrl)}"
-                               class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold shadow-sm transition">
-                                <span>Vào làm Quiz</span>
-                                <i class="fa-solid fa-arrow-right text-xs"></i>
-                            </a>
-                        </c:forEach>
-                    </div>
-                </div>
-            </c:if>
 
             <nav aria-label="Điều hướng bài học"
                  class="flex flex-wrap justify-between gap-3 mt-6">
@@ -238,32 +204,6 @@
     }
 </style>
 
-<script>
-    // Remember the last viewed lesson for this account and course.
-    (() => {
-        const viewer = document.querySelector('[data-lesson-id]');
-        if (!viewer) return;
-
-        const data = viewer.dataset;
-
-        if (!data.lessonUser || !data.lessonCourse || !data.lessonId) {
-            return;
-        }
-
-        const key = 'learnhub:lastLesson:'
-            + data.lessonContext + ':'
-            + data.lessonUser + ':'
-            + data.lessonCourse;
-
-        try {
-            localStorage.setItem(key, JSON.stringify({
-                lessonId: data.lessonId,
-                lessonTitle: data.lessonTitle
-            }));
-        } catch (error) {
-            // Learning still works if browser storage is unavailable.
-        }
-    })();
-</script>
+<script src="${pageContext.request.contextPath}/assets/js/lesson-last-viewed.js"></script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

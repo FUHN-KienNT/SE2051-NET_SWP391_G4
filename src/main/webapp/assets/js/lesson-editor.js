@@ -1,6 +1,17 @@
 document.addEventListener('DOMContentLoaded', function () {
     const content = document.getElementById('content');
-    if (!content || typeof Quill === 'undefined') return;
+    if (!content) return;
+    const type = document.getElementById('lessonType');
+    const required = () => !type || type.value === 'content';
+    if (typeof Quill === 'undefined') {
+        const syncRequired = () => {
+            content.required = required();
+            if (!required()) content.setCustomValidity('');
+        };
+        content.addEventListener('lesson-type-change', syncRequired);
+        syncRequired();
+        return;
+    }
 
     const wrapper = document.getElementById('lessonEditorWrapper');
     const validation = document.getElementById('contentValidation');
@@ -26,7 +37,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const sync = () => {
         content.value = editor.getSemanticHTML();
         const hasText = editor.getText().replace(/[\s\u200B-\u200D\uFEFF]/g, '').length > 0;
-        validation.setCustomValidity(serverError || (hasText ? '' : 'Please enter lesson content.'));
+        validation.disabled = type && type.value === 'quiz';
+        editor.root.setAttribute('aria-required', String(required()));
+        validation.setCustomValidity(required() ? (serverError || (hasText ? '' : 'Please enter lesson content.')) : '');
     };
     sync();
     editor.on('text-change', () => {
@@ -36,4 +49,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     validation.addEventListener('invalid', () => editor.focus());
     content.form.addEventListener('submit', sync);
+    content.addEventListener('lesson-type-change', sync);
 });

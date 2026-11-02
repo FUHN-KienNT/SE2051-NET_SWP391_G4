@@ -46,6 +46,10 @@
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <c:if test="${not empty resultCourseId}">
+                    <a href="${pageContext.request.contextPath}/learn/course?id=${resultCourseId}"
+                       class="px-6 py-3 bg-surface text-brand-700 font-semibold border border-border-default rounded-lg text-sm focus-visible:ring-2 focus-visible:ring-brand-700">Về nội dung khóa học</a>
+                </c:if>
                 <a href="${pageContext.request.contextPath}/quiz?quizId=${quiz.id}" class="px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center">
                     <i class="fa-solid fa-rotate-right mr-2"></i> Xem Tổng Quan & Làm Lại
                 </a>

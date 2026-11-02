@@ -15,6 +15,9 @@ public class Lesson implements Serializable {
     private String content;
     private int orderIndex;
     private Integer durationMinutes;
+    private String type = "content";
+    private String videoUrl;
+    private UUID quizId;
     private String publicationStatus = AppConstants.LessonStatus.DRAFT;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -22,6 +25,7 @@ public class Lesson implements Serializable {
     // Helper / joined fields
     private String materialUrl;
     private String moduleTitle;
+    private String quizTitle;
     private UUID courseId;
     private String status;
 
@@ -53,6 +57,12 @@ public class Lesson implements Serializable {
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 
     public Integer getDurationMinutes() { return durationMinutes; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public UUID getQuizId() { return quizId; }
+    public void setQuizId(UUID quizId) { this.quizId = quizId; }
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
 
     public String getPublicationStatus() { return publicationStatus; }
@@ -68,6 +78,8 @@ public class Lesson implements Serializable {
     public void setMaterialUrl(String materialUrl) { this.materialUrl = materialUrl; }
 
     public String getModuleTitle() { return moduleTitle; }
+    public String getQuizTitle() { return quizTitle; }
+    public void setQuizTitle(String quizTitle) { this.quizTitle = quizTitle; }
     public void setModuleTitle(String moduleTitle) { this.moduleTitle = moduleTitle; }
 
     public UUID getCourseId() { return courseId; }

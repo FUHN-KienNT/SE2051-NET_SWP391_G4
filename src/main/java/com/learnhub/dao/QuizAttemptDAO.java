@@ -22,6 +22,16 @@ import java.util.logging.Logger;
 public class QuizAttemptDAO {
     private static final Logger LOGGER = Logger.getLogger(QuizAttemptDAO.class.getName());
 
+    public boolean hasPassed(Connection conn, UUID userId, UUID quizId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT EXISTS (SELECT 1 FROM quiz_submission qs JOIN quiz q ON q.id=qs.quiz_id "
+                + "WHERE qs.user_id=? AND qs.quiz_id=? AND qs.score IS NOT NULL AND qs.pass_status=true AND q.status='published')")) {
+            ps.setObject(1, userId);
+            ps.setObject(2, quizId);
+            try (ResultSet rs = ps.executeQuery()) { rs.next(); return rs.getBoolean(1); }
+        }
+    }
+
     public boolean insertAttempt(QuizSubmission attempt) {
         String sql = "INSERT INTO quiz_submission (id, quiz_id, user_id, score, submitted_at, pass_status) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, NOW(), ?)";

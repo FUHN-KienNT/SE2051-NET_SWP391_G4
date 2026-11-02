@@ -35,6 +35,7 @@ DROP TYPE IF EXISTS notification_status CASCADE;
 DROP TYPE IF EXISTS question_type CASCADE;
 DROP TYPE IF EXISTS quiz_status CASCADE;
 DROP TYPE IF EXISTS lesson_status CASCADE;
+DROP TYPE IF EXISTS lesson_type CASCADE;
 DROP TYPE IF EXISTS learning_status CASCADE;
 DROP TYPE IF EXISTS payment_status CASCADE;
 DROP TYPE IF EXISTS registration_status CASCADE;
@@ -51,6 +52,7 @@ CREATE TYPE user_status AS ENUM ('active', 'inactive', 'banned');
 CREATE TYPE course_status AS ENUM ('draft', 'published', 'archived');
 
 CREATE TYPE lesson_status AS ENUM ('draft', 'published', 'archived', 'decline');
+CREATE TYPE lesson_type AS ENUM ('content', 'video', 'quiz');
 
 CREATE TYPE quiz_status AS ENUM ('published', 'draft', 'hidden');
 
@@ -181,6 +183,9 @@ CREATE TABLE lesson (
     content     TEXT,
     order_index INTEGER NOT NULL DEFAULT 0,
     duration_minutes INTEGER CONSTRAINT ck_lesson_duration_minutes CHECK (duration_minutes > 0),
+    lesson_type lesson_type NOT NULL DEFAULT 'content',
+    video_url TEXT,
+    quiz_id UUID,
     status      lesson_status NOT NULL DEFAULT 'draft',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -222,6 +227,15 @@ CREATE TABLE quiz (
 );
 
 CREATE INDEX idx_quiz_module_id ON quiz (module_id);
+CREATE UNIQUE INDEX uq_quiz_id_module ON quiz (id, module_id);
+ALTER TABLE lesson ADD CONSTRAINT fk_lesson_quiz_module
+    FOREIGN KEY (quiz_id, module_id) REFERENCES quiz (id, module_id);
+ALTER TABLE lesson ADD CONSTRAINT ck_lesson_type_payload CHECK (
+    (lesson_type = 'content' AND video_url IS NULL AND quiz_id IS NULL)
+    OR (lesson_type = 'video' AND NULLIF(BTRIM(video_url), '') IS NOT NULL AND quiz_id IS NULL)
+    OR (lesson_type = 'quiz' AND quiz_id IS NOT NULL AND video_url IS NULL AND COALESCE(content, '') = '')
+);
+CREATE INDEX idx_lesson_quiz_id ON lesson (quiz_id) WHERE quiz_id IS NOT NULL;
 
 
 -- ---------------------------------------------------------------------

@@ -234,6 +234,9 @@ public class LearningProcessService {
         dto.setMaterialUrl(lesson.getMaterialUrl());
         dto.setDurationMinutes(lesson.getDurationMinutes());
         dto.setPublicationStatus(lesson.getPublicationStatus());
+        dto.setType(lesson.getType());
+        dto.setVideoUrl(lesson.getVideoUrl());
+        dto.setQuizId(lesson.getQuizId());
 
         LearningProcess process =
                 learningProcessDAO.findByRegistrationAndLesson(
@@ -281,11 +284,27 @@ public class LearningProcessService {
                         && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()));
     }
 
+    public boolean isQuizLessonAvailable(LessonDTO lesson) {
+        var quiz = new com.learnhub.dao.QuizDAO().findById(lesson.getQuizId());
+        return quiz != null && quiz.isPublished() && lesson.getModuleId().equals(quiz.getModuleId());
+    }
+
     public void markLessonComplete(UUID registrationId, UUID lessonId) {
+        Lesson lesson = lessonDAO.findById(lessonId);
+        if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) {
+            throw new SecurityException("Lesson is not available.");
+        }
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 registrationDAO.lockRegistration(conn, registrationId);
+                if ("quiz".equals(lesson.getType())) {
+                    Registration registration = registrationDAO.findById(registrationId);
+                    if (registration == null || !new com.learnhub.dao.QuizAttemptDAO().hasPassed(
+                            conn, registration.getUserId(), lesson.getQuizId())) {
+                        throw new SecurityException("Pass the linked quiz to complete this lesson.");
+                    }
+                }
                 learningProcessDAO.completeLesson(conn, registrationId, lessonId);
                 var counts = learningProcessDAO.readProgressCounts(conn, registrationId);
                 int percent = calculateProgressPercent(counts.completed(), counts.total());
@@ -299,8 +318,27 @@ public class LearningProcessService {
                 }
                 throw e;
             }
+        } catch (SecurityException e) {
+            throw e;
         } catch (SQLException | RuntimeException e) {
             throw new IllegalStateException("Cannot save learning progress.", e);
+        }
+    }
+
+    /** Quiz scoring calls this only after saving the result; stored pass status is checked again. */
+    public void completeQuizLessons(UUID userId, UUID quizId) {
+        var quiz = new com.learnhub.dao.QuizDAO().findById(quizId);
+        if (quiz == null || !quiz.isPublished()) return;
+        var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
+        if (module == null) return;
+        Course course = courseService.getPublishedCourseCurriculum(module.getCourseId());
+        Registration registration = findRegistration(userId, module.getCourseId());
+        if (!isAccessibleRegistration(registration, course)) return;
+        for (Lesson lesson : lessonDAO.findByModuleId(module.getId())) {
+            if ("quiz".equals(lesson.getType()) && quizId.equals(lesson.getQuizId())
+                    && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) {
+                markLessonComplete(registration.getId(), lesson.getId());
+            }
         }
     }
 }

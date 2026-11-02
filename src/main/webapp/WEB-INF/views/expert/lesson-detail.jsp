@@ -77,7 +77,14 @@
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
+                        <input type="number" id="orderIndex" name="orderIndex" min="1"
+                               data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
+                               value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
+                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">
+                    </div>
                     <div>
                         <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
                             Estimated Duration (minutes) <span class="text-status-danger">*</span>
@@ -97,16 +104,37 @@
                     </div>
                 </div>
 
-                <div class="w-44">
-                    <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
-                    <input type="number" id="orderIndex" name="orderIndex" min="1"
-                    data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
-                           value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
-                           class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition text-center font-bold">
+                <div>
+                    <label for="lessonType" class="block text-sm font-semibold text-text-primary mb-2">Type <span class="text-status-danger">*</span></label>
+                    <select id="lessonType" name="type" required data-error="${fn:escapeXml(fieldErrors.type)}"
+                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        <option value="content" ${empty lesson or lesson.type eq 'content' ? 'selected' : ''}>Content</option>
+                        <option value="video" ${lesson.type eq 'video' ? 'selected' : ''}>Video</option>
+                        <option value="quiz" ${lesson.type eq 'quiz' ? 'selected' : ''}>Quiz</option>
+                    </select>
                 </div>
 
-                <div>
-                    <label id="contentLabel" for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span class="text-status-danger">*</span></label>
+                <div id="videoFields" ${lesson.type ne 'video' ? 'hidden' : ''}>
+                    <label for="videoUrl" class="block text-sm font-semibold text-text-primary mb-2">YouTube URL <span class="text-status-danger">*</span></label>
+                    <input type="url" id="videoUrl" name="videoUrl" value="${fn:escapeXml(lesson.videoUrl)}"
+                           data-error="${fn:escapeXml(fieldErrors.videoUrl)}" placeholder="https://www.youtube.com/watch?v=..."
+                           class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                </div>
+
+                <div id="quizFields" ${lesson.type ne 'quiz' ? 'hidden' : ''}>
+                    <label for="quizId" class="block text-sm font-semibold text-text-primary mb-2">Quiz <span class="text-status-danger">*</span></label>
+                    <select id="quizId" name="quizId" data-error="${fn:escapeXml(fieldErrors.quizId)}"
+                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        <option value="">-- Select a quiz --</option>
+                        <c:forEach var="q" items="${lessonQuizzes}">
+                            <option value="${q.id}" data-module-id="${q.moduleId}" ${lesson.quizId eq q.id ? 'selected' : ''}><c:out value="${q.title}" /></option>
+                        </c:forEach>
+                    </select>
+                    <p class="mt-2 text-sm text-text-secondary">Select a published quiz from this module. Students must pass it to complete this lesson.</p>
+                </div>
+
+                <div id="contentFields">
+                    <label id="contentLabel" for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span id="contentRequired" class="text-status-danger">*</span></label>
                     <div id="lessonEditorWrapper" class="relative hidden">
                         <div id="lessonToolbar" role="toolbar" aria-label="Content formatting">
                             <span class="ql-formats">
@@ -155,6 +183,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/lesson-editor.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/lesson-type.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const moduleSelect = document.getElementById('moduleId');

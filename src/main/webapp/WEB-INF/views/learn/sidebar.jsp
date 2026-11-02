@@ -52,8 +52,7 @@
                         </span>
 
                         <span class="block text-xs text-text-secondary mt-1">
-                            ${fn:length(module.lessons)} bài học ·
-                            ${fn:length(module.quizzes)} quiz
+                            ${fn:length(module.lessons)} bài học
                         </span>
                     </span>
 
@@ -66,7 +65,7 @@
                         <%-- Lessons --%>
                     <c:forEach items="${module.lessons}" var="item">
                         <c:set var="isCurrent"
-                               value="${not empty lesson and item.id eq lesson.id}" />
+                               value="${(not empty lesson and item.id eq lesson.id) or (not empty quiz and item.type eq 'quiz' and item.quizId eq quiz.id)}" />
 
                         <c:set var="itemStatus"
                                value="${lessonStatuses[item.id.toString()]}" />
@@ -83,7 +82,7 @@
                                aria-current="${isCurrent ? 'page' : 'false'}"
                                class="flex items-start gap-3 rounded-lg p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isCurrent ? 'bg-brand-50 text-brand-900 font-semibold' : 'text-text-primary hover:bg-surface'}">
 
-                                <i class="fa-solid ${itemStatus eq 'completed' ? 'fa-circle-check text-status-success' : 'fa-file-lines text-text-secondary'} mt-1 shrink-0"
+                                <i class="fa-solid ${itemStatus eq 'completed' ? 'fa-circle-check text-status-success' : (item.type eq 'video' ? 'fa-circle-play text-text-secondary' : (item.type eq 'quiz' ? 'fa-list-check text-text-secondary' : 'fa-file-lines text-text-secondary'))} mt-1 shrink-0"
                                    aria-hidden="true"></i>
 
                                 <span class="min-w-0">
@@ -112,36 +111,7 @@
                         </li>
                     </c:forEach>
 
-                        <%-- Quizzes --%>
-                    <c:forEach items="${module.quizzes}" var="qz">
-                        <c:set var="isCurrentQuiz" value="${not empty quiz and qz.id eq quiz.id}" />
-
-                        <c:url value="/quiz" var="quizUrl">
-                            <c:param name="quizId" value="${qz.id}" />
-                            <c:param name="courseId" value="${course.id}" />
-                        </c:url>
-
-                        <li>
-                            <a href="${fn:escapeXml(quizUrl)}"
-                               aria-current="${isCurrentQuiz ? 'page' : 'false'}"
-                               class="flex items-start gap-3 rounded-lg p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${isCurrentQuiz ? 'bg-brand-50 text-brand-900 font-semibold' : 'text-text-primary hover:bg-surface'}">
-
-                                <i class="fa-solid fa-list-check text-brand-700 mt-1 shrink-0"
-                                   aria-hidden="true"></i>
-
-                                <span class="min-w-0">
-                                    <span class="block break-words">
-                                        <c:out value="${qz.title}" />
-                                    </span>
-                                    <span class="block text-xs text-text-secondary mt-1">
-                                        Quiz · ${qz.questionCount} câu hỏi
-                                    </span>
-                                </span>
-                            </a>
-                        </li>
-                    </c:forEach>
-
-                    <c:if test="${empty module.lessons and empty module.quizzes}">
+                    <c:if test="${empty module.lessons}">
                         <li class="p-3 text-sm text-text-secondary">
                             Chương này chưa có nội dung.
                         </li>

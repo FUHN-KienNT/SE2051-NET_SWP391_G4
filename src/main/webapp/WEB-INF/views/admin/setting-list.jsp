@@ -220,10 +220,10 @@
                                             <td class="px-6 py-5 text-right space-x-2">
                                                 <a href="${pageContext.request.contextPath}/admin/setting-detail?id=${s.id}"
                                                    draggable="false"
-                                                   class="px-4 py-2 ${s.type eq 'role' ? 'bg-slate-700 hover:bg-slate-800' : 'bg-[#047857] hover:bg-[#065f46]'} text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm"
-                                                   title="${s.type eq 'role' ? 'View Role Details' : 'Manage Setting'}">
-                                                    <i class="fa-solid ${s.type eq 'role' ? 'fa-eye' : 'fa-pen-to-square'}"></i>
-                                                    <span>${s.type eq 'role' ? 'View' : 'Manage'}</span>
+                                                   class="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm"
+                                                   title="Manage Setting">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                    <span>Manage</span>
                                                 </a>
 
                                                 <c:set var="isRoleSetting" value="${s.type eq 'role'}" />

@@ -16,9 +16,9 @@
             <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-start space-x-3 shadow-sm">
                 <i class="fa-solid fa-shield-halved text-amber-600 text-lg mt-0.5"></i>
                 <div>
-                    <p class="font-bold text-amber-950">Vai trò hệ thống (Chỉ xem)</p>
+                    <p class="font-bold text-amber-950">Vai trò hệ thống (Protected Role)</p>
                     <p class="text-amber-800 text-xs mt-0.5">
-                        Vai trò hệ thống là cấu hình dữ liệu cốt lõi được bảo vệ: chỉ xem chi tiết, không được phép chỉnh sửa tên, loại, mã hay mô tả. Thứ tự hiển thị có thể điều chỉnh tại danh sách bằng thao tác kéo thả (drag &amp; drop).
+                        Bạn có thể chỉnh sửa tên cấu hình (Setting Name). Loại cấu hình (Role), mã phân quyền và trạng thái được khóa cứng cố định để bảo toàn chức năng và bảo mật hệ thống.
                     </p>
                 </div>
             </div>
@@ -80,16 +80,15 @@
                     <!-- Setting Name -->
                     <div>
                         <label for="settingName" class="block text-sm font-semibold text-slate-600 mb-2">
-                            Setting Name
+                            Setting Name <span class="text-rose-500">*</span>
                         </label>
                         <input type="text"
                                id="settingName"
                                name="name"
                                required
-                               ${isRoleType ? 'readonly' : ''}
                                value="${fn:escapeXml(setting.name)}"
                                placeholder="Enter unique setting name..."
-                               class="w-full px-3.5 py-2.5 rounded-lg text-sm transition ${isRoleType ? 'bg-slate-100 text-slate-600 cursor-not-allowed border border-slate-200' : 'bg-white text-slate-800 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857]'}">
+                               class="w-full px-3.5 py-2.5 rounded-lg text-sm transition bg-white text-slate-800 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857]">
                     </div>
 
                     <!-- Setting Type -->
@@ -193,15 +192,13 @@
                     <a href="${pageContext.request.contextPath}/admin/settings"
                        class="px-5 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-sm transition inline-flex items-center gap-2">
                         <i class="fa-solid fa-arrow-left text-xs"></i>
-                        <span>${isRoleType ? 'Quay lại Setting List' : 'Cancel'}</span>
+                        <span>Cancel</span>
                     </a>
-                    <c:if test="${not isRoleType}">
-                        <button type="submit"
-                                class="px-6 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm shadow-sm transition cursor-pointer inline-flex items-center gap-2">
-                            <i class="fa-solid fa-check text-xs"></i>
-                            <span>Save Changes</span>
-                        </button>
-                    </c:if>
+                    <button type="submit"
+                            class="px-6 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-lg text-sm shadow-sm transition cursor-pointer inline-flex items-center gap-2">
+                        <i class="fa-solid fa-check text-xs"></i>
+                        <span>Save Changes</span>
+                    </button>
                 </div>
             </form>
 

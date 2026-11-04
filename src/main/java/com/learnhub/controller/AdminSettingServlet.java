@@ -143,10 +143,11 @@ public class AdminSettingServlet extends HttpServlet {
 // lay cac setting type cho vao dropdown
     private List<String> getSettingTypes(Setting setting) {
         List<String> types = new java.util.ArrayList<>(settingDAO.findAllTypes());
-        if (setting == null) {
-            // Không cho phép thêm vai trò mới
+        boolean isRole = isRoleSetting(setting);
+        if (!isRole) {
+            // Không cho phép thêm mới role hoặc đổi từ type khác sang role
             types.removeIf(t -> t != null && "role".equalsIgnoreCase(t.trim()));
-        } else if (setting.getType() != null && !setting.getType().trim().isEmpty()) {
+        } else if (setting != null && setting.getType() != null && !setting.getType().trim().isEmpty()) {
             String currentType = setting.getType().trim();
             boolean exists = false;
             for (String t : types) {
@@ -254,7 +255,9 @@ public class AdminSettingServlet extends HttpServlet {
             }
         }
 
-        // Không cho phép tạo vai trò (Role) mới
+        boolean isExistingRole = existing != null && isRoleSetting(existing);
+
+        // 1. Khóa cứng không cho phép tạo mới vai trò (Role)
         if (!isUpdate && "role".equalsIgnoreCase(type != null ? type.trim() : "")) {
             req.setAttribute("errorMessage", "Không được phép tạo vai trò (Role) mới trong hệ thống.");
             req.setAttribute("setting", null);
@@ -264,19 +267,26 @@ public class AdminSettingServlet extends HttpServlet {
             return;
         }
 
-        // Không cho phép sửa đổi vai trò (Role) cốt lõi hiện có
-        if (isUpdate && existing != null && isRoleSetting(existing)) {
-            req.setAttribute("errorMessage", "Vai trò hệ thống được bảo vệ: chỉ xem chi tiết, không được phép chỉnh sửa.");
+        // 2. Khóa cứng không cho phép đổi từ loại setting khác sang role
+        if (isUpdate && !isExistingRole && "role".equalsIgnoreCase(type != null ? type.trim() : "")) {
+            req.setAttribute("errorMessage", "Không được phép chuyển đổi từ loại cấu hình khác sang vai trò (Role).");
             req.setAttribute("setting", existing);
             req.setAttribute("types", getSettingTypes(existing));
-            req.setAttribute("isProtected", true);
+            req.setAttribute("isProtected", false);
             req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
             return;
         }
 
-        boolean isRole = "role".equalsIgnoreCase(type) || (existing != null && isRoleSetting(existing));
+        boolean isRole = isExistingRole;
         if (isRole) {
-            status = true; // Roles are strictly active
+            // Khi cập nhật Role:
+            // - Cho phép chỉnh sửa tên (Setting Name)
+            // - Khóa cứng Setting Type (luôn là role), Value/Code (giữ code gốc), Status (luôn Active), Description (giữ nguyên)
+            type = "role";
+            code = existing.getCode();
+            status = true;
+            description = existing.getDescription();
+            sortOrder = existing.getSortOrder();
         }
 
         boolean protectedSetting = isRole;

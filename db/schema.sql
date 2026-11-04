@@ -161,6 +161,7 @@ CREATE INDEX idx_registration_payment_method_id ON registration (payment_method_
 -- 6. MODULE
 -- ---------------------------------------------------------------------
 CREATE TABLE module (
+    hidden      BOOLEAN NOT NULL DEFAULT FALSE,
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id   UUID NOT NULL REFERENCES course (id) ON DELETE CASCADE,
     title       VARCHAR(255) NOT NULL,

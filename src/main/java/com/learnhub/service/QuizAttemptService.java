@@ -31,12 +31,18 @@ public class QuizAttemptService {
         this.quizDAO = new QuizDAO();
     }
 
+    public boolean isModuleVisible(Quiz quiz) {
+        if (quiz == null) return false;
+        var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
+        return module != null && !module.isHidden();
+    }
+
     public QuizSubmission startQuizAttempt(UUID userId, UUID quizId) {
         Quiz quiz = quizDAO.findById(quizId);
         if (quiz == null || !quiz.isPublished()) throw new SecurityException("Quiz is not available.");
         var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
         var learning = new LearningProcessService();
-        var course = module == null ? null : new CourseService().getPublishedCourseCurriculum(module.getCourseId());
+        var course = module == null || module.isHidden() ? null : new CourseService().getPublishedCourseCurriculum(module.getCourseId());
         var registration = course == null ? null : learning.findRegistration(userId, course.getId());
         if (!learning.isAccessibleRegistration(registration, course)) throw new SecurityException("Course access denied.");
         QuizSubmission attempt = new QuizSubmission();

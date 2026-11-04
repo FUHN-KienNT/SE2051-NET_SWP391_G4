@@ -330,7 +330,7 @@ public class LearningProcessService {
         var quiz = new com.learnhub.dao.QuizDAO().findById(quizId);
         if (quiz == null || !quiz.isPublished()) return;
         var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
-        if (module == null) return;
+        if (module == null || module.isHidden()) return;
         Course course = courseService.getPublishedCourseCurriculum(module.getCourseId());
         Registration registration = findRegistration(userId, module.getCourseId());
         if (!isAccessibleRegistration(registration, course)) return;

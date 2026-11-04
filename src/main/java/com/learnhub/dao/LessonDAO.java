@@ -26,10 +26,10 @@ public class LessonDAO {
     public List<Lesson> findByModuleId(UUID moduleId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
-                     "WHERE l.module_id = ? ORDER BY l.order_index ASC";
+                     "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE l.module_id = ? ORDER BY l.order_index ASC";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, moduleId);
@@ -47,10 +47,10 @@ public class LessonDAO {
     public Lesson findById(UUID lessonId) {
         if (lessonId == null) return null;
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
-                     "WHERE l.id = ?";
+                     "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE l.id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, lessonId);
@@ -68,10 +68,10 @@ public class LessonDAO {
     public List<Lesson> findByCourseId(UUID courseId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
-                     "WHERE m.course_id = ? ORDER BY m.order_index ASC, l.order_index ASC";
+                     "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE m.course_id = ? ORDER BY m.order_index ASC, l.order_index ASC";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, courseId);
@@ -100,8 +100,8 @@ public class LessonDAO {
         }
         String lockSql = "SELECT id FROM module WHERE id = ? FOR UPDATE";
         String insertSql = "INSERT INTO lesson "
-                + "(id, module_id, title, content, order_index, duration_minutes, status, created_at, updated_at) "
-                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                + "(id, module_id, title, content, order_index, duration_minutes, status, lesson_type, video_url, quiz_id, created_at, updated_at) "
+                + "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?::lesson_type, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -130,6 +130,9 @@ public class LessonDAO {
                     ps.setInt(5, lesson.getOrderIndex());
                     ps.setObject(6, lesson.getDurationMinutes(), Types.INTEGER);
                     ps.setString(7, lesson.getPublicationStatus());
+                    ps.setString(8, lesson.getType());
+                    ps.setString(9, lesson.getVideoUrl());
+                    ps.setObject(10, lesson.getQuizId());
                     if (ps.executeUpdate() != 1) {
                         throw new SQLException(
                                 "Lesson insert did not succeed."
@@ -182,16 +185,27 @@ public class LessonDAO {
                     throw new SQLException("Order index is outside the module.");
                 target.add(lesson.getOrderIndex() - 1, lesson.getId());
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
+                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, lesson_type=?::lesson_type, video_url=?, quiz_id=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
                     ps.setObject(1, newModule); ps.setString(2, lesson.getTitle());
                     ps.setString(3, lesson.getContent()); ps.setInt(4, lesson.getOrderIndex());
                     ps.setObject(5, lesson.getDurationMinutes(), Types.INTEGER);
                     ps.setString(6, lesson.getPublicationStatus());
-                    ps.setObject(7, lesson.getId()); ps.setObject(8, oldModule);
+                    ps.setString(7, lesson.getType());
+                    ps.setString(8, lesson.getVideoUrl());
+                    ps.setObject(9, lesson.getQuizId());
+                    ps.setObject(10, lesson.getId()); ps.setObject(11, oldModule);
                     if (ps.executeUpdate() != 1) throw new SQLException("Lesson update failed.");
                 }
                 if (!oldModule.equals(newModule)) writeLessonOrder(conn, oldModule, source);
                 writeLessonOrder(conn, newModule, target);
+                // A different assessment cannot inherit completion earned for old content/a different quiz.
+                if ("quiz".equals(lesson.getType()) && (!"quiz".equals(existing.getType())
+                        || !java.util.Objects.equals(existing.getQuizId(), lesson.getQuizId()))) {
+                    try (PreparedStatement ps = conn.prepareStatement("DELETE FROM learning_process WHERE lesson_id=?")) {
+                        ps.setObject(1, lesson.getId());
+                        ps.executeUpdate();
+                    }
+                }
                 conn.commit();
                 return true;
             } catch (SQLException | RuntimeException e) {
@@ -284,6 +298,10 @@ public class LessonDAO {
         l.setOrderIndex(rs.getInt("order_index"));
         l.setDurationMinutes((Integer) rs.getObject("duration_minutes"));
         l.setPublicationStatus(rs.getString("status"));
+        l.setType(rs.getString("lesson_type"));
+        l.setVideoUrl(rs.getString("video_url"));
+        l.setQuizId((UUID) rs.getObject("quiz_id"));
+        l.setQuizTitle(rs.getString("quiz_title"));
         l.setCreatedAt(rs.getTimestamp("created_at"));
         l.setUpdatedAt(rs.getTimestamp("updated_at"));
         try {

@@ -35,6 +35,12 @@ import java.sql.Timestamp;
 public class LessonServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
     private final CourseService courseService = new CourseService();
+    private final com.learnhub.service.QuizManagementService quizService = new com.learnhub.service.QuizManagementService();
+
+    private void loadQuizOptions(HttpServletRequest req, UUID expertId, UUID courseId) {
+        req.setAttribute("lessonQuizzes", courseId == null ? List.of()
+                : quizService.findByExpert(expertId, null, null, courseId, "published"));
+    }
 
      @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -59,6 +65,7 @@ public class LessonServlet extends HttpServlet {
                 if (course != null) {
                     req.setAttribute("course", course);
                     req.setAttribute("modules", course.getModules());
+                    loadQuizOptions(req, expertId, courseId);
                 }
             } catch (SecurityException e) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -227,6 +234,11 @@ public class LessonServlet extends HttpServlet {
             } catch (IllegalArgumentException ignored) {
             }
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
+            dto.setType(req.getParameter("type"));
+            dto.setVideoUrl(req.getParameter("videoUrl"));
+            try {
+                dto.setQuizId(UUID.fromString(req.getParameter("quizId")));
+            } catch (IllegalArgumentException | NullPointerException ignored) { }
             dto.setDurationMinutes(durationMinutes);
             dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
             Map<String, String> errors = lessonService.validateLesson(expertId, dto);
@@ -236,6 +248,7 @@ public class LessonServlet extends HttpServlet {
                         UUID.fromString(courseIdStr));
                 req.setAttribute("course", course);
                 req.setAttribute("modules", course == null ? List.of() : course.getModules());
+                loadQuizOptions(req, expertId, course == null ? null : course.getId());
                 req.setAttribute("lesson", dto);
                 req.setAttribute("fieldErrors", errors);
                 if (errors.isEmpty()) {

@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="lessonHtml" uri="/WEB-INF/lesson-html.tld" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
@@ -59,7 +60,15 @@
                         </form>
                     </c:if>
                 </div>
-                <details class="mt-4">
+                <p class="mt-3 text-sm text-text-secondary">Type: <c:out value="${les.type}" /></p>
+                <c:if test="${les.type eq 'video'}">
+                    <p class="mt-2 text-sm"><a href="${fn:escapeXml(les.videoUrl)}" target="_blank" rel="noopener noreferrer"
+                        class="text-brand-700 underline focus-visible:ring-2 focus-visible:ring-brand-700">View YouTube video</a></p>
+                </c:if>
+                <c:if test="${les.type eq 'quiz'}">
+                    <p class="mt-2 text-sm text-text-secondary">Linked quiz: <c:out value="${les.quizTitle}" />. Completion requires a passing result.</p>
+                </c:if>
+                <details class="mt-4" ${les.type eq 'quiz' ? 'hidden' : ''}>
                     <summary class="cursor-pointer text-sm font-semibold text-brand-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">Content</summary>
                     <div class="lesson-content mt-3 break-words text-sm text-text-primary">${lessonHtml:sanitize(les.content)}</div>
                 </details>

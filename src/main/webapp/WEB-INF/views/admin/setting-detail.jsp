@@ -48,9 +48,9 @@
             <!-- Form -->
             <form action="${pageContext.request.contextPath}/admin/setting-detail" method="post" class="space-y-6">
                 <input type="hidden" name="action" value="save">
+                <input type="hidden" name="sortOrder" value="${not empty setting ? setting.sortOrder : 1}">
                 <c:if test="${isEdit}">
                     <input type="hidden" name="id" value="${setting.id}">
-                    <input type="hidden" name="code" value="${fn:escapeXml(setting.code)}">
                 </c:if>
 
                 <!-- 2-Column Form Fields -->
@@ -93,18 +93,18 @@
                         </div>
                     </div>
 
-                    <!-- Display Order -->
+                    <!-- Value / Setting Code -->
                     <div>
-                        <label for="displayOrder" class="block text-sm font-semibold text-slate-600 mb-2">
-                            Display Order
+                        <label for="settingCode" class="block text-sm font-semibold text-slate-600 mb-2">
+                            Value / Setting Code <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number"
-                               id="displayOrder"
-                               name="sortOrder"
-                               min="0"
+                        <input type="text"
+                               id="settingCode"
+                               name="code"
                                required
-                               value="${not empty setting ? setting.sortOrder : 1}"
-                               class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition">
+                               value="${fn:escapeXml(setting.code)}"
+                               placeholder="e.g. ROLE_ADMIN, CAT_WEB, PAY_VNPAY..."
+                               class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition">
                     </div>
 
                     <!-- Status (Radio Buttons) -->
@@ -148,7 +148,7 @@
 
                 </div>
 
-                <!-- Description / Value Configuration -->
+                <!-- Description (Mô tả chi tiết) -->
                 <div>
                     <label for="settingDescription" class="block text-sm font-semibold text-slate-600 mb-2">
                         Description / Value Configuration
@@ -156,7 +156,7 @@
                     <textarea id="settingDescription"
                               name="description"
                               rows="4"
-                              placeholder="Enter detailed configuration or value description..."
+                              placeholder="Nhập mô tả giải thích ý nghĩa hoặc ghi chú chi tiết về cấu hình..."
                               class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition"><c:out value="${setting.description}" /></textarea>
                 </div>
 

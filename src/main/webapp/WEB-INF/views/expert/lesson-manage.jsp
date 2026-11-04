@@ -35,6 +35,73 @@
                             </c:if>
                             </div>
                         </div>
+            <div class="mb-5 flex flex-wrap items-center gap-2 text-sm text-text-primary">
+                <details id="lessonCoursePicker" class="group relative w-full min-w-0 sm:w-72">
+                    <summary class="flex min-h-9 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-border-default bg-surface-card px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-brand-700 [&::-webkit-details-marker]:hidden">
+                        <span class="truncate"><c:out value="${course.title}" default="No assigned courses" /></span>
+                        <i class="fa-solid fa-chevron-down shrink-0 text-xs text-text-secondary group-open:rotate-180" aria-hidden="true"></i>
+                    </summary>
+                    <div class="absolute inset-x-0 top-full z-20 mt-1 rounded-lg border border-border-default bg-surface-card shadow-lg">
+                        <ul id="lessonCourseOptions" aria-label="Assigned courses" class="max-h-60 overflow-y-auto">
+                            <c:forEach items="${assignedCourses}" var="assignedCourse">
+                                <c:url var="assignedCourseUrl" value="/expert/lessons">
+                                    <c:param name="courseId" value="${assignedCourse.id}" />
+                                </c:url>
+                                <li data-course-option>
+                                    <a href="${fn:escapeXml(assignedCourseUrl)}" title="${fn:escapeXml(assignedCourse.title)}"
+                                       aria-current="${assignedCourse.id eq course.id ? 'page' : 'false'}"
+                                       class="flex h-12 items-center px-3 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700 ${assignedCourse.id eq course.id ? 'bg-brand-50 font-semibold text-brand-900' : ''}">
+                                        <span class="truncate"><c:out value="${assignedCourse.title}" /></span>
+                                    </a>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                        <p id="courseSearchStatus" role="status" class="px-3 py-2 text-xs text-text-secondary" ${not empty assignedCourses ? 'hidden' : ''}>No matching courses.</p>
+                    </div>
+                </details>
+                <div class="w-full sm:w-44">
+                    <label for="courseNameSearch" class="sr-only">Course name</label>
+                    <input type="search" id="courseNameSearch" aria-controls="lessonCourseOptions"
+                           placeholder="Search by course name..."
+                           class="min-h-9 w-full rounded-lg border border-border-default bg-surface-card px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                </div>
+            </div>
+            <script>
+                (() => {
+                    const search = document.getElementById('courseNameSearch');
+                    const picker = document.getElementById('lessonCoursePicker');
+                    const options = document.getElementById('lessonCourseOptions');
+                    const courses = Array.from(options.querySelectorAll('[data-course-option]'));
+                    const status = document.getElementById('courseSearchStatus');
+                    const normalize = text => text.trim().toLocaleLowerCase('vi')
+                        .normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd');
+                    const showResults = () => {
+                        const keyword = normalize(search.value);
+                        for (const course of courses) {
+                            course.hidden = !normalize(course.textContent).includes(keyword);
+                        }
+                        status.hidden = courses.some(course => !course.hidden);
+                        options.scrollTop = 0;
+                        picker.open = true;
+                    };
+                    search.addEventListener('input', showResults);
+                    search.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' && !event.isComposing) {
+                            showResults();
+                            options.querySelector('li:not([hidden]) a')?.focus();
+                        }
+                    });
+                    document.addEventListener('click', event => {
+                        if (!picker.contains(event.target) && event.target !== search) picker.open = false;
+                    });
+                    document.addEventListener('keydown', event => {
+                        if (event.key === 'Escape' && picker.open) {
+                            picker.open = false;
+                            if (picker.contains(document.activeElement)) picker.querySelector('summary').focus();
+                        }
+                    });
+                })();
+            </script>
             <c:if test="${canCreateModule}">
                 <dialog id="createModuleDialog" aria-labelledby="createModuleHeading"
                         class="fixed inset-0 m-auto w-11/12 max-w-sm rounded-xl border border-border-default bg-surface-card p-6 text-text-primary shadow-xl backdrop:bg-slate-900/50">
@@ -93,8 +160,6 @@
             </c:if>
             <form class="mb-5 flex flex-wrap items-end justify-between gap-4 text-sm text-text-primary" id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}/expert/lessons">
                 <input type="hidden" name="courseId" value="${course.id}">
-                <input type="hidden" name="courseSearch" value="${fn:escapeXml(courseSearch)}">
-                <input type="hidden" name="coursePage" value="${coursePage}">
                 <div class="flex w-full items-end gap-2 sm:w-auto">
                     <div class="min-w-0 flex-1 sm:w-56">
                         <label for="lessonSearch" class="font-medium">Lesson Title</label>

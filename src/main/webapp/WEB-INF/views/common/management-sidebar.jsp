@@ -99,7 +99,7 @@
                 </div>
             </c:if>
 
-            <c:if test="${isExpert and (param.activeSection eq 'lessons' or param.activeSection eq 'questions' or param.activeSection eq 'quiz' or param.activeSection eq 'quizzes') and courseTotal ne null}">
+            <c:if test="${isExpert and (param.activeSection eq 'questions' or param.activeSection eq 'quiz' or param.activeSection eq 'quizzes') and courseTotal ne null}">
                 <jsp:include page="/WEB-INF/views/expert/assigned-course-sidebar.jsp" />
             </c:if>
         </nav>

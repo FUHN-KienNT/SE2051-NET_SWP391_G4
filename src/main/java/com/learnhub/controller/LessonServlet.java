@@ -106,6 +106,13 @@ public class LessonServlet extends HttpServlet {
             return;
         }
         Course selectedCourse = (Course) req.getAttribute("course");
+        int assignedCourseCount = courseService.countAssignedCourses(expertId);
+        List<Course> assignedCourses = assignedCourseCount == 0 ? List.of()
+                : courseService.getAssignedCourses(expertId, 1, assignedCourseCount);
+        if ((courseIdStr == null || courseIdStr.isBlank()) && !assignedCourses.isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + assignedCourses.get(0).getId());
+            return;
+        }
         req.setAttribute("canCreateModule", selectedCourse != null);
         LessonService.LessonListData lessonList;
         String lessonSearch = req.getParameter("lessonSearch");
@@ -134,18 +141,7 @@ public class LessonServlet extends HttpServlet {
         req.setAttribute("lessonDirection", lessonList.direction());
         req.setAttribute("lessonStatus", lessonList.status());
         req.setAttribute("lessonModuleId", lessonList.moduleId());
-        int coursePage = 1;
-        try {
-            coursePage = Integer.parseInt(req.getParameter("coursePage"));
-        } catch (NumberFormatException ignored) {
-        }
-        var navigation = courseService.getAssignedCourseNavigation(
-                expertId, req.getParameter("courseSearch"), coursePage);
-        req.setAttribute("assignedCourses", navigation.courses());
-        req.setAttribute("courseSearch", navigation.search());
-        req.setAttribute("coursePage", navigation.page());
-        req.setAttribute("courseTotalPages", navigation.totalPages());
-        req.setAttribute("courseTotal", navigation.totalCourses());
+        req.setAttribute("assignedCourses", assignedCourses);
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
 

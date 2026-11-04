@@ -65,6 +65,10 @@ public class QuizServlet extends HttpServlet {
                             && user.getId().equals(attempt.getUserId())
                             && attempt.getScore() == null) {
                         Quiz quiz = quizDAO.findById(attempt.getQuizId());
+                        if (!quizService.isModuleVisible(quiz)) {
+                            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                            return;
+                        }
                         List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
 
                         req.setAttribute("quiz", quiz);
@@ -102,6 +106,10 @@ public class QuizServlet extends HttpServlet {
                 if (quiz != null && quiz.isPublished()) {
                     // Khóa học của quiz suy ra từ module (không phụ thuộc courseId trên URL)
                     Module module = moduleDAO.findById(quiz.getModuleId());
+                    if (module != null && module.isHidden()) {
+                        resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
                     Course course = module != null
                             ? courseService.getPublishedCourseCurriculum(module.getCourseId()) : null;
                     Registration registration = course != null
@@ -208,7 +216,8 @@ public class QuizServlet extends HttpServlet {
                 UUID attemptId = UUID.fromString(attemptIdStr);
                 QuizSubmission ownedAttempt = quizService.getAttempt(attemptId);
                 if (ownedAttempt == null || !student.getId().equals(ownedAttempt.getUserId())
-                        || ownedAttempt.getScore() != null) {
+                        || ownedAttempt.getScore() != null
+                        || !quizService.isModuleVisible(quizDAO.findById(ownedAttempt.getQuizId()))) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN); return;
                 }
                 Map<UUID, List<UUID>> selectedAnswers = new HashMap<>();

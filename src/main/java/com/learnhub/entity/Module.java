@@ -12,6 +12,7 @@ public class Module implements Serializable {
     private UUID id;
     private UUID courseId;
     private String title;
+    private boolean hidden;
     private String content;
     private int orderIndex;
     private Timestamp createdAt;
@@ -39,6 +40,9 @@ public class Module implements Serializable {
 
     public UUID getCourseId() { return courseId; }
     public void setCourseId(UUID courseId) { this.courseId = courseId; }
+
+    public boolean isHidden() { return hidden; }
+    public void setHidden(boolean hidden) { this.hidden = hidden; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

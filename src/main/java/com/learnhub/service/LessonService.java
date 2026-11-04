@@ -105,12 +105,30 @@ public class LessonService {
     }
 
     public record LessonListData(List<LessonListRow> rows, String sort,
-                                 String direction, String status, UUID moduleId) {}
+                                 String direction, String status, UUID moduleId) {
+        public Map<Module, List<Lesson>> lessonsByModule() {
+            Map<Module, List<Lesson>> groups = new LinkedHashMap<>();
+            rows.stream().sorted(Comparator
+                    .comparingInt((LessonListRow row) -> row.module().getOrderIndex())
+                    .thenComparing(row -> row.module().getId(), Comparator.nullsLast(Comparator.naturalOrder())))
+                    .forEach(row -> {
+                        List<Lesson> lessons = groups.computeIfAbsent(row.module(), module -> new ArrayList<>());
+                        if (row.lesson() != null) lessons.add(row.lesson());
+                    });
+            return groups;
+        }
+    }
 
     public LessonListData buildLessonList(List<Module> modules, String sort,
                                           String direction, String status, UUID moduleId) {
+        return buildLessonList(modules, sort, direction, status, moduleId, "");
+    }
+
+    public LessonListData buildLessonList(List<Module> modules, String sort,
+                                          String direction, String status, UUID moduleId, String search) {
+        String keyword = search == null ? "" : search.strip().toLowerCase(Locale.ROOT);
         sort = "duration".equals(sort) ? "duration" : "module";
-        direction = "desc".equals(direction) ? "desc" : "asc";
+        direction = "duration".equals(sort) && "desc".equals(direction) ? "desc" : "asc";
         status = status == null ? "" : status.strip().toLowerCase(Locale.ROOT);
         if (!Set.of("draft", "decline", "published", "archived").contains(status)) status = "";
         if (moduleId != null && (modules == null || modules.stream()
@@ -123,10 +141,12 @@ public class LessonService {
                 if (moduleId != null && !moduleId.equals(module.getId())) continue;
                 List<Lesson> lessons = module.getLessons();
                 if (lessons == null || lessons.isEmpty()) {
-                    if (status.isEmpty()) rows.add(new LessonListRow(module, null));
+                    if (status.isEmpty() && keyword.isEmpty()) rows.add(new LessonListRow(module, null));
                 } else {
                     for (Lesson lesson : lessons) {
-                        if (status.isEmpty() || status.equals(lesson.getPublicationStatus())) {
+                        if ((status.isEmpty() || status.equals(lesson.getPublicationStatus()))
+                                && (keyword.isEmpty() || (lesson.getTitle() != null
+                                && lesson.getTitle().toLowerCase(Locale.ROOT).contains(keyword)))) {
                             rows.add(new LessonListRow(module, lesson));
                         }
                     }
@@ -148,8 +168,7 @@ public class LessonService {
                             ? null : row.lesson().getDurationMinutes(), Comparator.nullsLast(durationOrder))
                     .thenComparing(moduleOrder).thenComparing(lessonOrder);
         } else {
-            order = ("desc".equals(direction) ? moduleOrder.reversed() : moduleOrder)
-                    .thenComparing(lessonOrder);
+            order = moduleOrder.thenComparing(lessonOrder);
         }
         rows.sort(order);
         return new LessonListData(List.copyOf(rows), sort, direction, status, moduleId);

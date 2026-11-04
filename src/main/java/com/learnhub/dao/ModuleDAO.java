@@ -23,7 +23,7 @@ public class ModuleDAO {
             return list;
         }
 
-        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at " +
+        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
                      "FROM module WHERE course_id = ? ORDER BY order_index ASC";
 
         try (Connection conn = DbConnection.getConnection();
@@ -45,7 +45,7 @@ public class ModuleDAO {
             return null;
         }
 
-        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at " +
+        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
                      "FROM module WHERE id = ?";
 
         try (Connection conn = DbConnection.getConnection();
@@ -81,6 +81,44 @@ public class ModuleDAO {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in ModuleDAO.insert", e);
             return false;
+        }
+    }
+
+    public boolean appendForExpert(UUID courseId, UUID expertId, String title) throws SQLException {
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement lock = conn.prepareStatement(
+                        "SELECT id FROM course WHERE id = ? AND expert_id = ? FOR UPDATE")) {
+                    lock.setObject(1, courseId);
+                    lock.setObject(2, expertId);
+                    try (ResultSet result = lock.executeQuery()) {
+                        if (!result.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+                try (PreparedStatement insert = conn.prepareStatement("""
+                        INSERT INTO module (course_id, title, order_index)
+                        SELECT ?, ?, COALESCE(MAX(order_index), 0) + 1
+                        FROM module WHERE course_id = ?
+                        """)) {
+                    insert.setObject(1, courseId);
+                    insert.setString(2, title);
+                    insert.setObject(3, courseId);
+                    insert.executeUpdate();
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    e.addSuppressed(rollbackError);
+                }
+                throw e;
+            }
         }
     }
 
@@ -163,7 +201,7 @@ public class ModuleDAO {
     public List<Module> findByExpertId(UUID expertId) {
         List<Module> list = new ArrayList<>();
         if (expertId == null) return list;
-        String sql = "SELECT m.id,m.course_id,m.title,m.content,m.order_index,m.created_at,m.updated_at,c.title AS course_title " +
+        String sql = "SELECT m.id,m.course_id,m.title,m.content,m.order_index,m.created_at,m.updated_at,m.hidden,c.title AS course_title " +
                 "FROM module m JOIN course c ON m.course_id=c.id " +
                 "WHERE c.expert_id=? ORDER BY c.title ASC,m.order_index ASC";
         try (Connection conn = DbConnection.getConnection();
@@ -182,11 +220,30 @@ public class ModuleDAO {
         return list;
     }
 
+    public boolean updateForExpert(UUID courseId, UUID moduleId, UUID expertId, String title, Boolean hidden) throws SQLException {
+        String sql = """
+                UPDATE module m SET title = COALESCE(?, m.title),
+                    hidden = COALESCE(?, m.hidden), updated_at = NOW()
+                FROM course c WHERE m.course_id = c.id
+                    AND c.id = ? AND m.id = ? AND c.expert_id = ?
+                """;
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, title);
+            ps.setObject(2, hidden, Types.BOOLEAN);
+            ps.setObject(3, courseId);
+            ps.setObject(4, moduleId);
+            ps.setObject(5, expertId);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
     private Module mapResultSetToModule(ResultSet rs) throws SQLException {
         Module m = new Module();
         m.setId((UUID) rs.getObject("id"));
         m.setCourseId((UUID) rs.getObject("course_id"));
         m.setTitle(rs.getString("title"));
+        m.setHidden(rs.getBoolean("hidden"));
         m.setContent(rs.getString("content"));
         m.setOrderIndex(rs.getInt("order_index"));
         m.setCreatedAt(rs.getTimestamp("created_at"));

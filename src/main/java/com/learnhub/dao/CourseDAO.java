@@ -163,7 +163,7 @@ public class CourseDAO {
         Course course = findById(courseId);
         if (course == null) return null;
 
-        String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at " +
+        String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
                            "FROM module WHERE course_id = ? ORDER BY order_index ASC";
         String lessonSql = "SELECT id, module_id, title, content, order_index, duration_minutes, status, lesson_type, video_url, quiz_id, created_at, updated_at " +
                            "FROM lesson WHERE module_id = ? ORDER BY order_index ASC";
@@ -178,6 +178,7 @@ public class CourseDAO {
                     m.setId((UUID) mRs.getObject("id"));
                     m.setCourseId((UUID) mRs.getObject("course_id"));
                     m.setTitle(mRs.getString("title"));
+                    m.setHidden(mRs.getBoolean("hidden"));
                     m.setContent(mRs.getString("content"));
                     m.setOrderIndex(mRs.getInt("order_index"));
                     m.setCreatedAt(mRs.getTimestamp("created_at"));

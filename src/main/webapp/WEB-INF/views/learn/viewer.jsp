@@ -64,7 +64,6 @@
                                     class="w-full h-full border-0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                                     referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
                         </div>
-                        <p class="text-sm text-text-secondary">Video tự phát ở chế độ tắt tiếng. Bạn có thể bật âm thanh trong trình phát.</p>
                     </c:if>
                     <c:if test="${lesson.type ne 'video' and not empty lesson.materialUrl}">
                         <div class="aspect-video overflow-hidden rounded-xl border border-border-default bg-surface">

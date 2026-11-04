@@ -130,7 +130,6 @@
                             <option value="${q.id}" data-module-id="${q.moduleId}" ${lesson.quizId eq q.id ? 'selected' : ''}><c:out value="${q.title}" /></option>
                         </c:forEach>
                     </select>
-                    <p class="mt-2 text-sm text-text-secondary">Select a published quiz from this module. Students must pass it to complete this lesson.</p>
                 </div>
 
                 <div id="contentFields">

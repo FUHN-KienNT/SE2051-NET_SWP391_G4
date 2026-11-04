@@ -143,7 +143,10 @@ public class AdminSettingServlet extends HttpServlet {
 // lay cac setting type cho vao dropdown
     private List<String> getSettingTypes(Setting setting) {
         List<String> types = new java.util.ArrayList<>(settingDAO.findAllTypes());
-        if (setting != null && setting.getType() != null && !setting.getType().trim().isEmpty()) {
+        if (setting == null) {
+            // Không cho phép thêm vai trò mới
+            types.removeIf(t -> t != null && "role".equalsIgnoreCase(t.trim()));
+        } else if (setting.getType() != null && !setting.getType().trim().isEmpty()) {
             String currentType = setting.getType().trim();
             boolean exists = false;
             for (String t : types) {
@@ -249,6 +252,26 @@ public class AdminSettingServlet extends HttpServlet {
                 existing = settingDAO.findById(currentId);
             } catch (IllegalArgumentException ignored) {
             }
+        }
+
+        // Không cho phép tạo vai trò (Role) mới
+        if (!isUpdate && "role".equalsIgnoreCase(type != null ? type.trim() : "")) {
+            req.setAttribute("errorMessage", "Không được phép tạo vai trò (Role) mới trong hệ thống.");
+            req.setAttribute("setting", null);
+            req.setAttribute("types", getSettingTypes(null));
+            req.setAttribute("isProtected", false);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+            return;
+        }
+
+        // Không cho phép sửa đổi vai trò (Role) cốt lõi hiện có
+        if (isUpdate && existing != null && isRoleSetting(existing)) {
+            req.setAttribute("errorMessage", "Vai trò hệ thống được bảo vệ: chỉ xem chi tiết, không được phép chỉnh sửa.");
+            req.setAttribute("setting", existing);
+            req.setAttribute("types", getSettingTypes(existing));
+            req.setAttribute("isProtected", true);
+            req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
+            return;
         }
 
         boolean isRole = "role".equalsIgnoreCase(type) || (existing != null && isRoleSetting(existing));
@@ -411,11 +434,11 @@ public class AdminSettingServlet extends HttpServlet {
                 }
             }
             boolean success = settingDAO.updateSortOrders(orderMap);
-            resp.getWriter().write("{"success":" + success + "}");
+            resp.getWriter().write("{\"success\":" + success + "}");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error reordering settings: " + e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{"success":false,"error":"" + escapeJson(e.getMessage()) + ""}");
+            resp.getWriter().write("{\"success\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
         }
     }
 

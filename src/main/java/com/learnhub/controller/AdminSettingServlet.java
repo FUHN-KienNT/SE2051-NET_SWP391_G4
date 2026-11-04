@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  *
  * URLs: /admin/settings, /admin/setting-detail, /admin/setting-status
  */
-@WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-detail", "/admin/setting-status"})
+@WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-detail", "/admin/setting-status", "/admin/setting-reorder"})
 public class AdminSettingServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AdminSettingServlet.class.getName());
@@ -57,7 +57,7 @@ public class AdminSettingServlet extends HttpServlet {
             handleShowDetail(req, resp);
             return;
         }
-
+// 42-57 kiem tra quyen current role
         String action = req.getParameter("action");
         if ("get-json".equalsIgnoreCase(action)) {
             handleGetJson(req, resp);
@@ -140,7 +140,7 @@ public class AdminSettingServlet extends HttpServlet {
                 : "Add New Setting – LearnHub Admin");
         req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
     }
-
+// lay cac setting type cho vao dropdown
     private List<String> getSettingTypes(Setting setting) {
         List<String> types = new java.util.ArrayList<>(settingDAO.findAllTypes());
         if (setting != null && setting.getType() != null && !setting.getType().trim().isEmpty()) {
@@ -177,7 +177,9 @@ public class AdminSettingServlet extends HttpServlet {
         String path = req.getServletPath();
         String action = req.getParameter("action");
 
-        if ("/admin/setting-status".equals(path) || "status".equalsIgnoreCase(action)) {
+        if ("/admin/setting-reorder".equals(path) || "reorder".equalsIgnoreCase(action)) {
+            handleReorderSettings(req, resp);
+        } else if ("/admin/setting-status".equals(path) || "status".equalsIgnoreCase(action)) {
             handleChangeStatus(req, resp, currentUser);
         } else if ("/admin/setting-detail".equals(path) || "save".equalsIgnoreCase(action)) {
             handleSaveSetting(req, resp, currentUser);
@@ -386,4 +388,35 @@ public class AdminSettingServlet extends HttpServlet {
                 || "Administrator".equalsIgnoreCase(rName)
                 || "Admin".equalsIgnoreCase(rName);
     }
+
+    private void handleReorderSettings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        try {
+            StringBuilder sb = new StringBuilder();
+            try (java.io.BufferedReader reader = req.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            String body = sb.toString().trim();
+            com.google.gson.JsonArray array = com.google.gson.JsonParser.parseString(body).getAsJsonArray();
+            java.util.Map<UUID, Integer> orderMap = new java.util.LinkedHashMap<>();
+            for (com.google.gson.JsonElement el : array) {
+                com.google.gson.JsonObject obj = el.getAsJsonObject();
+                if (obj.has("id") && obj.has("sortOrder")) {
+                    UUID id = UUID.fromString(obj.get("id").getAsString().trim());
+                    int sortOrder = obj.get("sortOrder").getAsInt();
+                    orderMap.put(id, sortOrder);
+                }
+            }
+            boolean success = settingDAO.updateSortOrders(orderMap);
+            resp.getWriter().write("{"success":" + success + "}");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error reordering settings: " + e.getMessage(), e);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write("{"success":false,"error":"" + escapeJson(e.getMessage()) + ""}");
+        }
+    }
+
 }

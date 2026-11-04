@@ -267,6 +267,33 @@ public class SettingDAO {
         }
     }
 
+    public boolean updateSortOrders(java.util.Map<UUID, Integer> orderMap) {
+        if (orderMap == null || orderMap.isEmpty()) {
+            return true;
+        }
+        String sql = "UPDATE setting SET sort_order = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (java.util.Map.Entry<UUID, Integer> entry : orderMap.entrySet()) {
+                    ps.setInt(1, entry.getValue());
+                    ps.setObject(2, entry.getKey());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+                return true;
+            } catch (SQLException ex) {
+                conn.rollback();
+                LOGGER.log(Level.SEVERE, "Rollback transaction error in updateSortOrders: " + ex.getMessage(), ex);
+                return false;
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Connection error in SettingDAO.updateSortOrders: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
     public boolean insert(Setting setting) {
         String sql = "INSERT INTO setting (id, type, code, name, description, status, sort_order, created_at, updated_at) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?, NOW(), NOW())";

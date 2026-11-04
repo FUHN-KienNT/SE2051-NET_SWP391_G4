@@ -5,6 +5,14 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
+
+<style>
+    .drag-handle { cursor: grab; }
+    .drag-handle:active { cursor: grabbing; }
+    tr.setting-dragging { opacity: 0.45; background-color: #f0fdf4 !important; }
+    tr.setting-drag-over { border-top: 3px solid #047857 !important; }
+</style>
+
 <div class="min-h-[calc(100vh-64px)] bg-[#f8fafc]">
     <main class="flex-grow p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
 
@@ -98,6 +106,16 @@
                 </form>
             </div>
 
+            
+            <!-- Reorder Success Toast -->
+            <div id="reorderToast" class="hidden mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-xs transition">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                    <span>Thứ tự hiển thị đã được cập nhật và lưu thành công!</span>
+                </div>
+                <button type="button" onclick="this.parentElement.classList.add('hidden')" class="text-emerald-500 hover:text-emerald-800"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
             <!-- Settings Table -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
                 <div class="overflow-x-auto">
@@ -118,7 +136,7 @@
                             <c:choose>
                                 <c:when test="${empty settings}">
                                     <tr>
-                                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
+                                        <td colspan="8" class="px-6 py-16 text-center text-slate-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
                                                 <p class="text-base font-semibold text-slate-700">No settings found</p>

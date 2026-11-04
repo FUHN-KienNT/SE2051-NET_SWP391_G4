@@ -74,7 +74,8 @@ public class AuthorizationFilter implements Filter {
                     || isUnder(path, "/admin/user-list");
             boolean isSettingsManagement = isUnder(path, "/admin/settings")
                     || isUnder(path, "/admin/setting-detail")
-                    || isUnder(path, "/admin/setting-status");
+                    || isUnder(path, "/admin/setting-status")
+                    || isUnder(path, "/admin/setting-reorder");
                     
             if (isUserManagement || isSettingsManagement) {
                 // User and system settings management: Allowed ONLY for Admin

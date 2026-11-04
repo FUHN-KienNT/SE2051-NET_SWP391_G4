@@ -5,12 +5,19 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-
 <style>
     .drag-handle { cursor: grab; }
     .drag-handle:active { cursor: grabbing; }
-    tr.setting-dragging { opacity: 0.45; background-color: #f0fdf4 !important; }
-    tr.setting-drag-over { border-top: 3px solid #047857 !important; }
+    tr.setting-row.setting-dragging {
+        opacity: 0.45;
+        background-color: #ecfdf5 !important;
+    }
+    tr.setting-row.setting-drag-over-top > td {
+        border-top: 2px solid #047857 !important;
+    }
+    tr.setting-row.setting-drag-over-bottom > td {
+        border-bottom: 2px solid #047857 !important;
+    }
 </style>
 
 <div class="min-h-[calc(100vh-64px)] bg-[#f8fafc]">
@@ -49,6 +56,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">System Settings</h1>
+                    <p class="text-xs text-slate-500 mt-1">Kéo thả các hàng bằng biểu tượng <i class="fa-solid fa-grip-vertical text-slate-400"></i> để thay đổi thứ tự hiển thị trực quan.</p>
                 </div>
                 <div>
                     <a href="${pageContext.request.contextPath}/admin/setting-detail" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-[8px] text-sm transition shadow-sm cursor-pointer">
@@ -106,7 +114,6 @@
                 </form>
             </div>
 
-            
             <!-- Reorder Success Toast -->
             <div id="reorderToast" class="hidden mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-xs transition">
                 <div class="flex items-center space-x-2">
@@ -122,7 +129,7 @@
                     <table class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-white border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider w-16">#</th>
+                                <th class="px-4 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider w-16 text-center">#</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">TÊN CẤU HÌNH (NAME)</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">LOẠI (TYPE)</th>
                                 <th class="px-6 py-4 font-bold text-[11px] text-slate-600 uppercase tracking-wider">MÔ TẢ</th>
@@ -132,11 +139,11 @@
                             </tr>
                         </thead>
 
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody id="settingsTableBody" class="divide-y divide-slate-100">
                             <c:choose>
                                 <c:when test="${empty settings}">
                                     <tr>
-                                        <td colspan="8" class="px-6 py-16 text-center text-slate-400">
+                                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <i class="fa-regular fa-folder-open text-4xl mb-3 text-slate-300"></i>
                                                 <p class="text-base font-semibold text-slate-700">No settings found</p>
@@ -151,19 +158,28 @@
 
                                 <c:otherwise>
                                     <c:forEach var="s" items="${settings}" varStatus="loop">
-                                        <tr class="hover:bg-slate-50/50 transition group">
-                                            <td class="px-6 py-5 text-slate-500 font-medium">${loop.index + 1}</td>
+                                        <tr draggable="true"
+                                            data-id="${s.id}"
+                                            class="setting-row hover:bg-emerald-50/20 transition group select-none">
+                                            <!-- Drag Handle & Index -->
+                                            <td class="px-4 py-5 text-center">
+                                                <div class="inline-flex items-center gap-2 drag-handle cursor-grab active:cursor-grabbing text-slate-400 group-hover:text-slate-600 transition"
+                                                     title="Kéo thả để thay đổi thứ tự">
+                                                    <i class="fa-solid fa-grip-vertical text-slate-300 group-hover:text-[#047857] text-sm pointer-events-none"></i>
+                                                    <span class="row-index font-semibold text-xs text-slate-500">${(currentPage - 1) * pageSize + loop.index + 1}</span>
+                                                </div>
+                                            </td>
                                             
                                             <!-- Name and Code -->
                                             <td class="px-6 py-5">
-                                                <div class="font-bold text-[#111827] text-[15px]">${s.name}</div>
-                                                <div class="text-xs text-slate-400 mt-0.5">Code: ${s.code}</div>
+                                                <div class="font-bold text-[#111827] text-[15px]"><c:out value="${s.name}" /></div>
+                                                <div class="text-xs text-slate-400 mt-0.5">Code: <span class="font-mono"><c:out value="${s.code}" /></span></div>
                                             </td>
 
                                             <!-- Type -->
                                             <td class="px-6 py-5">
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#e8f5e9] text-[#2e7d32]">
-                                                    ${s.type}
+                                                    <c:out value="${s.type}" />
                                                 </span>
                                             </td>
 
@@ -180,7 +196,7 @@
                                             </td>
 
                                             <!-- Sort Order -->
-                                            <td class="px-6 py-5 text-center font-semibold text-slate-600">
+                                            <td class="px-6 py-5 text-center font-bold text-slate-700 sort-order-cell">
                                                 ${s.sortOrder}
                                             </td>
 
@@ -203,6 +219,7 @@
                                             <!-- Actions -->
                                             <td class="px-6 py-5 text-right space-x-2">
                                                 <a href="${pageContext.request.contextPath}/admin/setting-detail?id=${s.id}"
+                                                   draggable="false"
                                                    class="px-4 py-2 ${s.type eq 'role' ? 'bg-slate-700 hover:bg-slate-800' : 'bg-[#047857] hover:bg-[#065f46]'} text-white rounded-[8px] text-xs font-bold transition inline-flex items-center gap-2 shadow-sm"
                                                    title="${s.type eq 'role' ? 'View Role Details' : 'Manage Setting'}">
                                                     <i class="fa-solid ${s.type eq 'role' ? 'fa-eye' : 'fa-pen-to-square'}"></i>
@@ -218,13 +235,12 @@
                                                                 title="Vai trò hệ thống - Luôn Active, không thể tắt">
                                                             <span class="relative inline-flex items-center justify-center w-3.5 h-3.5">
                                                                 <i class="fa-solid fa-power-off text-slate-400 text-xs"></i>
-                                                                <!-- Đường gạch chéo đỏ xuyên qua icon -->
                                                                 <span class="absolute w-[140%] h-[1.5px] bg-rose-500 -rotate-45 transform origin-center pointer-events-none"></span>
                                                             </span>
                                                         </button>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline">
+                                                        <form action="${pageContext.request.contextPath}/admin/setting-status" method="post" class="inline" draggable="false">
                                                             <input type="hidden" name="id" value="${s.id}">
                                                             <input type="hidden" name="status" value="${!s.status}">
                                                             <c:choose>
@@ -308,5 +324,139 @@
 
         </main>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('settingsTableBody');
+    if (!tableBody) return;
+
+    let draggedRow = null;
+    let dragStartIndex = -1;
+
+    function getRows() {
+        return Array.from(tableBody.querySelectorAll('tr.setting-row'));
+    }
+
+    function initRow(row) {
+        row.addEventListener('dragstart', function(e) {
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('form')) {
+                e.preventDefault();
+                return;
+            }
+            draggedRow = this;
+            const rows = getRows();
+            dragStartIndex = rows.indexOf(this);
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-id') || '');
+            this.classList.add('setting-dragging');
+        });
+
+        row.addEventListener('dragend', function() {
+            this.classList.remove('setting-dragging');
+            getRows().forEach(r => {
+                r.classList.remove('setting-drag-over-top', 'setting-drag-over-bottom');
+            });
+
+            const rows = getRows();
+            const newIndex = rows.indexOf(this);
+            if (dragStartIndex !== -1 && newIndex !== -1 && newIndex !== dragStartIndex) {
+                onReorderSaved();
+            }
+            draggedRow = null;
+            dragStartIndex = -1;
+        });
+
+        row.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            if (!draggedRow || draggedRow === this) return;
+
+            const rect = this.getBoundingClientRect();
+            const relY = e.clientY - rect.top;
+            const isBottom = relY > rect.height / 2;
+
+            this.classList.toggle('setting-drag-over-top', !isBottom);
+            this.classList.toggle('setting-drag-over-bottom', isBottom);
+        });
+
+        row.addEventListener('dragleave', function() {
+            this.classList.remove('setting-drag-over-top', 'setting-drag-over-bottom');
+        });
+
+        row.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('setting-drag-over-top', 'setting-drag-over-bottom');
+
+            if (!draggedRow || draggedRow === this) return;
+
+            const rect = this.getBoundingClientRect();
+            const relY = e.clientY - rect.top;
+            const isBottom = relY > rect.height / 2;
+
+            if (isBottom) {
+                tableBody.insertBefore(draggedRow, this.nextSibling);
+            } else {
+                tableBody.insertBefore(draggedRow, this);
+            }
+        });
+    }
+
+    getRows().forEach(initRow);
+
+    function onReorderSaved() {
+        const rows = getRows();
+        const pageOffset = ${(currentPage - 1) * pageSize};
+        const orderPayload = [];
+
+        rows.forEach((row, idx) => {
+            const newOrder = pageOffset + idx + 1;
+            const indexSpan = row.querySelector('.row-index');
+            const sortOrderCell = row.querySelector('.sort-order-cell');
+
+            if (indexSpan) indexSpan.textContent = newOrder;
+            if (sortOrderCell) sortOrderCell.textContent = newOrder;
+
+            orderPayload.push({
+                id: row.getAttribute('data-id'),
+                sortOrder: newOrder
+            });
+        });
+
+        if (orderPayload.length === 0) return;
+
+        fetch('${pageContext.request.contextPath}/admin/setting-reorder?action=reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(orderPayload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP status ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data && data.success) {
+                const toast = document.getElementById('reorderToast');
+                if (toast) {
+                    toast.classList.remove('hidden');
+                    if (window._reorderToastTimeout) clearTimeout(window._reorderToastTimeout);
+                    window._reorderToastTimeout = setTimeout(() => {
+                        toast.classList.add('hidden');
+                    }, 3500);
+                }
+            } else {
+                console.error('Server error reordering:', data ? data.error : 'Unknown error');
+            }
+        })
+        .catch(err => {
+            console.error('Error saving reorder:', err);
+        });
+    }
+});
+</script>
 
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

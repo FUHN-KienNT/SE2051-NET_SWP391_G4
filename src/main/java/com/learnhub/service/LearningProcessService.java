@@ -265,7 +265,8 @@ public class LearningProcessService {
                 learningProcessDAO.completeLesson(conn, registrationId, lessonId);
                 var counts = learningProcessDAO.readProgressCounts(conn, registrationId);
                 int percent = calculateProgressPercent(counts.completed(), counts.total());
-                registrationDAO.updateProgressPercent(conn, registrationId, percent);
+                boolean completed = counts.total() > 0 && counts.completed() == counts.total();
+                registrationDAO.updateLearningProgress(conn, registrationId, percent, completed);
                 conn.commit();
             } catch (SQLException | RuntimeException e) {
                 try {

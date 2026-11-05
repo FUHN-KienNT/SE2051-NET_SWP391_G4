@@ -227,14 +227,24 @@ public class ModuleDAO {
                 FROM course c WHERE m.course_id = c.id
                     AND c.id = ? AND m.id = ? AND c.expert_id = ?
                 """;
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, title);
-            ps.setObject(2, hidden, Types.BOOLEAN);
-            ps.setObject(3, courseId);
-            ps.setObject(4, moduleId);
-            ps.setObject(5, expertId);
-            return ps.executeUpdate() == 1;
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, title);
+                ps.setObject(2, hidden, Types.BOOLEAN);
+                ps.setObject(3, courseId);
+                ps.setObject(4, moduleId);
+                ps.setObject(5, expertId);
+                boolean changed = ps.executeUpdate() == 1;
+                if (changed && hidden != null) {
+                    new RegistrationDAO().refreshCourseLearningProgress(conn, courseId);
+                }
+                conn.commit();
+                return changed;
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackError) { e.addSuppressed(rollbackError); }
+                throw e;
+            }
         }
     }
 

@@ -143,6 +143,9 @@ public class LessonDAO {
                 savedIds.remove(lesson.getId());
                 savedIds.add(lesson.getOrderIndex() - 1, lesson.getId());
                 writeLessonOrder(conn, lesson.getModuleId(), savedIds);
+                if ("published".equals(lesson.getPublicationStatus())) {
+                    refreshProgressForModules(conn, lesson.getModuleId(), lesson.getModuleId());
+                }
                 conn.commit();
                 return true;
             } catch (SQLException e) {
@@ -206,6 +209,7 @@ public class LessonDAO {
                         ps.executeUpdate();
                     }
                 }
+                refreshProgressForModules(conn, oldModule, newModule);
                 conn.commit();
                 return true;
             } catch (SQLException | RuntimeException e) {
@@ -215,6 +219,22 @@ public class LessonDAO {
         } catch (SQLException | RuntimeException e) {
             LOGGER.log(Level.SEVERE, "Cannot update and reorder lesson", e);
             return false;
+        }
+    }
+
+    private void refreshProgressForModules(Connection conn, UUID firstModule, UUID secondModule) throws SQLException {
+        List<UUID> courseIds = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT DISTINCT course_id FROM module WHERE id IN (?, ?) ORDER BY course_id")) {
+            ps.setObject(1, firstModule);
+            ps.setObject(2, secondModule);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) courseIds.add(rs.getObject("course_id", UUID.class));
+            }
+        }
+        RegistrationDAO registrations = new RegistrationDAO();
+        for (UUID courseId : courseIds) {
+            registrations.refreshCourseLearningProgress(conn, courseId);
         }
     }
 
@@ -246,15 +266,25 @@ public class LessonDAO {
                 + "WHERE id=? AND status=? AND updated_at=? "
                 + "AND module_id IN (SELECT m.id FROM module m JOIN course c ON c.id=m.course_id "
                 + "WHERE c.id=? AND c.expert_id=?)";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, targetStatus);
-            ps.setObject(2, lessonId);
-            ps.setString(3, expectedStatus);
-            ps.setTimestamp(4, expectedUpdatedAt);
-            ps.setObject(5, courseId);
-            ps.setObject(6, expertId);
-            return ps.executeUpdate() == 1;
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, targetStatus);
+                ps.setObject(2, lessonId);
+                ps.setString(3, expectedStatus);
+                ps.setTimestamp(4, expectedUpdatedAt);
+                ps.setObject(5, courseId);
+                ps.setObject(6, expertId);
+                boolean changed = ps.executeUpdate() == 1;
+                if (changed) {
+                    new RegistrationDAO().refreshCourseLearningProgress(conn, courseId);
+                }
+                conn.commit();
+                return changed;
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackError) { e.addSuppressed(rollbackError); }
+                throw e;
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("Cannot change lesson availability.", e);
         }
@@ -277,13 +307,23 @@ public class LessonDAO {
         String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
                 + "WHERE id=? AND status='draft' AND updated_at=? "
                 + "AND module_id IN (SELECT id FROM module WHERE course_id=?)";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setObject(2, lessonId);
-            ps.setTimestamp(3, expectedUpdatedAt);
-            ps.setObject(4, courseId);
-            return ps.executeUpdate() == 1;
+        try (Connection conn = DbConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, status);
+                ps.setObject(2, lessonId);
+                ps.setTimestamp(3, expectedUpdatedAt);
+                ps.setObject(4, courseId);
+                boolean changed = ps.executeUpdate() == 1;
+                if (changed && "published".equals(status)) {
+                    new RegistrationDAO().refreshCourseLearningProgress(conn, courseId);
+                }
+                conn.commit();
+                return changed;
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackError) { e.addSuppressed(rollbackError); }
+                throw e;
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("Cannot save lesson review.", e);
         }

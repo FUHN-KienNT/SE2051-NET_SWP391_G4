@@ -271,13 +271,54 @@ public class RegistrationDAO {
             }
         }
     }
-    public void updateProgressPercent(Connection conn, UUID registrationId, int percent)
+    public void updateLearningProgress(Connection conn, UUID registrationId, int percent, boolean completed)
             throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
-                "UPDATE registration SET progress_percent = ? WHERE id = ?")) {
+                """
+                UPDATE registration SET progress_percent = ?,
+                    status = CASE WHEN ? THEN 'completed'::registration_status ELSE 'enrolled'::registration_status END
+                WHERE id = ? AND status IN ('enrolled', 'completed')
+                """)) {
             ps.setInt(1, percent);
-            ps.setObject(2, registrationId);
+            ps.setBoolean(2, completed);
+            ps.setObject(3, registrationId);
             if (ps.executeUpdate() != 1) throw new SQLException("Cannot update progress.");
+        }
+    }
+
+    public void refreshCourseLearningProgress(Connection conn, UUID courseId) throws SQLException {
+        // Serialize recalculation with individual lesson completion before reading the counts.
+        try (PreparedStatement lock = conn.prepareStatement("""
+                SELECT id FROM registration WHERE course_id = ?
+                    AND status IN ('enrolled', 'completed') ORDER BY id FOR UPDATE
+                """)) {
+            lock.setObject(1, courseId);
+            try (ResultSet registrations = lock.executeQuery()) {
+                if (!registrations.next()) return;
+            }
+        }
+        try (PreparedStatement update = conn.prepareStatement("""
+                WITH visible_lessons AS (
+                    SELECT l.id FROM lesson l JOIN module m ON m.id = l.module_id
+                    WHERE m.course_id = ? AND NOT m.hidden AND l.status = 'published'
+                ), counts AS (
+                    SELECT r.id, COUNT(l.id) AS total,
+                           COUNT(l.id) FILTER (WHERE lp.status = 'completed') AS done
+                    FROM registration r
+                    LEFT JOIN visible_lessons l ON TRUE
+                    LEFT JOIN learning_process lp ON lp.registration_id = r.id AND lp.lesson_id = l.id
+                    WHERE r.course_id = ? AND r.status IN ('enrolled', 'completed')
+                    GROUP BY r.id
+                )
+                UPDATE registration r
+                SET progress_percent = COALESCE(ROUND(100.0 * counts.done / NULLIF(counts.total, 0)), 0),
+                    status = CASE WHEN counts.total > 0 AND counts.done = counts.total
+                        THEN 'completed'::registration_status ELSE 'enrolled'::registration_status END
+                FROM counts WHERE r.id = counts.id
+                """)) {
+            update.setObject(1, courseId);
+            update.setObject(2, courseId);
+            update.executeUpdate();
         }
     }
 }

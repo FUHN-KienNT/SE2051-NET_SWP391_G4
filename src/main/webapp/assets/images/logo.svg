@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="lhLogoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ecfdf3"/>
+    </linearGradient>
+    <linearGradient id="lhLogoDolphin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#028446"/>
+    </linearGradient>
+  </defs>
+  <!-- Squircle Base -->
+  <rect x="5" y="5" width="90" height="90" rx="24" fill="url(#lhLogoBg)" stroke="#d1fae5" stroke-width="3"/>
+  <!-- Jumping Dolphin Silhouette -->
+  <path fill="url(#lhLogoDolphin)" d="M78 40 C75 32 67 26 55 26 C48 26 43 28 39 31 L37 20 C35 22 33 26 31 30 C24 37 19 46 17 56 C16 61 17 65 20 67 C23 69 26 69 29 67 C32 65 34 62 36 58 C38 54 40 50 44 47 L41 57 C43 57 46 54 47 51 C52 46 58 43 65 43 C71 43 76 46 78 49 C79 48 80 44 78 40 Z"/>
+  <!-- Eye -->
+  <circle cx="67" cy="35" r="2.5" fill="#ffffff"/>
+</svg>

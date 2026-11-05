@@ -97,8 +97,9 @@ public class UserDAO {
 
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ?) ");
+            sql.append("AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ? OR LOWER(COALESCE(u.full_name, '')) LIKE ?) ");
             String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
             params.add(term);
             params.add(term);
         }
@@ -136,8 +137,9 @@ public class UserDAO {
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ?) ");
+            sql.append("AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ? OR LOWER(COALESCE(u.full_name, '')) LIKE ?) ");
             String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
             params.add(term);
             params.add(term);
         }
@@ -186,14 +188,15 @@ public class UserDAO {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE \"user\" SET username = ?, email = ?, role_id = ?, status = ?::user_status, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, role_id = ?, status = ?::user_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
-            ps.setString(2, user.getEmail());
-            ps.setObject(3, user.getRoleId());
-            ps.setString(4, user.getStatus());
-            ps.setObject(5, user.getId());
+            ps.setString(2, user.getFullName());
+            ps.setString(3, user.getEmail());
+            ps.setObject(4, user.getRoleId());
+            ps.setString(5, user.getStatus());
+            ps.setObject(6, user.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.update: " + e.getMessage(), e);

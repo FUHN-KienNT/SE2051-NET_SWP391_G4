@@ -225,7 +225,16 @@
                                     <tbody class="divide-y divide-border-default">
                                         <c:forEach var="les" items="${group.value}">
                                             <tr class="hover:bg-surface">
-                                                <td class="px-5 py-4 font-medium text-text-primary"><c:out value="${les.title}" /></td>
+                                                <c:url var="lessonEditUrl" value="/expert/lessons/edit">
+                                                    <c:param name="id" value="${les.id}" />
+                                                    <c:param name="courseId" value="${course.id}" />
+                                                </c:url>
+                                                <td class="px-5 py-4 font-medium text-text-primary">
+                                                    <a href="${fn:escapeXml(lessonEditUrl)}"
+                                                       class="rounded hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                                                        <c:out value="${les.title}" />
+                                                    </a>
+                                                </td>
                                                 <td class="px-5 py-4 capitalize"><c:out value="${les.type}" default="content" /></td>
                                                 <td class="px-5 py-4 text-center whitespace-nowrap">
                                                     <span class="text-xs font-semibold capitalize ${les.publicationStatus eq 'published' ? 'text-status-success' : les.publicationStatus eq 'draft' ? 'text-status-warning' : les.publicationStatus eq 'decline' ? 'text-status-danger' : 'text-text-secondary'}">
@@ -239,7 +248,7 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
-                                                    <a href="${pageContext.request.contextPath}/expert/lessons/edit?id=${les.id}&courseId=${course.id}"
+                                                    <a href="${fn:escapeXml(lessonEditUrl)}"
                                                        class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
                                                    <c:if test="${les.publicationStatus eq 'published' || les.publicationStatus eq 'archived'}">
                                                    <form action="${pageContext.request.contextPath}/expert/lessons"

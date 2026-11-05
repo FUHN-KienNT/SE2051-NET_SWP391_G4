@@ -7,25 +7,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 flex flex-col lg:flex-row gap-6">
-    <aside class="w-full lg:w-52 shrink-0">
-        <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
-            <nav class="flex flex-wrap lg:flex-col p-2 gap-1">
-                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 border-l-4 border-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-book-open text-brand-700 text-sm"></i>
-                    <span>Lesson</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-clipboard-question text-text-secondary text-sm"></i>
-                    <span>Quiz</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
-
-    <div class="flex-1 min-w-0">
+<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
+    <div class="min-w-0">
         <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
             <div class="flex flex-wrap items-center gap-4 pb-5 mb-6 border-b border-border-default">
                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"

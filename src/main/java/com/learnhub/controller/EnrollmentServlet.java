@@ -169,9 +169,15 @@ public class EnrollmentServlet extends HttpServlet {
 
         String sort = req.getParameter("sort");
         var data = learningService.buildStudentDashboard(
-                enrolled, search, categoryId, sort);
+                enrolled, search, categoryId, sort, req.getParameter("status"));
         req.setAttribute("myCourses", data.myCourses());
-        req.setAttribute("availableCourses", data.availableCourses());
+        long completedCourseCount = enrolled.stream()
+                .filter(learningService::isCourseCompleted)
+                .count();
+        req.setAttribute("enrolledCourseCount", enrolled.size());
+        req.setAttribute("completedCourseCount", completedCourseCount);
+        req.setAttribute("ongoingCourseCount", enrolled.size() - completedCourseCount);
+        req.setAttribute("selectedStatus", data.status());
         req.setAttribute("categories", courseService.getActiveCategories());
         req.setAttribute("search", search);
         req.setAttribute(

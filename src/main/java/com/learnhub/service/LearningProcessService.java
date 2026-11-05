@@ -6,7 +6,6 @@ import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.dto.LessonDTO;
-import com.learnhub.dto.CourseDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.LearningProcess;
 import com.learnhub.entity.Lesson;
@@ -26,7 +25,7 @@ public class LearningProcessService {
     private final CourseService courseService = new CourseService();
     public record StudentDashboardData(
             List<ContinueLearningDTO> myCourses,
-            List<CourseDTO> availableCourses, String sort) {}
+            String sort, String status) {}
 
     public LearningProcessService() {
         this.learningProcessDAO = new LearningProcessDAO();
@@ -72,6 +71,11 @@ public class LearningProcessService {
         return courses;
     }
 
+    public boolean isCourseCompleted(ContinueLearningDTO course) {
+        return course.getLessonCount() > 0
+                && course.getCompletedLessonCount() == course.getLessonCount();
+    }
+
     private int calculateProgressPercent(int completed, int total) {
         return total <= 0 ? 0
                 : Math.min(100, (int) Math.round(100.0 * completed / total));
@@ -96,73 +100,26 @@ public class LearningProcessService {
     }
 
     public StudentDashboardData buildStudentDashboard(
-            List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort) {
+            List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort, String status) {
         String keyword = search.toLowerCase(Locale.ROOT);
-        if (!Set.of(
-                "newest", "title_asc", "price_asc", "price_desc"
-        ).contains(sort == null ? "" : sort)) {
+        String selectedStatus = "completed".equals(status) || "enrolled".equals(status) ? status : "";
+        List<ContinueLearningDTO> myCourses = new ArrayList<>(enrolled.stream()
+                .filter(course -> course.getCourseTitle().toLowerCase(Locale.ROOT).contains(keyword))
+                .filter(course -> categoryId == null || categoryId.equals(course.getCategoryId()))
+                .filter(course -> selectedStatus.isEmpty()
+                        || ("completed".equals(selectedStatus) == isCourseCompleted(course)))
+                .toList());
+
+        Comparator<ContinueLearningDTO> byProgress = Comparator.comparingInt(ContinueLearningDTO::getProgressPercent);
+        if ("progress_asc".equals(sort)) {
+            myCourses.sort(byProgress);
+        } else if ("progress_desc".equals(sort)) {
+            myCourses.sort(byProgress.reversed());
+        } else {
+            // findStudentCourses supplies newest enrollments first.
             sort = "newest";
         }
-
-        Set<UUID> enrolledIds = new HashSet<>();
-
-        List<ContinueLearningDTO> myCourses = new ArrayList<>();
-
-        for (ContinueLearningDTO course : enrolled) {
-            enrolledIds.add(course.getCourseId());
-
-            if (course.getCourseTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                myCourses.add(course);
-            }
-        }
-
-        int count =
-                courseService.countPublicCourses(search, categoryId);
-
-        List<CourseDTO> availableCourses = new ArrayList<>();
-
-        List<CourseDTO> publishedCourses =
-                courseService.searchPublicCourses(
-                        search,
-                        categoryId,
-                        1,
-                        Math.max(1, count)
-                );
-
-        for (CourseDTO course : publishedCourses) {
-            if (!enrolledIds.contains(course.getId())
-                    && course.getTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                availableCourses.add(course);
-            }
-        }
-
-        Comparator<CourseDTO> priceOrder = Comparator.comparing(course ->
-                course.getPrice() == null
-                        ? BigDecimal.ZERO
-                        : course.getPrice()
-        );
-
-        if ("title_asc".equals(sort)) {
-            availableCourses.sort(
-                    Comparator.comparing(
-                            CourseDTO::getTitle,
-                            String.CASE_INSENSITIVE_ORDER
-                    ).thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_asc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_desc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.reversed().thenComparing(CourseDTO::getId)
-            );
-        }
-        return new StudentDashboardData(myCourses, availableCourses, sort);
+        return new StudentDashboardData(myCourses, sort, selectedStatus);
     }
 
     public ContinueLearningDTO resolveContinueLesson(

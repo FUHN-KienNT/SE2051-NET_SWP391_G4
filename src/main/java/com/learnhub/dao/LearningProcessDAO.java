@@ -97,9 +97,11 @@ public class LearningProcessDAO {
                 SELECT c.id,
                        c.title,
                        c.thumbnail_url,
+                       c.category_id,
+                       r.status AS registration_status,
                        s.name AS category_name,
                        (SELECT COUNT(*) FROM module
-                        WHERE course_id = c.id) AS module_count,
+                        WHERE course_id = c.id AND NOT hidden) AS module_count,
                        (SELECT COUNT(*) FROM lesson l
                         JOIN module m ON m.id = l.module_id
                         WHERE m.course_id = c.id AND l.status = 'published' AND NOT m.hidden) AS lesson_count,
@@ -146,6 +148,8 @@ public class LearningProcessDAO {
                     course.setCourseId((UUID) rs.getObject("id"));
                     course.setCourseTitle(rs.getString("title"));
                     course.setThumbnailUrl(rs.getString("thumbnail_url"));
+                    course.setCategoryId(rs.getObject("category_id", UUID.class));
+                    course.setRegistrationStatus(rs.getString("registration_status"));
                     course.setCategoryName(rs.getString("category_name"));
                     course.setModuleCount(rs.getInt("module_count"));
 

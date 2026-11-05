@@ -45,7 +45,6 @@
             <!-- Page Header -->
             <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="mb-2 text-sm font-semibold text-brand-700">Management / Courses</p>
                     <h1 class="text-3xl font-bold tracking-tight text-text-primary">Course management</h1>
                     <p class="mt-2 text-sm text-text-secondary">Manage, filter, and oversee courses on LearnHub.</p>
                 </div>
@@ -59,70 +58,57 @@
 
             <!-- Filter Bar (SDS 2.4.1) -->
             <div class="mb-6 rounded-xl border border-border-default bg-surface-card p-4 shadow-sm sm:p-6">
-                <form id="filterForm" action="${pageContext.request.contextPath}/manager/courses" method="get" class="grid grid-cols-1 items-center gap-3 sm:grid-cols-2 xl:grid-cols-12">
+                <form id="filterForm" action="${pageContext.request.contextPath}/manager/courses" method="get" class="flex flex-wrap items-center justify-between gap-3">
                     <!-- Preserve Sorting and Page -->
                     <input type="hidden" name="sortBy" value="${sortBy}">
                     <input type="hidden" name="sortOrder" value="${sortOrder}">
 
+                    <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:flex">
+                        <!-- Course Category Filter -->
+                        <div class="min-w-0 lg:w-48">
+                            <label for="courseCategory" class="sr-only">Course category</label>
+                            <select name="categoryId"
+                                    id="courseCategory" onchange="this.form.requestSubmit()"
+                                    title="Course Category"
+                                    class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
+                                <option value="">All Categories</option>
+                                <c:forEach var="cat" items="${categories}">
+                                    <option value="${cat.id}" ${selectedCategory eq cat.id.toString() ? 'selected' : ''}>${cat.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <!-- Course Status Filter -->
+                        <div class="min-w-0">
+                            <label for="courseStatus" class="sr-only">Course status</label>
+                            <select name="status"
+                                    id="courseStatus" onchange="this.form.requestSubmit()"
+                                    title="Course Status"
+                                    class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
+                                <option value="">All Statuses</option>
+                                <option value="draft" ${selectedStatus eq 'draft' ? 'selected' : ''}>Draft</option>
+                                <option value="published" ${selectedStatus eq 'published' ? 'selected' : ''}>Published</option>
+                                <option value="archived" ${selectedStatus eq 'archived' ? 'selected' : ''}>Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Search Keyword -->
-                    <div class="relative xl:col-span-3">
-                        <label for="courseSearch" class="sr-only">Search courses</label>
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text"
-                               id="courseSearch"
-                               name="search"
-                               value="${search}"
-                               placeholder="Search course title or instructor..."
-                               title="Search Keyword: Filter courses by title, course code, or instructor name"
-                               class="w-full rounded-lg border border-border-default bg-surface-card py-2.5 pl-9 pr-3.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
-                    </div>
-
-                    <!-- Course Category Filter -->
-                    <div class="xl:col-span-3">
-                        <label for="courseCategory" class="sr-only">Course category</label>
-                        <select name="categoryId"
-                                id="courseCategory"
-                                title="Course Category"
-                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
-                            <option value="">All Categories</option>
-                            <c:forEach var="cat" items="${categories}">
-                                <option value="${cat.id}" ${selectedCategory eq cat.id.toString() ? 'selected' : ''}>${cat.name}</option>
-                            </c:forEach>
-                        </select>
-                    </div>
-
-                    <!-- Course Status Filter -->
-                    <div class="xl:col-span-2">
-                        <label for="courseStatus" class="sr-only">Course status</label>
-                        <select name="status"
-                                id="courseStatus"
-                                title="Course Status"
-                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
-                            <option value="">All Statuses</option>
-                            <option value="draft" ${selectedStatus eq 'draft' ? 'selected' : ''}>Draft</option>
-                            <option value="published" ${selectedStatus eq 'published' ? 'selected' : ''}>Published</option>
-                            <option value="archived" ${selectedStatus eq 'archived' ? 'selected' : ''}>Archived</option>
-                        </select>
-                    </div>
-
-                    <!-- Price Type Filter -->
-                    <div class="xl:col-span-2">
-                        <label for="coursePriceType" class="sr-only">Price type</label>
-                        <select name="priceType"
-                                id="coursePriceType"
-                                title="Price Type: Free or Paid"
-                                class="w-full rounded-lg border border-border-default bg-surface-card px-3.5 py-2.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
-                            <option value="">All Prices</option>
-                            <option value="free" ${selectedPriceType eq 'free' ? 'selected' : ''}>Free</option>
-                            <option value="paid" ${selectedPriceType eq 'paid' ? 'selected' : ''}>Paid</option>
-                        </select>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="xl:col-span-2">
+                    <div class="ml-auto flex w-full max-w-xs items-center gap-2">
+                        <div class="relative min-w-0 flex-1">
+                            <label for="courseSearch" class="sr-only">Search courses</label>
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text"
+                                   id="courseSearch"
+                                   name="search"
+                                   value="${fn:escapeXml(search)}"
+                                   placeholder="Search courses..."
+                                   title="Search Keyword: Filter courses by title, course code, or instructor name"
+                                   class="w-full rounded-lg border border-border-default bg-surface-card py-2.5 pl-9 pr-3.5 text-sm focus:border-brand-700 focus:ring-2 focus:ring-brand-700">
+                        </div>
                         <button type="submit"
-                                class="min-h-11 w-full rounded-lg bg-text-primary px-4 text-center text-sm font-semibold text-white hover:bg-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                            Filter
+                                class="min-h-11 shrink-0 rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                            Search
                         </button>
                     </div>
                 </form>
@@ -131,35 +117,27 @@
             <!-- Course Table (SDS 2.4 / 2.4.1) -->
             <section class="overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm" aria-label="Course list">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border-default px-4 py-4 sm:px-6">
-                    <h2 class="text-base font-semibold text-text-primary">Courses</h2>
-                    <span class="text-sm text-text-secondary"><strong class="font-semibold text-text-primary">${totalCourses}</strong> results</span>
+                    <h2 class="text-base font-semibold text-text-primary">Courses: ${totalCourses}</h2>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-max text-left text-sm text-text-secondary">
+                    <table class="w-full text-left text-sm text-text-secondary">
                         <thead class="border-b border-border-default bg-surface text-xs font-semibold uppercase tracking-wide text-text-secondary">
                             <tr>
-                                <!-- Sortable: COURSE INFO -->
-                                <th class="px-6 py-4">
-                                    <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=title&sortOrder=${sortBy eq 'title' and sortOrder eq 'asc' ? 'desc' : 'asc'}"
-                                       class="inline-flex items-center gap-1.5 hover:text-slate-800 transition-colors">
-                                        <span>COURSE INFO</span>
-                                        <c:choose>
-                                            <c:when test="${sortBy eq 'title'}">
-                                                <i class="fa-solid fa-arrow-${sortOrder eq 'asc' ? 'up' : 'down'} text-brand-700 text-xs"></i>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <i class="fa-solid fa-sort text-slate-300 text-xs"></i>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </a>
-                                </th>
+                                <th scope="col" class="w-2/5 px-2 py-3 xl:px-3">Course Name</th>
 
                                 <!-- CATEGORY -->
-                                <th class="px-6 py-4">CATEGORY</th>
+                                <th class="px-2 py-3 xl:px-3">CATEGORY</th>
 
                                 <!-- Sortable: PRICE -->
-                                <th class="px-6 py-4">
-                                    <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=price&sortOrder=${sortBy eq 'price' and sortOrder eq 'asc' ? 'desc' : 'asc'}"
+                                <th class="px-2 py-3 xl:px-3">
+                                    <c:url var="priceSortUrl" value="/manager/courses">
+                                        <c:param name="search" value="${search}" />
+                                        <c:param name="categoryId" value="${selectedCategory}" />
+                                        <c:param name="status" value="${selectedStatus}" />
+                                        <c:param name="sortBy" value="${sortBy eq 'price' and sortOrder eq 'desc' ? 'created_at' : 'price'}" />
+                                        <c:param name="sortOrder" value="${sortBy eq 'price' ? 'desc' : 'asc'}" />
+                                    </c:url>
+                                    <a href="${fn:escapeXml(priceSortUrl)}"
                                        class="inline-flex items-center gap-1.5 hover:text-slate-800 transition-colors">
                                         <span>PRICE</span>
                                         <c:choose>
@@ -174,8 +152,15 @@
                                 </th>
 
                                 <!-- Sortable: TOTAL ENROLLED -->
-                                <th class="px-6 py-4">
-                                    <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=enrolled&sortOrder=${sortBy eq 'enrolled' and sortOrder eq 'asc' ? 'desc' : 'asc'}"
+                                <th class="px-2 py-3 xl:px-3">
+                                    <c:url var="enrolledSortUrl" value="/manager/courses">
+                                        <c:param name="search" value="${search}" />
+                                        <c:param name="categoryId" value="${selectedCategory}" />
+                                        <c:param name="status" value="${selectedStatus}" />
+                                        <c:param name="sortBy" value="${sortBy eq 'enrolled' and sortOrder eq 'desc' ? 'created_at' : 'enrolled'}" />
+                                        <c:param name="sortOrder" value="${sortBy eq 'enrolled' ? 'desc' : 'asc'}" />
+                                    </c:url>
+                                    <a href="${fn:escapeXml(enrolledSortUrl)}"
                                        class="inline-flex items-center gap-1.5 hover:text-slate-800 transition-colors">
                                         <span>TOTAL ENROLLED</span>
                                         <c:choose>
@@ -190,10 +175,10 @@
                                 </th>
 
                                 <!-- STATUS -->
-                                <th class="px-6 py-4">STATUS</th>
+                                <th class="px-2 py-3 xl:px-3">STATUS</th>
 
                                 <!-- ACTIONS -->
-                                <th class="px-6 py-4 text-right">ACTIONS</th>
+                                <th class="px-2 py-3 xl:px-3 text-right">ACTIONS</th>
                             </tr>
                         </thead>
 
@@ -218,10 +203,10 @@
                                     <c:forEach var="c" items="${courses}">
                                         <tr class="hover:bg-slate-50/80 transition-colors">
                                             <!-- Course Info -->
-                                            <td class="px-6 py-4">
-                                                <div class="flex items-center space-x-3.5">
+                                            <td class="max-w-0 px-2 py-3 xl:px-3">
+                                                <div class="flex items-center gap-2">
                                                     <!-- Course Thumbnail / Box -->
-                                                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-brand-50 border border-slate-200 flex-shrink-0 flex items-center justify-center shadow-xs">
+                                                    <div class="w-8 h-8 rounded-lg overflow-hidden bg-brand-50 border border-slate-200 flex-shrink-0 flex items-center justify-center shadow-xs">
                                                         <c:choose>
                                                             <c:when test="${not empty c.thumbnailUrl}">
                                                                 <img src="${c.thumbnailUrl}" alt="${c.title}" class="w-full h-full object-cover">
@@ -237,26 +222,24 @@
                                                     <!-- Title & Instructor -->
                                                     <div class="min-w-0">
                                                         <a href="${pageContext.request.contextPath}/manager/course-detail?id=${c.id}"
-                                                           class="font-bold text-slate-900 hover:text-brand-700 transition-colors line-clamp-1 block text-sm">
+                                                           title="${fn:escapeXml(c.title)}" class="block truncate text-sm font-bold text-text-primary transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                                             ${c.title}
                                                         </a>
-                                                        <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                                                        <div class="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2 break-words">
                                                             <span>
                                                                 <i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-1"></i>Instructor: 
                                                                 <strong class="text-slate-600 font-medium">${not empty c.expertName ? c.expertName : 'Unassigned'}</strong>
                                                             </span>
-                                                            <span class="text-slate-300">•</span>
-                                                            <span class="text-[11px] font-mono text-slate-400">#${fn:substring(c.id.toString(), 0, 8)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
 
                                             <!-- Category -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-2 py-3 xl:px-3">
                                                 <c:choose>
                                                     <c:when test="${not empty c.categoryName}">
-                                                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
+                                                        <span class="inline-block break-words px-2 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
                                                             ${c.categoryName}
                                                         </span>
                                                     </c:when>
@@ -267,7 +250,7 @@
                                             </td>
 
                                             <!-- Price -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-2 py-3 xl:px-3 whitespace-nowrap">
                                                 <c:choose>
                                                     <c:when test="${empty c.price or c.price le 0}">
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
@@ -283,7 +266,7 @@
                                             </td>
 
                                             <!-- Total Enrolled -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-2 py-3 xl:px-3 whitespace-nowrap">
                                                 <span class="inline-flex items-center gap-1.5 font-bold text-slate-700">
                                                     <i class="fa-solid fa-user-graduate text-slate-400 text-xs"></i>
                                                     ${c.enrolledCount}
@@ -292,7 +275,7 @@
                                             </td>
 
                                             <!-- Status -->
-                                            <td class="px-6 py-4 whitespace-nowrap">
+                                            <td class="px-2 py-3 xl:px-3 whitespace-nowrap">
                                                 <c:choose>
                                                     <c:when test="${c.status eq 'published'}">
                                                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -313,15 +296,7 @@
                                             </td>
 
                                             <!-- Actions: Edit / Archive / Publish -->
-                                            <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                                                <!-- View detail link -->
-                                                <a href="${pageContext.request.contextPath}/course-detail?id=${c.id}"
-                                                   target="_blank"
-                                                   title="View public course page"
-                                                   class="inline-block text-xs font-semibold text-slate-400 hover:text-slate-600 transition">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                                </a>
-
+                                            <td class="px-2 py-3 xl:px-3 whitespace-nowrap text-right">
                                                 <!-- Edit action -->
                                                 <a href="${pageContext.request.contextPath}/manager/course-detail?id=${c.id}"
                                                    class="text-xs font-bold text-brand-700 hover:text-brand-900 hover:underline cursor-pointer">
@@ -339,7 +314,7 @@
                                                                     data-confirm-title="Lưu trữ Khóa học"
                                                                     data-confirm-btn="Lưu trữ"
                                                                     data-confirm-type="warning"
-                                                                    class="text-xs font-bold text-amber-600 hover:text-amber-800 hover:underline cursor-pointer ml-2">
+                                                                    class="text-xs font-bold text-amber-600 hover:text-amber-800 hover:underline cursor-pointer ml-1">
                                                                 Archive
                                                             </button>
                                                         </form>
@@ -353,7 +328,7 @@
                                                                     data-confirm-title="Xuất bản Khóa học"
                                                                     data-confirm-btn="Xuất bản"
                                                                     data-confirm-type="info"
-                                                                    class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer ml-2">
+                                                                    class="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline cursor-pointer ml-1">
                                                                 Publish
                                                             </button>
                                                         </form>
@@ -369,51 +344,40 @@
                 </div>
 
                 <!-- Pagination Footer -->
-                <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-                    <div>
-                        Showing 
-                        <strong class="text-slate-800 font-semibold">${totalCourses gt 0 ? (currentPage - 1) * pageSize + 1 : 0}</strong>
-                        to 
-                        <strong class="text-slate-800 font-semibold">${currentPage * pageSize lt totalCourses ? currentPage * pageSize : totalCourses}</strong>
-                        of 
-                        <strong class="text-slate-800 font-semibold">${totalCourses}</strong> courses
+                <c:if test="${totalPages gt 1}">
+                    <div class="flex flex-wrap items-center justify-end gap-1 border-t border-border-default bg-surface px-4 py-4 text-xs sm:px-6">
+                        <!-- Prev button -->
+                        <c:if test="${currentPage gt 1}">
+                            <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${currentPage - 1}"
+                               class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-medium text-slate-700 transition">
+                                Previous
+                            </a>
+                        </c:if>
+
+                        <!-- Pages -->
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p eq currentPage}">
+                                    <span class="px-3 py-1.5 rounded-lg bg-brand-700 text-white font-bold">${p}</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${p}"
+                                       class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-medium transition">
+                                        ${p}
+                                    </a>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+
+                        <!-- Next button -->
+                        <c:if test="${currentPage lt totalPages}">
+                            <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${currentPage + 1}"
+                               class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-medium text-slate-700 transition">
+                                Next
+                            </a>
+                        </c:if>
                     </div>
-
-                    <c:if test="${totalPages gt 1}">
-                        <div class="flex items-center space-x-1">
-                            <!-- Prev button -->
-                            <c:if test="${currentPage gt 1}">
-                                <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${currentPage - 1}"
-                                   class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-medium text-slate-700 transition">
-                                    Previous
-                                </a>
-                            </c:if>
-
-                            <!-- Pages -->
-                            <c:forEach begin="1" end="${totalPages}" var="p">
-                                <c:choose>
-                                    <c:when test="${p eq currentPage}">
-                                        <span class="px-3 py-1.5 rounded-lg bg-brand-700 text-white font-bold">${p}</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${p}"
-                                           class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-medium transition">
-                                            ${p}
-                                        </a>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-
-                            <!-- Next button -->
-                            <c:if test="${currentPage lt totalPages}">
-                                <a href="?search=${search}&categoryId=${selectedCategory}&status=${selectedStatus}&priceType=${selectedPriceType}&sortBy=${sortBy}&sortOrder=${sortOrder}&page=${currentPage + 1}"
-                                   class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-medium text-slate-700 transition">
-                                    Next
-                                </a>
-                            </c:if>
-                        </div>
-                    </c:if>
-                </div>
+                </c:if>
             </section>
 
         </main>

@@ -106,6 +106,19 @@ public class LearningProcessServlet extends HttpServlet {
             return;
         }
 
+        if ("quiz".equals(lesson.getType())) {
+            if (!learningService.isQuizLessonAvailable(lesson)) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Quiz is not available.");
+                return;
+            }
+            resp.sendRedirect(req.getContextPath() + "/quiz?quizId=" + lesson.getQuizId()
+                    + "&courseId=" + courseId);
+            return;
+        }
+        if ("video".equals(lesson.getType())) {
+            req.setAttribute("videoEmbedUrl", com.learnhub.util.YouTubeVideo.embedUrl(lesson.getVideoUrl()));
+        }
+
         List<Lesson> orderedLessons = course.getModules().stream()
                 .flatMap(module -> module.getLessons().stream())
                 .toList();
@@ -193,7 +206,12 @@ public class LearningProcessServlet extends HttpServlet {
             return;
         }
 
-        learningService.markLessonComplete(registrationId, lessonId);
+        try {
+            learningService.markLessonComplete(registrationId, lessonId);
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            return;
+        }
 
         resp.sendRedirect(
                 req.getContextPath()

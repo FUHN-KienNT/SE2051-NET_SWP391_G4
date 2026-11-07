@@ -6,6 +6,8 @@ public class ContinueLearningDTO {
     private UUID courseId;
     private String courseTitle;
     private String categoryName;
+    private UUID categoryId;
+    private String registrationStatus;
     private String thumbnailUrl;
     private int moduleCount;
     private int lessonCount;
@@ -22,6 +24,10 @@ public class ContinueLearningDTO {
     public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; }
 
     public String getCategoryName() { return categoryName; }
+    public UUID getCategoryId() { return categoryId; }
+    public void setCategoryId(UUID categoryId) { this.categoryId = categoryId; }
+    public String getRegistrationStatus() { return registrationStatus; }
+    public void setRegistrationStatus(String registrationStatus) { this.registrationStatus = registrationStatus; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
 
     public String getThumbnailUrl() { return thumbnailUrl; }

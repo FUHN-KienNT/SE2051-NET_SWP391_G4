@@ -67,6 +67,10 @@ public class QuizServlet extends HttpServlet {
                             && user.getId().equals(attempt.getUserId())
                             && attempt.getScore() == null) {
                         Quiz quiz = quizDAO.findById(attempt.getQuizId());
+                        if (!quizService.isModuleVisible(quiz)) {
+                            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                            return;
+                        }
                         List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
 
                         req.setAttribute("quiz", quiz);
@@ -137,9 +141,13 @@ public class QuizServlet extends HttpServlet {
             try {
                 UUID quizId = UUID.fromString(quizIdStr);
                 Quiz quiz = quizDAO.findById(quizId);
-                if (quiz != null) {
+                if (quiz != null && quiz.isPublished()) {
                     // Khóa học của quiz suy ra từ module (không phụ thuộc courseId trên URL)
                     Module module = moduleDAO.findById(quiz.getModuleId());
+                    if (module != null && module.isHidden()) {
+                        resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
                     Course course = module != null
                             ? courseService.getPublishedCourseCurriculum(module.getCourseId()) : null;
                     Registration registration = course != null
@@ -150,6 +158,19 @@ public class QuizServlet extends HttpServlet {
                         return;
                     }
 
+                    // Synchronize lessons for an earlier saved pass, including a retried request.
+                    boolean alreadyPassed = quizService.getAttemptHistory(user.getId(), quizId).stream()
+                            .anyMatch(a -> a.getScore() != null && Boolean.TRUE.equals(a.getPassStatus()));
+                    if (alreadyPassed) learningService.completeQuizLessons(user.getId(), quizId);
+                    for (Module m : course.getModules()) {
+                        for (Lesson l : m.getLessons()) {
+                            if ("quiz".equals(l.getType()) && quizId.equals(l.getQuizId())) {
+                                req.setAttribute("lesson", l);
+                                learningService.getLessonForStudent(l.getId(), registration.getId());
+                                break;
+                            }
+                        }
+                    }
                     // Dữ liệu cho sidebar (giống trang bài học)
                     List<Lesson> orderedLessons = new ArrayList<>();
                     for (Module m : course.getModules()) {
@@ -193,6 +214,8 @@ public class QuizServlet extends HttpServlet {
                     req.getRequestDispatcher("/WEB-INF/views/quiz/info.jsp").forward(req, resp);
                     return;
                 }
+            } catch (IllegalStateException e) {
+                throw new ServletException("Cannot load quiz learning progress.", e);
             } catch (Exception ignored) {
             }
         }
@@ -202,6 +225,11 @@ public class QuizServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        User student = ControllerSupport.currentUser(req);
+        if (student == null) { resp.sendRedirect(req.getContextPath() + "/auth/login"); return; }
+        if (!com.learnhub.constant.AppConstants.Role.STUDENT.equalsIgnoreCase(student.getRoleCode())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN); return;
+        }
         // Bấm nút "Bắt đầu làm bài" ở màn hình giới thiệu: tạo lượt làm bài rồi redirect sang trang làm bài
         if ("/quiz/take".equals(req.getServletPath())) {
             User user = ControllerSupport.currentUser(req);
@@ -224,6 +252,12 @@ public class QuizServlet extends HttpServlet {
         if (attemptIdStr != null) {
             try {
                 UUID attemptId = UUID.fromString(attemptIdStr);
+                QuizSubmission ownedAttempt = quizService.getAttempt(attemptId);
+                if (ownedAttempt == null || !student.getId().equals(ownedAttempt.getUserId())
+                        || ownedAttempt.getScore() != null
+                        || !quizService.isModuleVisible(quizDAO.findById(ownedAttempt.getQuizId()))) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN); return;
+                }
                 Map<UUID, List<UUID>> selectedAnswers = new HashMap<>();
                 Map<UUID, String> textAnswers = new HashMap<>();
 
@@ -269,8 +303,12 @@ public class QuizServlet extends HttpServlet {
                 req.setAttribute("quiz", quiz);
                 req.setAttribute("result", result);
                 req.setAttribute("questions", questions);
+                Module resultModule = quiz == null ? null : moduleDAO.findById(quiz.getModuleId());
+                if (resultModule != null) req.setAttribute("resultCourseId", resultModule.getCourseId());
                 req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
                 return;
+            } catch (IllegalStateException e) {
+                throw new ServletException("Cannot save quiz result or learning progress.", e);
             } catch (Exception ignored) {
             }
         }

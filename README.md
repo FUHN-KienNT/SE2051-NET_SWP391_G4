@@ -142,29 +142,14 @@ The database schema and sample data are defined in:
 # Create database
 createdb -U postgres learnhub
 
-# Execute schema and seed data
-psql -U postgres -d learnhub -f db/schema.sql
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/seed.sql
+# Create or reset the local schema and load seed data in one transaction
+psql -U postgres -d learnhub -v ON_ERROR_STOP=1 --single-transaction -f db/schema.sql -f db/seed.sql
 ```
 
 `db/seed.sql` includes 240 synthetic buyer accounts and 720 additional course orders spread across the last six months. Their `@example.test` addresses and `DEMO-PAID-*` transaction IDs mark them as demo data; the script can be rerun without duplicating these rows. Paid orders populate the Admin revenue chart, while all registrations populate enrollment metrics.
 Run the complete seed file with `psql -f` (or your SQL client's file execution command) instead of pasting or selecting part of it in a query editor.
 
-For an existing database, run these migrations **before** deploying the updated WAR:
-
-```bash
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/2026-10-17-add-user-full-name.sql
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/2026-10-17-require-google-password.sql
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/20261018_lesson_duration_status.sql
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/20261018_lesson_review_status.sql
-psql -U postgres -d learnhub -v ON_ERROR_STOP=1 -f db/migrations/20261018_quiz_lesson_status_enums.sql
-```
-
-The status ENUM migration preserves existing quiz and lesson statuses. It stops and rolls back if historical rows contain unsupported values; correct those rows explicitly before rerunning it.
-
-The user full-name migration fills existing users' `full_name` from `username` and then requires a nonblank value. Users can edit their name on the Account page. Fresh databases already have this column in `db/schema.sql` and `db/seed.sql`.
-
-New Google accounts must set a LearnHub password after their first Google sign-in. The random password stored during account creation is never shown to the user. Existing accounts keep their current password flow; the Google-password migration adds the required database flag with a default of `false`.
+`db/schema.sql` defines the full schema. Running it on an existing database drops and recreates the LearnHub tables. Back up any local data you want to keep before running the reset command above.
 
 Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
 

@@ -90,7 +90,13 @@
                 </div>
 
                 <!-- Primary Action Buttons -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-xl mx-auto">
+                    <c:if test="${not empty resultCourseId}">
+                        <a href="${pageContext.request.contextPath}/learn/course?id=${resultCourseId}"
+                           class="w-full sm:w-auto px-5 py-3 bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold border border-brand-200 rounded-xl text-sm transition flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                            <i class="fa-solid fa-graduation-cap text-xs" aria-hidden="true"></i> Về nội dung khóa học
+                        </a>
+                    </c:if>
                     <a href="${pageContext.request.contextPath}/quiz?quizId=${quiz.id}" class="w-full sm:w-auto px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2">
                         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm Lại Bài Thi
                     </a>

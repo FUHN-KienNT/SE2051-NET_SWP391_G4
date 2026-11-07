@@ -6,7 +6,6 @@ import com.learnhub.dao.LessonDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dto.ContinueLearningDTO;
 import com.learnhub.dto.LessonDTO;
-import com.learnhub.dto.CourseDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.LearningProcess;
 import com.learnhub.entity.Lesson;
@@ -26,7 +25,7 @@ public class LearningProcessService {
     private final CourseService courseService = new CourseService();
     public record StudentDashboardData(
             List<ContinueLearningDTO> myCourses,
-            List<CourseDTO> availableCourses, String sort) {}
+            String sort, String status) {}
 
     public LearningProcessService() {
         this.learningProcessDAO = new LearningProcessDAO();
@@ -72,6 +71,11 @@ public class LearningProcessService {
         return courses;
     }
 
+    public boolean isCourseCompleted(ContinueLearningDTO course) {
+        return course.getLessonCount() > 0
+                && course.getCompletedLessonCount() == course.getLessonCount();
+    }
+
     private int calculateProgressPercent(int completed, int total) {
         return total <= 0 ? 0
                 : Math.min(100, (int) Math.round(100.0 * completed / total));
@@ -96,73 +100,26 @@ public class LearningProcessService {
     }
 
     public StudentDashboardData buildStudentDashboard(
-            List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort) {
+            List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort, String status) {
         String keyword = search.toLowerCase(Locale.ROOT);
-        if (!Set.of(
-                "newest", "title_asc", "price_asc", "price_desc"
-        ).contains(sort == null ? "" : sort)) {
+        String selectedStatus = "completed".equals(status) || "enrolled".equals(status) ? status : "";
+        List<ContinueLearningDTO> myCourses = new ArrayList<>(enrolled.stream()
+                .filter(course -> course.getCourseTitle().toLowerCase(Locale.ROOT).contains(keyword))
+                .filter(course -> categoryId == null || categoryId.equals(course.getCategoryId()))
+                .filter(course -> selectedStatus.isEmpty()
+                        || ("completed".equals(selectedStatus) == isCourseCompleted(course)))
+                .toList());
+
+        Comparator<ContinueLearningDTO> byProgress = Comparator.comparingInt(ContinueLearningDTO::getProgressPercent);
+        if ("progress_asc".equals(sort)) {
+            myCourses.sort(byProgress);
+        } else if ("progress_desc".equals(sort)) {
+            myCourses.sort(byProgress.reversed());
+        } else {
+            // findStudentCourses supplies newest enrollments first.
             sort = "newest";
         }
-
-        Set<UUID> enrolledIds = new HashSet<>();
-
-        List<ContinueLearningDTO> myCourses = new ArrayList<>();
-
-        for (ContinueLearningDTO course : enrolled) {
-            enrolledIds.add(course.getCourseId());
-
-            if (course.getCourseTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                myCourses.add(course);
-            }
-        }
-
-        int count =
-                courseService.countPublicCourses(search, categoryId);
-
-        List<CourseDTO> availableCourses = new ArrayList<>();
-
-        List<CourseDTO> publishedCourses =
-                courseService.searchPublicCourses(
-                        search,
-                        categoryId,
-                        1,
-                        Math.max(1, count)
-                );
-
-        for (CourseDTO course : publishedCourses) {
-            if (!enrolledIds.contains(course.getId())
-                    && course.getTitle()
-                    .toLowerCase(Locale.ROOT)
-                    .contains(keyword)) {
-                availableCourses.add(course);
-            }
-        }
-
-        Comparator<CourseDTO> priceOrder = Comparator.comparing(course ->
-                course.getPrice() == null
-                        ? BigDecimal.ZERO
-                        : course.getPrice()
-        );
-
-        if ("title_asc".equals(sort)) {
-            availableCourses.sort(
-                    Comparator.comparing(
-                            CourseDTO::getTitle,
-                            String.CASE_INSENSITIVE_ORDER
-                    ).thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_asc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.thenComparing(CourseDTO::getId)
-            );
-        } else if ("price_desc".equals(sort)) {
-            availableCourses.sort(
-                    priceOrder.reversed().thenComparing(CourseDTO::getId)
-            );
-        }
-        return new StudentDashboardData(myCourses, availableCourses, sort);
+        return new StudentDashboardData(myCourses, sort, selectedStatus);
     }
 
     public ContinueLearningDTO resolveContinueLesson(
@@ -234,6 +191,9 @@ public class LearningProcessService {
         dto.setMaterialUrl(lesson.getMaterialUrl());
         dto.setDurationMinutes(lesson.getDurationMinutes());
         dto.setPublicationStatus(lesson.getPublicationStatus());
+        dto.setType(lesson.getType());
+        dto.setVideoUrl(lesson.getVideoUrl());
+        dto.setQuizId(lesson.getQuizId());
 
         LearningProcess process =
                 learningProcessDAO.findByRegistrationAndLesson(
@@ -281,15 +241,32 @@ public class LearningProcessService {
                         && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()));
     }
 
+    public boolean isQuizLessonAvailable(LessonDTO lesson) {
+        var quiz = new com.learnhub.dao.QuizDAO().findById(lesson.getQuizId());
+        return quiz != null && quiz.isPublished() && lesson.getModuleId().equals(quiz.getModuleId());
+    }
+
     public void markLessonComplete(UUID registrationId, UUID lessonId) {
+        Lesson lesson = lessonDAO.findById(lessonId);
+        if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) {
+            throw new SecurityException("Lesson is not available.");
+        }
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 registrationDAO.lockRegistration(conn, registrationId);
+                if ("quiz".equals(lesson.getType())) {
+                    Registration registration = registrationDAO.findById(registrationId);
+                    if (registration == null || !new com.learnhub.dao.QuizAttemptDAO().hasPassed(
+                            conn, registration.getUserId(), lesson.getQuizId())) {
+                        throw new SecurityException("Pass the linked quiz to complete this lesson.");
+                    }
+                }
                 learningProcessDAO.completeLesson(conn, registrationId, lessonId);
                 var counts = learningProcessDAO.readProgressCounts(conn, registrationId);
                 int percent = calculateProgressPercent(counts.completed(), counts.total());
-                registrationDAO.updateProgressPercent(conn, registrationId, percent);
+                boolean completed = counts.total() > 0 && counts.completed() == counts.total();
+                registrationDAO.updateLearningProgress(conn, registrationId, percent, completed);
                 conn.commit();
             } catch (SQLException | RuntimeException e) {
                 try {
@@ -299,8 +276,27 @@ public class LearningProcessService {
                 }
                 throw e;
             }
+        } catch (SecurityException e) {
+            throw e;
         } catch (SQLException | RuntimeException e) {
             throw new IllegalStateException("Cannot save learning progress.", e);
+        }
+    }
+
+    /** Quiz scoring calls this only after saving the result; stored pass status is checked again. */
+    public void completeQuizLessons(UUID userId, UUID quizId) {
+        var quiz = new com.learnhub.dao.QuizDAO().findById(quizId);
+        if (quiz == null || !quiz.isPublished()) return;
+        var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
+        if (module == null || module.isHidden()) return;
+        Course course = courseService.getPublishedCourseCurriculum(module.getCourseId());
+        Registration registration = findRegistration(userId, module.getCourseId());
+        if (!isAccessibleRegistration(registration, course)) return;
+        for (Lesson lesson : lessonDAO.findByModuleId(module.getId())) {
+            if ("quiz".equals(lesson.getType()) && quizId.equals(lesson.getQuizId())
+                    && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) {
+                markLessonComplete(registration.getId(), lesson.getId());
+            }
         }
     }
 }

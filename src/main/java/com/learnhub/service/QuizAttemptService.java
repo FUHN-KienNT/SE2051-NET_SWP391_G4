@@ -31,14 +31,27 @@ public class QuizAttemptService {
         this.quizDAO = new QuizDAO();
     }
 
+    public boolean isModuleVisible(Quiz quiz) {
+        if (quiz == null) return false;
+        var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
+        return module != null && !module.isHidden();
+    }
+
     public QuizSubmission startQuizAttempt(UUID userId, UUID quizId) {
+        Quiz quiz = quizDAO.findById(quizId);
+        if (quiz == null || !quiz.isPublished()) throw new SecurityException("Quiz is not available.");
+        var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
+        var learning = new LearningProcessService();
+        var course = module == null || module.isHidden() ? null : new CourseService().getPublishedCourseCurriculum(module.getCourseId());
+        var registration = course == null ? null : learning.findRegistration(userId, course.getId());
+        if (!learning.isAccessibleRegistration(registration, course)) throw new SecurityException("Course access denied.");
         QuizSubmission attempt = new QuizSubmission();
         attempt.setId(UUID.randomUUID());
         attempt.setQuizId(quizId);
         attempt.setUserId(userId);
         attempt.setScore(null);
         attempt.setPassStatus(null);
-        quizAttemptDAO.insertAttempt(attempt);
+        if (!quizAttemptDAO.insertAttempt(attempt)) throw new IllegalStateException("Cannot start quiz attempt.");
         return attempt;
     }
 
@@ -86,8 +99,11 @@ public class QuizAttemptService {
         BigDecimal score = calculateScore(attempt.getQuizId(), mergedAnswers, textAnswers);
         boolean passed = score.compareTo(passScoreThreshold) >= 0;
 
-        quizAttemptDAO.updateScore(submissionId, score, passed);
+        if (!quizAttemptDAO.updateScore(submissionId, score, passed)) {
+            throw new IllegalStateException("Cannot save quiz result.");
+        }
         quizAttemptDAO.updateBestFlag(submissionId);
+        if (passed) new LearningProcessService().completeQuizLessons(attempt.getUserId(), attempt.getQuizId());
 
         QuizAttemptDTO dto = new QuizAttemptDTO();
         dto.setAttemptId(submissionId);

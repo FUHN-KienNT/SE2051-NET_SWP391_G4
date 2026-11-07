@@ -6,6 +6,7 @@ import com.learnhub.entity.User;
 import com.learnhub.constant.AppConstants;
 import com.learnhub.service.CourseService;
 import com.learnhub.service.LessonService;
+import com.learnhub.service.ModuleService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -34,7 +35,14 @@ import java.sql.Timestamp;
 @MultipartConfig(maxFileSize = 50 * 1024 * 1024)
 public class LessonServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
+    private final ModuleService moduleService = new ModuleService();
     private final CourseService courseService = new CourseService();
+    private final com.learnhub.service.QuizManagementService quizService = new com.learnhub.service.QuizManagementService();
+
+    private void loadQuizOptions(HttpServletRequest req, UUID expertId, UUID courseId) {
+        req.setAttribute("lessonQuizzes", courseId == null ? List.of()
+                : quizService.findByExpert(expertId, null, null, courseId, "published"));
+    }
 
      @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -59,6 +67,7 @@ public class LessonServlet extends HttpServlet {
                 if (course != null) {
                     req.setAttribute("course", course);
                     req.setAttribute("modules", course.getModules());
+                    loadQuizOptions(req, expertId, courseId);
                 }
             } catch (SecurityException e) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -97,36 +106,42 @@ public class LessonServlet extends HttpServlet {
             return;
         }
         Course selectedCourse = (Course) req.getAttribute("course");
+        int assignedCourseCount = courseService.countAssignedCourses(expertId);
+        List<Course> assignedCourses = assignedCourseCount == 0 ? List.of()
+                : courseService.getAssignedCourses(expertId, 1, assignedCourseCount);
+        if ((courseIdStr == null || courseIdStr.isBlank()) && !assignedCourses.isEmpty()) {
+            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + assignedCourses.get(0).getId());
+            return;
+        }
+        req.setAttribute("canCreateModule", selectedCourse != null);
         LessonService.LessonListData lessonList;
+        String lessonSearch = req.getParameter("lessonSearch");
+        lessonSearch = lessonSearch == null ? "" : lessonSearch.strip();
+        String durationSort = req.getParameter("durationSort");
+        String sort = req.getParameter("sort");
+        String direction = req.getParameter("direction");
+        if (durationSort != null) {
+            sort = "asc".equals(durationSort) || "desc".equals(durationSort) ? "duration" : "module";
+            direction = durationSort;
+        }
         try {
             String moduleFilter = req.getParameter("lessonModuleId");
             UUID moduleId = moduleFilter == null || moduleFilter.isBlank()
                     ? null : UUID.fromString(moduleFilter.strip());
             lessonList = lessonService.buildLessonList(
                     selectedCourse == null ? List.of() : selectedCourse.getModules(),
-                    req.getParameter("sort"), req.getParameter("direction"),
-                    req.getParameter("lessonStatus"), moduleId);
+                    sort, direction, req.getParameter("lessonStatus"), moduleId, lessonSearch);
         } catch (IllegalArgumentException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid lesson module filter.");
             return;
         }
-        req.setAttribute("lessonRows", lessonList.rows());
+        req.setAttribute("lessonsByModule", lessonList.lessonsByModule());
+        req.setAttribute("lessonSearch", lessonSearch);
         req.setAttribute("lessonSort", lessonList.sort());
         req.setAttribute("lessonDirection", lessonList.direction());
         req.setAttribute("lessonStatus", lessonList.status());
         req.setAttribute("lessonModuleId", lessonList.moduleId());
-        int coursePage = 1;
-        try {
-            coursePage = Integer.parseInt(req.getParameter("coursePage"));
-        } catch (NumberFormatException ignored) {
-        }
-        var navigation = courseService.getAssignedCourseNavigation(
-                expertId, req.getParameter("courseSearch"), coursePage);
-        req.setAttribute("assignedCourses", navigation.courses());
-        req.setAttribute("courseSearch", navigation.search());
-        req.setAttribute("coursePage", navigation.page());
-        req.setAttribute("courseTotalPages", navigation.totalPages());
-        req.setAttribute("courseTotal", navigation.totalCourses());
+        req.setAttribute("assignedCourses", assignedCourses);
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
     }
 
@@ -202,6 +217,30 @@ public class LessonServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+        if ("createModule".equals(action) || "renameModule".equals(action)
+                || "hideModule".equals(action) || "showModule".equals(action)) {
+            try {
+                UUID courseId = UUID.fromString(req.getParameter("courseId"));
+                if ("createModule".equals(action)) {
+                    moduleService.createForExpert(courseId, expertId, req.getParameter("moduleTitle"));
+                } else {
+                    UUID moduleId = UUID.fromString(req.getParameter("moduleId"));
+                    if ("renameModule".equals(action)) {
+                        moduleService.renameForExpert(courseId, moduleId, expertId, req.getParameter("moduleTitle"));
+                    } else {
+                        moduleService.setHiddenForExpert(courseId, moduleId, expertId, "hideModule".equals(action));
+                    }
+                }
+                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&moduleAction=" + action);
+            } catch (SecurityException e) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            } catch (IllegalArgumentException | NullPointerException e) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid course or module name.");
+            } catch (IllegalStateException e) {
+                throw new ServletException("Cannot create module.", e);
+            }
+            return;
+        }
         String idStr = req.getParameter("id");
         String courseIdStr = req.getParameter("courseId");
         String moduleIdStr = req.getParameter("moduleId");
@@ -227,6 +266,11 @@ public class LessonServlet extends HttpServlet {
             } catch (IllegalArgumentException ignored) {
             }
             LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
+            dto.setType(req.getParameter("type"));
+            dto.setVideoUrl(req.getParameter("videoUrl"));
+            try {
+                dto.setQuizId(UUID.fromString(req.getParameter("quizId")));
+            } catch (IllegalArgumentException | NullPointerException ignored) { }
             dto.setDurationMinutes(durationMinutes);
             dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
             Map<String, String> errors = lessonService.validateLesson(expertId, dto);
@@ -236,6 +280,7 @@ public class LessonServlet extends HttpServlet {
                         UUID.fromString(courseIdStr));
                 req.setAttribute("course", course);
                 req.setAttribute("modules", course == null ? List.of() : course.getModules());
+                loadQuizOptions(req, expertId, course == null ? null : course.getId());
                 req.setAttribute("lesson", dto);
                 req.setAttribute("fieldErrors", errors);
                 if (errors.isEmpty()) {

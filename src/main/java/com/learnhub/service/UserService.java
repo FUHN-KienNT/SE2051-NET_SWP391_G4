@@ -77,6 +77,9 @@ public class UserService {
         if (user == null) return false;
 
         user.setUsername(dto.getUsername());
+        if (dto.getFullName() != null) {
+            user.setFullName(dto.getFullName().trim());
+        }
         user.setEmail(dto.getEmail());
         if (dto.getRoleId() != null) {
             user.setRoleId(dto.getRoleId());

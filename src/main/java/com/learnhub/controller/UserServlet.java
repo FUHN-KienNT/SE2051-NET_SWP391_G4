@@ -141,16 +141,21 @@ public class UserServlet extends HttpServlet {
 
         if ("/admin/user-detail".equals(path)) {
             String idStr = req.getParameter("userId");
+            if (idStr == null || idStr.trim().isEmpty()) {
+                idStr = req.getParameter("id");
+            }
             String username = req.getParameter("username");
+            String fullName = req.getParameter("fullName");
             String email = req.getParameter("email");
             String roleIdStr = req.getParameter("roleId");
             String status = req.getParameter("status");
 
             if (idStr != null) {
                 try {
-                    UUID userId = UUID.fromString(idStr);
-                    UUID roleId = roleIdStr != null ? UUID.fromString(roleIdStr) : null;
+                    UUID userId = UUID.fromString(idStr.trim());
+                    UUID roleId = roleIdStr != null && !roleIdStr.trim().isEmpty() ? UUID.fromString(roleIdStr.trim()) : null;
                     UserDTO dto = new UserDTO(userId, username, email, roleId, null, status);
+                    dto.setFullName(fullName != null ? fullName.trim() : null);
                     userService.updateUserProfile(dto);
                     resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId + "&success=true");
                     return;

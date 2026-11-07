@@ -12,6 +12,9 @@ public class LessonDTO implements Serializable {
     private String content;
     private int orderIndex;
     private Integer durationMinutes;
+    private String type = "content";
+    private String videoUrl;
+    private UUID quizId;
     private String publicationStatus = "draft";
     private String materialUrl;
     private String status;
@@ -43,6 +46,12 @@ public class LessonDTO implements Serializable {
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 
     public Integer getDurationMinutes() { return durationMinutes; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public UUID getQuizId() { return quizId; }
+    public void setQuizId(UUID quizId) { this.quizId = quizId; }
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
 
     public String getPublicationStatus() { return publicationStatus; }

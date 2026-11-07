@@ -163,9 +163,9 @@ public class CourseDAO {
         Course course = findById(courseId);
         if (course == null) return null;
 
-        String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at " +
+        String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
                            "FROM module WHERE course_id = ? ORDER BY order_index ASC";
-        String lessonSql = "SELECT id, module_id, title, content, order_index, duration_minutes, status, created_at, updated_at " +
+        String lessonSql = "SELECT id, module_id, title, content, order_index, duration_minutes, status, lesson_type, video_url, quiz_id, created_at, updated_at " +
                            "FROM lesson WHERE module_id = ? ORDER BY order_index ASC";
 
         List<Module> modules = new ArrayList<>();
@@ -178,6 +178,7 @@ public class CourseDAO {
                     m.setId((UUID) mRs.getObject("id"));
                     m.setCourseId((UUID) mRs.getObject("course_id"));
                     m.setTitle(mRs.getString("title"));
+                    m.setHidden(mRs.getBoolean("hidden"));
                     m.setContent(mRs.getString("content"));
                     m.setOrderIndex(mRs.getInt("order_index"));
                     m.setCreatedAt(mRs.getTimestamp("created_at"));
@@ -196,6 +197,9 @@ public class CourseDAO {
                                 l.setOrderIndex(lRs.getInt("order_index"));
                                 l.setDurationMinutes((Integer) lRs.getObject("duration_minutes"));
                                 l.setPublicationStatus(lRs.getString("status"));
+                                l.setType(lRs.getString("lesson_type"));
+                                l.setVideoUrl(lRs.getString("video_url"));
+                                l.setQuizId((UUID) lRs.getObject("quiz_id"));
                                 l.setCreatedAt(lRs.getTimestamp("created_at"));
                                 l.setUpdatedAt(lRs.getTimestamp("updated_at"));
                                 l.setCourseId(courseId);

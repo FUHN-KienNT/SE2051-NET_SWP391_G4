@@ -49,30 +49,15 @@
 
             <!-- Card Container (Exact Match to User Mockup Image) -->
             <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
-                <!-- Header with Title and Status Badge -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-200">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                        Course Detail - ${not empty course.id ? course.courseCode : 'New Course'}
+                <!-- Header with Course Title and Back Link -->
+                <div class="flex items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                    <h1 class="min-w-0 truncate text-xl font-bold tracking-tight text-text-primary sm:text-2xl" title="${fn:escapeXml(empty course.id ? 'New Course' : course.title)}">
+                        <c:out value="${empty course.id ? 'New Course' : course.title}" />
                     </h1>
-                    <div>
-                        <c:choose>
-                            <c:when test="${course.status eq 'published'}">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    Published
-                                </span>
-                            </c:when>
-                            <c:when test="${course.status eq 'archived'}">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                                    Archived
-                                </span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                    Draft
-                                </span>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
+                    <a href="${pageContext.request.contextPath}/manager/courses"
+                       class="shrink-0 rounded-lg border border-border-default bg-surface-card px-3 py-2 text-sm font-semibold text-text-primary hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 sm:px-5">
+                        Back to List
+                    </a>
                 </div>
 
                 <!-- Form to update course attributes -->
@@ -240,11 +225,6 @@
                                     </a>
                                         </c:otherwise>
                                     </c:choose>
-                                    <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${course.id}"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-xl transition">
-                                        <i class="fa-solid fa-list-check text-xs"></i>
-                                        <span>Manage Quizzes</span>
-                                    </a>
                                 </div>
                             </div>
 
@@ -313,37 +293,9 @@
                     </c:if>
 
                     <!-- Bottom Divider & Action Buttons (Exact Match to Mockup) -->
-                    <div class="pt-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <!-- Left Action: Publish / Unpublish Toggle -->
-                        <div>
-                            <c:if test="${not empty course.id}">
-                                <c:choose>
-                                    <c:when test="${course.status eq 'published'}">
-                                        <button type="submit"
-                                                formaction="${pageContext.request.contextPath}/manager/course-detail?action=unpublish&id=${course.id}"
-                                                class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                            <i class="fa-solid fa-eye-slash text-xs"></i>
-                                            <span>Unpublish Course</span>
-                                        </button>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <button type="submit"
-                                                formaction="${pageContext.request.contextPath}/manager/course-detail?action=publish&id=${course.id}"
-                                                class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                            <i class="fa-solid fa-globe text-xs"></i>
-                                            <span>Publish Course</span>
-                                        </button>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:if>
-                        </div>
-
-                        <!-- Right Actions: Back to List & Save Changes -->
+                    <div class="pt-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-4">
+                        <!-- Save Changes -->
                         <div class="flex items-center space-x-3">
-                            <a href="${pageContext.request.contextPath}/manager/courses"
-                               class="px-5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-sm transition shadow-2xs">
-                                Back to List
-                            </a>
                             <button type="submit"
                                     class="px-6 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm shadow-md shadow-brand-700/20 transition cursor-pointer">
                                 Save Changes

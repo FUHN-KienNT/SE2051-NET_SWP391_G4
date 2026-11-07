@@ -7,25 +7,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/lesson-content.css?v=2">
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 flex flex-col lg:flex-row gap-6">
-    <aside class="w-full lg:w-52 shrink-0">
-        <div class="bg-surface-card rounded-xl border border-border-default overflow-hidden shadow-sm">
-            <nav class="flex flex-wrap lg:flex-col p-2 gap-1">
-                <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-bold bg-brand-50 text-brand-900 border-l-4 border-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-book-open text-brand-700 text-sm"></i>
-                    <span>Lesson</span>
-                </a>
-                <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${course.id}"
-                   class="flex items-center space-x-2.5 rounded-lg px-4 py-3 text-sm font-medium text-text-secondary hover:bg-surface hover:text-text-primary transition border-l-4 border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                    <i class="fa-solid fa-clipboard-question text-text-secondary text-sm"></i>
-                    <span>Quiz</span>
-                </a>
-            </nav>
-        </div>
-    </aside>
-
-    <div class="flex-1 min-w-0">
+<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16">
+    <div class="min-w-0">
         <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
             <div class="flex flex-wrap items-center gap-4 pb-5 mb-6 border-b border-border-default">
                 <a href="${pageContext.request.contextPath}/expert/lessons?courseId=${course.id}"
@@ -77,7 +60,14 @@
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
+                        <input type="number" id="orderIndex" name="orderIndex" min="1"
+                               data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
+                               value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
+                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">
+                    </div>
                     <div>
                         <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
                             Estimated Duration (minutes) <span class="text-status-danger">*</span>
@@ -97,16 +87,36 @@
                     </div>
                 </div>
 
-                <div class="w-44">
-                    <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
-                    <input type="number" id="orderIndex" name="orderIndex" min="1"
-                    data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
-                           value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
-                           class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition text-center font-bold">
+                <div>
+                    <label for="lessonType" class="block text-sm font-semibold text-text-primary mb-2">Type <span class="text-status-danger">*</span></label>
+                    <select id="lessonType" name="type" required data-error="${fn:escapeXml(fieldErrors.type)}"
+                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        <option value="content" ${empty lesson or lesson.type eq 'content' ? 'selected' : ''}>Content</option>
+                        <option value="video" ${lesson.type eq 'video' ? 'selected' : ''}>Video</option>
+                        <option value="quiz" ${lesson.type eq 'quiz' ? 'selected' : ''}>Quiz</option>
+                    </select>
                 </div>
 
-                <div>
-                    <label id="contentLabel" for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span class="text-status-danger">*</span></label>
+                <div id="videoFields" ${lesson.type ne 'video' ? 'hidden' : ''}>
+                    <label for="videoUrl" class="block text-sm font-semibold text-text-primary mb-2">YouTube URL <span class="text-status-danger">*</span></label>
+                    <input type="url" id="videoUrl" name="videoUrl" value="${fn:escapeXml(lesson.videoUrl)}"
+                           data-error="${fn:escapeXml(fieldErrors.videoUrl)}" placeholder="https://www.youtube.com/watch?v=..."
+                           class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                </div>
+
+                <div id="quizFields" ${lesson.type ne 'quiz' ? 'hidden' : ''}>
+                    <label for="quizId" class="block text-sm font-semibold text-text-primary mb-2">Quiz <span class="text-status-danger">*</span></label>
+                    <select id="quizId" name="quizId" data-error="${fn:escapeXml(fieldErrors.quizId)}"
+                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                        <option value="">-- Select a quiz --</option>
+                        <c:forEach var="q" items="${lessonQuizzes}">
+                            <option value="${q.id}" data-module-id="${q.moduleId}" ${lesson.quizId eq q.id ? 'selected' : ''}><c:out value="${q.title}" /></option>
+                        </c:forEach>
+                    </select>
+                </div>
+
+                <div id="contentFields">
+                    <label id="contentLabel" for="content" class="block text-sm font-semibold text-text-primary mb-2">Content <span id="contentRequired" class="text-status-danger">*</span></label>
                     <div id="lessonEditorWrapper" class="relative hidden">
                         <div id="lessonToolbar" role="toolbar" aria-label="Content formatting">
                             <span class="ql-formats">
@@ -155,6 +165,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/lesson-editor.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/lesson-type.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const moduleSelect = document.getElementById('moduleId');

@@ -1,7 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 
 <c:set var="pageLanguage" value="en" scope="request" />
 <c:set var="pageTitle" value="My Courses - LearnHub" scope="request" />
@@ -13,16 +12,16 @@
       data-learning-context="${fn:escapeXml(pageContext.request.contextPath)}"
       class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-    <div class="rounded-2xl border border-brand-100 bg-brand-50 p-6 sm:p-8 mb-8">
-        <p class="text-sm font-semibold text-brand-700 mb-2">
-            Learning Space
-        </p>
-        <h1 class="text-3xl font-bold text-text-primary">
-            My Courses
-        </h1>
-        <p class="mt-3 text-text-secondary">
-            Continue learning and discover new courses tailored to you.
-        </p>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brand-100 bg-brand-50 px-5 py-4">
+        <div>
+            <p class="text-sm font-semibold text-brand-700">Learning Space</p>
+            <h1 class="text-2xl font-bold text-text-primary">My Courses</h1>
+            <p class="mt-1 text-sm text-text-secondary">Continue learning and discover new courses tailored to you.</p>
+        </div>
+        <a href="${pageContext.request.contextPath}/courses"
+           class="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+            Discover New Course
+        </a>
     </div>
 
     <c:if test="${param.notice eq 'no-lessons'}">
@@ -32,73 +31,55 @@
         </p>
     </c:if>
 
-    <form action="${pageContext.request.contextPath}/my-enrollments"
-          method="get"
-          class="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 rounded-xl border border-border-default bg-surface-card p-5 shadow-sm">
-
-        <div class="sm:col-span-2 lg:col-span-1">
-            <label for="search" class="block text-sm font-semibold mb-2">
-                Search Courses
-            </label>
-            <input id="search"
-                   name="search"
-                   value="${fn:escapeXml(search)}"
-                   placeholder="Enter a course name"
-                   class="w-full rounded-lg border border-border-default px-3 py-2.5 focus:ring-2 focus:ring-brand-700 focus:outline-none">
-        </div>
-
-        <div>
-            <label for="categoryId" class="block text-sm font-semibold mb-2">
-                Category · Available Courses
-            </label>
-            <select id="categoryId"
-                    name="categoryId"
-                    class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
-                <option value="">All Categories</option>
-
-                <c:forEach items="${categories}" var="category">
-                    <option value="${category.id}"
-                            ${selectedCategory eq category.id.toString() ? 'selected' : ''}>
-                        <c:out value="${category.name}" />
-                    </option>
-                </c:forEach>
-            </select>
-        </div>
-
-        <div>
-            <label for="sort" class="block text-sm font-semibold mb-2">
-                Sort · Available Courses
-            </label>
-            <select id="sort"
-                    name="sort"
-                    class="w-full rounded-lg border border-border-default px-3 py-2.5 bg-white focus:ring-2 focus:ring-brand-700 focus:outline-none">
-                <option value="newest" ${sort eq 'newest' ? 'selected' : ''}>
-                    Newest
-                </option>
-                <option value="title_asc" ${sort eq 'title_asc' ? 'selected' : ''}>
-                    Title A–Z
-                </option>
-                <option value="price_asc" ${sort eq 'price_asc' ? 'selected' : ''}>
-                    Price: Low to High
-                </option>
-                <option value="price_desc" ${sort eq 'price_desc' ? 'selected' : ''}>
-                    Price: High to Low
-                </option>
-            </select>
-        </div>
-
-        <div class="flex items-end gap-3">
-            <button type="submit"
-                    class="rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                Apply
-            </button>
-
-            <a href="${pageContext.request.contextPath}/my-enrollments"
-               class="rounded-lg border border-border-default px-4 py-2.5 font-medium hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                Reset
-            </a>
-        </div>
-    </form>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-xl border border-border-default bg-surface-card p-4">
+        <dl class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <div class="flex gap-1"><dt>Total Courses</dt><dd class="font-bold"><c:out value="${requestScope.enrolledCourseCount}" default="0" /></dd></div>
+            <div class="flex gap-1"><dt>Complete</dt><dd class="font-bold text-status-success"><c:out value="${requestScope.completedCourseCount}" default="0" /></dd></div>
+            <div class="flex gap-1"><dt>On-going</dt><dd class="font-bold text-status-warning"><c:out value="${requestScope.ongoingCourseCount}" default="0" /></dd></div>
+        </dl>
+        <form id="studentCourseFilters" action="${pageContext.request.contextPath}/my-enrollments" method="get"
+              class="flex w-full flex-wrap items-end gap-3 text-sm lg:w-auto lg:justify-end">
+            <div class="w-full sm:w-64">
+                <label for="search" class="mb-1 block font-semibold">Course Name</label>
+                <div class="flex gap-2">
+                <input id="search" name="search" type="search" value="${fn:escapeXml(search)}"
+                       placeholder="Enter a course name"
+                       class="min-w-0 flex-1 rounded-lg border border-border-default bg-surface-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                    <button type="submit" class="rounded-lg bg-brand-700 px-3 py-2 font-semibold text-white hover:bg-brand-800 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Search</button>
+                </div>
+            </div>
+            <div class="w-full sm:w-44">
+                <label for="categoryId" class="mb-1 block font-semibold">Category</label>
+                <select id="categoryId" name="categoryId"
+                        class="w-full rounded-lg border border-border-default bg-surface-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                    <option value="">All Categories</option>
+                    <c:forEach items="${categories}" var="category">
+                        <option value="${category.id}" ${selectedCategory eq category.id.toString() ? 'selected' : ''}>
+                            <c:out value="${category.name}" />
+                        </option>
+                    </c:forEach>
+                </select>
+            </div>
+            <div class="w-full sm:w-auto">
+                <label for="status" class="mb-1 block font-semibold">Status</label>
+                <select id="status" name="status"
+                        class="w-full rounded-lg border border-border-default bg-surface-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                    <option value="">All Statuses</option>
+                    <option value="completed" ${selectedStatus eq 'completed' ? 'selected' : ''}>Complete</option>
+                    <option value="enrolled" ${selectedStatus eq 'enrolled' ? 'selected' : ''}>On-going</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-auto">
+                <label for="sort" class="mb-1 block font-semibold">Sort By</label>
+                <select id="sort" name="sort"
+                        class="w-full rounded-lg border border-border-default bg-surface-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
+                    <option value="newest" ${sort eq 'newest' ? 'selected' : ''}>Newest</option>
+                    <option value="progress_desc" ${sort eq 'progress_desc' ? 'selected' : ''}>Progress: High to Low</option>
+                    <option value="progress_asc" ${sort eq 'progress_asc' ? 'selected' : ''}>Progress: Low to High</option>
+                </select>
+            </div>
+        </form>
+    </div>
 
     <%-- My Courses --%>
     <section class="mb-12"
@@ -107,15 +88,12 @@
 
         <h2 id="my-heading" class="text-2xl font-bold mb-5">
             Enrolled Courses
-            <span class="text-base font-medium text-text-secondary">
-                (${fn:length(myCourses)})
-            </span>
         </h2>
 
         <c:choose>
             <c:when test="${empty myCourses}">
                 <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
-                    No matching enrolled courses found. Explore the courses below.
+                    No enrolled courses match your filters.
                 </p>
             </c:when>
 
@@ -125,9 +103,7 @@
 
                     <c:forEach items="${myCourses}" var="course">
                         <article data-course-card
-                                 class="flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
-                            <a href="${pageContext.request.contextPath}/learn/course?id=${course.courseId}"
-                               aria-label="Xem chi tiết khóa học">
+                                 class="relative flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
                             <c:choose>
                                 <c:when test="${not empty course.thumbnailUrl}">
                                     <img src="${fn:escapeXml(course.thumbnailUrl)}"
@@ -142,14 +118,13 @@
                                     </div>
                                 </c:otherwise>
                             </c:choose>
-                        </a>
                             <div class="p-5 flex flex-col flex-grow">
                                 <p class="text-xs font-semibold text-brand-700 mb-2">
                                     <c:out value="${empty course.categoryName ? 'Course' : course.categoryName}" />
                                 </p>
 
                                 <h3 class="text-lg font-bold break-words">
-                                    <a href="${pageContext.request.contextPath}/learn/course?id=${course.courseId}">
+                                    <a href="${pageContext.request.contextPath}/learn/course?id=${course.courseId}" class="after:absolute after:inset-0 after:cursor-pointer after:content-[''] hover:text-brand-700 focus-visible:text-brand-700 focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-brand-700">
                                         <c:out value="${course.courseTitle}" />
                                     </a>
                                 </h3>
@@ -190,7 +165,7 @@
 
                                 <a data-continue-course="${course.courseId}"
                                    href="${fn:escapeXml(continueUrl)}"
-                                   class="mt-auto text-center rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                   class="relative z-10 mt-auto text-center rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                     Continue Learning
                                 </a>
                             </div>
@@ -218,108 +193,6 @@
         </c:choose>
     </section>
 
-    <%-- Available Courses --%>
-    <section data-course-section aria-labelledby="available-heading">
-
-        <h2 id="available-heading" class="text-2xl font-bold mb-5">
-            Available Courses
-            <span class="text-base font-medium text-text-secondary">
-                (${fn:length(availableCourses)})
-            </span>
-        </h2>
-
-        <c:choose>
-            <c:when test="${empty availableCourses}">
-                <p class="rounded-xl border border-dashed border-border-default p-8 bg-surface-card text-text-secondary">
-                    No matching courses found. Try a different search term or category.
-                </p>
-            </c:when>
-
-            <c:otherwise>
-                <div id="available-course-list"
-                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                    <c:forEach items="${availableCourses}" var="course">
-                        <article data-course-card
-                                 class="flex flex-col overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-sm">
-
-                            <c:choose>
-                                <c:when test="${not empty course.thumbnailUrl}">
-                                    <img src="${fn:escapeXml(course.thumbnailUrl)}"
-                                         alt=""
-                                         loading="lazy"
-                                         class="h-44 w-full object-cover">
-                                </c:when>
-                                <c:otherwise>
-                                    <div class="h-44 bg-brand-50 flex items-center justify-center text-brand-700 text-4xl">
-                                        <i class="fa-solid fa-graduation-cap"
-                                           aria-hidden="true"></i>
-                                    </div>
-                                </c:otherwise>
-                            </c:choose>
-
-                            <div class="p-5 flex flex-col flex-grow">
-                                <p class="text-xs font-semibold text-brand-700 mb-2">
-                                    <c:out value="${empty course.categoryName ? 'Course' : course.categoryName}" />
-                                </p>
-
-                                <h3 class="text-lg font-bold break-words">
-                                    <c:out value="${course.title}" />
-                                </h3>
-
-                                <p class="text-sm text-text-secondary mt-2">
-                                    <c:out value="${empty course.expertName ? 'LearnHub' : course.expertName}" />
-                                </p>
-
-                                <p class="text-sm text-text-secondary mt-2">
-                                    ${course.moduleCount} modules ·
-                                    ${course.lessonCount} lessons
-                                </p>
-
-                                <p class="text-lg font-bold text-brand-700 mt-4 mb-5">
-                                    <c:choose>
-                                        <c:when test="${empty course.price or course.price le 0}">
-                                            Free
-                                        </c:when>
-                                        <c:otherwise>
-                                            <fmt:formatNumber value="${course.price}"
-                                                              pattern="#,##0" /> VND
-                                        </c:otherwise>
-                                    </c:choose>
-                                </p>
-
-                                <c:url value="/course-detail" var="detailUrl">
-                                    <c:param name="id" value="${course.id}" />
-                                </c:url>
-
-                                <a href="${fn:escapeXml(detailUrl)}"
-                                   class="mt-auto text-center rounded-lg border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-brand-700">
-                                    View Details
-                                </a>
-                            </div>
-                        </article>
-                    </c:forEach>
-                </div>
-
-                <div class="mt-6 flex justify-center gap-3"
-                     data-list-controls
-                     hidden>
-                    <button type="button"
-                            data-more
-                            aria-controls="available-course-list"
-                            class="rounded-lg border border-brand-700 text-brand-700 font-semibold px-5 py-2.5 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Show More
-                    </button>
-                    <button type="button"
-                            data-less
-                            aria-controls="available-course-list"
-                            class="rounded-lg border border-border-default font-semibold px-5 py-2.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-700">
-                        Show Less
-                    </button>
-                </div>
-            </c:otherwise>
-        </c:choose>
-    </section>
 </main>
 
 <style>
@@ -333,6 +206,10 @@
 </style>
 
 <script>
+    document.querySelectorAll('#studentCourseFilters select').forEach(select => {
+        select.addEventListener('change', () => select.form.requestSubmit());
+    });
+
     // Restore the last lesson separately for each user and course.
     (() => {
         const root = document.querySelector('[data-learning-user]');
@@ -403,7 +280,7 @@
         });
     })();
 
-    // Each section expands and collapses independently.
+    // Show more or fewer enrolled courses.
     document.querySelectorAll('[data-course-section]').forEach(section => {
         const cards = [...section.querySelectorAll('[data-course-card]')];
         const controls = section.querySelector('[data-list-controls]');

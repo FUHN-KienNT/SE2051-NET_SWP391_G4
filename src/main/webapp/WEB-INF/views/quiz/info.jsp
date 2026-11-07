@@ -6,7 +6,10 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
-<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<main data-lesson-user="${sessionScope.currentUser.id}" data-lesson-course="${course.id}"
+      data-lesson-id="${lesson.id}" data-lesson-title="${fn:escapeXml(lesson.title)}"
+      data-lesson-context="${fn:escapeXml(pageContext.request.contextPath)}"
+      class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <nav aria-label="Breadcrumb"
          class="mb-6 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
@@ -199,4 +202,5 @@
     </div>
 </main>
 
+<script src="${pageContext.request.contextPath}/assets/js/lesson-last-viewed.js"></script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

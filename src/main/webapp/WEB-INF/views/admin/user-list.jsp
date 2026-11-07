@@ -35,7 +35,7 @@
                         <input type="text"
                                name="search"
                                value="${search}"
-                               placeholder="Tìm theo tên đăng nhập hoặc email..."
+                               placeholder="Tìm theo tên đăng nhập, họ tên hoặc email..."
                                class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] bg-white">
                     </div>
 
@@ -95,6 +95,10 @@
                                     <span>Tài khoản</span>
                                 </th>
                                 <th class="px-6 py-3.5">
+                                    <i class="fa-regular fa-id-card mr-1.5 text-slate-400"></i>
+                                    <span>Họ và tên</span>
+                                </th>
+                                <th class="px-6 py-3.5">
                                     <i class="fa-regular fa-envelope mr-1.5 text-slate-400"></i>
                                     <span>Email</span>
                                 </th>
@@ -116,7 +120,7 @@
                             <c:choose>
                                 <c:when test="${empty users}">
                                     <tr>
-                                        <td colspan="5" class="py-12 text-center text-slate-400">
+                                        <td colspan="6" class="py-12 text-center text-slate-400">
                                             <i class="fa-solid fa-user-slash text-4xl text-slate-300 mb-3 block"></i>
                                             <p class="text-sm font-medium">Không tìm thấy người dùng phù hợp</p>
                                             <a href="${pageContext.request.contextPath}/admin/users" class="mt-2 inline-block text-xs text-[#047857] hover:underline">
@@ -130,13 +134,23 @@
                                         <tr class="hover:bg-slate-50/60 transition-colors">
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center space-x-3">
-                                                    <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs uppercase border border-indigo-100">
-                                                        ${fn:substring(u.username, 0, 1)}
+                                                    <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs uppercase border border-emerald-100">
+                                                        ${not empty u.fullName ? fn:substring(u.fullName, 0, 1) : fn:substring(u.username, 0, 1)}
                                                     </div>
                                                     <div>
                                                         <span class="font-bold text-slate-900 block">${u.username}</span>
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td class="px-6 py-4 font-semibold text-slate-800 text-[13px]">
+                                                <c:choose>
+                                                    <c:when test="${not empty u.fullName}">
+                                                        <c:out value="${u.fullName}" />
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-slate-400 italic font-normal text-[11px]">Chưa cập nhật</span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </td>
                                             <td class="px-6 py-4 font-mono text-[11px] text-slate-600">
                                                 ${u.email}

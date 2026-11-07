@@ -96,6 +96,8 @@ public class CourseService {
     public Course getPublishedCourseCurriculum(UUID courseId) {
         Course course = getCourseDetailWithCurriculum(courseId);
         if (course != null && course.getModules() != null) {
+            course.setModules(course.getModules().stream().filter(module -> !module.isHidden()).toList());
+            course.setModuleCount(course.getModules().size());
             int lessonCount = 0;
             for (com.learnhub.entity.Module module : course.getModules()) {
                 module.setLessons(module.getLessons().stream()

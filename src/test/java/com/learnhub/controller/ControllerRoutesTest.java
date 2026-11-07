@@ -24,6 +24,7 @@ class ControllerRoutesTest {
                 "/admin/registrations",
                 "/admin/reset-password",
                 "/admin/setting-detail",
+                "/admin/setting-reorder",
                 "/admin/setting-status",
                 "/admin/settings",
                 "/admin/user-detail",

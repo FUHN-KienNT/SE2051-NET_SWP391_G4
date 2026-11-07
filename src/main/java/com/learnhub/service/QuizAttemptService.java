@@ -82,6 +82,7 @@ public class QuizAttemptService {
         }
 
         answerDAO.saveAnswers(submissionId, mergedAnswers);
+        int correctAnswers = countCorrectAnswers(questions, mergedAnswers, textAnswers);
         BigDecimal score = calculateScore(attempt.getQuizId(), mergedAnswers, textAnswers);
         boolean passed = score.compareTo(passScoreThreshold) >= 0;
 
@@ -95,6 +96,7 @@ public class QuizAttemptService {
         dto.setScore(score);
         dto.setPassed(passed);
         dto.setTotalQuestions(questions.size());
+        dto.setCorrectAnswers(correctAnswers);
         dto.setSelectedAnswers(mergedAnswers);
         return dto;
     }
@@ -118,23 +120,16 @@ public class QuizAttemptService {
         return quizAttemptDAO.findAttemptsByStudent(userId, quizId);
     }
 
-    public BigDecimal calculateScore(UUID quizId, Map<UUID, List<UUID>> selectedAnswers) {
-        return calculateScore(quizId, selectedAnswers, Collections.emptyMap());
-    }
-
-    public BigDecimal calculateScore(
-            UUID quizId,
+    public int countCorrectAnswers(
+            List<Question> questions,
             Map<UUID, List<UUID>> selectedAnswers,
             Map<UUID, String> textAnswers) {
 
-        List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
         if (questions == null || questions.isEmpty()) {
-            return BigDecimal.ZERO;
+            return 0;
         }
 
-        int totalQuestions = questions.size();
         int correctCount = 0;
-
         for (Question q : questions) {
             if (q.isFillInBlank()) {
                 String userText = textAnswers != null ? textAnswers.get(q.getId()) : null;
@@ -166,7 +161,25 @@ public class QuizAttemptService {
                 }
             }
         }
+        return correctCount;
+    }
 
+    public BigDecimal calculateScore(UUID quizId, Map<UUID, List<UUID>> selectedAnswers) {
+        return calculateScore(quizId, selectedAnswers, Collections.emptyMap());
+    }
+
+    public BigDecimal calculateScore(
+            UUID quizId,
+            Map<UUID, List<UUID>> selectedAnswers,
+            Map<UUID, String> textAnswers) {
+
+        List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
+        if (questions == null || questions.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        int totalQuestions = questions.size();
+        int correctCount = countCorrectAnswers(questions, selectedAnswers, textAnswers);
         double scoreVal = ((double) correctCount / totalQuestions) * 10.0;
         return BigDecimal.valueOf(scoreVal).setScale(2, java.math.RoundingMode.HALF_UP);
     }

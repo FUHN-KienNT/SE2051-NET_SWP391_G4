@@ -1,5 +1,6 @@
 package com.learnhub.controller;
 
+import com.learnhub.dao.AnswerDAO;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dao.QuestionDAO;
 import com.learnhub.dao.QuizDAO;
@@ -33,11 +34,12 @@ import java.util.*;
  * - viewHistory()
  * - viewQuizOverview()
  */
-@WebServlet(name = "QuizServlet", urlPatterns = {"/quiz", "/quiz/take", "/quiz/submit", "/quiz/history", "/quiz/view", "/quiz/info"})
+@WebServlet(name = "QuizServlet", urlPatterns = {"/quiz", "/quiz/take", "/quiz/submit", "/quiz/history", "/quiz/view", "/quiz/info", "/quiz/result"})
 public class QuizServlet extends HttpServlet {
     private final QuizAttemptService quizService = new QuizAttemptService();
     private final QuizDAO quizDAO = new QuizDAO();
     private final QuestionDAO questionDAO = new QuestionDAO();
+    private final AnswerDAO answerDAO = new AnswerDAO();
     private final ModuleDAO moduleDAO = new ModuleDAO();
     private final CourseService courseService = new CourseService();
     private final LearningProcessService learningService = new LearningProcessService();
@@ -88,6 +90,42 @@ public class QuizServlet extends HttpServlet {
                     req.setAttribute("history", history);
                     req.getRequestDispatcher("/WEB-INF/views/quiz/history.jsp").forward(req, resp);
                     return;
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if ("/quiz/result".equals(path) || "result".equals(req.getParameter("action"))) {
+            String subIdStr = req.getParameter("attemptId") != null
+                    ? req.getParameter("attemptId") : req.getParameter("submissionId");
+            if (subIdStr != null) {
+                try {
+                    UUID subId = UUID.fromString(subIdStr);
+                    QuizSubmission attempt = quizService.getAttempt(subId);
+                    if (attempt != null && user.getId().equals(attempt.getUserId()) && attempt.getScore() != null) {
+                        Quiz quiz = quizDAO.findById(attempt.getQuizId());
+                        List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
+
+                        QuizAttemptDTO result = new QuizAttemptDTO();
+                        result.setAttemptId(attempt.getId());
+                        result.setQuizId(attempt.getQuizId());
+                        result.setQuizTitle(quiz != null ? quiz.getTitle() : "Quiz");
+                        result.setScore(attempt.getScore());
+                        result.setPassed(attempt.getPassStatus() != null && attempt.getPassStatus());
+                        result.setTotalQuestions(questions != null ? questions.size() : 0);
+                        result.setSubmittedAt(attempt.getSubmittedAt());
+
+                        if (questions != null && !questions.isEmpty() && attempt.getScore() != null) {
+                            int correct = (int) Math.round((attempt.getScore().doubleValue() / 10.0) * questions.size());
+                            result.setCorrectAnswers(correct);
+                        }
+
+                        req.setAttribute("quiz", quiz);
+                        req.setAttribute("result", result);
+                        req.setAttribute("questions", questions);
+                        req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
+                        return;
+                    }
                 } catch (Exception ignored) {
                 }
             }
@@ -227,8 +265,10 @@ public class QuizServlet extends HttpServlet {
 
                 QuizAttemptDTO result = quizService.submitQuizAttempt(attemptId, selectedAnswers, textAnswers);
                 Quiz quiz = quizDAO.findById(result.getQuizId());
+                List<Question> questions = questionDAO.findQuestionsByQuizId(result.getQuizId());
                 req.setAttribute("quiz", quiz);
                 req.setAttribute("result", result);
+                req.setAttribute("questions", questions);
                 req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
                 return;
             } catch (Exception ignored) {

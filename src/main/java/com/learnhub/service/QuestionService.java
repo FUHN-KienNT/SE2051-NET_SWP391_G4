@@ -4,6 +4,7 @@ import com.learnhub.dao.QuestionDAO;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.QuestionOption;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,9 +15,17 @@ import java.util.logging.Logger;
 public class QuestionService {
 
     private static final Logger LOGGER = Logger.getLogger(QuestionService.class.getName());
-    private final QuestionDAO dao = new QuestionDAO();
+    private final QuestionDAO dao;
 
     public static final int MAX_WORDS_QUESTION_CONTENT = 120;
+
+    public QuestionService() {
+        this(new QuestionDAO());
+    }
+
+    public QuestionService(QuestionDAO dao) {
+        this.dao = dao;
+    }
 
     public List<Question> search(String keyword, String type) {
         return search(keyword, type, null, null, null);
@@ -156,13 +165,14 @@ public class QuestionService {
     }
 
     /**
-     * Soft delete / hide.
+     * Xóa vĩnh viễn câu hỏi nếu chưa từng được sử dụng trong bài thi nào.
+     * Nếu câu hỏi đã được dùng trong bài thi thì trả về false (chỉ được phép ẩn).
      */
     public boolean delete(UUID id) {
-        if (id == null) {
+        if (id == null || dao.isUsedInQuiz(id)) {
             return false;
         }
-        return dao.hide(id);
+        return dao.delete(id);
     }
 
     public boolean hide(UUID id) {
@@ -186,126 +196,44 @@ public class QuestionService {
         String trimmed = text.trim().replaceAll("\\s+", " ");
         return trimmed.split(" ").length;
     }
-    public int importFromDocument(UUID moduleId, String status, String docText) {
-        if (docText == null || docText.trim().isEmpty()) {
-            return 0;
+
+    /**
+     * Import câu hỏi từ file Excel vào module:
+     * - Bước 1: Đọc và kiểm tra toàn bộ file (nếu có lỗi sẽ dừng và báo rõ dòng bị lỗi).
+     * - Bước 2: Lưu tất cả câu hỏi hợp lệ vào database trong một transaction duy nhất.
+     */
+    public QuestionImportResult importFromExcel(UUID moduleId, String status, String fileName, InputStream in) {
+        QuestionImportResult result;
+        try {
+            // 1. Đọc các dòng từ Excel và validate
+            result = QuestionImportParser.parse(QuestionExcelFile.readRows(in));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Không đọc được file Excel import: " + fileName, e);
+            result = new QuestionImportResult();
+            result.addError("Không đọc được file Excel. Vui lòng đảm bảo file đúng định dạng .xlsx (hoặc tải file mẫu).");
+        }
+        result.setFileName(fileName);
+
+        // 2. Nếu có bất kỳ lỗi nào, không lưu vào DB
+        if (result.getErrorCount() > 0) {
+            result.markNotImported();
+            return result;
         }
 
-        String[] lines = docText.split("\\r?\\n");
-        int count = 0;
-
-        String currentContent = null;
-        String currentType = "single_choice";
-        List<String> currentOptionTexts = new ArrayList<>();
-        List<String> currentCorrectIndexes = new ArrayList<>();
-
-        for (int i = 0; i <= lines.length; i++) {
-            String line = (i < lines.length) ? lines[i].trim() : "";
-            boolean isEndOfFile = (i == lines.length);
-
-            boolean isNewQuestionHeader = false;
-            if (!isEndOfFile) {
-                String lower = line.toLowerCase();
-                if (lower.startsWith("câu ") || lower.startsWith("cau ") || lower.startsWith("question ")
-                        || line.matches("^\\d+[\\.\\:\\)].*")) {
-                    isNewQuestionHeader = true;
-                }
-            }
-
-            if (isNewQuestionHeader || isEndOfFile) {
-                // Save previous question if exists
-                if (currentContent != null && !currentContent.isBlank()) {
-                    if (currentCorrectIndexes.size() > 1 && !"fill_in_blank".equals(currentType)) {
-                        currentType = "multiple_choice";
-                    }
-                    boolean saved = save(
-                            null,
-                            moduleId,
-                            currentContent,
-                            currentType,
-                            status != null ? status : "public",
-                            null,
-                            currentOptionTexts.toArray(new String[0]),
-                            currentCorrectIndexes.toArray(new String[0])
-                    );
-                    if (saved) {
-                        count++;
-                    }
-                }
-
-                // Reset for next question
-                currentContent = null;
-                currentType = "single_choice";
-                currentOptionTexts = new ArrayList<>();
-                currentCorrectIndexes = new ArrayList<>();
-
-                if (isEndOfFile) break;
-
-                // Extract content without leading "Câu 1:" etc.
-                int colonIdx = line.indexOf(':');
-                int dotIdx = line.indexOf('.');
-                int startContentIdx = 0;
-                if (colonIdx > 0 && colonIdx < 15) {
-                    startContentIdx = colonIdx + 1;
-                } else if (dotIdx > 0 && dotIdx < 10) {
-                    startContentIdx = dotIdx + 1;
-                }
-                currentContent = line.substring(startContentIdx).trim();
-                continue;
-            }
-
-            if (currentContent == null) {
-                if (!line.isEmpty()) {
-                    currentContent = line;
-                }
-                continue;
-            }
-
-            // Check if line is option: A. B. C. D. or *A. or [x] A.
-            String trimmedLine = line;
-            boolean isCorrect = false;
-            if (trimmedLine.startsWith("*") || trimmedLine.startsWith("+") || trimmedLine.startsWith("[x]")) {
-                isCorrect = true;
-                trimmedLine = trimmedLine.replaceFirst("^(\\*|\\+|\\[x\\])\\s*", "");
-            }
-
-            // Check fill in blank answers (e.g. "Đáp án: keyword1, keyword2")
-            String lowerLine = trimmedLine.toLowerCase();
-            if (lowerLine.startsWith("đáp án:") || lowerLine.startsWith("dap an:")
-                    || lowerLine.startsWith("answer:") || lowerLine.startsWith("keywords:")) {
-                currentType = "fill_in_blank";
-                int colon = trimmedLine.indexOf(':');
-                String answerStr = (colon >= 0) ? trimmedLine.substring(colon + 1).trim() : "";
-                String[] keywords = answerStr.split("[,;]");
-                for (String kw : keywords) {
-                    if (!kw.trim().isEmpty()) {
-                        currentOptionTexts.add(kw.trim());
-                    }
-                }
-                continue;
-            }
-
-            // Match choice options like "A.", "B)", "[A]", "A -"
-            if (trimmedLine.matches("^[A-Ha-h][\\.\\:\\-\\)]\\s*.*")) {
-                int optIdx = currentOptionTexts.size();
-                String optText = trimmedLine.replaceFirst("^[A-Ha-h][\\.\\:\\-\\)]\\s*", "").trim();
-                currentOptionTexts.add(optText);
-                if (isCorrect) {
-                    currentCorrectIndexes.add(String.valueOf(optIdx));
-                }
-            } else if (!trimmedLine.isEmpty()) {
-                // Continuation of question content if no options added yet
-                if (currentOptionTexts.isEmpty()) {
-                    currentContent += " " + trimmedLine;
-                }
-            }
+        // 3. Gán module_id và status
+        String normalizedStatus = "draft".equalsIgnoreCase(status) ? "draft" : "public";
+        for (Question question : result.getQuestions()) {
+            question.setModuleId(moduleId);
+            question.setStatus(normalizedStatus);
         }
 
-        // Determine if multiple_choice
-        if (currentCorrectIndexes.size() > 1 && !"fill_in_blank".equals(currentType)) {
-            currentType = "multiple_choice";
+        // 4. Lưu đồng loạt vào database
+        if (dao.insertAll(result.getQuestions())) {
+            result.markImported();
+        } else {
+            result.markNotImported();
+            result.addError("Lỗi hệ thống khi lưu câu hỏi vào cơ sở dữ liệu. Vui lòng thử lại.");
         }
-
-        return count;
+        return result;
     }
 }

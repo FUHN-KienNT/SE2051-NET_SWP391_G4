@@ -29,15 +29,15 @@ public class    QuestionDAO {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
-                + "m.title module_title, c.id course_id, c.title course_title, "
-                + "(SELECT COUNT(*) FROM question_option qo "
-                + " WHERE qo.question_id=q.id) option_count, "
-                + "(SELECT COUNT(*) FROM quiz_question qq "
-                + " WHERE qq.question_id=q.id) quiz_count "
-                + "FROM question q "
-                + "LEFT JOIN module m ON q.module_id=m.id "
-                + "LEFT JOIN course c ON m.course_id=c.id "
-                + "WHERE 1=1 "
+                        + "m.title module_title, c.id course_id, c.title course_title, "
+                        + "(SELECT COUNT(*) FROM question_option qo "
+                        + " WHERE qo.question_id=q.id) option_count, "
+                        + "(SELECT COUNT(*) FROM quiz_question qq "
+                        + " WHERE qq.question_id=q.id) quiz_count "
+                        + "FROM question q "
+                        + "LEFT JOIN module m ON q.module_id=m.id "
+                        + "LEFT JOIN course c ON m.course_id=c.id "
+                        + "WHERE 1=1 "
         );
 
         List<Object> params = new ArrayList<>();
@@ -100,11 +100,12 @@ public class    QuestionDAO {
 
         String sql =
                 "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
-                + "m.title module_title, c.id course_id, c.title course_title "
-                + "FROM question q "
-                + "LEFT JOIN module m ON q.module_id=m.id "
-                + "LEFT JOIN course c ON m.course_id=c.id "
-                + "WHERE q.id=?";
+                        + "m.title module_title, c.id course_id, c.title course_title, "
+                        + "(SELECT COUNT(*) FROM quiz_question qq WHERE qq.question_id=q.id) quiz_count "
+                        + "FROM question q "
+                        + "LEFT JOIN module m ON q.module_id=m.id "
+                        + "LEFT JOIN course c ON m.course_id=c.id "
+                        + "WHERE q.id=?";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -135,14 +136,14 @@ public class    QuestionDAO {
 
         String sql =
                 "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
-                + "m.title module_title, c.id course_id, c.title course_title, "
-                + "qq.order_index "
-                + "FROM question q "
-                + "JOIN quiz_question qq ON q.id=qq.question_id "
-                + "LEFT JOIN module m ON q.module_id=m.id "
-                + "LEFT JOIN course c ON m.course_id=c.id "
-                + "WHERE qq.quiz_id=? "
-                + "ORDER BY qq.order_index ASC, q.created_at ASC";
+                        + "m.title module_title, c.id course_id, c.title course_title, "
+                        + "qq.order_index "
+                        + "FROM question q "
+                        + "JOIN quiz_question qq ON q.id=qq.question_id "
+                        + "LEFT JOIN module m ON q.module_id=m.id "
+                        + "LEFT JOIN course c ON m.course_id=c.id "
+                        + "WHERE qq.quiz_id=? "
+                        + "ORDER BY qq.order_index ASC, q.created_at ASC";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -196,8 +197,8 @@ public class    QuestionDAO {
 
         String sql =
                 "INSERT INTO question "
-                + "(id, module_id, content, type, status, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?::question_type, ?, NOW(), NOW())";
+                        + "(id, module_id, content, type, status, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?::question_type, ?, NOW(), NOW())";
 
         Connection conn = null;
 
@@ -232,6 +233,76 @@ public class    QuestionDAO {
     }
 
     /**
+     * CREATE nhiều question cùng lúc trong 1 transaction (dùng cho import Excel):
+     * hoặc tất cả được lưu, hoặc không câu nào.
+     */
+    public boolean insertAll(List<Question> questions) {
+        if (questions == null || questions.isEmpty()) {
+            return false;
+        }
+
+        String sql =
+                "INSERT INTO question "
+                        + "(id, module_id, content, type, status, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, ?::question_type, ?, NOW(), NOW())";
+
+        Connection conn = null;
+
+        try {
+            conn = DbConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (Question question : questions) {
+                    ps.setObject(1, question.getId());
+                    ps.setObject(2, question.getModuleId());
+                    ps.setString(3, question.getContent().trim());
+                    ps.setString(4, normalizeType(question.getType()));
+                    String st = question.getStatus();
+                    ps.setString(5, (st == null || st.isBlank()) ? "public" : st.trim());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            // Batch insert all options across all questions in a single PreparedStatement
+            String optionSql =
+                    "INSERT INTO question_option "
+                            + "(id, question_id, option_text, is_correct) "
+                            + "VALUES (?, ?, ?, ?)";
+
+            try (PreparedStatement optPs = conn.prepareStatement(optionSql)) {
+                for (Question question : questions) {
+                    List<QuestionOption> options = question.getOptions();
+                    if (options == null || options.isEmpty()) continue;
+                    for (QuestionOption option : options) {
+                        if (option == null || option.getOptionText() == null || option.getOptionText().trim().isEmpty()) {
+                            continue;
+                        }
+                        UUID optionId = option.getId() != null ? option.getId() : UUID.randomUUID();
+                        optPs.setObject(1, optionId);
+                        optPs.setObject(2, question.getId());
+                        optPs.setString(3, option.getOptionText().trim());
+                        optPs.setBoolean(4, option.isCorrect());
+                        optPs.addBatch();
+                    }
+                }
+                optPs.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in QuestionDAO.insertAll", e);
+            return rollback(conn);
+
+        } finally {
+            close(conn);
+        }
+    }
+
+    /**
      * UPDATE question.
      *
      * IMPORTANT:
@@ -252,8 +323,8 @@ public class    QuestionDAO {
 
         String sql =
                 "UPDATE question "
-                + "SET module_id=?, content=?, type=?::question_type, status=?, updated_at=NOW() "
-                + "WHERE id=?";
+                        + "SET module_id=?, content=?, type=?::question_type, status=?, updated_at=NOW() "
+                        + "WHERE id=?";
 
         Connection conn = null;
 
@@ -336,10 +407,26 @@ public class    QuestionDAO {
     }
 
     /**
-     * DELETE question -> thay bằng hide() để không gây lỗi FK nếu học sinh đã làm câu đó.
+     * DELETE câu hỏi vĩnh viễn:
+     * Chỉ được phép xóa nếu câu hỏi CHƯA TỪNG được sử dụng trong bài thi nào (quiz_question).
+     * Nếu câu hỏi đã được dùng, trả về false (chỉ được phép ẩn bằng hide()).
      */
     public boolean delete(UUID id) {
-        return hide(id);
+        if (id == null || isUsedInQuiz(id)) {
+            return false;
+        }
+
+        String sql = "DELETE FROM question WHERE id=?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in QuestionDAO.delete", e);
+            return false;
+        }
     }
 
     /**
@@ -352,9 +439,9 @@ public class    QuestionDAO {
 
         String sql =
                 "SELECT EXISTS("
-                + "SELECT 1 FROM quiz_question "
-                + "WHERE question_id=?"
-                + ")";
+                        + "SELECT 1 FROM quiz_question "
+                        + "WHERE question_id=?"
+                        + ")";
 
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -386,8 +473,8 @@ public class    QuestionDAO {
 
         String sql =
                 "INSERT INTO question_option "
-                + "(id, question_id, option_text, is_correct) "
-                + "VALUES (?, ?, ?, ?)";
+                        + "(id, question_id, option_text, is_correct) "
+                        + "VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -449,13 +536,13 @@ public class    QuestionDAO {
 
         String updateSql =
                 "UPDATE question_option "
-                + "SET option_text=?, is_correct=? "
-                + "WHERE id=? AND question_id=?";
+                        + "SET option_text=?, is_correct=? "
+                        + "WHERE id=? AND question_id=?";
 
         String insertSql =
                 "INSERT INTO question_option "
-                + "(id, question_id, option_text, is_correct) "
-                + "VALUES (?, ?, ?, ?)";
+                        + "(id, question_id, option_text, is_correct) "
+                        + "VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement updatePs =
                      conn.prepareStatement(updateSql);
@@ -546,8 +633,8 @@ public class    QuestionDAO {
 
         String selectSql =
                 "SELECT id "
-                + "FROM question_option "
-                + "WHERE question_id=?";
+                        + "FROM question_option "
+                        + "WHERE question_id=?";
 
         List<UUID> existingIds = new ArrayList<>();
 
@@ -568,9 +655,9 @@ public class    QuestionDAO {
 
         String checkAnswerSql =
                 "SELECT EXISTS("
-                + "SELECT 1 FROM quiz_answer "
-                + "WHERE question_option_id=?"
-                + ")";
+                        + "SELECT 1 FROM quiz_answer "
+                        + "WHERE question_option_id=?"
+                        + ")";
 
         String deleteSql =
                 "DELETE FROM question_option WHERE id=?";
@@ -630,9 +717,9 @@ public class    QuestionDAO {
 
         String sql =
                 "SELECT id, question_id, option_text, is_correct "
-                + "FROM question_option "
-                + "WHERE question_id=? "
-                + "ORDER BY id";
+                        + "FROM question_option "
+                        + "WHERE question_id=? "
+                        + "ORDER BY id";
 
         try (PreparedStatement ps =
                      conn.prepareStatement(sql)) {
@@ -694,6 +781,9 @@ public class    QuestionDAO {
             q.setModuleTitle(rs.getString("module_title"));
             q.setCourseId((UUID) rs.getObject("course_id"));
             q.setCourseTitle(rs.getString("course_title"));
+        } catch (SQLException ignored) {}
+        try {
+            q.setQuizCount(rs.getInt("quiz_count"));
         } catch (SQLException ignored) {}
         q.setCreatedAt(rs.getTimestamp("created_at"));
         q.setUpdatedAt(rs.getTimestamp("updated_at"));

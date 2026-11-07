@@ -8,29 +8,41 @@ import com.learnhub.entity.Question;
 import com.learnhub.entity.QuestionOption;
 import com.learnhub.entity.User;
 import com.learnhub.service.CourseService;
+import com.learnhub.service.QuestionExcelFile;
+import com.learnhub.service.QuestionImportResult;
 import com.learnhub.service.QuestionService;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
  * Expert Question Bank:
- * list, create, edit and hide questions.
+ * list, create, edit and hide questions, import questions from Excel.
  */
 @WebServlet(
         name = "QuestionServlet",
         urlPatterns = {
-            "/expert/questions",
-            "/expert/questions/detail"
+                "/expert/questions",
+                "/expert/questions/detail"
         }
 )
+@MultipartConfig(maxFileSize = QuestionServlet.MAX_IMPORT_FILE_BYTES,
+        maxRequestSize = QuestionServlet.MAX_IMPORT_FILE_BYTES + 1024 * 1024)
 public class QuestionServlet extends HttpServlet {
+
+    static final long MAX_IMPORT_FILE_BYTES = 5L * 1024 * 1024;
+    private static final String IMPORT_RESULT_KEY = "questionImportResult";
 
     private final QuestionService service =
             new QuestionService();
@@ -49,6 +61,11 @@ public class QuestionServlet extends HttpServlet {
         User user = ControllerSupport.currentUser(req);
         if (user == null) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        if ("template".equalsIgnoreCase(req.getParameter("action"))) {
+            sendImportTemplate(resp);
             return;
         }
 
@@ -133,14 +150,35 @@ public class QuestionServlet extends HttpServlet {
          * HIDE / UNHIDE / DELETE
          */
         String action = req.getParameter("action");
-        if ("delete".equalsIgnoreCase(action) || "hide".equalsIgnoreCase(action)) {
+        if ("delete".equalsIgnoreCase(action)) {
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
+            if (service.isUsedInQuiz(questionId)) {
+                resp.sendRedirect(
+                        req.getContextPath()
+                                + "/expert/questions?cannotDelete=true"
+                                + courseSuffix(courseId)
+                );
+                return;
+            }
+
+            boolean ok = service.delete(questionId);
+            resp.sendRedirect(
+                    req.getContextPath()
+                            + "/expert/questions?deleted="
+                            + ok
+                            + courseSuffix(courseId)
+            );
+            return;
+        }
+
+        if ("hide".equalsIgnoreCase(action)) {
             UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
             boolean ok = service.hide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/expert/questions?hidden="
-                    + ok
-                    + courseSuffix(courseId)
+                            + "/expert/questions?hidden="
+                            + ok
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -150,11 +188,18 @@ public class QuestionServlet extends HttpServlet {
             boolean ok = service.unhide(questionId);
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/expert/questions?unhidden="
-                    + ok
-                    + courseSuffix(courseId)
+                            + "/expert/questions?unhidden="
+                            + ok
+                            + courseSuffix(courseId)
             );
             return;
+        }
+
+        // Kết quả import (thành công / danh sách lỗi) được lưu trong session ở lần POST trước
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute(IMPORT_RESULT_KEY) != null) {
+            req.setAttribute("importResult", session.getAttribute(IMPORT_RESULT_KEY));
+            session.removeAttribute(IMPORT_RESULT_KEY);
         }
 
         req.setAttribute(
@@ -184,24 +229,10 @@ public class QuestionServlet extends HttpServlet {
         String action = req.getParameter("action");
 
         // =====================================================
-        // IMPORT FROM DOCS / TEXT
+        // IMPORT FROM EXCEL
         // =====================================================
-        if ("import_docs".equalsIgnoreCase(action)) {
-            UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
-            UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
-            String status = req.getParameter("status");
-            if (status == null || status.isBlank()) {
-                status = "public";
-            }
-            String docText = req.getParameter("docText");
-
-            int count = service.importFromDocument(moduleId, status, docText);
-
-            resp.sendRedirect(
-                    req.getContextPath()
-                    + "/expert/questions?imported=" + count
-                    + courseSuffix(courseId)
-            );
+        if ("import_excel".equalsIgnoreCase(action)) {
+            handleImportExcel(req, resp);
             return;
         }
 
@@ -253,8 +284,8 @@ public class QuestionServlet extends HttpServlet {
         if (ok) {
             resp.sendRedirect(
                     req.getContextPath()
-                    + "/expert/questions?saved=true"
-                    + courseSuffix(courseId)
+                            + "/expert/questions?saved=true"
+                            + courseSuffix(courseId)
             );
             return;
         }
@@ -266,6 +297,81 @@ public class QuestionServlet extends HttpServlet {
                 "Không thể lưu câu hỏi. Vui lòng kiểm tra lại: Single choice cần đúng 1 đáp án; "
                         + "Multiple choice cần ít nhất 1 đáp án đúng và tối thiểu 2 lựa chọn; "
                         + "Điền vào chỗ trống cần ít nhất 1 từ khóa đáp án.");
+    }
+
+    /**
+     * Nhận file Excel, import và lưu kết quả vào session rồi redirect (Post/Redirect/Get)
+     * để trang danh sách hiển thị thông báo thành công hoặc danh sách lỗi.
+     */
+    private void handleImportExcel(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        String status = "draft".equalsIgnoreCase(req.getParameter("status")) ? "draft" : "public";
+
+        QuestionImportResult result = new QuestionImportResult();
+        try {
+            Part file = req.getPart("excelFile");
+            String fileName = file == null ? null : file.getSubmittedFileName();
+            String lowerName = fileName == null ? "" : fileName.toLowerCase(Locale.ROOT);
+
+            if (moduleId == null) {
+                result.addError("Vui lòng chọn chương / module để import câu hỏi vào.");
+            } else {
+                Module module = moduleDAO.findById(moduleId);
+                if (module == null) {
+                    result.addError("Chương / module được chọn không tồn tại.");
+                } else {
+                    result.setModuleTitle(module.getTitle());
+                    if (courseId == null) {
+                        courseId = module.getCourseId();
+                    }
+                }
+            }
+
+            if (file == null || file.getSize() == 0 || fileName == null || fileName.isBlank()) {
+                result.addError("Vui lòng chọn file Excel (.xlsx hoặc .xls) để import.");
+            } else if (!lowerName.endsWith(".xlsx") && !lowerName.endsWith(".xls")) {
+                result.addError("Chỉ chấp nhận file Excel (.xlsx hoặc .xls). File bạn chọn: \"" + fileName + "\".");
+            }
+
+            if (result.getErrorCount() == 0) {
+                try (InputStream in = file.getInputStream()) {
+                    result = service.importFromExcel(moduleId, status, fileName, in);
+                }
+                if (result.isSuccess() && result.getModuleTitle() == null) {
+                    Module module = moduleDAO.findById(moduleId);
+                    if (module != null) {
+                        result.setModuleTitle(module.getTitle());
+                    }
+                }
+            }
+        } catch (IllegalStateException e) {
+            // Vượt quá maxFileSize / maxRequestSize
+            result = new QuestionImportResult();
+            result.addError("File quá lớn. Dung lượng tối đa là " + (MAX_IMPORT_FILE_BYTES / (1024 * 1024)) + "MB.");
+        } catch (ServletException | RuntimeException e) {
+            result = new QuestionImportResult();
+            result.addError("Không thể xử lý file tải lên. Vui lòng kiểm tra lại file và thử lại.");
+        }
+
+        req.getSession().setAttribute(IMPORT_RESULT_KEY, result);
+
+        StringBuilder redirectUrl = new StringBuilder(req.getContextPath()).append("/expert/questions");
+        boolean hasQuery = false;
+        if (courseId != null) {
+            redirectUrl.append("?courseId=").append(courseId);
+            hasQuery = true;
+        }
+        if (moduleId != null) {
+            redirectUrl.append(hasQuery ? "&moduleId=" : "?moduleId=").append(moduleId);
+        }
+        resp.sendRedirect(redirectUrl.toString());
+    }
+
+    private void sendImportTemplate(HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        resp.setHeader("Content-Disposition", "attachment; filename=\"question-import-template.xlsx\"");
+        QuestionExcelFile.writeTemplate(resp.getOutputStream());
     }
 
     private void forwardWithError(

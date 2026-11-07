@@ -48,6 +48,10 @@ public class RegistrationDAO {
     }
 
     public List<Registration> findRegistrations(String search, String status, int offset, int limit) {
+        return findRegistrations(search, status, null, offset, limit);
+    }
+
+    public List<Registration> findRegistrations(String search, String status, String paymentStatus, int offset, int limit) {
         List<Registration> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT r.id, r.user_id, r.course_id, r.enrolled_at, r.status, r.progress_percent, " +
@@ -68,9 +72,12 @@ public class RegistrationDAO {
             params.add(term);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND (r.status = ? OR r.payment_status = ?) ");
+            sql.append("AND r.status = ? ");
             params.add(status.trim());
-            params.add(status.trim());
+        }
+        if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
+            sql.append("AND r.payment_status = ? ");
+            params.add(paymentStatus.trim());
         }
 
         sql.append("ORDER BY r.enrolled_at DESC ");
@@ -97,6 +104,10 @@ public class RegistrationDAO {
     }
 
     public int countRegistrations(String search, String status) {
+        return countRegistrations(search, status, null);
+    }
+
+    public int countRegistrations(String search, String status, String paymentStatus) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM registration r " +
                 "JOIN \"user\" u ON r.user_id = u.id " +
@@ -112,9 +123,12 @@ public class RegistrationDAO {
             params.add(term);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND (r.status = ? OR r.payment_status = ?) ");
+            sql.append("AND r.status = ? ");
             params.add(status.trim());
-            params.add(status.trim());
+        }
+        if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
+            sql.append("AND r.payment_status = ? ");
+            params.add(paymentStatus.trim());
         }
 
         try (Connection conn = DbConnection.getConnection();
@@ -131,6 +145,33 @@ public class RegistrationDAO {
             LOGGER.log(Level.SEVERE, "Error in countRegistrations: " + e.getMessage(), e);
         }
         return 0;
+    }
+
+    public java.util.Map<String, Object> getRegistrationStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("total", 0);
+        stats.put("paidCount", 0);
+        stats.put("pendingCount", 0);
+        stats.put("totalRevenue", java.math.BigDecimal.ZERO);
+
+        String sql = "SELECT COUNT(*) as total, " +
+                     "COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count, " +
+                     "COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_count, " +
+                     "COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN amount ELSE 0 END), 0) as total_revenue " +
+                     "FROM registration";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                stats.put("total", rs.getInt("total"));
+                stats.put("paidCount", rs.getInt("paid_count"));
+                stats.put("pendingCount", rs.getInt("pending_count"));
+                stats.put("totalRevenue", rs.getBigDecimal("total_revenue"));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in getRegistrationStats: " + e.getMessage(), e);
+        }
+        return stats;
     }
 
     public Registration findById(UUID id) {

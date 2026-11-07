@@ -22,6 +22,7 @@ public class Question implements Serializable {
     private UUID courseId;
     private String courseTitle;
     private int orderIndex;
+    private int quizCount; // Số bài thi/quiz đang sử dụng câu hỏi này
     private List<QuestionOption> options = new ArrayList<>();
 
     public Question() {
@@ -68,6 +69,10 @@ public class Question implements Serializable {
 
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
+
+    public int getQuizCount() { return quizCount; }
+    public void setQuizCount(int quizCount) { this.quizCount = quizCount; }
+    public boolean isUsed() { return quizCount > 0; }
 
     public List<QuestionOption> getOptions() { return options; }
     public void setOptions(List<QuestionOption> options) { this.options = options; }

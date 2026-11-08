@@ -66,7 +66,7 @@
                             <p class="text-xl font-bold text-text-primary mt-1">
                                 <c:choose>
                                     <c:when test="${not empty quiz.timeLimit && quiz.timeLimit > 0}">${quiz.timeLimit} phút</c:when>
-                                    <c:otherwise>Không giới hạn</c:otherwise>
+                                    <c:otherwise>15 phút</c:otherwise>
                                 </c:choose>
                             </p>
                         </div>

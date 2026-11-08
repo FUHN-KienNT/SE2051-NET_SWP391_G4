@@ -73,18 +73,36 @@ public class QuestionServlet extends HttpServlet {
 
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (moduleId != null && !"/expert/questions/detail".equals(path)) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m != null) {
+                if (courseId != null && !courseId.equals(m.getCourseId())) {
+                    courseId = m.getCourseId();
+                }
+            } else {
+                moduleId = null;
+            }
+        }
 
         List<Course> courses = courseDAO.findByExpertId(user.getId());
         req.setAttribute("courses", courses);
 
         List<Module> modules;
         if (courseId != null) {
-            modules = moduleDAO.findByCourseId(courseId);
+            List<Module> courseModules = moduleDAO.findByCourseId(courseId);
+            if (courseModules.isEmpty()) {
+                req.setAttribute("courseHasNoModules", true);
+                modules = moduleDAO.findByExpertId(user.getId());
+            } else {
+                req.setAttribute("courseHasNoModules", false);
+                modules = courseModules;
+            }
         } else {
+            req.setAttribute("courseHasNoModules", false);
             modules = moduleDAO.findByExpertId(user.getId());
         }
         req.setAttribute("modules", modules);
-        req.setAttribute("courseId", courseId != null ? courseId.toString() : "");
+        req.setAttribute("courseId", courseId);
         req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
 
@@ -116,17 +134,66 @@ public class QuestionServlet extends HttpServlet {
                     if (question != null) {
                         req.setAttribute("question", question);
                         if (question.getModuleId() != null) {
-                            req.setAttribute("moduleId", question.getModuleId());
-                            Module mod = moduleDAO.findById(question.getModuleId());
-                            if (mod != null && courseId == null) {
+                            moduleId = question.getModuleId();
+                            req.setAttribute("moduleId", moduleId);
+                            Module mod = moduleDAO.findById(moduleId);
+                            if (mod != null) {
                                 courseId = mod.getCourseId();
-                                req.setAttribute("courseId", courseId.toString());
-                                req.setAttribute("modules", moduleDAO.findByCourseId(courseId));
                             }
                         }
                     }
                 }
             }
+
+            if (moduleId != null) {
+                Module mod = moduleDAO.findById(moduleId);
+                if (mod != null) {
+                    courseId = mod.getCourseId();
+                }
+            } else if (courseId != null) {
+                List<Module> courseModules = moduleDAO.findByCourseId(courseId);
+                if (!courseModules.isEmpty()) {
+                    moduleId = courseModules.get(0).getId();
+                    req.setAttribute("moduleId", moduleId);
+                }
+            }
+
+            req.setAttribute("courseId", courseId);
+            Course selectedCourse = courseId != null ? courseDAO.findById(courseId) : null;
+            req.setAttribute("course", selectedCourse);
+
+            List<Course> detailCourses = new ArrayList<>(courses);
+            if (selectedCourse != null) {
+                boolean foundCourse = false;
+                for (Course c : detailCourses) {
+                    if (selectedCourse.getId().equals(c.getId())) {
+                        foundCourse = true;
+                        break;
+                    }
+                }
+                if (!foundCourse) {
+                    detailCourses.add(selectedCourse);
+                }
+            }
+            req.setAttribute("courses", detailCourses);
+
+            // Luôn nạp toàn bộ module của Expert (và bổ sung module của khóa học hiện tại nếu thiếu)
+            List<Module> detailModules = new ArrayList<>(moduleDAO.findByExpertId(user.getId()));
+            if (courseId != null) {
+                Set<UUID> existingModIds = new HashSet<>();
+                for (Module m : detailModules) {
+                    existingModIds.add(m.getId());
+                }
+                for (Module cm : moduleDAO.findByCourseId(courseId)) {
+                    if (!existingModIds.contains(cm.getId())) {
+                        if (selectedCourse != null) {
+                            cm.setCourseTitle(selectedCourse.getTitle());
+                        }
+                        detailModules.add(cm);
+                    }
+                }
+            }
+            req.setAttribute("modules", detailModules);
 
             req.getRequestDispatcher(
                     "/WEB-INF/views/expert/question-detail.jsp"
@@ -241,7 +308,13 @@ public class QuestionServlet extends HttpServlet {
         // =====================================================
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
-        req.setAttribute("courseId", courseId != null ? courseId.toString() : "");
+        if (moduleId != null) {
+            Module selectedMod = moduleDAO.findById(moduleId);
+            if (selectedMod != null) {
+                courseId = selectedMod.getCourseId();
+            }
+        }
+        req.setAttribute("courseId", courseId);
         req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
 
@@ -428,11 +501,7 @@ public class QuestionServlet extends HttpServlet {
 
         if (user != null) {
             req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
-            if (courseId != null) {
-                req.setAttribute("modules", moduleDAO.findByCourseId(courseId));
-            } else {
-                req.setAttribute("modules", moduleDAO.findByExpertId(user.getId()));
-            }
+            req.setAttribute("modules", moduleDAO.findByExpertId(user.getId()));
         }
 
         req.getRequestDispatcher(

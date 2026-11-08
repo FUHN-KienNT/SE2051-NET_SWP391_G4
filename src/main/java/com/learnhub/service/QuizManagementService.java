@@ -15,8 +15,21 @@ import java.util.UUID;
  */
 public class QuizManagementService {
 
-    private final QuizDAO quizDAO = new QuizDAO();
-    private final QuizQuestionDAO qqDAO = new QuizQuestionDAO();
+    private final QuizDAO quizDAO;
+    private final QuizQuestionDAO qqDAO;
+
+    public QuizManagementService() {
+        this(new QuizDAO(), new QuizQuestionDAO());
+    }
+
+    public QuizManagementService(QuizDAO quizDAO) {
+        this(quizDAO, new QuizQuestionDAO());
+    }
+
+    public QuizManagementService(QuizDAO quizDAO, QuizQuestionDAO qqDAO) {
+        this.quizDAO = quizDAO;
+        this.qqDAO = qqDAO;
+    }
 
     // =========================================================
     // FIND QUIZZES
@@ -143,14 +156,11 @@ public class QuizManagementService {
         }
 
         // -----------------------------------------------------
-        // Time Limit
+        // Time Limit: required, 1 - 600 minutes
         // -----------------------------------------------------
 
-        if (timeLimit != null) {
-
-            if (timeLimit < 1 || timeLimit > 600) {
-                return false;
-            }
+        if (timeLimit == null || timeLimit < 1 || timeLimit > 600) {
+            return false;
         }
 
         // -----------------------------------------------------
@@ -229,8 +239,30 @@ public class QuizManagementService {
         return quizDAO.unhide(id);
     }
 
+    public boolean isUsed(UUID id) {
+        if (id == null) {
+            return false;
+        }
+        return quizDAO.isUsed(id);
+    }
+
+    /**
+     * Xóa vĩnh viễn quiz nếu thuộc về expert và chưa từng được sử dụng trong khóa học / chương học nào.
+     * Nếu quiz đã được dùng thì trả về false (chỉ được phép ẩn).
+     */
     public boolean delete(UUID expertId, UUID id) {
-        // Soft delete (hide) quiz
-        return hide(expertId, id);
+        if (expertId == null || id == null) {
+            return false;
+        }
+
+        if (!quizDAO.belongsToExpert(id, expertId)) {
+            return false;
+        }
+
+        if (quizDAO.isUsed(id)) {
+            return false;
+        }
+
+        return quizDAO.delete(id);
     }
 }

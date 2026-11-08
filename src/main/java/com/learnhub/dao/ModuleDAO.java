@@ -23,15 +23,29 @@ public class ModuleDAO {
             return list;
         }
 
-        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
-                     "FROM module WHERE course_id = ? ORDER BY order_index ASC";
+        String sql = "SELECT m.id, m.course_id, m.title, m.content, m.order_index, m.created_at, m.updated_at, m.hidden, c.title AS course_title " +
+                     "FROM module m LEFT JOIN course c ON m.course_id = c.id WHERE m.course_id = ? ORDER BY m.order_index ASC";
+        String fallbackSql = "SELECT m.id, m.course_id, m.title, m.content, m.order_index, m.created_at, m.updated_at, c.title AS course_title " +
+                     "FROM module m LEFT JOIN course c ON m.course_id = c.id WHERE m.course_id = ? ORDER BY m.order_index ASC";
 
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, courseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapResultSetToModule(rs));
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, courseId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(mapResultSetToModule(rs));
+                    }
+                }
+                return list;
+            } catch (SQLException primaryError) {
+                list.clear();
+                try (PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                    ps.setObject(1, courseId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(mapResultSetToModule(rs));
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -45,15 +59,28 @@ public class ModuleDAO {
             return null;
         }
 
-        String sql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
-                     "FROM module WHERE id = ?";
+        String sql = "SELECT m.id, m.course_id, m.title, m.content, m.order_index, m.created_at, m.updated_at, m.hidden, c.title AS course_title " +
+                     "FROM module m LEFT JOIN course c ON m.course_id = c.id WHERE m.id = ?";
+        String fallbackSql = "SELECT m.id, m.course_id, m.title, m.content, m.order_index, m.created_at, m.updated_at, c.title AS course_title " +
+                     "FROM module m LEFT JOIN course c ON m.course_id = c.id WHERE m.id = ?";
 
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToModule(rs);
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToModule(rs);
+                    }
+                }
+                return null;
+            } catch (SQLException primaryError) {
+                try (PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                    ps.setObject(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            return mapResultSetToModule(rs);
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -204,14 +231,27 @@ public class ModuleDAO {
         String sql = "SELECT m.id,m.course_id,m.title,m.content,m.order_index,m.created_at,m.updated_at,m.hidden,c.title AS course_title " +
                 "FROM module m JOIN course c ON m.course_id=c.id " +
                 "WHERE c.expert_id=? ORDER BY c.title ASC,m.order_index ASC";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, expertId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Module m = mapResultSetToModule(rs);
-                    m.setCourseTitle(rs.getString("course_title"));
-                    list.add(m);
+        String fallbackSql = "SELECT m.id,m.course_id,m.title,m.content,m.order_index,m.created_at,m.updated_at,c.title AS course_title " +
+                "FROM module m JOIN course c ON m.course_id=c.id " +
+                "WHERE c.expert_id=? ORDER BY c.title ASC,m.order_index ASC";
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, expertId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(mapResultSetToModule(rs));
+                    }
+                }
+                return list;
+            } catch (SQLException primaryError) {
+                list.clear();
+                try (PreparedStatement ps = conn.prepareStatement(fallbackSql)) {
+                    ps.setObject(1, expertId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(mapResultSetToModule(rs));
+                        }
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -253,7 +293,15 @@ public class ModuleDAO {
         m.setId((UUID) rs.getObject("id"));
         m.setCourseId((UUID) rs.getObject("course_id"));
         m.setTitle(rs.getString("title"));
-        m.setHidden(rs.getBoolean("hidden"));
+        try {
+            m.setHidden(rs.getBoolean("hidden"));
+        } catch (SQLException ignored) {
+            m.setHidden(false);
+        }
+        try {
+            m.setCourseTitle(rs.getString("course_title"));
+        } catch (SQLException ignored) {
+        }
         m.setContent(rs.getString("content"));
         m.setOrderIndex(rs.getInt("order_index"));
         m.setCreatedAt(rs.getTimestamp("created_at"));

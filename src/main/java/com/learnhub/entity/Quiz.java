@@ -26,6 +26,7 @@ public class Quiz implements Serializable {
     private String courseTitle;
     private String moduleTitle;
     private int questionCount;
+    private int usedCount;
     private List<Question> questions = new ArrayList<>();
 
     public Quiz() {
@@ -76,6 +77,11 @@ public class Quiz implements Serializable {
 
     public int getQuestionCount() { return questionCount; }
     public void setQuestionCount(int questionCount) { this.questionCount = questionCount; }
+
+    public int getUsedCount() { return usedCount; }
+    public void setUsedCount(int usedCount) { this.usedCount = usedCount; }
+
+    public boolean isUsed() { return usedCount > 0; }
 
     public List<Question> getQuestions() { return questions; }
     public void setQuestions(List<Question> questions) { this.questions = questions; }

@@ -127,6 +127,10 @@ public class QuizServlet extends HttpServlet {
                         req.setAttribute("quiz", quiz);
                         req.setAttribute("result", result);
                         req.setAttribute("questions", questions);
+                        Module resultModule = quiz == null ? null : moduleDAO.findById(quiz.getModuleId());
+                        if (resultModule != null) {
+                            req.setAttribute("resultCourseId", resultModule.getCourseId());
+                        }
                         req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
                         return;
                     }

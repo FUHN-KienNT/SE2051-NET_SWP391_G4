@@ -1,14 +1,33 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 <jsp:include page="/WEB-INF/views/common/navbar.jsp" />
 
+<%-- 
+=============================================================================
+MÀN HÌNH LÀM BÀI THI TRẮC NGHIỆM TRỰC TUYẾN (QUIZ TAKING)
+Dành cho Học viên (Student / Learner):
+- Thanh tiêu đề ghim trên cùng (Sticky Header): Đồng hồ đếm ngược, điểm chuẩn đạt.
+- Cột bên trái: Danh sách câu hỏi chi tiết (Hỗ trợ 1 đáp án, nhiều đáp án, điền chỗ trống).
+  + Nút đánh dấu xem lại câu hỏi (Flag for review).
+  + Điều hướng nhanh câu trước / câu sau.
+- Cột bên phải: Ma trận bảng câu hỏi (Question Matrix Navigation) & Thanh tiến độ làm bài.
+- Thanh ghim dưới cùng (Sticky Bottom Bar): Thống kê nhanh số câu đã làm và nút Nộp bài.
+- Hộp thoại Modal xác nhận nộp bài kèm cảnh báo nếu còn câu hỏi chưa làm.
+=============================================================================
+--%>
+
 <main class="flex-grow bg-surface py-6 md:py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <!-- Quiz Header Sticky Top -->
+
+        <!-- ================================================================= -->
+        <!-- PHẦN 1: THANH TIÊU ĐỀ BÀI THI & ĐỒNG HỒ ĐẾM NGƯỢC (STICKY TOP)     -->
+        <!-- ================================================================= -->
         <header class="sticky top-16 z-30 bg-surface-card/95 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-border-default shadow-sm mb-6 transition-all duration-200">
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <!-- Thông tin tiêu đề bài thi và module -->
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2 mb-1.5">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-100">
@@ -35,6 +54,7 @@
                     </div>
                 </div>
 
+                <!-- Đồng hồ đếm ngược thời gian và nút nộp bài nhanh trên Mobile -->
                 <div class="flex items-center gap-3 shrink-0 self-stretch md:self-auto justify-between md:justify-end">
                     <c:if test="${not empty quiz.timeLimit && quiz.timeLimit > 0}">
                         <div id="timer-container" class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-brand-50 border border-brand-100 rounded-xl text-brand-700 font-semibold text-sm sm:text-base flex items-center shadow-xs transition-colors" role="timer" aria-live="polite">
@@ -43,7 +63,7 @@
                             <span id="countdown-timer" class="font-bold font-mono text-base tracking-wider">--:--</span>
                         </div>
                     </c:if>
-                    
+
                     <button type="button" onclick="openSubmitModal()" class="md:hidden px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold rounded-xl text-xs transition flex items-center shadow-sm">
                         <i class="fa-solid fa-paper-plane mr-1.5" aria-hidden="true"></i> Nộp bài
                     </button>
@@ -51,21 +71,27 @@
             </div>
         </header>
 
-        <!-- Quiz Form -->
+        <!-- ================================================================= -->
+        <!-- FORM BÀI LÀM QUIZ                                                 -->
+        <!-- ================================================================= -->
         <form id="quiz-form" action="${pageContext.request.contextPath}/quiz" method="post" class="pb-28">
             <input type="hidden" name="action" value="submit">
             <input type="hidden" name="quizId" value="${quiz.id}">
             <input type="hidden" name="attemptId" value="${attempt.id}">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-                <!-- Left Column: Questions List -->
+
+                <!-- ============================================================= -->
+                <!-- PHẦN 2: CỘT TRÁI - DANH SÁCH THẺ CÂU HỎI & CÁC LỰA CHỌN       -->
+                <!-- ============================================================= -->
                 <div class="lg:col-span-8 space-y-6">
                     <c:forEach var="q" items="${questions}" varStatus="status">
                         <article id="question-card-${status.count}"
                                  data-q-card="${q.id}"
                                  data-q-index="${status.count}"
                                  class="bg-surface-card p-5 sm:p-7 rounded-2xl border border-border-default shadow-xs scroll-mt-36 transition-all duration-200 hover:border-slate-300">
-                            <!-- Question Card Header -->
+                            
+                            <!-- Tiêu đề thẻ câu hỏi & Nút đánh dấu xem lại (Bookmark) -->
                             <div class="flex items-start justify-between gap-3 mb-4 pb-3 border-b border-border-default/70">
                                 <div class="flex items-center gap-2.5">
                                     <span id="q-badge-${q.id}" class="w-8 h-8 rounded-xl bg-brand-50 border border-brand-100 text-brand-700 font-bold flex items-center justify-center text-xs shrink-0 transition-colors">
@@ -75,6 +101,8 @@
                                         <span class="text-xs font-semibold text-text-primary">Câu hỏi ${status.count}</span>
                                         <span class="text-text-secondary text-xs ml-1">/ ${questions.size()}</span>
                                     </div>
+
+                                    <!-- Huy hiệu phân loại câu hỏi -->
                                     <c:choose>
                                         <c:when test="${q.fillInBlank}">
                                             <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-status-warning border border-amber-200">
@@ -94,7 +122,7 @@
                                     </c:choose>
                                 </div>
 
-                                <!-- Flag for review button -->
+                                <!-- Nút đánh dấu xem lại sau -->
                                 <button type="button"
                                         onclick="toggleFlag('${q.id}')"
                                         id="flag-btn-${q.id}"
@@ -105,14 +133,15 @@
                                 </button>
                             </div>
 
-                            <!-- Question Content -->
+                            <!-- Nội dung câu hỏi -->
                             <div class="mb-5">
                                 <p class="text-base sm:text-lg font-semibold text-text-primary leading-relaxed">${q.content}</p>
                             </div>
 
-                            <!-- Question Inputs / Options -->
+                            <!-- Vùng trả lời của học viên (Tùy theo loại câu hỏi) -->
                             <div class="space-y-3">
                                 <c:choose>
+                                    <%-- LOẠI 1: ĐIỀN VÀO CHỖ TRỐNG --%>
                                     <c:when test="${q.fillInBlank}">
                                         <div class="space-y-2">
                                             <label class="block text-xs font-bold text-text-secondary uppercase tracking-wider">
@@ -132,8 +161,9 @@
                                         </div>
                                     </c:when>
 
+                                    <%-- LOẠI 2: CHỌN NHIỀU ĐÁP ÁN (CHECKBOX) --%>
                                     <c:when test="${q.multipleChoice}">
-                                        <c:forEach var="opt" items="${q.options}" varStatus="optStatus">
+                                        <c:forEach var="opt" items="${q.options}">
                                             <label class="option-card flex items-start p-3.5 sm:p-4 rounded-xl border border-border-default bg-surface hover:bg-brand-50/40 hover:border-brand-500 cursor-pointer transition-all duration-150 group">
                                                 <div class="relative flex items-center justify-center mt-0.5 shrink-0">
                                                     <input type="checkbox" name="question_${q.id}" value="${opt.id}" class="peer sr-only">
@@ -145,8 +175,9 @@
                                         </c:forEach>
                                     </c:when>
 
+                                    <%-- LOẠI 3: CHỌN MỘT ĐÁP ÁN DUY NHẤT (RADIO) --%>
                                     <c:otherwise>
-                                        <c:forEach var="opt" items="${q.options}" varStatus="optStatus">
+                                        <c:forEach var="opt" items="${q.options}">
                                             <label class="option-card flex items-start p-3.5 sm:p-4 rounded-xl border border-border-default bg-surface hover:bg-brand-50/40 hover:border-brand-500 cursor-pointer transition-all duration-150 group">
                                                 <div class="relative flex items-center justify-center mt-0.5 shrink-0">
                                                     <input type="radio" name="question_${q.id}" value="${opt.id}" class="peer sr-only">
@@ -160,7 +191,7 @@
                                 </c:choose>
                             </div>
 
-                            <!-- Navigation buttons between questions -->
+                            <!-- Nút chuyển tiếp giữa các câu hỏi dưới chân mỗi thẻ -->
                             <div class="mt-5 pt-4 border-t border-border-default/60 flex items-center justify-between text-xs text-text-secondary">
                                 <c:choose>
                                     <c:when test="${status.count > 1}">
@@ -188,9 +219,12 @@
                     </c:forEach>
                 </div>
 
-                <!-- Right Column: Sidebar Question Overview -->
+                <!-- ============================================================= -->
+                <!-- PHẦN 3: CỘT PHẢI - MA TRẬN BẢNG CÂU HỎI & TIẾN ĐỘ LÀM BÀI    -->
+                <!-- ============================================================= -->
                 <aside class="lg:col-span-4 space-y-5 lg:sticky lg:top-36 z-20">
                     <div class="bg-surface-card p-5 sm:p-6 rounded-2xl border border-border-default shadow-xs">
+                        <!-- Tiêu đề cột điều hướng -->
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-border-default">
                             <h2 class="text-sm font-bold text-text-primary flex items-center tracking-tight">
                                 <i class="fa-solid fa-list-check text-brand-700 mr-2" aria-hidden="true"></i> Bảng câu hỏi
@@ -200,7 +234,7 @@
                             </span>
                         </div>
 
-                        <!-- Progress Bar Section -->
+                        <!-- Thanh hiển thị tiến độ làm bài -->
                         <div class="mb-5">
                             <div class="flex justify-between items-center text-xs text-text-secondary font-medium mb-1.5">
                                 <span>Tiến độ hoàn thành</span>
@@ -211,7 +245,7 @@
                             </div>
                         </div>
 
-                        <!-- Question Grid Buttons -->
+                        <!-- Lưới nút số câu hỏi (Nhấn để cuộn nhanh đến câu tương ứng) -->
                         <div class="grid grid-cols-5 gap-2 max-h-[45vh] overflow-y-auto p-1 custom-scrollbar">
                             <c:forEach var="q" items="${questions}" varStatus="status">
                                 <button type="button"
@@ -226,7 +260,7 @@
                             </c:forEach>
                         </div>
 
-                        <!-- Legend -->
+                        <!-- Chú thích màu sắc trạng thái câu hỏi -->
                         <div class="mt-5 pt-4 border-t border-border-default grid grid-cols-3 gap-2 text-center text-[11px] text-text-secondary font-medium">
                             <div class="flex items-center justify-center gap-1.5">
                                 <span class="w-3 h-3 rounded-md bg-brand-600 inline-block shadow-xs"></span>
@@ -242,7 +276,7 @@
                             </div>
                         </div>
 
-                        <!-- Sidebar Submit Action -->
+                        <!-- Nút nộp bài thi ở cột phải -->
                         <div class="mt-5 pt-4 border-t border-border-default">
                             <button type="button" onclick="openSubmitModal()" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-sm transition flex items-center justify-center text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                 <i class="fa-solid fa-paper-plane mr-2" aria-hidden="true"></i> Nộp Bài Thi
@@ -252,7 +286,9 @@
                 </aside>
             </div>
 
-            <!-- Sticky Bottom Submit Action -->
+            <!-- ============================================================= -->
+            <!-- PHẦN 4: THANH THAO TÁC GHIM DƯỚI ĐÁY TRANG (STICKY BOTTOM)     -->
+            <!-- ============================================================= -->
             <div class="fixed bottom-0 left-0 right-0 p-3.5 sm:p-4 bg-surface-card/95 backdrop-blur-md border-t border-border-default shadow-lg z-40">
                 <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-3 px-4 sm:px-6">
                     <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-text-secondary font-medium">
@@ -276,9 +312,11 @@
     </div>
 </main>
 
-<!-- Submit Confirmation Modal -->
+<!-- ========================================================================= -->
+<!-- PHẦN 5: MODAL XÁC NHẬN NỘP BÀI THI KÈM THỐNG KÊ CHI TIẾT                  -->
+<!-- ========================================================================= -->
 <div id="submit-confirm-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-surface-card rounded-2xl border border-border-default shadow-xl max-w-md w-full p-6 text-center transform transition-all animate-fade-in">
+    <div class="bg-surface-card rounded-2xl border border-border-default shadow-xl max-w-md w-full p-6 text-center transform transition-all">
         <div class="w-14 h-14 rounded-full bg-brand-50 border border-brand-100 text-brand-700 flex items-center justify-center text-2xl mx-auto mb-4 shadow-xs">
             <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
         </div>
@@ -288,7 +326,7 @@
             Khi nộp bài, hệ thống sẽ tự động chấm điểm và bạn không thể chỉnh sửa đáp án đã chọn.
         </p>
 
-        <!-- Stats in modal -->
+        <!-- Thống kê trạng thái làm bài trước khi nộp -->
         <div class="bg-surface rounded-xl p-4 border border-border-default mb-5 grid grid-cols-3 gap-2 text-center">
             <div>
                 <p class="text-[11px] text-text-secondary font-medium">Đã trả lời</p>
@@ -304,25 +342,31 @@
             </div>
         </div>
 
+        <!-- Cảnh báo nếu vẫn còn câu chưa hoàn thành -->
         <div id="modal-unanswered-alert" class="hidden mb-5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-status-warning text-xs text-left flex items-start gap-2">
             <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5" aria-hidden="true"></i>
             <span>Bạn vẫn còn câu hỏi chưa hoàn thành. Bạn có chắc chắn muốn nộp bài ngay bây giờ?</span>
         </div>
 
+        <!-- Các nút hành động trong Modal -->
         <div class="flex items-center gap-3">
             <button type="button" onclick="closeSubmitModal()" class="flex-1 py-2.5 px-4 rounded-xl border border-border-default font-semibold text-text-secondary hover:bg-slate-100 transition text-sm">
                 Xem lại bài
             </button>
-            <button type="button" onclick="confirmAndSubmitQuiz()" class="flex-1 py-2.5 px-4 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold transition text-sm shadow-sm">
+            <button type="button" id="modal-confirm-submit-btn" onclick="confirmAndSubmitQuiz()" class="flex-1 py-2.5 px-4 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold transition text-sm shadow-sm">
                 Nộp bài ngay
             </button>
         </div>
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- PHẦN 6: JAVASCRIPT ĐIỀU KHIỂN: CUỘN CÂU HỎI, ĐẾM NGƯỢC, TIẾN ĐỘ, NỘP BÀI -->
+<!-- ========================================================================= -->
 <script>
     var flaggedQuestions = new Set();
 
+    // Cuộn mượt màn hình đến câu hỏi tương ứng và hiệu ứng viền sáng nổi bật
     function scrollToQuestion(index) {
         var card = document.getElementById("question-card-" + index);
         if (card) {
@@ -334,6 +378,7 @@
         }
     }
 
+    // Đánh dấu hoặc bỏ đánh dấu câu hỏi cần xem lại
     function toggleFlag(qId) {
         var flagBtn = document.getElementById("flag-btn-" + qId);
         var navFlag = document.getElementById("nav-flag-" + qId);
@@ -359,6 +404,7 @@
         updateBottomFlagged();
     }
 
+    // Cập nhật số lượng câu được đánh dấu dưới thanh ghim đáy
     function updateBottomFlagged() {
         var bottomContainer = document.getElementById("bottom-flagged-container");
         var bottomCount = document.getElementById("bottom-flagged-count");
@@ -372,8 +418,9 @@
         }
     }
 
+    // Mở hộp thoại Modal xác nhận nộp bài và tính toán thống kê
     function openSubmitModal() {
-        var total = ${questions.size()};
+        var total = ${empty questions ? 0 : questions.size()};
         var answered = 0;
         var navButtons = document.querySelectorAll(".q-nav-btn");
 
@@ -416,17 +463,19 @@
         if (modal) modal.classList.remove("hidden");
     }
 
+    // Đóng hộp thoại Modal
     function closeSubmitModal() {
         var modal = document.getElementById("submit-confirm-modal");
         if (modal) modal.classList.add("hidden");
     }
 
+    // Thực hiện nộp bài thi
     function confirmAndSubmitQuiz() {
         var quizForm = document.getElementById("quiz-form");
         if (quizForm) {
             var submitBtns = document.querySelectorAll("button[type='button'], button[type='submit']");
             submitBtns.forEach(function(b) { b.disabled = true; });
-            var confirmBtn = event ? event.target : null;
+            var confirmBtn = document.getElementById("modal-confirm-submit-btn");
             if (confirmBtn) {
                 confirmBtn.innerHTML = "<i class='fa-solid fa-spinner fa-spin mr-2'></i> Đang nộp bài...";
             }
@@ -434,10 +483,12 @@
         }
     }
 
+    // Khởi tạo các sự kiện khi trang đã tải xong
     document.addEventListener("DOMContentLoaded", function() {
         var quizForm = document.getElementById("quiz-form");
-        var totalQuestions = ${questions.size()};
+        var totalQuestions = ${empty questions ? 0 : questions.size()};
 
+        // Hàm cập nhật tiến độ làm bài khi học viên chọn hoặc nhập đáp án
         function updateProgress() {
             var answeredCount = 0;
             var navButtons = document.querySelectorAll(".q-nav-btn");
@@ -494,6 +545,7 @@
             updateProgress();
         }
 
+        // Xử lý bộ đếm ngược thời gian làm bài (Countdown Timer)
         var timeLimitMinutes = parseInt("${quiz.timeLimit}");
         if (!isNaN(timeLimitMinutes) && timeLimitMinutes > 0) {
             var now = new Date().getTime();
@@ -506,6 +558,7 @@
                 var currentTime = new Date().getTime();
                 var distance = endTime - currentTime;
 
+                // Tự động nộp bài khi hết giờ
                 if (distance <= 0) {
                     clearInterval(updateTimer);
                     if (timerDisplay) timerDisplay.textContent = "00:00";
@@ -530,6 +583,7 @@
 
                 if (timerDisplay) timerDisplay.textContent = minsStr + ":" + secsStr;
                 
+                // Đổi màu cảnh báo đỏ khi còn dưới 30 giây, màu vàng khi còn dưới 60 giây
                 if (minutes === 0 && seconds <= 30 && timerContainer) {
                     timerContainer.className = "px-3.5 py-2 sm:px-4 sm:py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-status-danger font-semibold text-sm sm:text-base flex items-center shrink-0 animate-pulse";
                 } else if (minutes === 0 && seconds <= 60 && timerContainer) {

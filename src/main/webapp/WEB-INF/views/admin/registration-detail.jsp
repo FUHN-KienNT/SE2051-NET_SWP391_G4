@@ -2,25 +2,48 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
+<%-- 
+=============================================================================
+MÀN HÌNH CHI TIẾT ĐƠN ĐĂNG KÝ KHÓA HỌC (REGISTRATION DETAIL)
+Dành cho Quản trị viên (Admin) / Quản lý (Manager):
+- Bố cục 2 cột (12 cột lưới Tailwind):
+  + Cột trái (8 cột):
+    * Khối 1: Thông tin học viên (Họ tên, email, SĐT, trạng thái tài khoản).
+    * Khối 2: Thông tin khóa học (Tên, danh mục, học phí niêm yết, link xem khóa học).
+    * Khối 3: Chi tiết thanh toán & giao dịch (Số tiền, phương thức, mã Txn, ngày giờ).
+    * Khối 4: Tiến độ học tập thực tế của học viên trong khóa học.
+  + Cột phải (4 cột, Ghim sticky khi cuộn):
+    * Form cập nhật trạng thái học (enrolled / completed / cancelled).
+    * Form cập nhật tình trạng thanh toán (paid / pending / refunded).
+    * Bảng hướng dẫn & chính sách quyền truy cập của học viên.
+=============================================================================
+--%>
+
 <div class="min-h-screen flex flex-col bg-surface lg:flex-row">
+    <!-- Sidebar điều hướng quản lý -->
     <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
         <jsp:param name="activeSection" value="registrations" />
     </jsp:include>
 
-    <!-- Main Content Area -->
+    <!-- Khu vực nội dung chính -->
     <div class="flex-1 flex flex-col min-w-0">
         <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
-            <!-- Alerts -->
+            <!-- ============================================================= -->
+            <!-- PHẦN 1: THÔNG BÁO PHẢN HỒI (ALERTS)                           -->
+            <!-- ============================================================= -->
             <c:if test="${param.success eq 'updated'}">
                 <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-xs animate-fade-in">
                     <div class="flex items-center space-x-2.5">
                         <i class="fa-solid fa-circle-check text-status-success text-base" aria-hidden="true"></i>
                         <span class="font-medium">Cập nhật thông tin đăng ký thành công!</span>
                     </div>
-                    <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss alert" class="rounded-lg p-1.5 text-status-success hover:bg-emerald-100"><i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i></button>
+                    <button type="button" onclick="this.parentElement.remove()" aria-label="Đóng thông báo" class="rounded-lg p-1.5 text-status-success hover:bg-emerald-100">
+                        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                    </button>
                 </div>
             </c:if>
             <c:if test="${param.error eq 'update_failed'}">
@@ -29,11 +52,15 @@
                         <i class="fa-solid fa-circle-exclamation text-rose-600 text-base" aria-hidden="true"></i>
                         <span class="font-medium">Không thể cập nhật trạng thái đơn đăng ký. Vui lòng thử lại!</span>
                     </div>
-                    <button type="button" onclick="this.parentElement.remove()" aria-label="Dismiss alert" class="rounded-lg p-1.5 text-status-danger hover:bg-rose-100"><i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i></button>
+                    <button type="button" onclick="this.parentElement.remove()" aria-label="Đóng thông báo" class="rounded-lg p-1.5 text-status-danger hover:bg-rose-100">
+                        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+                    </button>
                 </div>
             </c:if>
 
-            <!-- Breadcrumbs & Back link -->
+            <!-- ============================================================= -->
+            <!-- PHẦN 2: BREADCRUMB & TIÊU ĐỀ TRANG                             -->
+            <!-- ============================================================= -->
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <nav class="mb-1 text-xs font-semibold text-brand-700 tracking-wide uppercase flex items-center gap-1.5">
@@ -57,13 +84,17 @@
                 </a>
             </div>
 
-            <!-- Main Layout Grid -->
+            <!-- ============================================================= -->
+            <!-- PHẦN 3: BỐ CỤC NỘI DUNG 2 CỘT (MAIN LAYOUT GRID)              -->
+            <!-- ============================================================= -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-                <!-- Left Column: Details (8 cols) -->
+                <!-- --------------------------------------------------------- -->
+                <!-- CỘT TRÁI (8 CỘT): CHI TIẾT DỮ LIỆU ĐĂNG KÝ                 -->
+                <!-- --------------------------------------------------------- -->
                 <div class="lg:col-span-8 space-y-6">
 
-                    <!-- Student Info Card -->
+                    <!-- KHỐI 1: THÔNG TIN HỌC VIÊN -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
                         <div class="flex items-center justify-between pb-4 mb-5 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
@@ -78,6 +109,7 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                            <!-- Avatar chữ cái đầu -->
                             <div class="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-100 text-brand-700 font-bold flex items-center justify-center text-2xl shrink-0 shadow-xs">
                                 <c:choose>
                                     <c:when test="${not empty registration.userName}">
@@ -87,6 +119,7 @@
                                 </c:choose>
                             </div>
 
+                            <!-- Lưới thông tin liên hệ -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 text-xs sm:text-sm">
                                 <div>
                                     <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Họ và tên</p>
@@ -118,7 +151,7 @@
                         </div>
                     </div>
 
-                    <!-- Course Info Card -->
+                    <!-- KHỐI 2: THÔNG TIN KHÓA HỌC -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
                         <div class="flex items-center justify-between pb-4 mb-5 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
@@ -126,7 +159,7 @@
                                 <span>Thông Tin Khóa Học</span>
                             </h2>
                             <c:if test="${not empty course}">
-                                <a href="${pageContext.request.contextPath}/course?id=${course.id}" target="_blank" class="text-xs font-semibold text-brand-700 hover:underline flex items-center gap-1">
+                                <a href="${pageContext.request.contextPath}/course-detail?id=${course.id}" target="_blank" class="text-xs font-semibold text-brand-700 hover:underline flex items-center gap-1">
                                     <span>Xem khóa học</span>
                                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
                                 </a>
@@ -165,12 +198,12 @@
                         </div>
                     </div>
 
-                    <!-- Payment & Transaction Details Card -->
+                    <!-- KHỐI 3: CHI TIẾT THANH TOÁN & GIAO DỊCH -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
                         <div class="flex items-center justify-between pb-4 mb-5 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
                                 <i class="fa-solid fa-receipt text-brand-700" aria-hidden="true"></i>
-                                <span>Chi Tiết Thanh Toán & Giao Dịch</span>
+                                <span>Chi Tiết Thanh Toán &amp; Giao Dịch</span>
                             </h2>
                             <div>
                                 <c:choose>
@@ -194,6 +227,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-xs sm:text-sm">
+                            <!-- Số tiền đăng ký -->
                             <div>
                                 <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Số tiền đăng ký</p>
                                 <p class="text-xl font-black text-brand-700 mt-0.5">
@@ -206,6 +240,7 @@
                                 </p>
                             </div>
 
+                            <!-- Phương thức thanh toán -->
                             <div>
                                 <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Phương thức thanh toán</p>
                                 <p class="font-bold text-text-primary mt-0.5">
@@ -216,6 +251,7 @@
                                 </p>
                             </div>
 
+                            <!-- Mã giao dịch -->
                             <div>
                                 <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Mã giao dịch (Txn ID)</p>
                                 <p class="font-mono font-semibold text-text-primary mt-0.5 break-all">
@@ -226,6 +262,7 @@
                                 </p>
                             </div>
 
+                            <!-- Thời điểm đăng ký -->
                             <div>
                                 <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Thời điểm đăng ký</p>
                                 <p class="font-semibold text-text-primary mt-0.5">
@@ -238,6 +275,7 @@
                                 </p>
                             </div>
 
+                            <!-- Thời điểm thanh toán -->
                             <div>
                                 <p class="text-text-secondary text-[11px] uppercase tracking-wider font-semibold">Thời điểm thanh toán</p>
                                 <p class="font-semibold text-text-primary mt-0.5">
@@ -252,7 +290,7 @@
                         </div>
                     </div>
 
-                    <!-- Learning Progress Card -->
+                    <!-- KHỐI 4: TIẾN ĐỘ HỌC TẬP -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
                         <div class="flex items-center justify-between pb-4 mb-4 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
@@ -278,10 +316,12 @@
 
                 </div>
 
-                <!-- Right Column: Status Management (4 cols) -->
+                <!-- --------------------------------------------------------- -->
+                <!-- CỘT PHẢI (4 CỘT): FORM CẬP NHẬT TRẠNG THÁI & CHÍNH SÁCH    -->
+                <!-- --------------------------------------------------------- -->
                 <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
 
-                    <!-- Status Update Form Card -->
+                    <!-- KHỐI 5: FORM CẬP NHẬT ĐƠN ĐĂNG KÝ -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
                         <div class="pb-4 mb-5 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
@@ -297,7 +337,7 @@
                             <input type="hidden" name="action" value="updateStatus">
                             <input type="hidden" name="id" value="${registration.id}">
 
-                            <!-- Course Status Field -->
+                            <!-- Lựa chọn trạng thái học -->
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">
                                     Trạng thái học (Course Status)
@@ -309,7 +349,7 @@
                                 </select>
                             </div>
 
-                            <!-- Payment Status Field -->
+                            <!-- Lựa chọn tình trạng thanh toán -->
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">
                                     Tình trạng thanh toán (Payment Status)
@@ -321,7 +361,7 @@
                                 </select>
                             </div>
 
-                            <!-- Save Button -->
+                            <!-- Nút Lưu thay đổi -->
                             <div class="pt-3">
                                 <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                     <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
@@ -331,7 +371,7 @@
                         </form>
                     </div>
 
-                    <!-- Policy & Help Note Card -->
+                    <!-- KHỐI 6: LƯU Ý VỀ CHÍNH SÁCH QUYỀN TRUY CẬP -->
                     <div class="bg-surface p-5 rounded-2xl border border-border-default text-xs text-text-secondary space-y-2.5">
                         <div class="flex items-center gap-2 font-bold text-text-primary">
                             <i class="fa-solid fa-circle-info text-brand-700" aria-hidden="true"></i>

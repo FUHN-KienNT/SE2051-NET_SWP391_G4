@@ -151,7 +151,10 @@ public class QuizDAO {
 
         if (quiz == null || quiz.getModuleId() == null
                 || quiz.getTitle() == null
-                || quiz.getTitle().trim().isEmpty()) {
+                || quiz.getTitle().trim().isEmpty()
+                || quiz.getTimeLimit() == null
+                || quiz.getTimeLimit() < 1
+                || quiz.getTimeLimit() > 600) {
             return false;
         }
 
@@ -170,12 +173,7 @@ public class QuizDAO {
             ps.setObject(1, id);
             ps.setObject(2, quiz.getModuleId());
             ps.setString(3, quiz.getTitle().trim());
-
-            if (quiz.getTimeLimit() == null) {
-                ps.setNull(4, Types.INTEGER);
-            } else {
-                ps.setInt(4, quiz.getTimeLimit());
-            }
+            ps.setInt(4, quiz.getTimeLimit());
 
             if (quiz.getPassScore() == null) {
                 ps.setBigDecimal(5, new BigDecimal("5.0"));
@@ -207,7 +205,10 @@ public class QuizDAO {
         if (quiz == null || quiz.getId() == null
                 || quiz.getModuleId() == null
                 || quiz.getTitle() == null
-                || quiz.getTitle().trim().isEmpty()) {
+                || quiz.getTitle().trim().isEmpty()
+                || quiz.getTimeLimit() == null
+                || quiz.getTimeLimit() < 1
+                || quiz.getTimeLimit() > 600) {
             return false;
         }
 
@@ -227,12 +228,7 @@ public class QuizDAO {
 
             ps.setObject(1, quiz.getModuleId());
             ps.setString(2, quiz.getTitle().trim());
-
-            if (quiz.getTimeLimit() == null) {
-                ps.setNull(3, Types.INTEGER);
-            } else {
-                ps.setInt(3, quiz.getTimeLimit());
-            }
+            ps.setInt(3, quiz.getTimeLimit());
 
             if (quiz.getPassScore() == null) {
                 ps.setBigDecimal(4, new BigDecimal("5.0"));
@@ -304,8 +300,7 @@ public class QuizDAO {
             return false;
         }
 
-        if (timeLimit != null
-                && (timeLimit < 1 || timeLimit > 600)) {
+        if (timeLimit == null || timeLimit < 1 || timeLimit > 600) {
             return false;
         }
 
@@ -353,13 +348,7 @@ public class QuizDAO {
                     ps.setObject(1, finalQuizId);
                     ps.setObject(2, moduleId);
                     ps.setString(3, title.trim());
-
-                    if (timeLimit == null) {
-                        ps.setNull(4, Types.INTEGER);
-                    } else {
-                        ps.setInt(4, timeLimit);
-                    }
-
+                    ps.setInt(4, timeLimit);
                     ps.setBigDecimal(5, passScore);
                     ps.setString(6, safeStatus);
                     ps.setString(7, safeImageUrl);
@@ -401,13 +390,7 @@ public class QuizDAO {
 
                     ps.setObject(1, moduleId);
                     ps.setString(2, title.trim());
-
-                    if (timeLimit == null) {
-                        ps.setNull(3, Types.INTEGER);
-                    } else {
-                        ps.setInt(3, timeLimit);
-                    }
-
+                    ps.setInt(3, timeLimit);
                     ps.setBigDecimal(4, passScore);
                     ps.setString(5, safeStatus);
                     ps.setString(6, safeImageUrl);
@@ -510,7 +493,7 @@ public class QuizDAO {
     }
 
     // =========================================================
-    // HIDE / SOFT DELETE QUIZ
+    // HIDE / UNHIDE / HARD DELETE QUIZ
     // =========================================================
 
     public boolean hide(UUID id) {
@@ -551,9 +534,99 @@ public class QuizDAO {
         }
     }
 
+    /**
+     * Kiểm tra quiz đã được sử dụng trong khóa học / chương học (bảng lesson)
+     * hoặc đã có học viên làm bài (bảng quiz_submission) hay chưa.
+     */
+    public boolean isUsed(UUID quizId) {
+        if (quizId == null) {
+            return false;
+        }
+
+        try (Connection conn = DbConnection.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT EXISTS(SELECT 1 FROM quiz_submission WHERE quiz_id=?)")) {
+                ps.setObject(1, quizId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getBoolean(1)) {
+                        return true;
+                    }
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, "Error checking quiz_submission in QuizDAO.isUsed", e);
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT EXISTS(SELECT 1 FROM lesson WHERE quiz_id=?)")) {
+                ps.setObject(1, quizId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getBoolean(1)) {
+                        return true;
+                    }
+                }
+            } catch (SQLException e) {
+                LOGGER.log(Level.WARNING, "Error checking lesson.quiz_id in QuizDAO.isUsed", e);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in QuizDAO.isUsed", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * DELETE quiz vĩnh viễn:
+     * Chỉ được phép xóa nếu quiz CHƯA TỪNG được sử dụng trong bất kỳ khóa học / module nào (lesson)
+     * và chưa có học viên làm bài (quiz_submission).
+     * Nếu quiz đã được dùng, trả về false (chỉ được phép ẩn bằng hide()).
+     */
     public boolean delete(UUID id) {
-        // Thay vì xóa cứng làm hỏng dữ liệu bài làm cũ của học sinh, ta ẩn quiz (soft delete)
-        return hide(id);
+        if (id == null || isUsed(id)) {
+            return false;
+        }
+
+        String deleteQuestionsSql = "DELETE FROM quiz_question WHERE quiz_id=?";
+        String deleteQuizSql = "DELETE FROM quiz WHERE id=?";
+
+        Connection conn = null;
+        try {
+            conn = DbConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps1 = conn.prepareStatement(deleteQuestionsSql)) {
+                ps1.setObject(1, id);
+                ps1.executeUpdate();
+            }
+
+            int affected;
+            try (PreparedStatement ps2 = conn.prepareStatement(deleteQuizSql)) {
+                ps2.setObject(1, id);
+                affected = ps2.executeUpdate();
+            }
+
+            conn.commit();
+            return affected > 0;
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    LOGGER.log(Level.SEVERE, "Rollback failed in QuizDAO.delete", rollbackError);
+                }
+            }
+            LOGGER.log(Level.SEVERE, "Error in QuizDAO.delete", e);
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    LOGGER.log(Level.WARNING, "Error closing connection", e);
+                }
+            }
+        }
     }
 
     // =========================================================

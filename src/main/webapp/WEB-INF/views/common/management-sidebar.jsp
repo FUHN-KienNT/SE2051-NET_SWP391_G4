@@ -60,7 +60,10 @@
 
             <c:if test="${isExpert}">
                 <c:set var="targetCourseId" value="${not empty param.courseId ? param.courseId : (not empty courseId ? courseId : (not empty course.id ? course.id : ''))}" />
-                <c:set var="courseQuery" value="${not empty targetCourseId ? '?courseId='.concat(targetCourseId) : ''}" />
+                <c:set var="courseQuery" value="" />
+                <c:if test="${not empty targetCourseId}">
+                    <c:set var="courseQuery" value="?courseId=${targetCourseId}" />
+                </c:if>
 
                 <c:if test="${param.activeSection ne 'dashboard' and (not empty targetCourseId or param.activeSection eq 'lessons' or param.activeSection eq 'questions' or param.activeSection eq 'quiz' or param.activeSection eq 'quizzes')}">
                     <div class="border-t border-border-default pt-4">
@@ -109,10 +112,6 @@
                         <span class="management-sidebar-label">System Settings</span>
                     </a>
                 </div>
-            </c:if>
-
-            <c:if test="${isExpert and (param.activeSection eq 'questions' or param.activeSection eq 'quiz' or param.activeSection eq 'quizzes') and courseTotal ne null}">
-                <jsp:include page="/WEB-INF/views/expert/assigned-course-sidebar.jsp" />
             </c:if>
         </nav>
     </div>

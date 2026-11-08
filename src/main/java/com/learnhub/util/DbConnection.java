@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,9 +56,39 @@ public class DbConnection {
             config.addDataSourceProperty("stringtype", "unspecified");
 
             dataSource = new HikariDataSource(config);
+            ensureSchemaUpToDate();
             LOGGER.info("HikariCP Connection Pool initialized successfully.");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to initialize HikariCP connection pool: " + e.getMessage(), e);
+        }
+    }
+
+    private static void ensureSchemaUpToDate() {
+        String[] statements = {
+            "ALTER TABLE module ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE",
+            "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lesson_type') THEN CREATE TYPE lesson_type AS ENUM ('content', 'video', 'quiz'); END IF; END $$",
+            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS lesson_type lesson_type NOT NULL DEFAULT 'content'",
+            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS video_url TEXT",
+            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS quiz_id UUID",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_quiz_id_module ON quiz (id, module_id)",
+            "CREATE INDEX IF NOT EXISTS idx_lesson_quiz_id ON lesson (quiz_id) WHERE quiz_id IS NOT NULL",
+            "INSERT INTO module (course_id, title, content, order_index) " +
+                    "SELECT c.id, 'Chương 1: Kiến thức nền tảng & Tổng quan', 'Nội dung kiến thức nền tảng của khóa học.', 1 " +
+                    "FROM course c WHERE NOT EXISTS (SELECT 1 FROM module m WHERE m.course_id = c.id)",
+            "INSERT INTO module (course_id, title, content, order_index) " +
+                    "SELECT c.id, 'Chương 2: Thực hành chuyên sâu & Dự án thực tế', 'Ứng dụng thực hành và bài tập tổng hợp của khóa học.', 2 " +
+                    "FROM course c WHERE (SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) = 1"
+        };
+        try (Connection conn = dataSource.getConnection();
+             Statement st = conn.createStatement()) {
+            for (String sql : statements) {
+                try {
+                    st.execute(sql);
+                } catch (SQLException ignored) {
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Schema auto-check skipped: " + e.getMessage());
         }
     }
 

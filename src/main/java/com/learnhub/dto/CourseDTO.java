@@ -15,6 +15,7 @@ public class CourseDTO implements Serializable {
     private String status;
     private UUID categoryId;
     private String categoryName;
+    private Boolean categoryStatus;
     private String expertName;
     private int moduleCount;
     private int lessonCount;
@@ -58,6 +59,9 @@ public class CourseDTO implements Serializable {
 
     public UUID getCategoryId() { return categoryId; }
     public void setCategoryId(UUID categoryId) { this.categoryId = categoryId; }
+
+    public Boolean getCategoryStatus() { return categoryStatus; }
+    public void setCategoryStatus(Boolean categoryStatus) { this.categoryStatus = categoryStatus; }
 
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }

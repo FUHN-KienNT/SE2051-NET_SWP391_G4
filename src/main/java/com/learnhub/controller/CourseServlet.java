@@ -132,9 +132,20 @@ public class CourseServlet extends HttpServlet {
 
                     // Kiểm tra user đã đăng ký khóa học chưa
                     User user = ControllerSupport.currentUser(req);
-                    if (user != null && AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode())
-                            && learningService.findEnrolledCourse(user.getId(), courseId) != null) {
+                    boolean isEnrolled = (user != null && learningService.findEnrolledCourse(user.getId(), courseId) != null);
+                    if (user != null && AppConstants.Role.STUDENT.equalsIgnoreCase(user.getRoleCode()) && isEnrolled) {
                         resp.sendRedirect(req.getContextPath() + "/learn/course?id=" + courseId);
+                        return;
+                    }
+
+                    boolean isStaff = (user != null && (AppConstants.Role.ADMIN.equalsIgnoreCase(user.getRoleCode())
+                            || AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode())
+                            || (AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode()) && course.getExpertId() != null && course.getExpertId().equals(user.getId()))));
+
+                    // Nếu danh mục bị tắt và người dùng chưa ghi danh, không phải staff thì không cho xem
+                    if (course.getCategoryStatus() != null && !course.getCategoryStatus() && !isEnrolled && !isStaff) {
+                        req.getSession().setAttribute("flashError", "Khóa học này hiện không khả dụng do danh mục đang tạm dừng.");
+                        resp.sendRedirect(req.getContextPath() + "/courses");
                         return;
                     }
 
@@ -163,6 +174,12 @@ public class CourseServlet extends HttpServlet {
         if (courseIdStr != null) {
             try {
                 UUID courseId = UUID.fromString(courseIdStr);
+                Course course = courseService.getPublishedCourseCurriculum(courseId);
+                if (course == null || (course.getCategoryStatus() != null && !course.getCategoryStatus())) {
+                    req.getSession().setAttribute("flashError", "Không thể đăng ký: Khóa học hiện không khả dụng do danh mục đang tạm dừng.");
+                    resp.sendRedirect(req.getContextPath() + "/courses");
+                    return;
+                }
                 Registration reg = courseService.processCourseRegistration(currentUser.getId(), courseId, null);
                 if (reg != null) {
                     boolean canLearn = learningService.findEnrolledCourse(

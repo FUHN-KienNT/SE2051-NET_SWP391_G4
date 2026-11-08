@@ -1,5 +1,6 @@
 package com.learnhub.controller;
 
+import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.SettingDAO;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
@@ -35,6 +36,7 @@ public class AdminSettingServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AdminSettingServlet.class.getName());
     private final SettingDAO settingDAO = new SettingDAO();
+    private final CourseDAO courseDAO = new CourseDAO();
     private final DashboardService dashboardService = new DashboardService();
 
     @Override
@@ -88,6 +90,8 @@ public class AdminSettingServlet extends HttpServlet {
 
         List<String> types = settingDAO.findAllTypes();
 
+        java.util.Map<UUID, Integer> categoryCourseCounts = courseDAO.countCoursesGroupedByCategory();
+        req.setAttribute("categoryCourseCounts", categoryCourseCounts);
         req.setAttribute("settings", settings);
         req.setAttribute("types", types);
         req.setAttribute("search", search);
@@ -132,6 +136,11 @@ public class AdminSettingServlet extends HttpServlet {
             }
         }
 
+        int linkedCourseCount = 0;
+        if (setting != null && "category".equalsIgnoreCase(setting.getType())) {
+            linkedCourseCount = courseDAO.countCoursesByCategoryId(setting.getId());
+        }
+        req.setAttribute("linkedCourseCount", linkedCourseCount);
         req.setAttribute("setting", setting);
         req.setAttribute("types", getSettingTypes(setting));
         req.setAttribute("isProtected", isRoleSetting(setting));

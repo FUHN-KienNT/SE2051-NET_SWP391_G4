@@ -239,9 +239,16 @@
                                             <td class="px-2 py-3 xl:px-3">
                                                 <c:choose>
                                                     <c:when test="${not empty c.categoryName}">
-                                                        <span class="inline-block break-words px-2 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
-                                                            ${c.categoryName}
-                                                        </span>
+                                                        <div class="flex flex-col gap-1 items-start">
+                                                            <span class="inline-block break-words px-2 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200/80">
+                                                                ${c.categoryName}
+                                                            </span>
+                                                            <c:if test="${c.categoryStatus != null and not c.categoryStatus}">
+                                                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" title="Danh mục này đang Inactive, khóa học bị ẩn khỏi tìm kiếm công khai">
+                                                                    <i class="fa-solid fa-eye-slash text-xs"></i> Danh mục ẩn
+                                                                </span>
+                                                            </c:if>
+                                                        </div>
                                                     </c:when>
                                                     <c:otherwise>
                                                         <span class="text-xs text-slate-400 italic">None</span>

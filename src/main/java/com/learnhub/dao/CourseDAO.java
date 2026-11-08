@@ -26,13 +26,13 @@ public class CourseDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                 "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
-                "s.name as category_name, u.username as expert_name, " +
+                "s.name as category_name, s.status as category_status, u.username as expert_name, " +
                 "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
                 "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) as lesson_count " +
                 "FROM course c " +
                 "LEFT JOIN setting s ON c.category_id = s.id " +
                 "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
-                "WHERE c.status = 'published' ");
+                "WHERE c.status = 'published' AND (s.id IS NULL OR s.status = TRUE) ");
 
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
@@ -71,7 +71,7 @@ public class CourseDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                 "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
-                "s.name AS category_name, u.username AS expert_name, " +
+                "s.name AS category_name, s.status AS category_status, u.username AS expert_name, " +
                 "(SELECT COUNT(*) FROM registration r WHERE r.course_id = c.id " +
                 "AND r.status IN ('enrolled', 'completed') " +
                 "AND (c.price <= 0 OR r.payment_status = 'paid')) AS enrolled_count, " +
@@ -80,7 +80,7 @@ public class CourseDAO {
                 "FROM course c " +
                 "LEFT JOIN setting s ON c.category_id = s.id " +
                 "LEFT JOIN \"user\" u ON c.expert_id = u.id " +
-                "WHERE c.status = 'published' ");
+                "WHERE c.status = 'published' AND (s.id IS NULL OR s.status = TRUE) ");
         if (excludedCourseId != null) {
             sql.append("AND c.id <> ? ");
         }
@@ -105,7 +105,7 @@ public class CourseDAO {
     }
 
     public int countPublishedCourses(String search, UUID categoryId) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM course c WHERE c.status = 'published' ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM course c LEFT JOIN setting s ON c.category_id = s.id WHERE c.status = 'published' AND (s.id IS NULL OR s.status = TRUE) ");
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
@@ -139,7 +139,7 @@ public class CourseDAO {
         if (id == null) return null;
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                      "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
-                     "s.name as category_name, u.username as expert_name, " +
+                     "s.name as category_name, s.status as category_status, u.username as expert_name, " +
                      "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
                      "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) as lesson_count " +
                      "FROM course c " +
@@ -244,6 +244,10 @@ public class CourseDAO {
         c.setUpdatedAt(rs.getTimestamp("updated_at"));
         try {
             c.setCategoryName(rs.getString("category_name"));
+            Object catStatus = rs.getObject("category_status");
+            if (catStatus != null) {
+                c.setCategoryStatus(rs.getBoolean("category_status"));
+            }
             c.setExpertName(rs.getString("expert_name"));
             c.setModuleCount(rs.getInt("module_count"));
             c.setLessonCount(rs.getInt("lesson_count"));
@@ -258,7 +262,7 @@ public class CourseDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                 "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
-                "s.name as category_name, u.username as expert_name, " +
+                "s.name as category_name, s.status as category_status, u.username as expert_name, " +
                 "(SELECT COUNT(*) FROM registration r WHERE r.course_id = c.id) as enrolled_count, " +
                 "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
                 "(SELECT COUNT(*) FROM lesson l JOIN module m ON l.module_id = m.id WHERE m.course_id = c.id) as lesson_count " +
@@ -579,5 +583,37 @@ public class CourseDAO {
             LOGGER.log(Level.SEVERE, "Error in CourseDAO.assignExpert: " + e.getMessage(), e);
             return false;
         }
+    }
+    public int countCoursesByCategoryId(UUID categoryId) {
+        if (categoryId == null) return 0;
+        String sql = "SELECT COUNT(*) FROM course WHERE category_id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, categoryId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.countCoursesByCategoryId: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public Map<UUID, Integer> countCoursesGroupedByCategory() {
+        Map<UUID, Integer> map = new HashMap<>();
+        String sql = "SELECT category_id, COUNT(*) FROM course WHERE category_id IS NOT NULL GROUP BY category_id";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                UUID catId = (UUID) rs.getObject(1);
+                if (catId != null) {
+                    map.put(catId, rs.getInt(2));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in CourseDAO.countCoursesGroupedByCategory: " + e.getMessage(), e);
+        }
+        return map;
     }
 }

@@ -24,6 +24,7 @@ public class Course implements Serializable {
 
     // Joined / helper fields
     private String categoryName;
+    private Boolean categoryStatus;
     private String expertName;
     private String createdByName;
     private int moduleCount;
@@ -84,6 +85,9 @@ public class Course implements Serializable {
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
 
+    
+    public Boolean getCategoryStatus() { return categoryStatus; }
+    public void setCategoryStatus(Boolean categoryStatus) { this.categoryStatus = categoryStatus; }
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
 

@@ -170,6 +170,18 @@
                                 (Luôn Active - Vai trò hệ thống)
                             </span>
                         </div>
+
+                        <c:if test="${setting.type eq 'category'}">
+                            <div class="mt-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-graduation-cap text-[#047857] mr-1"></i>
+                                Hiện có <strong>${linkedCourseCount}</strong> khóa học thuộc danh mục này.
+                            </div>
+                        </c:if>
+
+                        <div id="categoryInactiveWarning" class="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start space-x-2 ${setting.type eq 'category' and not isActiveStatus ? '' : 'hidden'}">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <span><strong>Lưu ý:</strong> Khi danh mục ở trạng thái <em>Inactive</em>, tất cả các khóa học thuộc danh mục này sẽ tạm thời bị ẩn và không thể tìm thấy trên trang chủ hoặc trang tìm kiếm công khai.</span>
+                        </div>
                     </div>
 
                 </div>
@@ -210,13 +222,24 @@
 <script>
     function updateStatusBadge(isActive) {
         const badge = document.getElementById('statusBadge');
-        if (!badge) return;
-        if (isActive) {
-            badge.textContent = 'Active';
-            badge.className = 'inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#15803d]';
-        } else {
-            badge.textContent = 'Inactive';
-            badge.className = 'inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600';
+        if (badge) {
+            if (isActive) {
+                badge.textContent = 'Active';
+                badge.className = 'inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#15803d]';
+            } else {
+                badge.textContent = 'Inactive';
+                badge.className = 'inline-flex items-center px-3.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600';
+            }
+        }
+        const warning = document.getElementById('categoryInactiveWarning');
+        const settingTypeSelect = document.getElementById('settingType');
+        const isCat = (settingTypeSelect && settingTypeSelect.value === 'category') || '${setting.type}' === 'category';
+        if (warning) {
+            if (!isActive && isCat) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
         }
     }
 

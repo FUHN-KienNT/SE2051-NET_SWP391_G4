@@ -116,13 +116,13 @@ INSERT INTO "user" (id, username, full_name, email, password, role_id, status, c
      '$2a$10$qIrXEEG4/EdxpCYiOLAkp.GeeA272AZnh5VFgUNZoihL/yCjuDwKG',
      (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'active', NOW() - INTERVAL '115 days'),
 
-    -- Inactive & Banned
+    -- Inactive users
     ('c0000000-0000-0000-0000-000000000016', 'inactive', 'Ngô Văn Tùng', 'inactive@learnhub.com',
      '$2a$10$eu4KnFl9QzuD.jwM6Q58O.l/7fIyFCuieKJCC.69WiUnZEHsm9ZIC',
      (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'inactive', NOW() - INTERVAL '100 days'),
     ('c0000000-0000-0000-0000-000000000017', 'banned', 'Trương Quốc Spam', 'banned@learnhub.com',
      '$2a$10$v1OxBlBlLquJKeBXy7ydROU.3jayw6i9JUYxiiYEbVm.7NtNpI08i',
-     (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'banned', NOW() - INTERVAL '90 days'),
+     (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'inactive', NOW() - INTERVAL '90 days'),
 
     -- ══ NEW STUDENTS (18–55) ══
     ('c0000000-0000-0000-0000-000000000018', 'nguyenhoang', 'Nguyễn Hoàng Nam', 'nguyenhoang@gmail.com',
@@ -239,13 +239,13 @@ INSERT INTO "user" (id, username, full_name, email, password, role_id, status, c
     ('c0000000-0000-0000-0000-000000000055', 'ryandinh', 'Ryan Đinh', 'ryan.dinh@gmail.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
      (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'active', NOW() - INTERVAL '1 days'),
-    -- Extra inactive/banned
+    -- Extra inactive users
     ('c0000000-0000-0000-0000-000000000056', 'inactive2', 'Cao Minh Đạt', 'inactive2@gmail.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
      (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'inactive', NOW() - INTERVAL '60 days'),
     ('c0000000-0000-0000-0000-000000000057', 'banned2', 'Spammer Test', 'spammer@mailinator.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-     (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'banned', NOW() - INTERVAL '45 days')
+     (SELECT id FROM setting WHERE type='role' AND code='ROLE_STUDENT' LIMIT 1), 'inactive', NOW() - INTERVAL '45 days')
 ON CONFLICT (id) DO UPDATE SET
     username  = EXCLUDED.username,
     full_name = EXCLUDED.full_name,

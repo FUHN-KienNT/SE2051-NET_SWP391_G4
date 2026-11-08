@@ -139,8 +139,9 @@ public class ProfileAccountServlet extends HttpServlet {
             throws ServletException, IOException {
         String requestedUsername = req.getParameter("username");
         String requestedFullName = req.getParameter("fullName");
+        String requestedPhone = req.getParameter("phone");
         UserService.ProfileUpdateResult result = userService.updateOwnProfile(
-                user.getId(), requestedUsername, requestedFullName);
+                user.getId(), requestedUsername, requestedFullName, requestedPhone);
         if (result == UserService.ProfileUpdateResult.SUCCESS) {
             refreshSessionUser(req, user.getId());
             resp.sendRedirect(req.getContextPath() + "/account?updated=profile");
@@ -148,9 +149,12 @@ public class ProfileAccountServlet extends HttpServlet {
         }
         req.setAttribute("enteredUsername", requestedUsername);
         req.setAttribute("enteredFullName", requestedFullName);
+        req.setAttribute("enteredPhone", requestedPhone);
         req.setAttribute("profileError", switch (result) {
             case INVALID_USERNAME -> "Use 3–255 letters, numbers, dots, underscores, or hyphens for your username.";
             case INVALID_FULL_NAME -> "Enter a full name using letters, spaces, apostrophes, hyphens, or periods (up to 255 characters).";
+            case INVALID_PHONE -> "Enter 10 digits starting with 0, or leave the phone number blank.";
+            case PHONE_TAKEN -> "This phone number is already in use.";
             case TAKEN -> "This username is already in use.";
             default -> "Could not save your profile. Please try again.";
         });

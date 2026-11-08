@@ -57,9 +57,11 @@
                     </button>
                     <div class="relative sm:ml-2" id="userMenuDropdown">
                         <button type="button" id="userMenuBtn" class="flex items-center justify-center w-9 h-9 rounded-full border border-brand-700 bg-brand-50 text-brand-700 hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2" aria-label="Account menu" aria-expanded="false" aria-haspopup="true" aria-controls="userMenuPanel">
-                            <span class="text-brand-700 font-bold text-sm uppercase select-none">
-                                <c:out value="${fn:substring(sessionScope.currentUser.username, 0, 1)}" />
-                            </span>
+                            <jsp:include page="/WEB-INF/views/common/avatar.jsp">
+                    <jsp:param name="avatarUrl" value="${sessionScope.currentUser.avatarUrl}" />
+                    <jsp:param name="avatarName" value="${sessionScope.currentUser.fullName}" />
+                    <jsp:param name="avatarClass" value="h-9 w-9 text-sm" />
+                </jsp:include>
                         </button>
                         <div id="userMenuPanel" class="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50 transition-all duration-200 ease-out opacity-0 invisible translate-y-1 pointer-events-none before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                             <div class="px-4 py-3 border-b border-slate-50">

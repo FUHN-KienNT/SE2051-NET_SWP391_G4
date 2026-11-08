@@ -28,12 +28,17 @@
 
     <div class="grid gap-6 ${empty overview ? 'max-w-xl' : 'lg:grid-cols-3'}">
         <section aria-label="Account identity" class="rounded-xl border border-border-default bg-surface-card p-6 shadow-sm flex flex-col items-center justify-center text-center">
-            <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-3xl font-bold uppercase text-brand-700" aria-hidden="true">
-                <c:out value="${fn:substring(profileUser.fullName, 0, 1)}" />
-            </div>
+            <jsp:include page="/WEB-INF/views/common/avatar.jsp">
+                    <jsp:param name="avatarUrl" value="${profileUser.avatarUrl}" />
+                    <jsp:param name="avatarName" value="${profileUser.fullName}" />
+                    <jsp:param name="avatarClass" value="h-20 w-20 text-3xl" />
+                </jsp:include>
             <h2 class="mt-4 text-xl font-bold text-text-primary break-words"><c:out value="${profileUser.fullName}" /></h2>
             <p class="mt-1 text-sm text-text-secondary break-words"><c:out value="${profileUser.username}" /></p>
             <p class="mt-1 text-sm text-text-secondary break-all"><c:out value="${profileUser.email}" /></p>
+            <c:if test="${not empty profileUser.phone}">
+                <p class="mt-1 text-sm text-text-secondary"><c:out value="${profileUser.phone}" /></p>
+            </c:if>
             <p class="mt-4 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
                 <c:out value="${empty profileUser.roleName ? profileUser.roleCode : profileUser.roleName}" />
             </p>

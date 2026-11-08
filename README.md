@@ -154,7 +154,25 @@ Run the complete seed file with `psql -f` (or your SQL client's file execution c
 Configure connection parameters in `src/main/resources/database.properties` or via environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
 
 ### Social sign-in (Google and GitHub)
-Set the following environment variables in the Tomcat process; never commit provider secrets:
+Copy `.env.example` to `.env` in the project root (beside `pom.xml`), then fill in your credentials. In PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+The `.env` file supports Google/GitHub login and SMTP email settings. It is ignored by Git and is not bundled in the WAR. Send it privately only to teammates who need to run the backend; website testers only need the website URL.
+
+Run Tomcat with the project root as its **Working directory**. If your IntelliJ Tomcat configuration does not expose that option, add a single **VM option** pointing to your file, for example:
+
+```text
+-Dlearnhub.envFile="D:/Materials/5_Semester/SWP391/LearnHub/.env"
+```
+
+Each teammate uses their own local path. Restart Tomcat after editing the file. Existing nonblank process environment variables take precedence; remove the corresponding entries from IntelliJ's **Environment variables** if you want `.env` to control them. Missing `.env` is allowed when no explicit path is set; an explicit missing path or malformed file reports a configuration error without logging values.
+
+Use one `KEY=VALUE` per line, optionally enclosing the whole value in matching single or double quotes. Blank lines and lines starting with `#` are ignored. Values are literal: no variable substitution, escape expansion, multiline values, or inline comments. Database settings still use their existing configuration.
+
+Alternatively, set the following environment variables directly in the Tomcat process; never commit provider secrets:
 
 ```text
 GOOGLE_CLIENT_ID
@@ -169,7 +187,7 @@ Register each redirect URI in its provider's OAuth application settings. For a l
 
 ### Email verification for password sign-up
 
-For Gmail, turn on 2-Step Verification and create a Google App Password for LearnHub. Set these two environment variables **in the Tomcat process** (or its IDE run configuration), then restart Tomcat:
+For Gmail, turn on 2-Step Verification and create a Google App Password for LearnHub. Set these two values in `.env` or **in the Tomcat process** (or its IDE run configuration), then restart Tomcat:
 
 ```text
 SMTP_USERNAME=your-gmail-address@gmail.com
@@ -179,6 +197,10 @@ SMTP_PASSWORD=your-google-app-password
 The sender defaults to `SMTP_USERNAME` and the server defaults to `smtp.gmail.com:587` with authenticated STARTTLS. `SMTP_HOST`, `SMTP_PORT`, and `SMTP_FROM` are optional overrides for another SMTP provider. Use an App Password, not the regular Google account password. Do not commit credentials. The `smtp.*` placeholders in `src/main/resources/db.properties` are not used by the mail sender; changing that file alone will not enable email. If sending fails, sign-up stays on the form and Tomcat logs the SMTP error.
 
 Password sign-up sends a six-digit code that expires after 10 minutes. After five incorrect attempts, request a new code; resend is available after 60 seconds and invalidates the previous code. The pending registration is stored in the user's server-side HTTP session; a correct code creates the account. A lost session or Tomcat restart requires starting sign-up again. Google and GitHub sign-in use the provider's verified email and do not send a LearnHub code. No database migration is needed for email verification.
+
+### Profile avatars
+
+Run `db/add_avatar_url.sql` once on an existing database before deploying this version. New databases get the column from `db/schema.sql`. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in the Tomcat process environment, then restart Tomcat. Never commit credentials. JPEG and PNG uploads are limited to 5 MB. Previously uploaded avatars are retained on Cloudinary when replaced.
 
 ### 2. Build Project
 ```bash

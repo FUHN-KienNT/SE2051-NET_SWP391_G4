@@ -21,13 +21,13 @@ public class EmailUtil {
     }
 
     public static boolean sendEmail(String toEmail, String subject, String bodyHtml) {
-        String host = System.getenv("SMTP_HOST");
-        String username = System.getenv("SMTP_USERNAME");
-        String password = System.getenv("SMTP_PASSWORD");
-        String from = System.getenv("SMTP_FROM");
-        String port = System.getenv("SMTP_PORT");
+        String host = AppConfig.get("SMTP_HOST");
+        String username = AppConfig.get("SMTP_USERNAME");
+        String password = AppConfig.get("SMTP_PASSWORD");
+        String from = AppConfig.get("SMTP_FROM");
+        String port = AppConfig.get("SMTP_PORT");
         if (isBlank(username) || isBlank(password) || "app_specific_password_here".equals(password)) {
-            LOGGER.warning("SMTP_USERNAME and SMTP_PASSWORD must be configured in the Tomcat process.");
+            LOGGER.warning("SMTP_USERNAME and SMTP_PASSWORD must be configured in the Tomcat process or .env file.");
             return false;
         }
         if (isBlank(host)) host = "smtp.gmail.com";

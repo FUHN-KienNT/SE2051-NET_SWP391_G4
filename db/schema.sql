@@ -47,7 +47,7 @@ DROP TYPE IF EXISTS user_status CASCADE;
 -- 1. ENUM TYPES
 -- Dung cho cac trang thai gan chat voi logic nghiep vu (workflow/state machine)
 -- ---------------------------------------------------------------------
-CREATE TYPE user_status AS ENUM ('active', 'inactive', 'banned');
+CREATE TYPE user_status AS ENUM ('active', 'inactive');
 
 CREATE TYPE course_status AS ENUM ('draft', 'published', 'archived');
 
@@ -100,6 +100,7 @@ CREATE TABLE "user" (
     role_id    UUID NOT NULL REFERENCES setting (id),
     status     user_status NOT NULL DEFAULT 'active',
     phone      VARCHAR(50),
+    avatar_url TEXT,
     status_note TEXT,
     google_user_id VARCHAR(255),
     github_user_id VARCHAR(255),
@@ -111,6 +112,8 @@ CREATE TABLE "user" (
 );
 
 CREATE INDEX idx_user_role_id ON "user" (role_id);
+CREATE UNIQUE INDEX uq_user_phone_digits ON "user" (regexp_replace(phone, '[^0-9]', '', 'g'))
+    WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') <> '';
 
 
 -- ---------------------------------------------------------------------

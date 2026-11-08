@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.learnhub.entity.User;
+import com.learnhub.util.AppConfig;
 import com.learnhub.util.DbConnection;
 import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
@@ -36,7 +37,7 @@ public class OAuthService {
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
 
     public static String setting(String name) {
-        String value = System.getenv(name);
+        String value = AppConfig.get(name);
         return value == null || value.isBlank() ? null : value.trim();
     }
 
@@ -109,7 +110,7 @@ public class OAuthService {
                 User user = null;
                 boolean foundByProvider = false;
                 String linkedProviderId = null;
-                String userSelect = "SELECT u.id,u.username,u.full_name,u.email,u.password,u.requires_password_change,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
+                String userSelect = "SELECT u.id,u.username,u.full_name,u.email,u.password,u.avatar_url,u.requires_password_change,u.role_id,u.status,u." + providerColumn + ",s.name role_name,s.code role_code FROM \"user\" u LEFT JOIN setting s ON s.id=u.role_id ";
                 try (PreparedStatement ps = conn.prepareStatement(userSelect + "WHERE u." + providerColumn + "=? FOR UPDATE OF u")) {
                     ps.setString(1, profile.id());
                     try (ResultSet rs = ps.executeQuery()) {
@@ -177,6 +178,7 @@ public class OAuthService {
 
     private static User readUser(ResultSet rs) throws SQLException {
         User u = new User(); u.setId((UUID)rs.getObject("id")); u.setUsername(rs.getString("username")); u.setFullName(rs.getString("full_name")); u.setEmail(rs.getString("email")); u.setPassword(rs.getString("password"));
+        u.setAvatarUrl(rs.getString("avatar_url"));
         u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));
         u.setRoleId((UUID)rs.getObject("role_id")); u.setStatus(rs.getString("status")); u.setRoleName(rs.getString("role_name")); u.setRoleCode(rs.getString("role_code")); return u;
     }

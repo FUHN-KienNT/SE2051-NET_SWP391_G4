@@ -47,21 +47,21 @@
             <form action="${pageContext.request.contextPath}/auth/register" method="post" class="space-y-4">
                 <input type="hidden" name="redirect_uri" value="${fn:escapeXml(param.redirect_uri)}">
                 <div>
-                    <label for="fullName" class="block text-xs font-semibold text-slate-600 mb-1.5">Full name</label>
+                    <label for="fullName" class="block text-xs font-semibold text-slate-600 mb-1.5">Full name <span class="text-status-danger" aria-hidden="true">*</span></label>
                     <input id="fullName" name="fullName" type="text" required maxlength="255" autocomplete="name" value="${fn:escapeXml(fullName != null ? fullName : param.fullName)}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all" placeholder="Nguyen Van A">
                 </div>
                 <div>
-                    <label for="username" class="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
+                    <label for="username" class="block text-xs font-semibold text-slate-600 mb-1.5">Username <span class="text-status-danger" aria-hidden="true">*</span></label>
                     <input id="username" name="username" type="text" required minlength="3" maxlength="255" value="${fn:escapeXml(username != null ? username : param.username)}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all" placeholder="hoangntc">
                 </div>
                 
                 <div>
-                    <label for="email" class="block text-xs font-semibold text-slate-600 mb-1.5">Email</label>
+                    <label for="email" class="block text-xs font-semibold text-slate-600 mb-1.5">Email <span class="text-status-danger" aria-hidden="true">*</span></label>
                     <input id="email" name="email" type="email" required value="${fn:escapeXml(email != null ? email : param.email)}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all" placeholder="me@example.com">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+                    <label for="password" class="block text-xs font-semibold text-slate-600 mb-1.5">Password <span class="text-status-danger" aria-hidden="true">*</span></label>
                     <div class="relative">
                         <input id="password" name="password" type="password" required minlength="8" maxlength="72" autocomplete="new-password" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all pr-10" placeholder="Create a password">
                         <button type="button" aria-label="Show or hide password" onclick="togglePassword('password')" class="absolute right-3 top-1/2 -translate-y-1/2 rounded text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
@@ -71,7 +71,7 @@
                 </div>
 
                 <div>
-                    <label for="confirmPassword" class="block text-xs font-semibold text-slate-600 mb-1.5">Confirm Password</label>
+                    <label for="confirmPassword" class="block text-xs font-semibold text-slate-600 mb-1.5">Confirm Password <span class="text-status-danger" aria-hidden="true">*</span></label>
                     <div class="relative">
                         <input id="confirmPassword" name="confirmPassword" type="password" required autocomplete="new-password" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 text-sm transition-all pr-10" placeholder="Confirm your password">
                         <button type="button" aria-label="Show or hide confirmation password" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 rounded text-slate-400 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">

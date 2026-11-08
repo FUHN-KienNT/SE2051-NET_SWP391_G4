@@ -8,3 +8,8 @@ target/
 
 .smarttomcat/
 *.log
+
+# Local credentials (keep only the empty template in Git)
+.env
+.env.*
+!.env.example

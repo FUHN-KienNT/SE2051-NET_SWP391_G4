@@ -24,8 +24,10 @@ class UserServiceAccountTest {
     private static class AccountDao extends UserDAO {
         final User user = new User();
         boolean taken;
+        boolean phoneTaken;
         String savedUsername;
         String savedFullName;
+        String savedPhone;
         String savedHash;
         User insertedUser;
         boolean insertCalled;
@@ -52,15 +54,19 @@ class UserServiceAccountTest {
         }
 
         @Override
+        public boolean isPhoneTakenByOther(UUID userId, String phone) { return phoneTaken; }
+
+        @Override
         public boolean updateOwnUsername(UUID userId, String username) {
             savedUsername = username;
             return true;
         }
 
         @Override
-        public boolean updateOwnProfile(UUID userId, String username, String fullName) {
+        public boolean updateOwnProfile(UUID userId, String username, String fullName, String phone) {
             savedUsername = username;
             savedFullName = fullName;
+            savedPhone = phone;
             return true;
         }
 
@@ -182,19 +188,33 @@ class UserServiceAccountTest {
         UserService service = new UserService(dao, new SettingDAO());
         UUID userId = dao.user.getId();
         assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
-                service.updateOwnProfile(userId, "Alex", "  \t  "));
+                service.updateOwnProfile(userId, "Alex", "  \t  ", null));
         assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
-                service.updateOwnProfile(userId, "Alex", "a".repeat(256)));
+                service.updateOwnProfile(userId, "Alex", "a".repeat(256), null));
         assertEquals(UserService.ProfileUpdateResult.INVALID_FULL_NAME,
-                service.updateOwnProfile(userId, "Alex", "Nguyễn abc@123"));
+                service.updateOwnProfile(userId, "Alex", "Nguyễn abc@123", null));
+        assertEquals(UserService.ProfileUpdateResult.INVALID_PHONE,
+                service.updateOwnProfile(userId, "Alex", "Nguyễn Văn A", "12345"));
         dao.taken = true;
         assertEquals(UserService.ProfileUpdateResult.TAKEN,
-                service.updateOwnProfile(userId, "Other", "Nguyễn Văn A"));
+                service.updateOwnProfile(userId, "Other", "Nguyễn Văn A", null));
         dao.taken = false;
+        dao.phoneTaken = true;
+        assertEquals(UserService.ProfileUpdateResult.PHONE_TAKEN,
+                service.updateOwnProfile(userId, "Alex_2", "Nguyễn Văn A", "0987654321"));
+        dao.phoneTaken = false;
         assertEquals(UserService.ProfileUpdateResult.SUCCESS,
-                service.updateOwnProfile(userId, "  Alex_2  ", "  Nguyễn Văn A  "));
+                service.updateOwnProfile(userId, "  Alex_2  ", "  Nguyễn Văn A  ", " 0987654321 "));
         assertEquals("Alex_2", dao.savedUsername);
         assertEquals("Nguyễn Văn A", dao.savedFullName);
+        assertEquals("0987654321", dao.savedPhone);
+        assertEquals(UserService.ProfileUpdateResult.INVALID_PHONE,
+                service.updateOwnProfile(userId, "Alex_2", "Nguyễn Văn A", "+84 912 345 678"));
+        assertEquals(UserService.ProfileUpdateResult.INVALID_PHONE,
+                service.updateOwnProfile(userId, "Alex_2", "Nguyễn Văn A", "1987654321"));
+        assertEquals(UserService.ProfileUpdateResult.SUCCESS,
+                service.updateOwnProfile(userId, "Alex_2", "Nguyễn Văn A", ""));
+        assertNull(dao.savedPhone);
     }
 
     @Test

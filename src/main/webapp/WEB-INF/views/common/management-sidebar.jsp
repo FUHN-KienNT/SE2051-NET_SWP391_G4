@@ -124,7 +124,11 @@
         </button>
         <div class="management-sidebar-account mt-2 flex items-center gap-1 rounded-xl border border-border-default bg-surface p-1">
             <a href="${pageContext.request.contextPath}/profile" class="management-sidebar-profile flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="My profile" title="My profile">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-bold uppercase text-brand-900"><c:out value="${empty sessionScope.currentUser.fullName ? 'LH' : fn:substring(sessionScope.currentUser.fullName, 0, 1)}" /></span>
+                <jsp:include page="/WEB-INF/views/common/avatar.jsp">
+                    <jsp:param name="avatarUrl" value="${sessionScope.currentUser.avatarUrl}" />
+                    <jsp:param name="avatarName" value="${sessionScope.currentUser.fullName}" />
+                    <jsp:param name="avatarClass" value="h-9 w-9 text-xs" />
+                </jsp:include>
                 <span class="management-sidebar-profile-copy min-w-0 flex-1">
                     <span class="block truncate text-xs font-semibold"><c:out value="${empty sessionScope.currentUser.fullName ? sessionScope.currentUser.username : sessionScope.currentUser.fullName}" /></span>
                     <span class="block text-xs text-text-secondary"><c:choose><c:when test="${isAdmin}">Admin</c:when><c:when test="${isManager}">Manager</c:when><c:when test="${isExpert}">Expert</c:when></c:choose></span>

@@ -11,7 +11,7 @@
         <div>
             <p class="text-sm font-semibold uppercase tracking-wide text-brand-700 mb-2">Settings</p>
             <h1 class="text-3xl font-bold text-text-primary">Account</h1>
-        <p class="mt-2 text-sm text-text-secondary">Manage your name and username, and keep your account secure.</p>
+        <p class="mt-2 text-sm text-text-secondary">Manage your name, username, and phone number, and keep your account secure.</p>
         </div>
         <a href="${pageContext.request.contextPath}/profile"
            class="inline-flex items-center gap-2 rounded-lg border border-border-default bg-surface-card px-4 py-2.5 text-sm font-semibold text-text-primary hover:border-brand-700 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
@@ -19,10 +19,11 @@
         </a>
     </div>
 
-    <c:if test="${param.updated eq 'profile' || param.updated eq 'password'}">
+    <c:if test="${param.updated eq 'profile' || param.updated eq 'password' || param.updated eq 'avatar'}">
         <p role="status" class="mb-6 rounded-xl border border-brand-100 bg-brand-50 p-4 text-sm font-medium text-status-success">
             <c:choose>
                 <c:when test="${param.updated eq 'profile'}">Your profile has been updated.</c:when>
+                <c:when test="${param.updated eq 'avatar'}">Your profile photo has been updated.</c:when>
                 <c:otherwise>Your password has been changed.</c:otherwise>
             </c:choose>
         </p>
@@ -33,16 +34,30 @@
             <h2 id="profile-details-heading" class="text-xl font-bold text-text-primary">Profile details</h2>
             <p class="mt-1 text-sm text-text-secondary">Your email is linked to this account and cannot be changed here.</p>
             <div class="my-6 flex items-center gap-4">
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-50 text-2xl font-bold uppercase text-brand-700" aria-hidden="true">
-                    <c:out value="${fn:substring(profileUser.fullName, 0, 1)}" />
-                </div>
+                <span id="avatar-current"><jsp:include page="/WEB-INF/views/common/avatar.jsp">
+                    <jsp:param name="avatarUrl" value="${profileUser.avatarUrl}" />
+                    <jsp:param name="avatarName" value="${profileUser.fullName}" />
+                    <jsp:param name="avatarClass" value="h-16 w-16 text-2xl" />
+                </jsp:include></span>
+                <img id="avatar-preview" alt="Preview of selected profile photo" class="hidden h-16 w-16 shrink-0 rounded-full object-cover">
                 <div class="min-w-0">
                     <p class="font-semibold text-text-primary break-words"><c:out value="${profileUser.fullName}" /></p>
                     <p class="mt-1 text-sm text-text-secondary break-words"><c:out value="${profileUser.username}" /></p>
-                    <p class="mt-1 text-sm text-text-secondary">Your initial is shown in place of a profile photo.</p>
+                    <p class="mt-1 text-sm text-text-secondary">Your profile photo appears across LearnHub.</p>
                 </div>
             </div>
 
+            <c:if test="${not empty avatarError}">
+                <p role="alert" class="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-status-danger"><c:out value="${avatarError}" /></p>
+            </c:if>
+            <form action="${pageContext.request.contextPath}/account/avatar" method="post" enctype="multipart/form-data" class="mb-8">
+                <input type="hidden" name="csrfToken" value="${fn:escapeXml(csrfToken)}">
+                <label for="avatar-file" class="mb-2 block text-sm font-semibold text-text-primary">Profile photo</label>
+                <input id="avatar-file" name="avatar" type="file" accept="image/jpeg,image/png" required aria-describedby="avatar-help"
+                       class="block w-full text-sm text-text-secondary file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:font-semibold file:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                <p id="avatar-help" class="mt-2 text-xs text-text-secondary">JPEG or PNG, up to 5 MB.</p>
+                <button type="submit" class="mt-4 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Save photo</button>
+            </form>
             <c:if test="${not empty profileError}">
                 <p role="alert" class="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-status-danger"><c:out value="${profileError}" /></p>
             </c:if>
@@ -67,6 +82,18 @@
                         <input id="account-email" type="email" readonly aria-readonly="true" value="${fn:escapeXml(profileUser.email)}"
                                class="w-full rounded-lg border border-border-default bg-surface px-3 py-2.5 text-base text-text-secondary">
                         <p class="mt-2 text-xs text-text-secondary">Contact support if your email needs to change.</p>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="account-phone" class="mb-2 block text-sm font-semibold text-text-primary">Phone</label>
+                        <c:choose>
+                            <c:when test="${not empty profileError}"><c:set var="phoneValue" value="${enteredPhone}" /></c:when>
+                            <c:otherwise><c:set var="phoneValue" value="${profileUser.phone}" /></c:otherwise>
+                        </c:choose>
+                        <input id="account-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[0-9]{9}"
+                               value="${fn:escapeXml(phoneValue)}"
+                               aria-describedby="account-phone-help"
+                               class="w-full rounded-lg border border-border-default bg-surface px-3 py-2.5 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
+                        <p id="account-phone-help" class="mt-2 text-xs text-text-secondary">Optional. Enter 10 digits starting with 0.</p>
                     </div>
                 </div>
                 <button type="submit"
@@ -117,4 +144,5 @@
         </section>
     </div>
 </main>
+<script src="${pageContext.request.contextPath}/assets/js/avatar-preview.js" defer></script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

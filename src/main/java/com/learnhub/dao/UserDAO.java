@@ -40,7 +40,7 @@ public class UserDAO {
 
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -59,7 +59,7 @@ public class UserDAO {
 
     public User findById(UUID id) {
         if (id == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -81,7 +81,7 @@ public class UserDAO {
     /** Legacy lookup used for login by either email or username. */
     public User findByEmail(String email) {
         if (email == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -104,7 +104,7 @@ public class UserDAO {
     public List<User> findUsers(String search, UUID roleId, String status, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, " +
+                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                 "s.name as role_name, s.code as role_code " +
                 "FROM \"user\" u " +
                 "LEFT JOIN setting s ON u.role_id = s.id WHERE 1=1 ");
@@ -243,6 +243,18 @@ public class UserDAO {
         }
     }
 
+    public boolean isPhoneTakenByOther(UUID userId, String phone) {
+        String sql = "SELECT 1 FROM \"user\" WHERE id <> ? AND phone IS NOT NULL "
+                + "AND regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace(?, '[^0-9]', '', 'g') LIMIT 1";
+        try (Connection conn = DbConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, userId);
+            ps.setString(2, phone);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot check phone availability", e);
+        }
+    }
+
     public boolean updateOwnUsername(UUID userId, String username) {
         String sql = "UPDATE \"user\" SET username = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -256,13 +268,26 @@ public class UserDAO {
         }
     }
 
-    public boolean updateOwnProfile(UUID userId, String username, String fullName) {
-        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, updated_at = NOW() WHERE id = ?";
+    public boolean updateOwnAvatar(UUID userId, String avatarUrl) {
+        String sql = "UPDATE \"user\" SET avatar_url = ?, updated_at = NOW() WHERE id = ? AND status = 'active'";
+        try (Connection conn = DbConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, avatarUrl);
+            ps.setObject(2, userId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error updating avatar", e);
+            return false;
+        }
+    }
+
+    public boolean updateOwnProfile(UUID userId, String username, String fullName, String phone) {
+        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, phone = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, fullName);
-            ps.setObject(3, userId);
+            ps.setString(3, phone);
+            ps.setObject(4, userId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.updateOwnProfile", e);
@@ -345,7 +370,7 @@ public class UserDAO {
 
     public List<User> findInstructors() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "JOIN setting s ON u.role_id = s.id " +
@@ -368,6 +393,7 @@ public class UserDAO {
         u.setId((UUID) rs.getObject("id"));
         u.setUsername(rs.getString("username"));
         u.setFullName(rs.getString("full_name"));
+        u.setAvatarUrl(rs.getString("avatar_url"));
         u.setEmail(rs.getString("email"));
         u.setPassword(rs.getString("password"));
         u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));

@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class UserService {
     public enum UsernameUpdateResult { SUCCESS, INVALID, TAKEN, FAILED }
-    public enum ProfileUpdateResult { SUCCESS, INVALID_USERNAME, INVALID_FULL_NAME, TAKEN, FAILED }
+    public enum ProfileUpdateResult { SUCCESS, INVALID_USERNAME, INVALID_FULL_NAME, INVALID_PHONE, PHONE_TAKEN, TAKEN, FAILED }
     public enum PasswordChangeResult { SUCCESS, INVALID_CURRENT, INVALID_NEW, SAME_PASSWORD, FAILED }
 
     public enum LoginStatus {
@@ -402,17 +402,23 @@ public class UserService {
                 ? UsernameUpdateResult.SUCCESS : UsernameUpdateResult.FAILED;
     }
 
-    public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername, String requestedFullName) {
+    public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername, String requestedFullName, String requestedPhone) {
         if (userId == null || requestedUsername == null) return ProfileUpdateResult.INVALID_USERNAME;
         String username = requestedUsername.trim();
         if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) return ProfileUpdateResult.INVALID_USERNAME;
         String fullName = FullNameUtil.normalizeOrNull(requestedFullName);
         if (fullName == null) return ProfileUpdateResult.INVALID_FULL_NAME;
+        String phone = requestedPhone == null || requestedPhone.isBlank() ? null : requestedPhone.trim();
+        if (phone != null && !phone.matches("0[0-9]{9}")) {
+            return ProfileUpdateResult.INVALID_PHONE;
+        }
         User user = userDAO.findById(userId);
         if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return ProfileUpdateResult.FAILED;
         if (userDAO.isIdentityTakenByOther(userId, username)) return ProfileUpdateResult.TAKEN;
-        return userDAO.updateOwnProfile(userId, username, fullName)
-                ? ProfileUpdateResult.SUCCESS : ProfileUpdateResult.FAILED;
+        if (phone != null && userDAO.isPhoneTakenByOther(userId, phone)) return ProfileUpdateResult.PHONE_TAKEN;
+        if (userDAO.updateOwnProfile(userId, username, fullName, phone)) return ProfileUpdateResult.SUCCESS;
+        if (phone != null && userDAO.isPhoneTakenByOther(userId, phone)) return ProfileUpdateResult.PHONE_TAKEN;
+        return ProfileUpdateResult.FAILED;
     }
 
     public PasswordChangeResult changeOwnPassword(UUID userId, String currentPassword,

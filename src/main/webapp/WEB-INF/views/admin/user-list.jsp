@@ -17,13 +17,41 @@
                     <p class="text-slate-500 text-xs sm:text-sm mt-1">Quản lý danh sách người dùng, vai trò và trạng thái tài khoản LearnHub</p>
                 </div>
                 <div>
-                    <a href="${pageContext.request.contextPath}/admin/users?action=new"
+                    <a href="${pageContext.request.contextPath}/admin/user-detail?action=new"
                        class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] active:bg-[#064e3b] text-white font-bold rounded-xl text-xs transition shadow-sm shadow-[#047857]/20">
                         <i class="fa-solid fa-user-plus text-xs"></i>
                         <span>Thêm người dùng</span>
                     </a>
                 </div>
             </div>
+
+            <!-- Flash Success Notification -->
+            <c:if test="${not empty sessionScope.flashMessage}">
+                <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-base" aria-hidden="true"></i>
+                        <span class="font-medium"><c:out value="${sessionScope.flashMessage}" /></span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 p-1" aria-label="Dismiss">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <c:remove var="flashMessage" scope="session"/>
+            </c:if>
+
+            <!-- Flash Error Notification -->
+            <c:if test="${not empty sessionScope.flashError}">
+                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-2.5">
+                        <i class="fa-solid fa-circle-exclamation text-rose-600 text-base" aria-hidden="true"></i>
+                        <span class="font-medium"><c:out value="${sessionScope.flashError}" /></span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800 p-1" aria-label="Dismiss">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <c:remove var="flashError" scope="session"/>
+            </c:if>
 
             <!-- Filter & Search Bar -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-6">

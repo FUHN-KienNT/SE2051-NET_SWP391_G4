@@ -99,6 +99,7 @@ CREATE TABLE "user" (
     requires_password_change BOOLEAN NOT NULL DEFAULT FALSE,
     role_id    UUID NOT NULL REFERENCES setting (id),
     status     user_status NOT NULL DEFAULT 'active',
+    phone      VARCHAR(50),
     google_user_id VARCHAR(255),
     github_user_id VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

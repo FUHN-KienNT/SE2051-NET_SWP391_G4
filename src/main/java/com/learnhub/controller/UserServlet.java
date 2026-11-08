@@ -23,6 +23,7 @@ import java.util.UUID;
  * - updateUserProfile()
  * - changeUserStatus()
  * - resetPassword()
+ * - createUser()
  */
 @WebServlet(name = "UserServlet", urlPatterns = {"/admin/users", "/admin/user-detail", "/admin/user-status", "/admin/reset-password"})
 public class UserServlet extends HttpServlet {
@@ -32,17 +33,39 @@ public class UserServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
 
+        if ("/admin/users".equals(path) && "new".equalsIgnoreCase(req.getParameter("action"))) {
+            resp.sendRedirect(req.getContextPath() + "/admin/user-detail?action=new");
+            return;
+        }
+
         if ("/admin/user-detail".equals(path)) {
+            String action = req.getParameter("action");
+            if ("new".equalsIgnoreCase(action)) {
+                List<Setting> roles = userService.getAllRoles();
+                req.setAttribute("isNew", true);
+                req.setAttribute("roles", roles);
+                req.getRequestDispatcher("/WEB-INF/views/admin/user-detail.jsp").forward(req, resp);
+                return;
+            }
+
             String idStr = req.getParameter("id");
             if (idStr != null) {
                 try {
-                    UUID userId = UUID.fromString(idStr);
+                    UUID userId = UUID.fromString(idStr.trim());
                     UserDTO user = userService.getUserById(userId);
-                    List<Setting> roles = userService.getAllRoles();
-                    req.setAttribute("user", user);
-                    req.setAttribute("roles", roles);
-                    req.getRequestDispatcher("/WEB-INF/views/admin/user-detail.jsp").forward(req, resp);
-                    return;
+                    if (user != null) {
+                        List<Setting> roles = userService.getAllRoles();
+                        String userCode = "USR-" + user.getId().toString().substring(0, 8).toUpperCase();
+                        String initials = computeInitials(user.getFullName() != null && !user.getFullName().isBlank()
+                                ? user.getFullName() : user.getUsername());
+
+                        req.setAttribute("user", user);
+                        req.setAttribute("roles", roles);
+                        req.setAttribute("userCode", userCode);
+                        req.setAttribute("initials", initials);
+                        req.getRequestDispatcher("/WEB-INF/views/admin/user-detail.jsp").forward(req, resp);
+                        return;
+                    }
                 } catch (Exception ignored) {
                 }
             }
@@ -94,7 +117,6 @@ public class UserServlet extends HttpServlet {
             }
         }
 
-
         int totalUsers = userService.countUsers(search, roleId, status);
         int totalPages = Math.max(1, (int) Math.ceil((double) totalUsers / pageSize));
         if (page > totalPages) {
@@ -103,8 +125,6 @@ public class UserServlet extends HttpServlet {
 
         List<UserDTO> users = userService.getUserList(search, roleId, status, page, pageSize);
         List<String> pageNumbers = PaginationHelper.getPageNumbers(page, totalPages);
-
-
 
         req.setAttribute("users", users);
         req.setAttribute("roles", roles);
@@ -140,26 +160,134 @@ public class UserServlet extends HttpServlet {
         }
 
         if ("/admin/user-detail".equals(path)) {
+            String action = req.getParameter("action");
+            if ("create".equalsIgnoreCase(action) || "new".equalsIgnoreCase(action)) {
+                String username = req.getParameter("username");
+                String fullName = req.getParameter("fullName");
+                String email = req.getParameter("email");
+                String phone = req.getParameter("phone");
+                String roleIdStr = req.getParameter("roleId");
+                String status = req.getParameter("status");
+
+                UUID roleId = null;
+                if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
+                    try {
+                        roleId = UUID.fromString(roleIdStr.trim());
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+
+                com.learnhub.entity.User currentAdmin = ControllerSupport.currentUser(req);
+                String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin";
+
+                UserService.AdminCreateUserResult result = userService.createUserByAdmin(
+                        username, fullName, email, phone, roleId, status, adminEmail);
+
+                if (result.isSuccess()) {
+                    String msg = "Tạo người dùng thành công!";
+                    if (result.isEmailSent()) {
+                        msg += " Đã gửi thông tin đăng nhập đến " + (email != null ? email.trim() : "") + ".";
+                    } else {
+                        msg += " (Lưu ý: Không gửi được email thông báo).";
+                    }
+                    msg += " Mật khẩu tạm thời: " + result.getTemporaryPassword();
+                    req.getSession().setAttribute("flashMessage", msg);
+                    resp.sendRedirect(req.getContextPath() + "/admin/users");
+                    return;
+                } else {
+                    req.setAttribute("errorMessage", result.getErrorMessage());
+                    req.setAttribute("isNew", true);
+                    req.setAttribute("roles", userService.getAllRoles());
+                    req.setAttribute("enteredUsername", username);
+                    req.setAttribute("enteredFullName", fullName);
+                    req.setAttribute("enteredEmail", email);
+                    req.setAttribute("enteredPhone", phone);
+                    req.setAttribute("enteredRoleId", roleIdStr);
+                    req.setAttribute("enteredStatus", status);
+                    req.getRequestDispatcher("/WEB-INF/views/admin/user-detail.jsp").forward(req, resp);
+                    return;
+                }
+            }
+
             String idStr = req.getParameter("userId");
             if (idStr == null || idStr.trim().isEmpty()) {
                 idStr = req.getParameter("id");
             }
-            String username = req.getParameter("username");
-            String fullName = req.getParameter("fullName");
-            String email = req.getParameter("email");
-            String roleIdStr = req.getParameter("roleId");
-            String status = req.getParameter("status");
 
+            if ("reset-password".equalsIgnoreCase(action)) {
+                if (idStr != null) {
+                    try {
+                        UUID userId = UUID.fromString(idStr.trim());
+                        com.learnhub.entity.User currentAdmin = ControllerSupport.currentUser(req);
+                        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin";
+                        String tempPass = userService.issueTemporaryPassword(userId, adminEmail);
+                        if (tempPass != null) {
+                            UserDTO targetUser = userService.getUserById(userId);
+                            String emailNotice = targetUser != null ? targetUser.getEmail() : "người dùng";
+                            req.getSession().setAttribute("flashMessage",
+                                    "Đã cấp mật khẩu tạm thời thành công và gửi email đến " + emailNotice + "! Mật khẩu tạm: " + tempPass);
+                        } else {
+                            req.getSession().setAttribute("flashError", "Không thể tạo mật khẩu tạm thời. Vui lòng kiểm tra lại.");
+                        }
+                        resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
+                        return;
+                    } catch (Exception e) {
+                        req.getSession().setAttribute("flashError", "Lỗi khi đặt lại mật khẩu: " + e.getMessage());
+                    }
+                }
+                resp.sendRedirect(req.getContextPath() + "/admin/users");
+                return;
+            }
+
+            // Default: update user profile
             if (idStr != null) {
                 try {
                     UUID userId = UUID.fromString(idStr.trim());
+                    String fullName = req.getParameter("fullName");
+                    String phone = req.getParameter("phone");
+                    String roleIdStr = req.getParameter("roleId");
+                    String status = req.getParameter("status");
+                    String statusNote = req.getParameter("statusNote");
+
+                    if (fullName == null || fullName.trim().isEmpty()) {
+                        req.getSession().setAttribute("flashError", "Họ và tên (Full Name) không được để trống.");
+                        resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
+                        return;
+                    }
+
+                    if (phone != null && !phone.trim().isEmpty()) {
+                        String p = phone.trim();
+                        if (!p.matches("^0[0-9]{9}$")) {
+                            req.getSession().setAttribute("flashError",
+                                    "Số điện thoại không hợp lệ (yêu cầu 10 chữ số bắt đầu bằng 0, ví dụ: 0987654321).");
+                            resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
+                            return;
+                        }
+                    }
+
                     UUID roleId = roleIdStr != null && !roleIdStr.trim().isEmpty() ? UUID.fromString(roleIdStr.trim()) : null;
-                    UserDTO dto = new UserDTO(userId, username, email, roleId, null, status);
-                    dto.setFullName(fullName != null ? fullName.trim() : null);
-                    userService.updateUserProfile(dto);
-                    resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId + "&success=true");
+                    UserDTO dto = new UserDTO();
+                    dto.setId(userId);
+                    dto.setFullName(fullName.trim());
+                    dto.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
+                    dto.setRoleId(roleId);
+                    dto.setStatus(status != null ? status.trim() : null);
+
+                    com.learnhub.entity.User currentAdmin = ControllerSupport.currentUser(req);
+                    String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin";
+
+                    boolean success = userService.updateUserProfile(dto, adminEmail, statusNote);
+                    if (success) {
+                        req.getSession().setAttribute("flashMessage", "Cập nhật hồ sơ người dùng thành công.");
+                    } else {
+                        req.getSession().setAttribute("flashError", "Không thể cập nhật hồ sơ người dùng.");
+                    }
+                    resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
                     return;
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    req.getSession().setAttribute("flashError", "Đã xảy ra lỗi khi cập nhật: " + e.getMessage());
+                    resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + idStr);
+                    return;
                 }
             }
             resp.sendRedirect(req.getContextPath() + "/admin/users");
@@ -178,5 +306,16 @@ public class UserServlet extends HttpServlet {
             }
             resp.sendRedirect(req.getContextPath() + "/admin/users?updated=password");
         }
+    }
+
+    private String computeInitials(String name) {
+        if (name == null || name.isBlank()) return "U";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        }
+        String first = parts[0].substring(0, 1).toUpperCase();
+        String last = parts[parts.length - 1].substring(0, 1).toUpperCase();
+        return first + last;
     }
 }

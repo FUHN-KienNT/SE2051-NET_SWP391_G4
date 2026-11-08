@@ -24,9 +24,22 @@ import java.util.logging.Logger;
 public class UserDAO {
     private static final Logger LOGGER = Logger.getLogger(UserDAO.class.getName());
 
+    static {
+        ensurePhoneColumn();
+    }
+
+    private static void ensurePhoneColumn() {
+        try (Connection conn = DbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS phone VARCHAR(50)");
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Phone column check: " + e.getMessage());
+        }
+    }
+
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -45,7 +58,7 @@ public class UserDAO {
 
     public User findById(UUID id) {
         if (id == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -67,7 +80,7 @@ public class UserDAO {
     /** Legacy lookup used for login by either email or username. */
     public User findByEmail(String email) {
         if (email == null) return null;
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
@@ -90,7 +103,7 @@ public class UserDAO {
     public List<User> findUsers(String search, UUID roleId, String status, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, " +
                 "s.name as role_name, s.code as role_code " +
                 "FROM \"user\" u " +
                 "LEFT JOIN setting s ON u.role_id = s.id WHERE 1=1 ");
@@ -169,8 +182,8 @@ public class UserDAO {
     }
 
     public boolean insert(User user) {
-        String sql = "INSERT INTO \"user\" (id, username, full_name, email, password, role_id, status, created_at, updated_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?::user_status, NOW(), NOW())";
+        String sql = "INSERT INTO \"user\" (id, username, full_name, email, password, role_id, status, phone, requires_password_change, created_at, updated_at) " +
+                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?::user_status, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, user.getId());
@@ -180,6 +193,8 @@ public class UserDAO {
             ps.setString(5, user.getPassword());
             ps.setObject(6, user.getRoleId());
             ps.setString(7, user.getStatus() != null ? user.getStatus() : "active");
+            ps.setString(8, user.getPhone());
+            ps.setBoolean(9, user.isRequiresPasswordChange());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.insert: " + e.getMessage(), e);
@@ -188,15 +203,16 @@ public class UserDAO {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, role_id = ?, status = ?::user_status, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, phone = ?, role_id = ?, status = ?::user_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getFullName());
             ps.setString(3, user.getEmail());
-            ps.setObject(4, user.getRoleId());
-            ps.setString(5, user.getStatus());
-            ps.setObject(6, user.getId());
+            ps.setString(4, user.getPhone());
+            ps.setObject(5, user.getRoleId());
+            ps.setString(6, user.getStatus());
+            ps.setObject(7, user.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.update: " + e.getMessage(), e);
@@ -277,6 +293,19 @@ public class UserDAO {
         }
     }
 
+    public boolean updatePasswordWithMustChange(UUID userId, String newHashedPassword) {
+        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = TRUE, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newHashedPassword);
+            ps.setObject(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.updatePasswordWithMustChange: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
     public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ? AND password = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -308,7 +337,7 @@ public class UserDAO {
 
     public List<User> findInstructors() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "JOIN setting s ON u.role_id = s.id " +
@@ -336,6 +365,10 @@ public class UserDAO {
         u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));
         u.setRoleId((UUID) rs.getObject("role_id"));
         u.setStatus(rs.getString("status"));
+        try {
+            u.setPhone(rs.getString("phone"));
+        } catch (SQLException ignored) {
+        }
         u.setCreatedAt(rs.getTimestamp("created_at"));
         u.setUpdatedAt(rs.getTimestamp("updated_at"));
         try {

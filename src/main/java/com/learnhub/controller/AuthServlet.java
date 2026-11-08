@@ -357,22 +357,34 @@ public class AuthServlet extends HttpServlet {
         }
 
         com.learnhub.dto.UserDTO user = userService.getUserByEmail(email);
-        if (user != null) {
-            HttpSession session = req.getSession(true);
-            synchronized (session) {
-                PendingReset previous = (PendingReset) session.getAttribute(PENDING_RESET);
-                if (previous != null && previous.getEmail().equals(email) && !previous.canResend(Instant.now())) {
-                    resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?wait=1");
-                    return;
-                }
-                
-                String code = newCode();
-                PendingReset pendingReset = new PendingReset(email, code, Instant.now());
-                if (sendResetCode(email, code)) {
-                    session.setAttribute(PENDING_RESET, pendingReset);
-                    session.removeAttribute(VERIFIED_RESET_EMAIL); 
-                }
+        if (user == null) {
+            req.setAttribute("errorMessage", "No account found with this email address. Please check it and try again.");
+            req.setAttribute("email", email);
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+            return;
+        }
+
+        HttpSession session = req.getSession(true);
+        boolean sent;
+        synchronized (session) {
+            PendingReset previous = (PendingReset) session.getAttribute(PENDING_RESET);
+            if (previous != null && previous.getEmail().equals(email) && !previous.canResend(Instant.now())) {
+                resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?wait=1");
+                return;
             }
+
+            String code = newCode();
+            sent = sendResetCode(email, code);
+            if (sent) {
+                session.setAttribute(PENDING_RESET, new PendingReset(email, code, Instant.now()));
+                session.removeAttribute(VERIFIED_RESET_EMAIL);
+            }
+        }
+        if (!sent) {
+            req.setAttribute("errorMessage", "Could not send a reset code. Please try again later.");
+            req.setAttribute("email", email);
+            req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+            return;
         }
         resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?sent=1");
     }

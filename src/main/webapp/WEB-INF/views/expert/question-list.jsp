@@ -182,6 +182,14 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                     </div>
                 </c:if>
 
+                <!-- Cảnh báo không thể sửa câu hỏi đã gán vào đề thi -->
+                <c:if test="${param.cannotEditUsedQuestion == 'true'}">
+                    <div role="alert" class="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold flex items-center gap-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base" aria-hidden="true"></i>
+                        <span>Câu hỏi này đã được sử dụng trong bài kiểm tra nên không thể chỉnh sửa để bảo toàn lịch sử dữ liệu thi.</span>
+                    </div>
+                </c:if>
+
                 <!-- Thông báo đã ẩn câu hỏi -->
                 <c:if test="${param.hidden == 'true'}">
                     <div class="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold flex items-center gap-2.5">
@@ -414,13 +422,15 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                                             </span>
                                         </td>
 
-                                        <!-- Cột Thao tác: Sửa, Ẩn/Hiện (áp dụng mọi câu hỏi), Xóa (chỉ câu chưa dùng) -->
+                                        <!-- Cột Thao tác: Sửa (chỉ câu chưa dùng), Ẩn/Hiện (áp dụng mọi câu hỏi), Xóa (chỉ câu chưa dùng) -->
                                         <td class="px-5 py-4 text-center space-x-1.5 text-xs font-semibold whitespace-nowrap">
-                                            <!-- 1. Nút Sửa -->
-                                            <a href="${pageContext.request.contextPath}/expert/questions/detail?id=${q.id}&courseId=${courseId}"
-                                               class="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-emerald-700 hover:bg-emerald-50 font-bold transition">
-                                                <i class="fa-solid fa-pen mr-1 text-[10px]" aria-hidden="true"></i>Sửa
-                                            </a>
+                                            <!-- 1. Nút Sửa: Chỉ hiển thị với câu hỏi CHƯA ĐƯỢC DÙNG (q.quizCount == 0) -->
+                                            <c:if test="${q.quizCount == 0}">
+                                                <a href="${pageContext.request.contextPath}/expert/questions/detail?id=${q.id}&courseId=${courseId}"
+                                                   class="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-emerald-700 hover:bg-emerald-50 font-bold transition">
+                                                    <i class="fa-solid fa-pen mr-1 text-[10px]" aria-hidden="true"></i>Sửa
+                                                </a>
+                                            </c:if>
 
                                             <!-- 2. Nút Ẩn / Hiện: Mọi câu hỏi (kể cả đã dùng hay chưa dùng) đều có thể Ẩn/Hiện -->
                                             <c:choose>

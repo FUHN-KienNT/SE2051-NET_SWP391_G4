@@ -130,6 +130,15 @@ public class QuestionServlet extends HttpServlet {
             if (id != null && !id.isBlank()) {
                 UUID questionId = ControllerSupport.optionalUuid(id);
                 if (questionId != null) {
+                    // Không cho phép chỉnh sửa câu hỏi đã được sử dụng trong bài kiểm tra
+                    if (service.isUsedInQuiz(questionId)) {
+                        resp.sendRedirect(
+                                req.getContextPath()
+                                        + "/expert/questions?cannotEditUsedQuestion=true"
+                                        + courseSuffix(courseId)
+                        );
+                        return;
+                    }
                     Question question = service.get(questionId);
                     if (question != null) {
                         req.setAttribute("question", question);
@@ -319,6 +328,14 @@ public class QuestionServlet extends HttpServlet {
         req.setAttribute("moduleId", moduleId);
 
         UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
+        if (questionId != null && service.isUsedInQuiz(questionId)) {
+            resp.sendRedirect(
+                    req.getContextPath()
+                            + "/expert/questions?cannotEditUsedQuestion=true"
+                            + courseSuffix(courseId)
+            );
+            return;
+        }
 
         String content = req.getParameter("content");
         String type = req.getParameter("type");

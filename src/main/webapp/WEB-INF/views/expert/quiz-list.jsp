@@ -347,7 +347,7 @@
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
-                                                <c:set var="isQuizUsed" value="${not empty usedQuizIds and usedQuizIds.contains(q.id)}" />
+                                                <c:set var="isQuizUsed" value="${q.used or q.usedCount > 0 or (not empty usedQuizIds and usedQuizIds.contains(q.id))}" />
                                                 <div class="mt-1">
                                                     <c:choose>
                                                         <c:when test="${isQuizUsed}">
@@ -364,26 +364,19 @@
                                                 </div>
                                             </td>
 
-                                            <!-- Các nút thao tác (Xem/Sửa, Ẩn/Hiện, Xóa khi chưa dùng) -->
+                                            <!-- Các nút thao tác (Sửa nếu chưa dùng, Ẩn/Hiện, Xóa nếu chưa dùng) -->
                                             <td class="px-5 py-4 text-center whitespace-nowrap">
                                                 <div class="flex items-center justify-center gap-1.5">
-                                                    <c:choose>
-                                                        <c:when test="${isQuizUsed}">
-                                                            <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
-                                                               class="inline-flex items-center px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs shadow-xs transition"
-                                                               title="Xem chi tiết bài kiểm tra (Chế độ chỉ đọc do đã sử dụng)">
-                                                                <i class="fa-solid fa-eye mr-1 text-blue-600" aria-hidden="true"></i>Xem
-                                                            </a>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
-                                                               class="inline-flex items-center px-3 py-1.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-primary font-semibold text-xs shadow-xs transition"
-                                                               title="Chỉnh sửa bài kiểm tra">
-                                                                <i class="fa-solid fa-pen-to-square mr-1 text-slate-400" aria-hidden="true"></i>Sửa
-                                                            </a>
-                                                        </c:otherwise>
-                                                    </c:choose>
+                                                    <%-- Chỉ hiển thị nút Sửa khi quiz chưa được sử dụng --%>
+                                                    <c:if test="${not isQuizUsed}">
+                                                        <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
+                                                           class="inline-flex items-center px-3 py-1.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-primary font-semibold text-xs shadow-xs transition"
+                                                           title="Chỉnh sửa bài kiểm tra">
+                                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400" aria-hidden="true"></i>Sửa
+                                                        </a>
+                                                    </c:if>
 
+                                                    <%-- Nút Ẩn / Hiện áp dụng cho mọi quiz (quiz đã dùng chỉ có thể ẩn hoặc hiện) --%>
                                                     <c:choose>
                                                         <c:when test="${q.hidden}">
                                                             <a href="${pageContext.request.contextPath}/expert/quizzes?action=unhide&id=${q.id}&courseId=${courseId}"
@@ -401,6 +394,7 @@
                                                         </c:otherwise>
                                                     </c:choose>
 
+                                                    <%-- Chỉ hiển thị nút Xóa khi quiz chưa được sử dụng --%>
                                                     <c:if test="${not isQuizUsed}">
                                                         <button type="button" onclick="confirmDeleteQuiz('${q.id}', '${courseId}')"
                                                                 class="inline-flex items-center px-3 py-1.5 rounded-xl border border-rose-200 text-status-danger hover:bg-rose-50 font-bold text-xs transition"

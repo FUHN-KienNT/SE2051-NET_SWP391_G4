@@ -83,12 +83,18 @@
         <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden mb-6">
             <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 class="font-bold text-slate-800 text-lg">Quản lý người dùng (Quick Access)</h2>
-                <div class="relative w-full sm:max-w-xs">
+                <form action="${pageContext.request.contextPath}/admin/users" method="get" class="relative w-full sm:max-w-xs">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <i class="fa-solid fa-magnifying-glass text-sm"></i>
                     </div>
-                    <input type="text" placeholder="Tìm kiếm nhanh..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] transition-all">
-                </div>
+                    <input type="text"
+                           id="quickUserSearch"
+                           name="search"
+                           placeholder="Tìm nhanh (hoặc gõ và nhấn Enter)..."
+                           autocomplete="off"
+                           title="Gõ để lọc nhanh 5 user gần nhất, hoặc nhấn Enter để tìm kiếm toàn bộ hệ thống"
+                           class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#047857] transition-all">
+                </form>
             </div>
             
             <div class="overflow-x-auto">
@@ -107,7 +113,7 @@
                             </tr>
                         </c:if>
                         <c:forEach var="u" items="${dashboard.recentUsers}">
-                            <tr class="hover:bg-slate-50 transition">
+                            <tr class="hover:bg-slate-50 transition quick-user-row">
                                 <td class="px-6 py-3">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#047857] flex items-center justify-center font-bold text-xs uppercase border border-emerald-100">
@@ -138,6 +144,13 @@
                                 </td>
                             </tr>
                         </c:forEach>
+                        <tr id="noQuickMatchRow" class="hidden">
+                            <td colspan="3" class="px-6 py-6 text-center text-slate-400 text-xs">
+                                <i class="fa-solid fa-user-slash text-base mb-1 block text-slate-300"></i>
+                                Không tìm thấy người dùng khớp từ khóa trong bảng này.<br>
+                                <span class="text-slate-500 font-semibold">Nhấn phím Enter</span> để tìm kiếm trong toàn bộ cơ sở dữ liệu.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -207,6 +220,32 @@
                     scales: {
                         y: { beginAtZero: true, border: {display: false}, grid: {color: '#f1f5f9'} },
                         x: { border: {display: false}, grid: {display: false} }
+                    }
+                }
+            });
+        }
+        // Client-side quick filter for Quick Access users table
+        const quickSearch = document.getElementById('quickUserSearch');
+        if (quickSearch) {
+            quickSearch.addEventListener('input', function() {
+                const term = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.quick-user-row');
+                let countVisible = 0;
+                rows.forEach(r => {
+                    const text = r.innerText.toLowerCase();
+                    if (text.includes(term)) {
+                        r.classList.remove('hidden');
+                        countVisible++;
+                    } else {
+                        r.classList.add('hidden');
+                    }
+                });
+                const noRow = document.getElementById('noQuickMatchRow');
+                if (noRow) {
+                    if (countVisible === 0 && rows.length > 0) {
+                        noRow.classList.remove('hidden');
+                    } else {
+                        noRow.classList.add('hidden');
                     }
                 }
             });

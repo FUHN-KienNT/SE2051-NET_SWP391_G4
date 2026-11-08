@@ -185,6 +185,10 @@ GITHUB_REDIRECT_URI
 
 Register each redirect URI in its provider's OAuth application settings. For a local deployment at `http://localhost:8080/learnhub`, use `http://localhost:8080/learnhub/auth/oauth/google/callback` and `http://localhost:8080/learnhub/auth/oauth/github/callback`. Google needs the `openid`, `email`, and `profile` scopes; GitHub needs `read:user` and `user:email`. New users whose provider does not supply a usable display name must enter one on LearnHub before their account is created. For an existing database, add nullable `google_user_id` and `github_user_id` columns with unique constraints to the `user` table before enabling social sign-in. A new database gets the provider ID columns from `db/schema.sql`.
 
+New Google accounts store `NULL` in `password` and set `requires_password_change = TRUE` until the user chooses a password. They can only access password setup and logout while setup is pending; signing in with Google again resumes setup. Completing setup stores a BCrypt hash and clears the flag. Linking Google to an existing account preserves its password and setup flag. GitHub sign-in is unchanged.
+
+Before deploying this change to an existing database, run `db/allow_null_google_password.sql`. Existing password hashes are preserved, including pending accounts created by older versions, which can still complete setup.
+
 ### Email verification for password sign-up
 
 For Gmail, turn on 2-Step Verification and create a Google App Password for LearnHub. Set these two values in `.env` or **in the Tomcat process** (or its IDE run configuration), then restart Tomcat:

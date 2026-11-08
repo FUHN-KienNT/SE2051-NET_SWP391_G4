@@ -170,9 +170,11 @@ public class AuthServlet extends HttpServlet {
         String error = null;
         if (fullName == null) {
             error = "Enter a full name using letters, spaces, apostrophes, hyphens, or periods (up to 255 characters).";
-        } else if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$") || email.length() > 255 ||
+        } else if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) {
+            error = "Username must be 3–255 characters and contain only letters, numbers, periods, underscores, or hyphens (no spaces).";
+        } else if (email.length() > 255 ||
                 !email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-            error = "Enter a valid username and email address.";
+            error = "Enter a valid email address (up to 255 characters).";
         } else if (password == null || password.length() < 8 || password.length() > 72 ||
                 password.getBytes(StandardCharsets.UTF_8).length > 72) {
             error = "Password must be at least 8 characters and no more than 72 bytes.";

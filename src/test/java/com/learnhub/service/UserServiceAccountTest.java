@@ -79,7 +79,7 @@ class UserServiceAccountTest {
 
         @Override
         public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
-            if (!user.isRequiresPasswordChange() || !currentHash.equals(user.getPassword())) return false;
+            if (!user.isRequiresPasswordChange() || !java.util.Objects.equals(currentHash, user.getPassword())) return false;
             savedHash = newHash;
             user.setPassword(newHash);
             user.setRequiresPasswordChange(false);
@@ -215,6 +215,32 @@ class UserServiceAccountTest {
         assertEquals(UserService.ProfileUpdateResult.SUCCESS,
                 service.updateOwnProfile(userId, "Alex_2", "Nguyễn Văn A", ""));
         assertNull(dao.savedPhone);
+    }
+
+    @Test
+    void googleAccountWithNullPasswordMustCompleteSetupBeforePasswordLogin() {
+        AccountDao dao = new AccountDao();
+        UserService service = new UserService(dao, new SettingDAO());
+        dao.user.setPassword(null);
+        dao.user.setRequiresPasswordChange(true);
+
+        assertEquals(UserService.LoginStatus.INVALID_CREDENTIALS,
+                service.authenticate(dao.user.getEmail(), "new-password").getStatus());
+        assertEquals(UserService.LoginStatus.INVALID_CREDENTIALS,
+                service.authenticate(dao.user.getEmail(), "").getStatus());
+        assertEquals(UserService.PasswordChangeResult.INVALID_NEW,
+                service.setInitialPassword(dao.user.getId(), "short"));
+        assertNull(dao.user.getPassword());
+        assertTrue(dao.user.isRequiresPasswordChange());
+
+        assertEquals(UserService.PasswordChangeResult.SUCCESS,
+                service.setInitialPassword(dao.user.getId(), "new-password"));
+        assertTrue(PasswordHashUtil.checkPassword("new-password", dao.savedHash));
+        assertFalse(dao.user.isRequiresPasswordChange());
+        assertEquals(UserService.LoginStatus.SUCCESS,
+                service.authenticate(dao.user.getEmail(), "new-password").getStatus());
+        assertEquals(UserService.PasswordChangeResult.FAILED,
+                service.setInitialPassword(dao.user.getId(), "another-password"));
     }
 
     @Test

@@ -355,7 +355,7 @@ public class UserDAO {
 
     public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() " +
-                "WHERE id = ? AND password = ? AND requires_password_change = TRUE AND status = 'active'";
+                "WHERE id = ? AND password IS NOT DISTINCT FROM ? AND requires_password_change = TRUE AND status = 'active'";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newHash);

@@ -162,7 +162,10 @@ public class OAuthService {
             roleId = (UUID) rs.getObject(1);
         }
         User user = new User(); user.setId(UUID.randomUUID()); user.setUsername(username); user.setFullName(fullName); user.setEmail(email);
-        user.setPassword(PasswordHashUtil.hashPassword(UUID.randomUUID().toString() + newState())); user.setRoleId(roleId); user.setStatus("active");
+        // Google accounts must choose a local password before accessing the application.
+        user.setPassword(provider == Provider.GOOGLE ? null
+                : PasswordHashUtil.hashPassword(UUID.randomUUID().toString() + newState()));
+        user.setRoleId(roleId); user.setStatus("active");
         user.setRequiresPasswordChange(provider == Provider.GOOGLE);
         String googleId = provider == Provider.GOOGLE ? profile.id() : null;
         String githubId = provider == Provider.GITHUB ? profile.id() : null;

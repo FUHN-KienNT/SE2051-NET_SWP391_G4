@@ -246,7 +246,9 @@
                                                             <c:choose>
                                                                 <c:when test="${s.status}">
                                                                     <button type="submit" 
-                                                                            data-confirm="Bạn có chắc chắn muốn TẮT cài đặt này không?"
+                                                                            <c:set var="courseCnt" value="${categoryCourseCounts[s.id] != null ? categoryCourseCounts[s.id] : 0}" />
+                                                                    <c:set var="deactivateMsg" value="${s.type eq 'category' ? ('Bạn có chắc chắn muốn TẮT danh mục này không? Có '.concat(courseCnt).concat(' khóa học thuộc danh mục này sẽ tạm thời bị ẩn khỏi trang tìm kiếm công khai.')) : 'Bạn có chắc chắn muốn TẮT cài đặt này không?'}" />
+                                                                    data-confirm="${deactivateMsg}"
                                                                             data-confirm-title="Tắt Cài đặt"
                                                                             data-confirm-btn="Tắt cài đặt"
                                                                             data-confirm-type="warning"

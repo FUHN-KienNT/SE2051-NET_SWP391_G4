@@ -15,6 +15,19 @@
             <p class="text-text-secondary mt-3 max-w-2xl text-base">Nâng cao kỹ năng chuyên môn với các khóa học thực chiến được xây dựng bởi đội ngũ giảng viên giàu kinh nghiệm.</p>
         </div>
 
+        <c:if test="${not empty sessionScope.flashError}">
+            <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-circle-exclamation text-rose-600 text-base" aria-hidden="true"></i>
+                    <span class="font-medium"><c:out value="${sessionScope.flashError}" /></span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800 p-1" aria-label="Dismiss">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <c:remove var="flashError" scope="session"/>
+        </c:if>
+
         <!-- Filter Bar -->
         <div class="bg-surface-card p-5 sm:p-6 rounded-2xl border border-border-default shadow-sm mb-10">
             <form action="${pageContext.request.contextPath}/courses" method="get" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">

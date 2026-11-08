@@ -81,6 +81,7 @@ public class CourseService {
         );
         dto.setModuleCount(course.getModuleCount());
         dto.setLessonCount(course.getLessonCount());
+        dto.setCategoryStatus(course.getCategoryStatus());
         return dto;
     }
 

@@ -36,16 +36,8 @@
                             class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                         <option value="" data-next-order="1">-- Chọn Module cho bài giảng --</option>
                         <c:forEach var="m" items="${modules}">
-                            <c:set var="nextOrder" value="1" />
-                            <c:if test="${not empty m.lessons}">
-                                <c:forEach var="l" items="${m.lessons}">
-                                    <c:if test="${lesson == null || l.id ne lesson.id}">
-                                        <c:set var="nextOrder" value="${nextOrder + 1}" />
-                                    </c:if>
-                                </c:forEach>
-                            </c:if>
-                            <option value="${m.id}" data-next-order="${nextOrder}" ${lesson != null && lesson.moduleId eq m.id ? 'selected' : ''}>
-                                ${m.title}
+                            <option value="${m.id}" data-next-order="${nextLessonOrders[m.id]}" ${lesson != null && lesson.moduleId eq m.id ? 'selected' : ''}>
+                                <c:out value="${m.title}" />
                             </option>
                         </c:forEach>
                     </select>
@@ -55,7 +47,7 @@
                     <label for="title" class="block text-sm font-semibold text-text-primary mb-2">Lesson Title <span class="text-status-danger">*</span></label>
                     <input type="text" id="title" name="title" required
                     data-error="${fn:escapeXml(fieldErrors.title)}"
-                           value="${lesson != null ? lesson.title : ''}"
+                           value="${fn:escapeXml(lesson != null ? lesson.title : '')}"
                            placeholder="Nhập tiêu đề bài giảng..."
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                 </div>

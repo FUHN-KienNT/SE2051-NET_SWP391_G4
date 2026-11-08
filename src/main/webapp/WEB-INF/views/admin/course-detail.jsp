@@ -211,7 +211,7 @@
                                 <div class="flex items-center gap-2">
                                     <c:choose>
                                         <c:when test="${sessionScope.currentUser.roleCode eq 'ROLE_MANAGER'}">
-                                            <a href="${pageContext.request.contextPath}/admin/lesson-review?courseId=${course.id}"
+                                            <a href="${pageContext.request.contextPath}/manager/lessons?courseId=${course.id}"
                                                class="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                                 <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
                                                 <span>Review Lessons</span>

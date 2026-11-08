@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-@WebServlet(name = "LessonReviewServlet", urlPatterns = "/admin/lesson-review")
+@WebServlet(name = "LessonReviewServlet", urlPatterns = {"/manager/lesson-review", "/manager/lessons"})
 public class LessonReviewServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
 
@@ -37,18 +37,22 @@ public class LessonReviewServlet extends HttpServlet {
             if (courseIdParam == null || courseIdParam.isBlank()) {
                 req.setAttribute("pendingCourses", lessonService.getCoursesAwaitingReview(manager));
                 req.setAttribute("pageTitle", "Lesson Review - LearnHub");
-                req.getRequestDispatcher("/WEB-INF/views/admin/lesson-review-list.jsp").forward(req, resp);
+                req.getRequestDispatcher("/WEB-INF/views/manager/lesson-review-list.jsp").forward(req, resp);
                 return;
             }
             UUID courseId = UUID.fromString(courseIdParam);
-            var data = lessonService.getLessonsForReview(manager, courseId);
-            if (req.getSession().getAttribute("lessonReviewToken") == null) {
-                req.getSession().setAttribute("lessonReviewToken", UUID.randomUUID().toString());
-            }
-            req.setAttribute("course", data.course());
-            req.setAttribute("lessons", data.lessons());
+            var course = lessonService.getCourseForLessonReview(manager, courseId);
+            var filter = lessonService.lessonListFilter(req.getParameter("sort"), req.getParameter("direction"),
+                    req.getParameter("durationSort"), req.getParameter("lessonStatus"),
+                    req.getParameter("lessonModuleId"), req.getParameter("lessonSearch"));
+            var lessonList = lessonService.buildLessonList(course.getModules(), filter);
+            req.setAttribute("course", course);
+            req.setAttribute("modules", course.getModules());
+            req.setAttribute("managerReview", true);
+            req.setAttribute("canCreateModule", false);
+            ControllerSupport.lessonListAttributes(req, lessonList, filter.search());
             req.setAttribute("pageTitle", "Lesson Review - LearnHub");
-            req.getRequestDispatcher("/WEB-INF/views/admin/lesson-review.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/common/lesson-list.jsp").forward(req, resp);
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -70,13 +74,13 @@ public class LessonReviewServlet extends HttpServlet {
             UUID lessonId = UUID.fromString(req.getParameter("lessonId"));
             Timestamp updatedAt = Timestamp.valueOf(req.getParameter("updatedAt"));
             boolean reviewed = lessonService.reviewLesson(manager, courseId, lessonId,
-                    updatedAt, req.getParameter("decision"));
+                    updatedAt, req.getParameter("decision"), req.getParameter("declineReason"));
             if (!reviewed) {
                 resp.sendError(HttpServletResponse.SC_CONFLICT,
                         "The lesson has changed or has already been reviewed. Reload before reviewing again.");
                 return;
             }
-            resp.sendRedirect(req.getContextPath() + "/admin/lesson-review?reviewed=true&courseId=" + courseId);
+            resp.sendRedirect(req.getContextPath() + "/manager/lessons?reviewed=true&courseId=" + courseId);
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
         } catch (IllegalArgumentException | NullPointerException e) {

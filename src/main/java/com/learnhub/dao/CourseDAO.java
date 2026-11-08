@@ -1,6 +1,7 @@
 package com.learnhub.dao;
 
 import com.learnhub.entity.Course;
+import com.learnhub.dto.CourseStatusCounts;
 import com.learnhub.entity.Lesson;
 import com.learnhub.entity.Module;
 import com.learnhub.util.DbConnection;
@@ -160,61 +161,31 @@ public class CourseDAO {
     }
 
     public Course findCourseWithModulesAndLessons(UUID courseId) {
+        return findCourseCurriculum(courseId, true);
+    }
+
+    public Course findCourseWithLessonSummaries(UUID courseId) {
+        return findCourseCurriculum(courseId, false);
+    }
+
+    private Course findCourseCurriculum(UUID courseId, boolean includeContent) {
         Course course = findById(courseId);
         if (course == null) return null;
 
-        String moduleSql = "SELECT id, course_id, title, content, order_index, created_at, updated_at, hidden " +
-                           "FROM module WHERE course_id = ? ORDER BY order_index ASC";
-        String lessonSql = "SELECT id, module_id, title, content, order_index, duration_minutes, status, lesson_type, video_url, quiz_id, created_at, updated_at " +
-                           "FROM lesson WHERE module_id = ? ORDER BY order_index ASC";
-
-        List<Module> modules = new ArrayList<>();
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement mPs = conn.prepareStatement(moduleSql)) {
-            mPs.setObject(1, courseId);
-            try (ResultSet mRs = mPs.executeQuery()) {
-                while (mRs.next()) {
-                    Module m = new Module();
-                    m.setId((UUID) mRs.getObject("id"));
-                    m.setCourseId((UUID) mRs.getObject("course_id"));
-                    m.setTitle(mRs.getString("title"));
-                    m.setHidden(mRs.getBoolean("hidden"));
-                    m.setContent(mRs.getString("content"));
-                    m.setOrderIndex(mRs.getInt("order_index"));
-                    m.setCreatedAt(mRs.getTimestamp("created_at"));
-                    m.setUpdatedAt(mRs.getTimestamp("updated_at"));
-
-                    try (PreparedStatement lPs = conn.prepareStatement(lessonSql)) {
-                        lPs.setObject(1, m.getId());
-                        try (ResultSet lRs = lPs.executeQuery()) {
-                            List<Lesson> lessons = new ArrayList<>();
-                            while (lRs.next()) {
-                                Lesson l = new Lesson();
-                                l.setId((UUID) lRs.getObject("id"));
-                                l.setModuleId((UUID) lRs.getObject("module_id"));
-                                l.setTitle(lRs.getString("title"));
-                                l.setContent(lRs.getString("content"));
-                                l.setOrderIndex(lRs.getInt("order_index"));
-                                l.setDurationMinutes((Integer) lRs.getObject("duration_minutes"));
-                                l.setPublicationStatus(lRs.getString("status"));
-                                l.setType(lRs.getString("lesson_type"));
-                                l.setVideoUrl(lRs.getString("video_url"));
-                                l.setQuizId((UUID) lRs.getObject("quiz_id"));
-                                l.setCreatedAt(lRs.getTimestamp("created_at"));
-                                l.setUpdatedAt(lRs.getTimestamp("updated_at"));
-                                l.setCourseId(courseId);
-                                lessons.add(l);
-                            }
-                            m.setLessons(lessons);
-                        }
-                    }
-                    modules.add(m);
-                }
-            }
-            course.setModules(modules);
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in findCourseWithModulesAndLessons: " + e.getMessage(), e);
+        List<Module> modules = new ModuleDAO().findByCourseId(courseId);
+        Map<UUID, Module> modulesById = new HashMap<>();
+        for (Module module : modules) {
+            module.setLessons(new ArrayList<>());
+            modulesById.put(module.getId(), module);
         }
+        LessonDAO lessons = new LessonDAO();
+        List<Lesson> courseLessons = includeContent
+                ? lessons.findByCourseId(courseId) : lessons.findSummariesByCourseId(courseId);
+        for (Lesson lesson : courseLessons) {
+            Module module = modulesById.get(lesson.getModuleId());
+            if (module != null) module.getLessons().add(lesson);
+        }
+        course.setModules(modules);
         return course;
     }
 
@@ -415,6 +386,26 @@ public class CourseDAO {
             return false;
         }
     }
+    public List<Course> findAssignedCourseOptions(UUID expertId) {
+        List<Course> courses = new ArrayList<>();
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT id, title FROM course WHERE expert_id=? ORDER BY updated_at DESC, id")) {
+            ps.setObject(1, expertId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Course course = new Course();
+                    course.setId(rs.getObject("id", UUID.class));
+                    course.setTitle(rs.getString("title"));
+                    courses.add(course);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot load assigned courses.", e);
+        }
+        return courses;
+    }
+
     public List<Course> findByExpertId(UUID expertId, int offset, int limit) {
         return findByExpertId(expertId, offset, limit, "");
     }
@@ -447,6 +438,28 @@ public class CourseDAO {
             LOGGER.log(Level.SEVERE, "Error in CourseDAO.findByExpertId: " + e.getMessage(), e);
         }
         return list;
+    }
+
+    public CourseStatusCounts countAssignedByStatus(UUID expertId, String search) {
+        String sql = """
+                SELECT COUNT(*) AS total,
+                       COUNT(*) FILTER (WHERE status='published') AS published,
+                       COUNT(*) FILTER (WHERE status='draft') AS draft,
+                       COUNT(*) FILTER (WHERE status='archived') AS archived
+                FROM course WHERE expert_id=? AND strpos(lower(title), lower(?)) > 0
+                """;
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, expertId);
+            ps.setString(2, search);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return new CourseStatusCounts(rs.getInt("total"), rs.getInt("published"),
+                        rs.getInt("draft"), rs.getInt("archived"));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot count assigned courses.", e);
+        }
     }
 
     public int countByExpertId(UUID expertId) {

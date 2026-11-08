@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * A question is shared across quizzes.
  * Quiz membership is maintained by QuizQuestionDAO.
  */
-public class    QuestionDAO {
+public class QuestionDAO {
 
     private static final Logger LOGGER =
             Logger.getLogger(QuestionDAO.class.getName());
@@ -154,14 +154,32 @@ public class    QuestionDAO {
                 while (rs.next()) {
                     Question q = mapQuestion(rs);
                     q.setOrderIndex(rs.getInt("order_index"));
-                    q.setOptions(findOptionsByQuestionId(q.getId(), conn));
                     list.add(q);
                 }
             }
 
+            Map<UUID, Question> questionsById = new HashMap<>();
+            for (Question question : list) questionsById.put(question.getId(), question);
+            try (PreparedStatement options = conn.prepareStatement("""
+                    SELECT qo.id, qo.question_id, qo.option_text, qo.is_correct
+                    FROM question_option qo JOIN quiz_question qq ON qq.question_id=qo.question_id
+                    WHERE qq.quiz_id=? ORDER BY qo.id
+                    """)) {
+                options.setObject(1, quizId);
+                try (ResultSet rs = options.executeQuery()) {
+                    while (rs.next()) {
+                        QuestionOption option = new QuestionOption();
+                        option.setId(rs.getObject("id", UUID.class));
+                        option.setQuestionId(rs.getObject("question_id", UUID.class));
+                        option.setOptionText(rs.getString("option_text"));
+                        option.setCorrect(rs.getBoolean("is_correct"));
+                        questionsById.get(option.getQuestionId()).addOption(option);
+                    }
+                }
+            }
+
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuestionDAO.findQuestionsByQuizId", e);
+            throw new IllegalStateException("Cannot load quiz questions.", e);
         }
 
         return list;

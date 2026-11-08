@@ -36,7 +36,7 @@
                                         </p>
                                         <p class="mt-1 text-sm text-status-warning"><c:out value="${item.pendingLessonCount}" /> draft lesson(s) awaiting review</p>
                                     </div>
-                                    <a href="${pageContext.request.contextPath}/admin/lesson-review?courseId=${item.courseId}"
+                                    <a href="${pageContext.request.contextPath}/manager/lessons?courseId=${item.courseId}"
                                        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                         Review lessons
                                     </a>

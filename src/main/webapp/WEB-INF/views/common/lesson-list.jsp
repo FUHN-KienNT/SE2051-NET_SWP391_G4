@@ -5,7 +5,7 @@
 
 <div class="min-h-screen flex flex-col bg-surface lg:flex-row">
     <jsp:include page="/WEB-INF/views/common/management-sidebar.jsp">
-        <jsp:param name="activeSection" value="lessons" />
+        <jsp:param name="activeSection" value="${managerReview ? 'review' : 'lessons'}" />
     </jsp:include>
 
     <!-- Main Content Area -->
@@ -13,14 +13,15 @@
         <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
             <div class="bg-surface-card rounded-xl border border-border-default shadow-sm p-6 sm:p-8">
             <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <a href="${pageContext.request.contextPath}/expert/dashboard"
+                            <a href="${pageContext.request.contextPath}${managerReview ? '/manager/lesson-review' : '/expert/dashboard'}"
                                class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-lg border border-border-default bg-surface-card hover:bg-surface text-text-secondary hover:text-text-primary transition text-sm font-semibold shadow-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                                 <i class="fa-solid fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
                                 <span>Quay lại</span>
                             </a>
-                            <h1 class="text-xl sm:text-2xl font-bold text-text-primary">Lesson List</h1>
+                            <h1 class="text-xl sm:text-2xl font-bold text-text-primary">${managerReview ? 'Lesson Review' : 'Lesson List'}</h1>
+                            <c:if test="${not managerReview}">
                             <div class="flex flex-wrap items-center gap-2">
-                            <c:if test="${canCreateModule}">
+                            <c:if test="${not managerReview and canCreateModule}">
                                 <button type="button" id="openCreateModule"
                                         class="rounded-lg border border-brand-700 px-4 py-2.5 text-sm font-bold text-brand-700 hover:bg-brand-50 focus-visible:ring-2 focus-visible:ring-brand-700">
                                     Create Module
@@ -34,7 +35,13 @@
                             </a>
                             </c:if>
                             </div>
+                            </c:if>
                         </div>
+            <c:choose>
+                <c:when test="${managerReview}">
+                    <p class="mb-5 truncate text-sm font-semibold text-text-primary" title="${fn:escapeXml(course.title)}"><c:out value="${course.title}" /></p>
+                </c:when>
+                <c:otherwise>
             <div class="mb-5 flex flex-wrap items-center gap-2 text-sm text-text-primary">
                 <details id="lessonCoursePicker" class="group relative w-full min-w-0 sm:w-72">
                     <summary class="flex min-h-9 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-border-default bg-surface-card px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-brand-700 [&::-webkit-details-marker]:hidden">
@@ -102,7 +109,9 @@
                     });
                 })();
             </script>
-            <c:if test="${canCreateModule}">
+                </c:otherwise>
+            </c:choose>
+            <c:if test="${not managerReview and canCreateModule}">
                 <dialog id="createModuleDialog" aria-labelledby="createModuleHeading"
                         class="fixed inset-0 m-auto w-11/12 max-w-sm rounded-xl border border-border-default bg-surface-card p-6 text-text-primary shadow-xl backdrop:bg-slate-900/50">
                     <form method="post" action="${pageContext.request.contextPath}/expert/lessons" class="space-y-4">
@@ -158,7 +167,10 @@
             <c:if test="${param.availability eq 'active'}">
                 <p role="status" class="mb-4 text-sm text-status-success">Lesson set to active.</p>
             </c:if>
-            <form class="mb-5 flex flex-wrap items-end justify-between gap-4 text-sm text-text-primary" id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}/expert/lessons">
+            <c:if test="${managerReview and param.reviewed eq 'true'}">
+                <p role="status" class="mb-4 text-sm text-status-success">Lesson review saved.</p>
+            </c:if>
+            <form class="mb-5 flex flex-wrap items-end justify-between gap-4 text-sm text-text-primary" id="lessonListFilters" method="GET" action="${pageContext.request.contextPath}${managerReview ? '/manager/lessons' : '/expert/lessons'}">
                 <input type="hidden" name="courseId" value="${course.id}">
                 <div class="flex w-full items-end gap-2 sm:w-auto">
                     <div class="min-w-0 flex-1 sm:w-56">
@@ -207,7 +219,7 @@
                 <c:forEach var="group" items="${lessonsByModule}" varStatus="moduleLoop">
                     <div class="relative">
                         <details class="group rounded-xl border border-border-default bg-surface-card" ${moduleLoop.first ? 'open' : ''}>
-                            <summary class="flex cursor-pointer list-none h-14 items-center gap-2 rounded-xl bg-surface pl-4 pr-24 sm:pr-52 font-semibold text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700 [&::-webkit-details-marker]:hidden">
+                            <summary class="flex cursor-pointer list-none h-14 items-center gap-2 rounded-xl bg-surface pl-4 ${managerReview ? 'pr-4' : 'pr-24 sm:pr-52'} font-semibold text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-700 [&::-webkit-details-marker]:hidden">
                                 <i class="fa-solid fa-chevron-down shrink-0 text-xs text-text-secondary transition-transform group-open:rotate-180" aria-hidden="true"></i>
                                 <span class="min-w-0 truncate"><c:out value="${group.key.title}" /></span>
                             </summary>
@@ -230,10 +242,15 @@
                                                     <c:param name="courseId" value="${course.id}" />
                                                 </c:url>
                                                 <td class="px-5 py-4 font-medium text-text-primary">
+                                                    <c:choose>
+                                                        <c:when test="${managerReview}"><c:out value="${les.title}" /></c:when>
+                                                        <c:otherwise>
                                                     <a href="${fn:escapeXml(lessonEditUrl)}"
                                                        class="rounded hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                                                         <c:out value="${les.title}" />
                                                     </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                                 <td class="px-5 py-4 capitalize"><c:out value="${les.type}" default="content" /></td>
                                                 <td class="px-5 py-4 text-center whitespace-nowrap">
@@ -248,6 +265,12 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="px-5 py-4 text-center space-x-3 text-xs font-semibold whitespace-nowrap">
+                                                    <c:url var="lessonPreviewUrl" value="/lessons/preview">
+                                                        <c:param name="id" value="${les.id}" />
+                                                    </c:url>
+                                                    <a href="${fn:escapeXml(lessonPreviewUrl)}"
+                                                       class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Preview</a>
+                                                    <c:if test="${not managerReview}">
                                                     <a href="${fn:escapeXml(lessonEditUrl)}"
                                                        class="inline-flex rounded-lg px-3 py-2 text-brand-700 hover:bg-brand-50 hover:text-brand-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Edit</a>
                                                    <c:if test="${les.publicationStatus eq 'published' || les.publicationStatus eq 'archived'}">
@@ -270,6 +293,7 @@
                                                        </button>
                                                    </form>
                                                    </c:if>
+                                                    </c:if>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -280,6 +304,7 @@
                                 </table>
                             </div>
                         </details>
+                        <c:if test="${not managerReview}">
                         <div class="absolute right-2 top-2 flex items-center gap-1">
                             <button type="button" data-rename-module="${group.key.id}" data-module-title="${fn:escapeXml(group.key.title)}"
                                     aria-label="Rename module" title="Rename module"
@@ -300,6 +325,7 @@
                                 </button>
                             </form>
                         </div>
+                        </c:if>
                     </div>
                 </c:forEach>
                 <c:if test="${empty lessonsByModule}">

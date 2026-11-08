@@ -1,12 +1,13 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dto.LessonDTO;
 import com.learnhub.entity.Course;
 import com.learnhub.entity.User;
-import com.learnhub.constant.AppConstants;
 import com.learnhub.service.CourseService;
 import com.learnhub.service.LessonService;
 import com.learnhub.service.ModuleService;
+import com.learnhub.service.QuizManagementService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,18 +18,11 @@ import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
-import java.util.Map;
-import java.util.List;
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
-/**
- * Servlet handling Lesson administration & material uploads.
- * Implements methods specified in SDS Lesson Learning Class Diagram (4.1):
- * - showLessonList()
- * - showLessonDetail()
- * - saveAndRedirect()
- */
 @WebServlet(name = "LessonServlet", urlPatterns = {
         "/expert/lessons", "/expert/lessons/create", "/expert/lessons/edit", "/expert/lessons/upload"
 })
@@ -37,268 +31,202 @@ public class LessonServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
     private final ModuleService moduleService = new ModuleService();
     private final CourseService courseService = new CourseService();
-    private final com.learnhub.service.QuizManagementService quizService = new com.learnhub.service.QuizManagementService();
+    private final QuizManagementService quizService = new QuizManagementService();
 
-    private void loadQuizOptions(HttpServletRequest req, UUID expertId, UUID courseId) {
-        req.setAttribute("lessonQuizzes", courseId == null ? List.of()
-                : quizService.findByExpert(expertId, null, null, courseId, "published"));
+    private User requireExpert(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User user = ControllerSupport.currentUser(req);
+        if (user == null || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return null;
+        }
+        return user;
     }
 
-     @Override
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-         Object account = req.getSession(false) == null ? null
-                 : req.getSession(false).getAttribute(AppConstants.SessionKey.CURRENT_USER);
-         if (!(account instanceof User user)
-                 || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
-             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-             return;
-         }
-         UUID expertId = user.getId();
-         if (req.getSession(false).getAttribute("lessonActionToken") == null) {
-             req.getSession(false).setAttribute(
-                     "lessonActionToken", UUID.randomUUID().toString());
-         }
-        String courseIdStr = req.getParameter("courseId");
-        if (courseIdStr != null && !courseIdStr.trim().isEmpty()) {
-            try {
-                UUID courseId = UUID.fromString(courseIdStr);
-                lessonService.requireCourseAccess(expertId, courseId);
-                Course course = courseService.getCourseDetailWithCurriculum(courseId);
-                if (course != null) {
-                    req.setAttribute("course", course);
-                    req.setAttribute("modules", course.getModules());
-                    loadQuizOptions(req, expertId, courseId);
-                }
-            } catch (SecurityException e) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            } catch (Exception e) {
-                throw new ServletException("Lesson operation failed.", e);
-            }
+        User user = requireExpert(req, resp);
+        if (user == null) return;
+        if (req.getSession(false).getAttribute("lessonActionToken") == null) {
+            req.getSession(false).setAttribute("lessonActionToken", UUID.randomUUID().toString());
         }
-        String path = req.getServletPath();
         String action = req.getParameter("action");
-        if ("/expert/lessons/create".equals(path)) {
-            req.setAttribute("defaultOrderIndex", 1);
-            req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
+        if ("delete".equalsIgnoreCase(action)) {
+            resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer supported.");
             return;
         }
         if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
-             resp.setHeader("Allow", "POST");
-             resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-             return;
-         }
-        if ("/expert/lessons/edit".equals(path)) {
-            String lessonIdStr = req.getParameter("id");
-            if (lessonIdStr != null && !lessonIdStr.trim().isEmpty()) {
-                try {
-                    UUID lessonId = UUID.fromString(lessonIdStr.trim());
-                    LessonDTO lesson = lessonService.getLesson(expertId, lessonId);
-                    req.setAttribute("lesson", lesson);
-                } catch (SecurityException e) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                } catch (Exception e) {
-                    throw new ServletException("Lesson operation failed.", e);
-                }
-            }
-            req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
+            resp.setHeader("Allow", "POST");
+            resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }
-        Course selectedCourse = (Course) req.getAttribute("course");
-        int assignedCourseCount = courseService.countAssignedCourses(expertId);
-        List<Course> assignedCourses = assignedCourseCount == 0 ? List.of()
-                : courseService.getAssignedCourses(expertId, 1, assignedCourseCount);
-        if ((courseIdStr == null || courseIdStr.isBlank()) && !assignedCourses.isEmpty()) {
+        try {
+            String value = req.getParameter("courseId");
+            UUID courseId = value == null || value.isBlank() ? null : UUID.fromString(value.strip());
+            switch (req.getServletPath()) {
+                case "/expert/lessons/create" -> showForm(req, resp, user.getId(), courseId, null);
+                case "/expert/lessons/edit" -> {
+                    UUID lessonId = UUID.fromString(req.getParameter("id"));
+                    LessonDTO lesson = lessonService.getLesson(user.getId(), lessonId);
+                    showForm(req, resp, user.getId(), courseId, lesson);
+                }
+                default -> showList(req, resp, user.getId(), courseId);
+            }
+        } catch (SecurityException e) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid course, lesson or filter.");
+        } catch (IllegalStateException e) {
+            throw new ServletException("Cannot load lessons.", e);
+        }
+    }
+
+    private void showList(HttpServletRequest req, HttpServletResponse resp, UUID expertId, UUID courseId)
+            throws ServletException, IOException {
+        var assignedCourses = courseService.getAssignedCourseOptions(expertId);
+        if (courseId == null && !assignedCourses.isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + assignedCourses.get(0).getId());
             return;
         }
-        req.setAttribute("canCreateModule", selectedCourse != null);
-        LessonService.LessonListData lessonList;
-        String lessonSearch = req.getParameter("lessonSearch");
-        lessonSearch = lessonSearch == null ? "" : lessonSearch.strip();
-        String durationSort = req.getParameter("durationSort");
-        String sort = req.getParameter("sort");
-        String direction = req.getParameter("direction");
-        if (durationSort != null) {
-            sort = "asc".equals(durationSort) || "desc".equals(durationSort) ? "duration" : "module";
-            direction = durationSort;
-        }
-        try {
-            String moduleFilter = req.getParameter("lessonModuleId");
-            UUID moduleId = moduleFilter == null || moduleFilter.isBlank()
-                    ? null : UUID.fromString(moduleFilter.strip());
-            lessonList = lessonService.buildLessonList(
-                    selectedCourse == null ? List.of() : selectedCourse.getModules(),
-                    sort, direction, req.getParameter("lessonStatus"), moduleId, lessonSearch);
-        } catch (IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid lesson module filter.");
-            return;
-        }
-        req.setAttribute("lessonsByModule", lessonList.lessonsByModule());
-        req.setAttribute("lessonSearch", lessonSearch);
-        req.setAttribute("lessonSort", lessonList.sort());
-        req.setAttribute("lessonDirection", lessonList.direction());
-        req.setAttribute("lessonStatus", lessonList.status());
-        req.setAttribute("lessonModuleId", lessonList.moduleId());
+        Course course = courseId == null ? null : lessonService.getCourseForExpert(expertId, courseId);
+        var filter = lessonService.lessonListFilter(req.getParameter("sort"), req.getParameter("direction"),
+                req.getParameter("durationSort"), req.getParameter("lessonStatus"),
+                req.getParameter("lessonModuleId"), req.getParameter("lessonSearch"));
+        var data = lessonService.buildLessonList(course == null ? List.of() : course.getModules(), filter);
+        req.setAttribute("course", course);
+        req.setAttribute("modules", course == null ? List.of() : course.getModules());
+        req.setAttribute("canCreateModule", course != null);
         req.setAttribute("assignedCourses", assignedCourses);
-        req.getRequestDispatcher("/WEB-INF/views/expert/lesson-manage.jsp").forward(req, resp);
+        ControllerSupport.lessonListAttributes(req, data, filter.search());
+        req.getRequestDispatcher("/WEB-INF/views/common/lesson-list.jsp").forward(req, resp);
+    }
+
+    private void showForm(HttpServletRequest req, HttpServletResponse resp, UUID expertId,
+                          UUID courseId, LessonDTO lesson) throws ServletException, IOException {
+        Course course = courseId == null ? null : lessonService.getCourseForExpert(expertId, courseId);
+        if (lesson != null && req.getAttribute("fieldErrors") == null && (course == null || course.getModules().stream()
+                .noneMatch(module -> module.getId().equals(lesson.getModuleId())))) {
+            throw new SecurityException("Lesson does not belong to this course.");
+        }
+        req.setAttribute("course", course);
+        req.setAttribute("modules", course == null ? List.of() : course.getModules());
+        req.setAttribute("lesson", lesson);
+        req.setAttribute("defaultOrderIndex", 1);
+        req.setAttribute("nextLessonOrders", lessonService.getNextLessonOrders(course, lesson == null ? null : lesson.getId()));
+        req.setAttribute("lessonQuizzes", courseId == null ? List.of()
+                : quizService.findByExpert(expertId, null, null, courseId, "published"));
+        req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Object account = req.getSession(false) == null ? null
-                : req.getSession(false).getAttribute(AppConstants.SessionKey.CURRENT_USER);
-        if (!(account instanceof User user)
-                || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        UUID expertId = user.getId();
+        User user = requireExpert(req, resp);
+        if (user == null) return;
         String action = req.getParameter("action");
-        if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)) {
-            Object token = req.getSession(false).getAttribute("lessonActionToken");
-            if (!(token instanceof String expected)
-                    || !expected.equals(req.getParameter("csrfToken"))) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-            UUID lessonId;
-            UUID courseId;
-            Timestamp updatedAt;
-            try {
-                lessonId = UUID.fromString(req.getParameter("id"));
-                courseId = UUID.fromString(req.getParameter("courseId"));
-                updatedAt = Timestamp.valueOf(req.getParameter("updatedAt"));
-            } catch (IllegalArgumentException | NullPointerException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-                return;
-            }
-            try {
-                boolean changed = lessonService.changeLessonAvailability(expertId, courseId, lessonId,
-                        updatedAt, "activate".equalsIgnoreCase(action));
-                if (!changed) {
-                    resp.sendError(HttpServletResponse.SC_CONFLICT, "Lesson status has changed. Reload and try again.");
-                    return;
-                }
-            } catch (SecurityException e) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            } catch (IllegalStateException e) {
-                throw new ServletException("Cannot change lesson availability.", e);
-            }
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId
-                    + "&availability=" + ("activate".equalsIgnoreCase(action) ? "active" : "inactive"));
+        if ("delete".equalsIgnoreCase(action)) {
+            resp.sendError(HttpServletResponse.SC_GONE, "Permanent lesson deletion is no longer supported.");
             return;
         }
-        if ("upload".equalsIgnoreCase(action)) {
-            String lessonIdStr = req.getParameter("lessonId");
-            Part filePart = req.getPart("file");
-            if (lessonIdStr != null && filePart != null) {
-                try {
-                    UUID lessonId = UUID.fromString(lessonIdStr);
-                    InputStream inputStream = filePart.getInputStream();
-                    String filename = filePart.getSubmittedFileName();
-                    lessonService.attachMaterial(expertId, lessonId, inputStream, filename);
-                } catch (SecurityException e) {
-                    resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-                    return;
-                } catch (Exception e) {
-                    throw new ServletException("Lesson operation failed.", e);
-                }
-            }
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?id=" + req.getParameter("lessonId") + "&uploaded=true");
-            return;
-        }
-
-        Object saveToken = req.getSession(false).getAttribute("lessonActionToken");
-        if (!(saveToken instanceof String expected)
-                || !expected.equals(req.getParameter("csrfToken"))) {
+        Object token = req.getSession(false).getAttribute("lessonActionToken");
+        if (!(token instanceof String expected) || !expected.equals(req.getParameter("csrfToken"))) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
-        if ("createModule".equals(action) || "renameModule".equals(action)
-                || "hideModule".equals(action) || "showModule".equals(action)) {
-            try {
-                UUID courseId = UUID.fromString(req.getParameter("courseId"));
-                if ("createModule".equals(action)) {
-                    moduleService.createForExpert(courseId, expertId, req.getParameter("moduleTitle"));
-                } else {
-                    UUID moduleId = UUID.fromString(req.getParameter("moduleId"));
-                    if ("renameModule".equals(action)) {
-                        moduleService.renameForExpert(courseId, moduleId, expertId, req.getParameter("moduleTitle"));
-                    } else {
-                        moduleService.setHiddenForExpert(courseId, moduleId, expertId, "hideModule".equals(action));
-                    }
-                }
-                resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&moduleAction=" + action);
-            } catch (SecurityException e) {
-                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-            } catch (IllegalArgumentException | NullPointerException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid course or module name.");
-            } catch (IllegalStateException e) {
-                throw new ServletException("Cannot create module.", e);
-            }
-            return;
-        }
-        String idStr = req.getParameter("id");
-        String courseIdStr = req.getParameter("courseId");
-        String moduleIdStr = req.getParameter("moduleId");
-        String title = req.getParameter("title");
-        String content = req.getParameter("content");
-        String orderIndexStr = req.getParameter("orderIndex");
-        String durationValue = req.getParameter("durationMinutes");
-        Integer durationMinutes = null;
+        action = action == null || action.isBlank() ? "save" : action;
+        if ("activate".equalsIgnoreCase(action) || "deactivate".equalsIgnoreCase(action)
+                || "upload".equalsIgnoreCase(action)) action = action.toLowerCase(Locale.ROOT);
         try {
-            durationMinutes = Integer.valueOf(durationValue == null ? "" : durationValue.strip());
-        } catch (NumberFormatException ignored) {
-        }
-        int orderIndex = 0;
-        try {
-            orderIndex = Integer.parseInt(orderIndexStr == null ? "" : orderIndexStr.trim());
-        } catch (NumberFormatException ignored) {
-        }
-        try {
-            UUID id = (idStr != null && !idStr.trim().isEmpty()) ? UUID.fromString(idStr) : UUID.randomUUID();
-            UUID moduleId = null;
-            try {
-                moduleId = UUID.fromString(moduleIdStr == null ? "" : moduleIdStr.trim());
-            } catch (IllegalArgumentException ignored) {
+            switch (action) {
+                case "activate", "deactivate" -> handleAvailability(req, resp, user.getId(), action);
+                case "createModule", "renameModule", "hideModule", "showModule" ->
+                        handleModuleAction(req, resp, user.getId(), action);
+                case "upload" -> handleUpload(req, resp, user.getId());
+                case "save" -> handleSave(req, resp, user.getId());
+                default -> resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid lesson action.");
             }
-            LessonDTO dto = new LessonDTO(id, moduleId, title, content, orderIndex);
-            dto.setType(req.getParameter("type"));
-            dto.setVideoUrl(req.getParameter("videoUrl"));
-            try {
-                dto.setQuizId(UUID.fromString(req.getParameter("quizId")));
-            } catch (IllegalArgumentException | NullPointerException ignored) { }
-            dto.setDurationMinutes(durationMinutes);
-            dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
-            Map<String, String> errors = lessonService.validateLesson(expertId, dto);
-            boolean saved = errors.isEmpty() && lessonService.saveLesson(expertId, dto);
-            if (!saved) {
-                Course course = courseService.getCourseDetailWithCurriculum(
-                        UUID.fromString(courseIdStr));
-                req.setAttribute("course", course);
-                req.setAttribute("modules", course == null ? List.of() : course.getModules());
-                loadQuizOptions(req, expertId, course == null ? null : course.getId());
-                req.setAttribute("lesson", dto);
-                req.setAttribute("fieldErrors", errors);
-                if (errors.isEmpty()) {
-                    req.setAttribute("saveError", "Can not save lesson.");
-                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                }
-                req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp")
-                        .forward(req, resp);
-                return;
-            }
-            resp.sendRedirect(req.getContextPath() + "/expert/lessons?submitted=true&courseId=" + (courseIdStr != null ? courseIdStr : ""));
         } catch (SecurityException e) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        } catch (Exception e) {
-            throw new ServletException("Cannot save lesson.", e);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid course, lesson or input.");
+        } catch (IllegalStateException e) {
+            throw new ServletException("Lesson operation failed.", e);
         }
+    }
+
+    private void handleAvailability(HttpServletRequest req, HttpServletResponse resp, UUID expertId, String action)
+            throws IOException {
+        UUID lessonId = UUID.fromString(req.getParameter("id"));
+        UUID courseId = UUID.fromString(req.getParameter("courseId"));
+        Timestamp version = Timestamp.valueOf(req.getParameter("updatedAt"));
+        boolean activate = "activate".equals(action);
+        if (!lessonService.changeLessonAvailability(expertId, courseId, lessonId, version, activate)) {
+            resp.sendError(HttpServletResponse.SC_CONFLICT, "Lesson status has changed. Reload and try again.");
+            return;
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId
+                + "&availability=" + (activate ? "active" : "inactive"));
+    }
+
+    private void handleModuleAction(HttpServletRequest req, HttpServletResponse resp, UUID expertId, String action)
+            throws IOException {
+        UUID courseId = UUID.fromString(req.getParameter("courseId"));
+        switch (action) {
+            case "createModule" -> moduleService.createForExpert(courseId, expertId, req.getParameter("moduleTitle"));
+            case "renameModule" -> moduleService.renameForExpert(courseId,
+                    UUID.fromString(req.getParameter("moduleId")), expertId, req.getParameter("moduleTitle"));
+            case "hideModule", "showModule" -> moduleService.setHiddenForExpert(courseId,
+                    UUID.fromString(req.getParameter("moduleId")), expertId, "hideModule".equals(action));
+            default -> throw new IllegalArgumentException("Invalid module action.");
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&moduleAction=" + action);
+    }
+
+    private void handleUpload(HttpServletRequest req, HttpServletResponse resp, UUID expertId)
+            throws ServletException, IOException {
+        UUID lessonId = UUID.fromString(req.getParameter("lessonId"));
+        Part file = req.getPart("file");
+        if (file == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing file.");
+            return;
+        }
+        try (InputStream input = file.getInputStream()) {
+            lessonService.attachMaterial(expertId, lessonId, input, file.getSubmittedFileName());
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?id=" + lessonId + "&uploaded=true");
+    }
+
+    private Integer readInteger(String value) {
+        try {
+            return value == null ? null : Integer.valueOf(value.strip());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void handleSave(HttpServletRequest req, HttpServletResponse resp, UUID expertId)
+            throws ServletException, IOException {
+        UUID courseId = UUID.fromString(req.getParameter("courseId"));
+        UUID id = ControllerSupport.optionalUuid(req.getParameter("id"));
+        if (id == null) {
+            String submittedId = req.getParameter("id");
+            if (submittedId != null && !submittedId.isBlank()) throw new IllegalArgumentException("Invalid lesson.");
+            id = UUID.randomUUID();
+        }
+        Integer order = readInteger(req.getParameter("orderIndex"));
+        LessonDTO dto = new LessonDTO(id, ControllerSupport.optionalUuid(req.getParameter("moduleId")),
+                req.getParameter("title"), req.getParameter("content"), order == null ? 0 : order);
+        dto.setDurationMinutes(readInteger(req.getParameter("durationMinutes")));
+        dto.setType(req.getParameter("type"));
+        dto.setVideoUrl(req.getParameter("videoUrl"));
+        dto.setQuizId(ControllerSupport.optionalUuid(req.getParameter("quizId")));
+        var result = lessonService.saveLesson(expertId, courseId, dto);
+        if (!result.saved()) {
+            req.setAttribute("fieldErrors", result.errors());
+            if (result.errors().isEmpty()) req.setAttribute("saveError", "Can not save lesson.");
+            resp.setStatus(result.errors().isEmpty()
+                    ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_BAD_REQUEST);
+            showForm(req, resp, expertId, courseId, dto);
+            return;
+        }
+        resp.sendRedirect(req.getContextPath() + "/expert/lessons?submitted=true&courseId=" + courseId);
     }
 }

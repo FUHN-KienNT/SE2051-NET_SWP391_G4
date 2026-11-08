@@ -188,6 +188,7 @@ CREATE TABLE lesson (
     lesson_type lesson_type NOT NULL DEFAULT 'content',
     video_url TEXT,
     quiz_id UUID,
+    decline_reason TEXT,
     status      lesson_status NOT NULL DEFAULT 'draft',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -49,7 +49,7 @@
                         <i class="fa-solid fa-address-card w-5 text-center" aria-hidden="true"></i>
                         <span class="management-sidebar-label">Registrations</span>
                     </a>
-                    <a href="${pageContext.request.contextPath}/admin/lesson-review"
+                    <a href="${pageContext.request.contextPath}/manager/lesson-review"
                        class="management-sidebar-link flex min-h-10 items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 ${param.activeSection eq 'review' ? 'border-brand-100 bg-brand-50 font-semibold text-brand-900' : 'border-transparent text-text-secondary hover:bg-surface hover:text-text-primary'}"
                        aria-label="Lesson Review" aria-current="${param.activeSection eq 'review' ? 'page' : 'false'}" title="Lesson Review">
                         <i class="fa-solid fa-clipboard-check w-5 text-center" aria-hidden="true"></i>

@@ -66,33 +66,16 @@ public class CourseServlet extends HttpServlet {
             ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), "must_login");
             return;
         }
-        UUID expertId = currentUser.getId();
-        int page = 1;
-        int pageSize = 8;
-        String pageStr = req.getParameter("page");
-        if (pageStr != null) {
-            try {
-                page = Math.max(1, Integer.parseInt(pageStr));
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        String search = req.getParameter("search");
-        search = search == null ? "" : search.strip();
-        int totalCourses = courseService.countAssignedCourses(expertId, null, search);
-        int totalPages = Math.max(1, (int) Math.ceil((double) totalCourses / pageSize));
-        page = Math.min(page, totalPages);
-        List<Course> courses = courseService.getAssignedCourses(expertId, page, pageSize, search);
-        int publishedCourses = courseService.countAssignedCourses(expertId, "published", search);
-        int draftCourses = courseService.countAssignedCourses(expertId, "draft", search);
-        int archivedCourse = courseService.countAssignedCourses(expertId, "archived", search);
-        req.setAttribute("search", search);
-        req.setAttribute("courses", courses);
-        req.setAttribute("currentPage", page);
-        req.setAttribute("totalPages", Math.max(1, totalPages));
-        req.setAttribute("totalCourses", totalCourses);
-        req.setAttribute("publishedCourses", publishedCourses);
-        req.setAttribute("draftCourses", draftCourses);
-        req.setAttribute("archivedCourses", archivedCourse);
+        int page = ControllerSupport.pageNumber(req.getParameter("page"));
+        var data = courseService.getExpertDashboard(currentUser.getId(), page, 8, req.getParameter("search"));
+        req.setAttribute("search", data.search());
+        req.setAttribute("courses", data.courses());
+        req.setAttribute("currentPage", data.page());
+        req.setAttribute("totalPages", data.totalPages());
+        req.setAttribute("totalCourses", data.counts().total());
+        req.setAttribute("publishedCourses", data.counts().published());
+        req.setAttribute("draftCourses", data.counts().draft());
+        req.setAttribute("archivedCourses", data.counts().archived());
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
     }
 

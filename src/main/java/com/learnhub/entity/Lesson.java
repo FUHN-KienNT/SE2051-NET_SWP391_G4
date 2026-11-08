@@ -23,6 +23,7 @@ public class Lesson implements Serializable {
     private Timestamp updatedAt;
 
     // Helper / joined fields
+    private String declineReason;
     private String materialUrl;
     private String moduleTitle;
     private String quizTitle;
@@ -73,6 +74,9 @@ public class Lesson implements Serializable {
 
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getDeclineReason() { return declineReason; }
+    public void setDeclineReason(String declineReason) { this.declineReason = declineReason; }
 
     public String getMaterialUrl() { return materialUrl; }
     public void setMaterialUrl(String materialUrl) { this.materialUrl = materialUrl; }

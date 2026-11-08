@@ -26,7 +26,7 @@ public class LessonDAO {
     public List<Lesson> findByModuleId(UUID moduleId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.decline_reason, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE l.module_id = ? ORDER BY l.order_index ASC";
@@ -47,7 +47,7 @@ public class LessonDAO {
     public Lesson findById(UUID lessonId) {
         if (lessonId == null) return null;
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
+                     "l.duration_minutes, l.decline_reason, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE l.id = ?";
@@ -66,9 +66,18 @@ public class LessonDAO {
     }
 
     public List<Lesson> findByCourseId(UUID courseId) {
+        return findByCourseId(courseId, true);
+    }
+
+    public List<Lesson> findSummariesByCourseId(UUID courseId) {
+        return findByCourseId(courseId, false);
+    }
+
+    private List<Lesson> findByCourseId(UUID courseId, boolean includeContent) {
         List<Lesson> list = new ArrayList<>();
-        String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
-                     "l.duration_minutes, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
+        String sql = "SELECT l.id, l.module_id, l.title, " +
+                     (includeContent ? "l.content" : "NULL::text AS content") + ", l.order_index, l.created_at, l.updated_at, " +
+                     "l.duration_minutes, l.decline_reason, l.status, l.lesson_type, l.video_url, l.quiz_id, q.title as quiz_title, m.title as module_title, m.course_id " +
                      "FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
                      "LEFT JOIN quiz q ON q.id=l.quiz_id WHERE m.course_id = ? ORDER BY m.order_index ASC, l.order_index ASC";
@@ -86,12 +95,46 @@ public class LessonDAO {
         return list;
     }
 
-    public boolean save(Lesson lesson) {
-        if (lesson == null) return false;
-        if (lesson.getId() != null && findById(lesson.getId()) != null) {
-            return update(lesson);
+    public int countByModuleId(UUID moduleId, UUID excludedLessonId) {
+        String sql = "SELECT COUNT(*) FROM lesson WHERE module_id=? AND (?::uuid IS NULL OR id<>?)";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, moduleId);
+            ps.setObject(2, excludedLessonId);
+            ps.setObject(3, excludedLessonId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot count module lessons.", e);
         }
-        return insert(lesson);
+    }
+
+    public boolean isVisibleInCourse(UUID lessonId, UUID courseId) {
+        String sql = """
+                SELECT EXISTS (
+                    SELECT 1 FROM lesson l JOIN module m ON m.id=l.module_id
+                    WHERE l.id=? AND m.course_id=? AND l.status='published' AND NOT m.hidden
+                )
+                """;
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, lessonId);
+            ps.setObject(2, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getBoolean(1);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot check lesson access.", e);
+        }
+    }
+
+    public boolean save(Lesson lesson) {
+        if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) return false;
+        Lesson existing = findById(lesson.getId());
+        return existing == null ? insert(lesson) : update(lesson, existing);
     }
 
     public boolean insert(Lesson lesson) {
@@ -165,7 +208,10 @@ public class LessonDAO {
     public boolean update(Lesson lesson) {
         if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) return false;
         Lesson existing = findById(lesson.getId());
-        if (existing == null) return false;
+        return existing != null && update(lesson, existing);
+    }
+
+    private boolean update(Lesson lesson, Lesson existing) {
         UUID oldModule = existing.getModuleId(), newModule = lesson.getModuleId();
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -188,7 +234,7 @@ public class LessonDAO {
                     throw new SQLException("Order index is outside the module.");
                 target.add(lesson.getOrderIndex() - 1, lesson.getId());
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, lesson_type=?::lesson_type, video_url=?, quiz_id=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
+                        "UPDATE lesson SET module_id=?, title=?, content=?, order_index=?, duration_minutes=?, status=?, lesson_type=?::lesson_type, video_url=?, quiz_id=?, decline_reason=NULL, updated_at=NOW() WHERE id=? AND module_id=?")) {
                     ps.setObject(1, newModule); ps.setString(2, lesson.getTitle());
                     ps.setString(3, lesson.getContent()); ps.setInt(4, lesson.getOrderIndex());
                     ps.setObject(5, lesson.getDurationMinutes(), Types.INTEGER);
@@ -304,16 +350,22 @@ public class LessonDAO {
 
     public boolean reviewPublication(UUID courseId, UUID lessonId,
                                      Timestamp expectedUpdatedAt, String status) {
-        String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
+        return reviewPublication(courseId, lessonId, expectedUpdatedAt, status, null);
+    }
+
+    public boolean reviewPublication(UUID courseId, UUID lessonId,
+                                     Timestamp expectedUpdatedAt, String status, String declineReason) {
+        String sql = "UPDATE lesson SET status=?, decline_reason=?, updated_at=NOW() "
                 + "WHERE id=? AND status='draft' AND updated_at=? "
                 + "AND module_id IN (SELECT id FROM module WHERE course_id=?)";
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, status);
-                ps.setObject(2, lessonId);
-                ps.setTimestamp(3, expectedUpdatedAt);
-                ps.setObject(4, courseId);
+                ps.setString(2, declineReason);
+                ps.setObject(3, lessonId);
+                ps.setTimestamp(4, expectedUpdatedAt);
+                ps.setObject(5, courseId);
                 boolean changed = ps.executeUpdate() == 1;
                 if (changed && "published".equals(status)) {
                     new RegistrationDAO().refreshCourseLearningProgress(conn, courseId);
@@ -335,6 +387,7 @@ public class LessonDAO {
         l.setModuleId((UUID) rs.getObject("module_id"));
         l.setTitle(rs.getString("title"));
         l.setContent(rs.getString("content"));
+        l.setDeclineReason(rs.getString("decline_reason"));
         l.setOrderIndex(rs.getInt("order_index"));
         l.setDurationMinutes((Integer) rs.getObject("duration_minutes"));
         l.setPublicationStatus(rs.getString("status"));

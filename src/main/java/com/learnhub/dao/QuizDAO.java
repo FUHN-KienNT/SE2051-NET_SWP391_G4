@@ -117,6 +117,21 @@ public class QuizDAO {
         return list;
     }
 
+    public List<Quiz> findByCourseId(UUID courseId) {
+        List<Quiz> quizzes = new ArrayList<>();
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     baseSelect() + " WHERE c.id=? AND q.status != 'hidden' ORDER BY m.order_index, m.id, q.created_at, q.id")) {
+            ps.setObject(1, courseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) quizzes.add(map(rs));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot load course quizzes.", e);
+        }
+        return quizzes;
+    }
+
     public List<Quiz> findByModuleId(UUID moduleId) {
 
         List<Quiz> list = new ArrayList<>();

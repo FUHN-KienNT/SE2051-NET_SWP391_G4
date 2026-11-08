@@ -2,18 +2,24 @@ package com.learnhub.service;
 
 import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.CourseDAO;
+import com.learnhub.dao.QuizDAO;
+import com.learnhub.dto.CourseStatusCounts;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dao.SettingDAO;
 import com.learnhub.dao.UserDAO;
 import com.learnhub.dto.CourseDTO;
 import com.learnhub.dto.RegistrationDTO;
 import com.learnhub.entity.Course;
+import com.learnhub.entity.Module;
+import com.learnhub.entity.Quiz;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
@@ -83,14 +89,19 @@ public class CourseService {
     }
 
     public Course getCourseDetailWithCurriculum(UUID courseId) {
-        Course c = courseDAO.findCourseWithModulesAndLessons(courseId);
-        if (c != null && c.getModules() != null) {
-            com.learnhub.dao.QuizDAO quizDAO = new com.learnhub.dao.QuizDAO();
-            for (com.learnhub.entity.Module m : c.getModules()) {
-                m.setQuizzes(quizDAO.findByModuleId(m.getId()));
-            }
+        Course course = courseDAO.findCourseWithModulesAndLessons(courseId);
+        if (course == null || course.getModules() == null) return course;
+
+        Map<UUID, Module> modules = new HashMap<>();
+        for (Module module : course.getModules()) {
+            module.setQuizzes(new ArrayList<>());
+            modules.put(module.getId(), module);
         }
-        return c;
+        for (Quiz quiz : new QuizDAO().findByCourseId(courseId)) {
+            Module module = modules.get(quiz.getModuleId());
+            if (module != null) module.getQuizzes().add(quiz);
+        }
+        return course;
     }
 
     public Course getPublishedCourseCurriculum(UUID courseId) {
@@ -99,7 +110,7 @@ public class CourseService {
             course.setModules(course.getModules().stream().filter(module -> !module.isHidden()).toList());
             course.setModuleCount(course.getModules().size());
             int lessonCount = 0;
-            for (com.learnhub.entity.Module module : course.getModules()) {
+            for (Module module : course.getModules()) {
                 module.setLessons(module.getLessons().stream()
                         .filter(lesson -> AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()))
                         .toList());
@@ -188,6 +199,23 @@ public class CourseService {
 
     public record AssignedCourseNavigation(List<Course> courses, String search,
                                            int page, int totalPages, int totalCourses) {}
+
+    public record ExpertDashboardData(List<Course> courses, int page, int totalPages,
+                                     CourseStatusCounts counts, String search) {}
+
+    public ExpertDashboardData getExpertDashboard(UUID expertId, int page, int pageSize, String search) {
+        String keyword = search == null ? "" : search.strip();
+        pageSize = pageSize < 1 ? 8 : pageSize;
+        var counts = courseDAO.countAssignedByStatus(expertId, keyword);
+        int totalPages = Math.max(1, (int) Math.ceil(counts.total() / (double) pageSize));
+        page = Math.max(1, Math.min(page, totalPages));
+        return new ExpertDashboardData(getAssignedCourses(expertId, page, pageSize, keyword),
+                page, totalPages, counts, keyword);
+    }
+
+    public List<Course> getAssignedCourseOptions(UUID expertId) {
+        return courseDAO.findAssignedCourseOptions(expertId);
+    }
 
     public AssignedCourseNavigation getAssignedCourseNavigation(UUID expertId, String search, int page) {
         String keyword = search == null ? "" : search.strip();

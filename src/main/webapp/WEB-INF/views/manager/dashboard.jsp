@@ -267,7 +267,7 @@
                                                 <span class="font-semibold text-status-warning">${item.pendingLessonCount} draft lesson(s) submitted</span>
                                             </p>
                                         </div>
-                                        <a href="${pageContext.request.contextPath}/admin/lesson-review?courseId=${item.courseId}"
+                                        <a href="${pageContext.request.contextPath}/manager/lessons?courseId=${item.courseId}"
                                            class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-700 hover:bg-brand-800 text-white transition shadow-xs">
                                             Review
                                         </a>

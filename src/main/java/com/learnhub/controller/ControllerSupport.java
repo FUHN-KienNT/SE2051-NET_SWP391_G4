@@ -2,6 +2,7 @@ package com.learnhub.controller;
 
 import com.learnhub.constant.AppConstants;
 import com.learnhub.entity.User;
+import com.learnhub.service.LessonService;
 import com.learnhub.util.PostLoginNavigation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -50,6 +51,16 @@ final class ControllerSupport {
     static String requestUri(HttpServletRequest request) {
         String query = request.getQueryString();
         return request.getRequestURI() + (query == null ? "" : "?" + query);
+    }
+
+    static void lessonListAttributes(HttpServletRequest req,
+                                     LessonService.LessonListData data, String search) {
+        req.setAttribute("lessonsByModule", data.lessonsByModule());
+        req.setAttribute("lessonSearch", search);
+        req.setAttribute("lessonSort", data.sort());
+        req.setAttribute("lessonDirection", data.direction());
+        req.setAttribute("lessonStatus", data.status());
+        req.setAttribute("lessonModuleId", data.moduleId());
     }
 
     static void signIn(HttpServletRequest request, HttpServletResponse response,

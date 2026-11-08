@@ -23,7 +23,7 @@
                     <c:out value="${saveError}" />
                 </p>
             </c:if>
-            <form action="${pageContext.request.contextPath}/expert/lessons" method="POST" class="space-y-6 w-full">
+            <form action="${pageContext.request.contextPath}/expert/lessons" method="POST" novalidate class="space-y-6 w-full">
                 <input type="hidden" name="action" value="save">
                 <input type="hidden" name="csrfToken" value="${sessionScope.lessonActionToken}">
                 <input type="hidden" name="courseId" value="${course.id}">
@@ -32,7 +32,7 @@
                 <div>
                     <label for="moduleId" class="block text-sm font-semibold text-text-primary mb-2">Module <span class="text-status-danger">*</span></label>
                     <select id="moduleId" name="moduleId" required
-                            data-error="${fn:escapeXml(fieldErrors.moduleId)}"
+                            aria-invalid="${not empty fieldErrors.moduleId}" aria-describedby="moduleId-error"
                             class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
                         <option value="" data-next-order="1">-- Chọn Module cho bài giảng --</option>
                         <c:forEach var="m" items="${modules}">
@@ -41,33 +41,45 @@
                             </option>
                         </c:forEach>
                     </select>
+                    <p id="moduleId-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.moduleId ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.moduleId}" />
+                    </p>
                 </div>
 
                 <div>
                     <label for="title" class="block text-sm font-semibold text-text-primary mb-2">Lesson Title <span class="text-status-danger">*</span></label>
                     <input type="text" id="title" name="title" required
-                    data-error="${fn:escapeXml(fieldErrors.title)}"
+                    aria-invalid="${not empty fieldErrors.title}" aria-describedby="title-error"
                            value="${fn:escapeXml(lesson != null ? lesson.title : '')}"
                            placeholder="Nhập tiêu đề bài giảng..."
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
+                    <p id="title-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.title ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.title}" />
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label for="orderIndex" class="block text-sm font-semibold text-text-primary mb-2">Order Index</label>
                         <input type="number" id="orderIndex" name="orderIndex" min="1"
-                               data-error="${fn:escapeXml(fieldErrors.orderIndex)}"
+                               aria-invalid="${not empty fieldErrors.orderIndex}" aria-describedby="orderIndex-error"
                                value="${lesson != null ? lesson.orderIndex : defaultOrderIndex}"
                                class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">
+                        <p id="orderIndex-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.orderIndex ? 'hidden' : ''}>
+                            <c:out value="${fieldErrors.orderIndex}" />
+                        </p>
                     </div>
                     <div>
                         <label for="durationMinutes" class="block text-sm font-semibold text-text-primary mb-2">
                             Estimated Duration (minutes) <span class="text-status-danger">*</span>
                         </label>
                         <input type="number" id="durationMinutes" name="durationMinutes" min="1" max="1440" step="1" required
-                               data-error="${fn:escapeXml(fieldErrors.durationMinutes)}"
+                               aria-invalid="${not empty fieldErrors.durationMinutes}" aria-describedby="durationMinutes-error"
                                value="${lesson != null ? lesson.durationMinutes : ''}"
                                class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700">
+                        <p id="durationMinutes-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.durationMinutes ? 'hidden' : ''}>
+                            <c:out value="${fieldErrors.durationMinutes}" />
+                        </p>
                     </div>
                     <div>
                         <label for="publicationStatus" class="block text-sm font-semibold text-text-primary mb-2">
@@ -81,30 +93,39 @@
 
                 <div>
                     <label for="lessonType" class="block text-sm font-semibold text-text-primary mb-2">Type <span class="text-status-danger">*</span></label>
-                    <select id="lessonType" name="type" required data-error="${fn:escapeXml(fieldErrors.type)}"
+                    <select id="lessonType" name="type" required aria-invalid="${not empty fieldErrors.type}" aria-describedby="lessonType-error"
                             class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
                         <option value="content" ${empty lesson or lesson.type eq 'content' ? 'selected' : ''}>Content</option>
                         <option value="video" ${lesson.type eq 'video' ? 'selected' : ''}>Video</option>
                         <option value="quiz" ${lesson.type eq 'quiz' ? 'selected' : ''}>Quiz</option>
                     </select>
+                    <p id="lessonType-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.type ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.type}" />
+                    </p>
                 </div>
 
                 <div id="videoFields" ${lesson.type ne 'video' ? 'hidden' : ''}>
                     <label for="videoUrl" class="block text-sm font-semibold text-text-primary mb-2">YouTube URL <span class="text-status-danger">*</span></label>
                     <input type="url" id="videoUrl" name="videoUrl" value="${fn:escapeXml(lesson.videoUrl)}"
-                           data-error="${fn:escapeXml(fieldErrors.videoUrl)}" placeholder="https://www.youtube.com/watch?v=..."
+                           aria-invalid="${not empty fieldErrors.videoUrl}" aria-describedby="videoUrl-error" placeholder="https://www.youtube.com/watch?v=..."
                            class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
+                    <p id="videoUrl-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.videoUrl ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.videoUrl}" />
+                    </p>
                 </div>
 
                 <div id="quizFields" ${lesson.type ne 'quiz' ? 'hidden' : ''}>
                     <label for="quizId" class="block text-sm font-semibold text-text-primary mb-2">Quiz <span class="text-status-danger">*</span></label>
-                    <select id="quizId" name="quizId" data-error="${fn:escapeXml(fieldErrors.quizId)}"
+                    <select id="quizId" name="quizId" aria-invalid="${not empty fieldErrors.quizId}" aria-describedby="quizId-error"
                             class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-700">
                         <option value="">-- Select a quiz --</option>
                         <c:forEach var="q" items="${lessonQuizzes}">
                             <option value="${q.id}" data-module-id="${q.moduleId}" ${lesson.quizId eq q.id ? 'selected' : ''}><c:out value="${q.title}" /></option>
                         </c:forEach>
                     </select>
+                    <p id="quizId-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.quizId ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.quizId}" />
+                    </p>
                 </div>
 
                 <div id="contentFields">
@@ -132,12 +153,14 @@
                             </span>
                         </div>
                         <div id="lessonEditor"></div>
-                        <input id="contentValidation" type="text" tabindex="-1" aria-label="Content" class="absolute bottom-0 left-0 w-px h-px opacity-0" disabled>
                     </div>
                     <textarea id="content" name="content" rows="10" required
-                    data-error="${fn:escapeXml(fieldErrors.content)}"
+                    aria-invalid="${not empty fieldErrors.content}" aria-describedby="content-error"
                               placeholder="Enter lesson content..."
                               class="w-full px-4 py-2.5 bg-surface-card border border-border-default rounded-lg text-sm text-text-primary placeholder-text-secondary focus:bg-surface-card focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition"><c:out value="${lessonHtml:sanitize(lesson.content)}" /></textarea>
+                    <p id="content-error" class="mt-1 text-sm text-status-danger" ${empty fieldErrors.content ? 'hidden' : ''}>
+                        <c:out value="${fieldErrors.content}" />
+                    </p>
                 </div>
 
                 <div class="pt-6 flex flex-wrap items-center gap-3 border-t border-border-default">
@@ -162,30 +185,10 @@
     document.addEventListener('DOMContentLoaded', function () {
         const moduleSelect = document.getElementById('moduleId');
         const orderInput = document.getElementById('orderIndex');
-        const fields = document.querySelectorAll('[data-error]');
-        let firstError = null;
-
-        fields.forEach(field => {
-            if (field.id === 'content' && field.hidden) return;
-            if (field.dataset.error) {
-                field.setCustomValidity(field.dataset.error);
-                if (!firstError) firstError = field;
-            }
-            const clearError = () => field.setCustomValidity('');
-            field.addEventListener('input', clearError);
-            field.addEventListener('change', clearError);
-        });
-
         moduleSelect.addEventListener('change', function () {
             const option = this.options[this.selectedIndex];
             orderInput.value = option.dataset.nextOrder || '1';
-            orderInput.setCustomValidity('');
         });
-
-        if (firstError) {
-            firstError.focus();
-            firstError.reportValidity();
-        }
     });
 </script>
 

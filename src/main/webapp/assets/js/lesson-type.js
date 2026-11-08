@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('contentRequired').hidden = type.value !== 'content';
         video.disabled = !isVideo;
         video.required = isVideo;
-        if (!isVideo) video.setCustomValidity('');
         quiz.disabled = !isQuiz;
         quiz.required = isQuiz;
         for (const option of quiz.options) {
@@ -23,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
             option.disabled = !matches;
             if (!matches && option.selected) quiz.value = '';
         }
-        if (!isQuiz) quiz.setCustomValidity('');
         content.disabled = isQuiz;
         content.dispatchEvent(new Event('lesson-type-change'));
     };

@@ -148,10 +148,22 @@ public class UserServlet extends HttpServlet {
         if ("/admin/user-status".equals(path)) {
             String idStr = req.getParameter("userId");
             String status = req.getParameter("status");
+            String statusNote = req.getParameter("statusNote");
             if (idStr != null && status != null) {
                 try {
                     UUID userId = UUID.fromString(idStr);
-                    userService.toggleStatus(userId, status);
+                    if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
+                        req.getSession().setAttribute("flashError", "Vui lòng nhập lý do tạm ngưng tài khoản để người dùng nắm được thông tin.");
+                        resp.sendRedirect(req.getContextPath() + "/admin/users");
+                        return;
+                    }
+                    UserDTO user = userService.getUserById(userId);
+                    if (user != null) {
+                        user.setStatus(status.trim().toLowerCase());
+                        com.learnhub.entity.User currentAdmin = ControllerSupport.currentUser(req);
+                        String adminEmail = currentAdmin != null ? currentAdmin.getEmail() : "admin";
+                        userService.updateUserProfile(user, adminEmail, statusNote);
+                    }
                 } catch (Exception ignored) {
                 }
             }
@@ -248,6 +260,12 @@ public class UserServlet extends HttpServlet {
                     String roleIdStr = req.getParameter("roleId");
                     String status = req.getParameter("status");
                     String statusNote = req.getParameter("statusNote");
+
+                    if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
+                        req.getSession().setAttribute("flashError", "Vui lòng nhập lý do tạm ngưng tài khoản để người dùng nắm được thông tin.");
+                        resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
+                        return;
+                    }
 
                     if (fullName == null || fullName.trim().isEmpty()) {
                         req.getSession().setAttribute("flashError", "Họ và tên (Full Name) không được để trống.");

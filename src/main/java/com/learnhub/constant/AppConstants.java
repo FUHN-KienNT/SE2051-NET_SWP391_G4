@@ -10,6 +10,8 @@ public final class AppConstants {
         // Prevent instantiation
     }
 
+    public static final String SUPPORT_EMAIL = "luukien2910@gmail.com";
+
     // =========================================================================
     // 1. User & Account Statuses (matches schema user_status ENUM)
     // =========================================================================
@@ -17,7 +19,6 @@ public final class AppConstants {
         private UserStatus() {}
         public static final String ACTIVE = "active";
         public static final String INACTIVE = "inactive";
-        public static final String BANNED = "banned";
     }
 
     // =========================================================================

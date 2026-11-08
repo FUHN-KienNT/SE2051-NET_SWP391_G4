@@ -1,17 +1,23 @@
 package com.learnhub.service;
 
 import com.learnhub.dao.DashboardDAO;
+import com.learnhub.dao.NotificationDAO;
 import com.learnhub.dao.SettingDAO;
 import com.learnhub.dao.UserDAO;
 import com.learnhub.dto.UserDTO;
+import com.learnhub.entity.Notification;
 import com.learnhub.entity.User;
 import com.learnhub.util.PasswordHashUtil;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceAccountTest {
@@ -30,6 +36,7 @@ class UserServiceAccountTest {
             user.setId(UUID.randomUUID());
             user.setUsername("Alex");
             user.setFullName("Alex Nguyen");
+            user.setEmail("alex@learnhub.com");
             user.setStatus("active");
             user.setPassword(PasswordHashUtil.hashPassword("current-password"));
         }
@@ -95,6 +102,10 @@ class UserServiceAccountTest {
 
         @Override
         public User findByEmail(String email) {
+            if (user != null && email != null &&
+                    (email.trim().equalsIgnoreCase(user.getEmail()) || email.trim().equalsIgnoreCase(user.getUsername()))) {
+                return user;
+            }
             if (taken) {
                 User u = new User();
                 u.setEmail(email);
@@ -113,6 +124,22 @@ class UserServiceAccountTest {
             this.loggedAction = actionType;
             this.loggedDesc = description;
             return true;
+        }
+    }
+
+    private static class MockNotificationDao extends NotificationDAO {
+        Notification insertedNotification;
+        final List<Notification> returnedList = new ArrayList<>();
+
+        @Override
+        public boolean insert(Notification notification) {
+            this.insertedNotification = notification;
+            return true;
+        }
+
+        @Override
+        public List<Notification> findByUserId(UUID userId) {
+            return returnedList;
         }
     }
 
@@ -191,26 +218,110 @@ class UserServiceAccountTest {
     }
 
     @Test
-    void updateUserProfileUpdatesPhoneAndStatusWithAuditLog() {
+    void updateUserProfileUpdatesPhoneAndStatusWithAuditLogAndNotification() {
         AccountDao dao = new AccountDao();
         MockDashboardDao dashboardDao = new MockDashboardDao();
-        UserService service = new UserService(dao, new SettingDAO(), dashboardDao);
+        MockNotificationDao notificationDao = new MockNotificationDao();
+        UserService service = new UserService(dao, new SettingDAO(), dashboardDao, notificationDao);
         UUID userId = dao.user.getId();
 
         UserDTO dto = new UserDTO();
         dto.setId(userId);
         dto.setFullName("Lê Đình Nguyên");
         dto.setPhone("0987654321");
-        dto.setStatus("banned");
+        dto.setStatus("inactive");
 
         boolean success = service.updateUserProfile(dto, "admin@learnhub.com", "Vi phạm điều khoản dịch vụ");
         assertTrue(success);
         assertTrue(dao.updateCalled);
         assertEquals("Lê Đình Nguyên", dao.user.getFullName());
         assertEquals("0987654321", dao.user.getPhone());
-        assertEquals("banned", dao.user.getStatus());
+        assertEquals("inactive", dao.user.getStatus());
+        assertEquals("Vi phạm điều khoản dịch vụ", dao.user.getStatusNote());
         assertEquals("ACCOUNT_STATUS_CHANGE", dashboardDao.loggedAction);
         assertTrue(dashboardDao.loggedDesc.contains("Vi phạm điều khoản dịch vụ"));
+        assertNotNull(notificationDao.insertedNotification);
+        assertEquals(userId, notificationDao.insertedNotification.getUserId());
+        assertTrue(notificationDao.insertedNotification.getContent().contains("Vi phạm điều khoản dịch vụ"));
+    }
+
+    @Test
+    void updateUserProfileRequiresReasonWhenSettingInactive() {
+        AccountDao dao = new AccountDao();
+        MockDashboardDao dashboardDao = new MockDashboardDao();
+        MockNotificationDao notificationDao = new MockNotificationDao();
+        UserService service = new UserService(dao, new SettingDAO(), dashboardDao, notificationDao);
+        UUID userId = dao.user.getId();
+
+        UserDTO dto = new UserDTO();
+        dto.setId(userId);
+        dto.setStatus("inactive");
+
+        // Null reason should fail
+        boolean successNull = service.updateUserProfile(dto, "admin@learnhub.com", null);
+        assertFalse(successNull);
+
+        // Empty reason should fail
+        boolean successEmpty = service.updateUserProfile(dto, "admin@learnhub.com", "   ");
+        assertFalse(successEmpty);
+    }
+
+    @Test
+    void authenticateActiveUserSuccess() {
+        AccountDao dao = new AccountDao();
+        UserService service = new UserService(dao, new SettingDAO());
+
+        UserService.LoginResult result = service.authenticate("alex@learnhub.com", "current-password");
+        assertEquals(UserService.LoginStatus.SUCCESS, result.getStatus());
+        assertNotNull(result.getUser());
+        assertEquals("Alex", result.getUser().getUsername());
+    }
+
+    @Test
+    void authenticateInvalidPasswordDoesNotRevealInactiveStatus() {
+        AccountDao dao = new AccountDao();
+        dao.user.setStatus("inactive");
+        dao.user.setStatusNote("Chưa hoàn tất học phí");
+        UserService service = new UserService(dao, new SettingDAO());
+
+        // Wrong password on inactive account must return INVALID_CREDENTIALS without revealing inactive state
+        UserService.LoginResult result = service.authenticate("alex@learnhub.com", "wrong-password");
+        assertEquals(UserService.LoginStatus.INVALID_CREDENTIALS, result.getStatus());
+        assertNull(result.getUser());
+        assertNull(result.getStatusNote());
+    }
+
+    @Test
+    void authenticateInactiveAccountReturnsReasonWhenPasswordIsCorrect() {
+        AccountDao dao = new AccountDao();
+        dao.user.setStatus("inactive");
+        dao.user.setStatusNote("Chưa đóng học phí Fall 2026");
+        UserService service = new UserService(dao, new SettingDAO());
+
+        UserService.LoginResult result = service.authenticate("alex@learnhub.com", "current-password");
+        assertEquals(UserService.LoginStatus.ACCOUNT_INACTIVE, result.getStatus());
+        assertNotNull(result.getUser());
+        assertEquals("Chưa đóng học phí Fall 2026", result.getStatusNote());
+    }
+
+    @Test
+    void authenticateInactiveAccountWithoutNoteFallsBackToNotification() {
+        AccountDao dao = new AccountDao();
+        dao.user.setStatus("inactive");
+        dao.user.setStatusNote(null); // No note in user table
+
+        MockNotificationDao notificationDao = new MockNotificationDao();
+        Notification notif = new Notification();
+        notif.setUserId(dao.user.getId());
+        notif.setContent("Tài khoản của bạn đã được chuyển sang trạng thái tạm ngưng. Lý do: Bảo trì tài khoản định kỳ");
+        notificationDao.returnedList.add(notif);
+
+        UserService service = new UserService(dao, new SettingDAO(), new DashboardDAO(), notificationDao);
+
+        UserService.LoginResult result = service.authenticate("alex@learnhub.com", "current-password");
+        assertEquals(UserService.LoginStatus.ACCOUNT_INACTIVE, result.getStatus());
+        assertNotNull(result.getStatusNote());
+        assertTrue(result.getStatusNote().contains("Bảo trì tài khoản định kỳ"));
     }
 
     @Test

@@ -113,15 +113,9 @@
                                         Active Account
                                     </span>
                                 </c:when>
-                                <c:when test="${user.status eq 'banned'}">
-                                    <span id="accountStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                        Locked Account
-                                    </span>
-                                </c:when>
                                 <c:otherwise>
-                                    <span id="accountStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 transition-all">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    <span id="accountStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 transition-all">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                         Inactive Account
                                     </span>
                                 </c:otherwise>
@@ -298,7 +292,6 @@
                                         class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition shadow-sm">
                                     <option value="active" ${user.status eq 'active' ? 'selected' : ''}>Active</option>
                                     <option value="inactive" ${user.status eq 'inactive' ? 'selected' : ''}>Inactive</option>
-                                    <option value="banned" ${user.status eq 'banned' ? 'selected' : ''}>Locked</option>
                                 </select>
                             </div>
                         </div>
@@ -306,11 +299,25 @@
                         <!-- Row 3: Notes / Reason for Status Change -->
                         <div>
                             <label for="statusNote" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                Notes / Reason for Status Change
+                                Lý do thay đổi trạng thái / Lý do tạm ngưng
+                                <span id="noteRequiredStar" class="text-rose-500 ${user.status eq 'inactive' ? '' : 'hidden'}">*</span>
                             </label>
                             <textarea id="statusNote" name="statusNote" rows="3"
-                                      placeholder="Enter notes..."
-                                      class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition shadow-sm resize-y"></textarea>
+                                      placeholder="Nhập lý do ngắn gọn, rõ ràng phù hợp hiển thị trực tiếp cho người dùng..."
+                                      class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition shadow-sm resize-y"
+                                      ${user.status eq 'inactive' ? 'required' : ''}><c:out value="${user.statusNote}" /></textarea>
+                            <div id="statusNoteGuide" class="mt-2.5 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5 ${user.status eq 'inactive' ? '' : 'hidden'}">
+                                <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-sm flex-shrink-0"></i>
+                                <div class="space-y-1">
+                                    <p class="font-bold text-amber-950">Hướng dẫn viết lý do tạm ngưng tài khoản:</p>
+                                    <p class="text-amber-800 leading-relaxed">
+                                        Vui lòng nhập lý do ngắn gọn, lịch sự và rõ ràng (Ví dụ: <em>&ldquo;Chưa hoàn tất học phí học kỳ Fall 2026&rdquo;</em>, <em>&ldquo;Tạm ngưng theo yêu cầu cá nhân&rdquo;</em> hoặc <em>&ldquo;Phát hiện dấu hiệu vi phạm quy chế thi&rdquo;</em>).
+                                    </p>
+                                    <p class="text-amber-700 text-[11px] font-medium">
+                                        💡 Lý do này sẽ được <strong>hiển thị trực tiếp cho người dùng</strong> khi họ đăng nhập và lưu trong thông báo hệ thống.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Divider & Action Footer -->
@@ -377,18 +384,40 @@
     <script>
     function updateAccountStatusBadge(status) {
         const badge = document.getElementById('accountStatusBadge');
-        if (!badge) return;
-        if (status === 'active') {
-            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition-all';
-            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active Account';
-        } else if (status === 'banned') {
-            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 transition-all';
-            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Locked Account';
+        const guide = document.getElementById('statusNoteGuide');
+        const star = document.getElementById('noteRequiredStar');
+        const noteInput = document.getElementById('statusNote');
+
+        if (status === 'inactive') {
+            if (badge) {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 transition-all';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Inactive Account';
+            }
+            if (guide) guide.classList.remove('hidden');
+            if (star) star.classList.remove('hidden');
+            if (noteInput) noteInput.setAttribute('required', 'required');
         } else {
-            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 transition-all';
-            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive Account';
+            if (badge) {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition-all';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active Account';
+            }
+            if (guide) guide.classList.add('hidden');
+            if (star) star.classList.add('hidden');
+            if (noteInput) noteInput.removeAttribute('required');
         }
     }
+
+    document.getElementById('userProfileForm')?.addEventListener('submit', function(e) {
+        const statusSelect = document.getElementById('status');
+        const noteInput = document.getElementById('statusNote');
+        if (statusSelect && statusSelect.value === 'inactive') {
+            if (!noteInput || !noteInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập lý do tạm ngưng tài khoản để người dùng nắm được thông tin.');
+                if (noteInput) noteInput.focus();
+            }
+        }
+    });
 
     function openResetPasswordModal() {
         const modal = document.getElementById('resetPasswordModal');

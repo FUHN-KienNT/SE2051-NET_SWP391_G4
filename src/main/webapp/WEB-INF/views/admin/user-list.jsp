@@ -91,7 +91,6 @@
                             <option value="">Tất cả trạng thái</option>
                             <option value="active" ${selectedStatus eq 'active' ? 'selected' : ''}>Hoạt động (Active)</option>
                             <option value="inactive" ${selectedStatus eq 'inactive' ? 'selected' : ''}>Tạm ngưng (Inactive)</option>
-                            <option value="banned" ${selectedStatus eq 'banned' ? 'selected' : ''}>Bị khóa (Banned)</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
                     </div>
@@ -196,14 +195,8 @@
                                                             <span>Active</span>
                                                         </span>
                                                     </c:when>
-                                                    <c:when test="${u.status eq 'banned'}">
-                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                            <i class="fa-solid fa-ban text-[10px]"></i>
-                                                            <span>Banned</span>
-                                                        </span>
-                                                    </c:when>
                                                     <c:otherwise>
-                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                                             <i class="fa-solid fa-circle-pause text-[10px]"></i>
                                                             <span>Inactive</span>
                                                         </span>

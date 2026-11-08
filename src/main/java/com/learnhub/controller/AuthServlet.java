@@ -1,5 +1,6 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.entity.User;
 import com.learnhub.service.UserService;
 import com.learnhub.util.EmailUtil;
@@ -30,7 +31,15 @@ public class AuthServlet extends HttpServlet {
     private static final String PENDING_RESET = "auth.pendingReset";
     private static final String VERIFIED_RESET_EMAIL = "auth.verifiedResetEmail";
     private static final SecureRandom CODE_RANDOM = new SecureRandom();
-    private final UserService userService = new UserService();
+    private final UserService userService;
+
+    public AuthServlet() {
+        this(new UserService());
+    }
+
+    public AuthServlet(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -88,6 +97,15 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         if ("/auth/login".equals(path)) {
+            if (req.getParameter("suspended") != null) {
+                String reason = req.getParameter("reason");
+                StringBuilder msg = new StringBuilder("Phiên làm việc của bạn đã kết thúc do tài khoản đã bị tạm ngưng.");
+                if (reason != null && !reason.isBlank()) {
+                    msg.append(" Lý do: ").append(reason.trim()).append(".");
+                }
+                msg.append(" Vui lòng liên hệ qua email ").append(AppConstants.SUPPORT_EMAIL).append(" để được giải quyết.");
+                req.setAttribute("errorMessage", msg.toString());
+            }
             req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             return;
         }
@@ -110,14 +128,30 @@ public class AuthServlet extends HttpServlet {
 
     private void login(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
-        User user = userService.login(email, req.getParameter("password"));
-        if (user == null) {
+        String password = req.getParameter("password");
+        UserService.LoginResult result = userService.authenticate(email, password);
+
+        if (result.getStatus() == UserService.LoginStatus.ACCOUNT_INACTIVE) {
             req.setAttribute("email", email);
-            req.setAttribute("errorMessage", "Incorrect email or password, or your account is locked.");
+            String note = result.getStatusNote();
+            StringBuilder msg = new StringBuilder("Tài khoản của bạn đang tạm ngưng.");
+            if (note != null && !note.isBlank()) {
+                msg.append(" Lý do: ").append(note.trim()).append(".");
+            }
+            msg.append(" Vui lòng liên hệ qua email ").append(AppConstants.SUPPORT_EMAIL).append(" để được hỗ trợ kích hoạt lại.");
+            req.setAttribute("errorMessage", msg.toString());
             req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             return;
         }
 
+        if (result.getStatus() != UserService.LoginStatus.SUCCESS || result.getUser() == null) {
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", "Incorrect email or password.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+            return;
+        }
+
+        User user = result.getUser();
         req.getSession(true).removeAttribute(PENDING_REGISTRATION);
         ControllerSupport.signIn(req, resp, user, req.getParameter("redirect_uri"));
     }

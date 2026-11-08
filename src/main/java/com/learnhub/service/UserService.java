@@ -1,12 +1,14 @@
 package com.learnhub.service;
 
 import com.learnhub.dao.DashboardDAO;
+import com.learnhub.dao.NotificationDAO;
 import com.learnhub.dao.SettingDAO;
-import com.learnhub.util.EmailUtil;
 import com.learnhub.dao.UserDAO;
 import com.learnhub.dto.UserDTO;
+import com.learnhub.entity.Notification;
 import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
+import com.learnhub.util.EmailUtil;
 import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PasswordHashUtil;
 
@@ -27,11 +29,46 @@ import java.util.logging.Logger;
  * - updateUserProfile()
  * - toggleStatus()
  * - resetPassword()
+ * - authenticate()
  */
 public class UserService {
     public enum UsernameUpdateResult { SUCCESS, INVALID, TAKEN, FAILED }
     public enum ProfileUpdateResult { SUCCESS, INVALID_USERNAME, INVALID_FULL_NAME, TAKEN, FAILED }
     public enum PasswordChangeResult { SUCCESS, INVALID_CURRENT, INVALID_NEW, SAME_PASSWORD, FAILED }
+
+    public enum LoginStatus {
+        SUCCESS,
+        INVALID_CREDENTIALS,
+        ACCOUNT_INACTIVE
+    }
+
+    public static class LoginResult {
+        private final LoginStatus status;
+        private final User user;
+        private final String statusNote;
+
+        private LoginResult(LoginStatus status, User user, String statusNote) {
+            this.status = status;
+            this.user = user;
+            this.statusNote = statusNote;
+        }
+
+        public static LoginResult success(User user) {
+            return new LoginResult(LoginStatus.SUCCESS, user, null);
+        }
+
+        public static LoginResult invalidCredentials() {
+            return new LoginResult(LoginStatus.INVALID_CREDENTIALS, null, null);
+        }
+
+        public static LoginResult inactive(User user, String statusNote) {
+            return new LoginResult(LoginStatus.ACCOUNT_INACTIVE, user, statusNote);
+        }
+
+        public LoginStatus getStatus() { return status; }
+        public User getUser() { return user; }
+        public String getStatusNote() { return statusNote; }
+    }
 
     public static class AdminCreateUserResult {
         private final boolean success;
@@ -62,26 +99,31 @@ public class UserService {
         public String getErrorMessage() { return errorMessage; }
         public User getUser() { return user; }
     }
+
     private static final Logger LOGGER = Logger.getLogger(UserService.class.getName());
 
     private final UserDAO userDAO;
     private final SettingDAO settingDAO;
     private final DashboardDAO dashboardDAO;
+    private final NotificationDAO notificationDAO;
 
     public UserService() {
-        this.userDAO = new UserDAO();
-        this.settingDAO = new SettingDAO();
-        this.dashboardDAO = new DashboardDAO();
+        this(new UserDAO(), new SettingDAO(), new DashboardDAO(), new NotificationDAO());
     }
 
     public UserService(UserDAO userDAO, SettingDAO settingDAO) {
-        this(userDAO, settingDAO, new DashboardDAO());
+        this(userDAO, settingDAO, new DashboardDAO(), new NotificationDAO());
     }
 
     public UserService(UserDAO userDAO, SettingDAO settingDAO, DashboardDAO dashboardDAO) {
+        this(userDAO, settingDAO, dashboardDAO, new NotificationDAO());
+    }
+
+    public UserService(UserDAO userDAO, SettingDAO settingDAO, DashboardDAO dashboardDAO, NotificationDAO notificationDAO) {
         this.userDAO = userDAO;
         this.settingDAO = settingDAO;
         this.dashboardDAO = dashboardDAO;
+        this.notificationDAO = notificationDAO;
     }
 
     public List<UserDTO> getUserList(String search, UUID roleId, String status, int page, int pageSize) {
@@ -121,6 +163,32 @@ public class UserService {
         if (user == null) return false;
 
         String oldStatus = user.getStatus();
+        boolean statusChangingToInactive = false;
+        boolean statusChanged = false;
+
+        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
+            String newStatus = dto.getStatus().trim().toLowerCase(Locale.ROOT);
+            if ("inactive".equalsIgnoreCase(newStatus)) {
+                // Rule 1: Admin must provide mandatory reason when setting inactive
+                if (statusNote == null || statusNote.trim().isEmpty()) {
+                    return false;
+                }
+                user.setStatusNote(statusNote.trim());
+                if (!"inactive".equalsIgnoreCase(oldStatus)) {
+                    statusChangingToInactive = true;
+                }
+            } else if ("active".equalsIgnoreCase(newStatus)) {
+                user.setStatusNote(null);
+            }
+
+            if (!newStatus.equalsIgnoreCase(oldStatus)) {
+                statusChanged = true;
+                user.setStatus(newStatus);
+            }
+        } else if (statusNote != null) {
+            user.setStatusNote(statusNote.trim().isEmpty() ? null : statusNote.trim());
+        }
+
         if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
             user.setUsername(dto.getUsername().trim());
         }
@@ -136,32 +204,39 @@ public class UserService {
         }
         user.setPhone(dto.getPhone() != null && !dto.getPhone().isBlank() ? dto.getPhone().trim() : null);
 
-        boolean statusChanged = false;
-        if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
-            if (!dto.getStatus().equalsIgnoreCase(oldStatus)) {
-                statusChanged = true;
-                user.setStatus(dto.getStatus().trim().toLowerCase());
-            }
-        }
-
         boolean updated = userDAO.update(user);
-        if (updated && (statusChanged || (statusNote != null && !statusNote.isBlank()))) {
-            try {
-                String actor = (adminEmail != null && !adminEmail.isBlank()) ? adminEmail : "admin";
-                String actionType = "ACCOUNT_STATUS_CHANGE";
-                StringBuilder desc = new StringBuilder();
-                desc.append("User [").append(user.getEmail()).append("] status: ");
-                if (statusChanged) {
-                    desc.append(oldStatus).append(" -> ").append(user.getStatus());
-                } else {
-                    desc.append(user.getStatus());
+        if (updated) {
+            if (statusChangingToInactive && statusNote != null && !statusNote.isBlank()) {
+                try {
+                    Notification notification = new Notification();
+                    notification.setId(UUID.randomUUID());
+                    notification.setUserId(user.getId());
+                    notification.setContent("Tài khoản của bạn đã được chuyển sang trạng thái tạm ngưng. Lý do: " + statusNote.trim());
+                    notification.setStatus("unread");
+                    notificationDAO.insert(notification);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Failed to record status change notification: " + e.getMessage());
                 }
-                if (statusNote != null && !statusNote.isBlank()) {
-                    desc.append(". Note: ").append(statusNote.trim());
+            }
+
+            if (statusChanged || (statusNote != null && !statusNote.isBlank())) {
+                try {
+                    String actor = (adminEmail != null && !adminEmail.isBlank()) ? adminEmail : "admin";
+                    String actionType = "ACCOUNT_STATUS_CHANGE";
+                    StringBuilder desc = new StringBuilder();
+                    desc.append("User [").append(user.getEmail()).append("] status: ");
+                    if (statusChanged) {
+                        desc.append(oldStatus).append(" -> ").append(user.getStatus());
+                    } else {
+                        desc.append(user.getStatus());
+                    }
+                    if (user.getStatusNote() != null && !user.getStatusNote().isBlank()) {
+                        desc.append(". Note: ").append(user.getStatusNote());
+                    }
+                    dashboardDAO.insertAuditLog(actor, actionType, desc.toString(), "SUCCESS");
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Failed to log status change audit: " + e.getMessage());
                 }
-                dashboardDAO.insertAuditLog(actor, actionType, desc.toString(), "SUCCESS");
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to log status change audit: " + e.getMessage());
             }
         }
         return updated;
@@ -276,7 +351,11 @@ public class UserService {
         newUser.setEmail(normalizedEmail);
         newUser.setPassword(hashedPassword);
         newUser.setRoleId(roleId);
-        newUser.setStatus(status != null && !status.isBlank() ? status.trim().toLowerCase(Locale.ROOT) : "active");
+        String finalStatus = "active";
+        if (status != null && "inactive".equalsIgnoreCase(status.trim())) {
+            finalStatus = "inactive";
+        }
+        newUser.setStatus(finalStatus);
         newUser.setPhone(normalizedPhone);
         newUser.setRequiresPasswordChange(true);
 
@@ -304,8 +383,7 @@ public class UserService {
                     + "- Mật khẩu tạm thời: " + tempPassword + "\n\n"
                     + "Vì lý do an toàn bảo mật, hệ thống sẽ yêu cầu bạn đổi mật khẩu mới ngay trong lần đăng nhập đầu tiên.\n\n"
                     + "Trân trọng,\nĐội ngũ Quản trị LearnHub";
-            EmailUtil.sendEmail(newUser.getEmail(), subject, body);
-            emailSent = true;
+            emailSent = EmailUtil.sendEmail(newUser.getEmail(), subject, body);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to send welcome email with temp password to " + newUser.getEmail() + ": " + e.getMessage());
         }
@@ -379,8 +457,15 @@ public class UserService {
     }
 
     public boolean toggleStatus(UUID userId, String status) {
-        if (userId == null) return false;
-        return userDAO.updateStatus(userId, status);
+        return toggleStatus(userId, status, null);
+    }
+
+    public boolean toggleStatus(UUID userId, String status, String statusNote) {
+        if (userId == null || status == null) return false;
+        if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
+            return false;
+        }
+        return userDAO.updateStatus(userId, status, statusNote);
     }
 
     public boolean resetPassword(UUID userId, String newPlainPassword) {
@@ -391,20 +476,55 @@ public class UserService {
         return userDAO.updatePassword(userId, hashed);
     }
 
-    public User login(String email, String plainPassword) {
-        if (email == null || plainPassword == null) return null;
+    /**
+     * Authenticates user credentials with enhanced status validation:
+     * - Returns SUCCESS if password is valid and status is 'active'.
+     * - Returns ACCOUNT_INACTIVE with status note (or notification fallback) if password is valid and account is inactive.
+     * - Returns INVALID_CREDENTIALS if account is not found or password does NOT match (never reveals inactive status on wrong password).
+     */
+    public LoginResult authenticate(String email, String plainPassword) {
+        if (email == null || plainPassword == null) {
+            return LoginResult.invalidCredentials();
+        }
         User user = userDAO.findByEmail(email.trim());
-        if (user == null) return null;
+        if (user == null) {
+            return LoginResult.invalidCredentials();
+        }
 
-        if (PasswordHashUtil.checkPassword(plainPassword, user.getPassword())) {
-            if ("active".equalsIgnoreCase(user.getStatus())) {
-                return user;
-            } else {
-                LOGGER.warning("User " + email + " is " + user.getStatus());
-                return null;
+        // Rule 3: Security requirement - do not reveal inactive status or reason on wrong password
+        if (!PasswordHashUtil.checkPassword(plainPassword, user.getPassword())) {
+            return LoginResult.invalidCredentials();
+        }
+
+        if ("active".equalsIgnoreCase(user.getStatus())) {
+            return LoginResult.success(user);
+        }
+
+        // Account is inactive (or non-active)
+        String note = user.getStatusNote();
+        if (note == null || note.isBlank()) {
+            // Rule 4: Fallback to notifications if note column is empty (legacy data)
+            try {
+                List<Notification> notifs = notificationDAO.findByUserId(user.getId());
+                if (notifs != null) {
+                    for (Notification n : notifs) {
+                        if (n.getContent() != null && n.getContent().toLowerCase().contains("tạm ngưng")) {
+                            note = n.getContent();
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Failed to read notification fallback: " + e.getMessage());
             }
         }
-        return null;
+
+        return LoginResult.inactive(user, note);
+    }
+
+    public User login(String email, String plainPassword) {
+        LoginResult result = authenticate(email, plainPassword);
+        return result.getStatus() == LoginStatus.SUCCESS ? result.getUser() : null;
     }
 
     /** Called only after the email verification code has been accepted. */
@@ -467,6 +587,7 @@ public class UserService {
         dto.setRoleName(u.getRoleName());
         dto.setRoleCode(u.getRoleCode());
         dto.setStatus(u.getStatus());
+        dto.setStatusNote(u.getStatusNote());
         dto.setPhone(u.getPhone());
         dto.setAvatarUrl(u.getAvatarUrl());
         return dto;

@@ -1,6 +1,7 @@
 package com.learnhub.filter;
 
 import com.learnhub.constant.AppConstants;
+import com.learnhub.dao.UserDAO;
 import com.learnhub.entity.User;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
  * - isLoggedIn(req)
  * - hasExpertRole(req)
  * - hasStudentRole(req)
+ * - Mid-session status check for account suspension
  */
 @WebFilter(filterName = "AuthorizationFilter", urlPatterns = {
         "/admin/*", "/manager/*", "/expert/*",
@@ -28,6 +30,16 @@ import java.nio.charset.StandardCharsets;
         "/profile", "/account", "/account/*"
 })
 public class AuthorizationFilter implements Filter {
+
+    private final UserDAO userDAO;
+
+    public AuthorizationFilter() {
+        this(new UserDAO());
+    }
+
+    public AuthorizationFilter(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
@@ -52,6 +64,24 @@ public class AuthorizationFilter implements Filter {
                     + "/auth/login?error=unauthorized&redirect_uri="
                     + encodedUri);
             return;
+        }
+
+        // Rule 5: Mid-session suspension check. Invalidate session if user becomes non-active.
+        User currentUser = getCurrentUser(req);
+        if (currentUser != null && currentUser.getId() != null) {
+            User freshUser = userDAO.findById(currentUser.getId());
+            if (freshUser == null || !"active".equalsIgnoreCase(freshUser.getStatus())) {
+                HttpSession session = req.getSession(false);
+                if (session != null) {
+                    session.invalidate();
+                }
+                String reason = (freshUser != null && freshUser.getStatusNote() != null && !freshUser.getStatusNote().isBlank())
+                        ? freshUser.getStatusNote().trim() : "";
+                String encodedReason = URLEncoder.encode(reason, StandardCharsets.UTF_8);
+                resp.sendRedirect(req.getContextPath() + "/auth/login?suspended=1"
+                        + (!encodedReason.isEmpty() ? "&reason=" + encodedReason : ""));
+                return;
+            }
         }
 
         boolean isCourseManagement = isUnder(path, "/manager/courses")
@@ -105,7 +135,7 @@ public class AuthorizationFilter implements Filter {
             resp.sendError(
                     HttpServletResponse.SC_FORBIDDEN,
                     "Access denied: Subject Expert privileges required."
-            );
+                    );
             return;
         }
 

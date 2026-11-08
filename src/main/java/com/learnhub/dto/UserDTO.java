@@ -16,6 +16,7 @@ public class UserDTO implements Serializable {
     private String status;
     private String phone;
     private String avatarUrl;
+    private String statusNote;
 
     public UserDTO() {
     }
@@ -58,4 +59,7 @@ public class UserDTO implements Serializable {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getStatusNote() { return statusNote; }
+    public void setStatusNote(String statusNote) { this.statusNote = statusNote; }
 }

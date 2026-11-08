@@ -23,6 +23,7 @@ public class User implements Serializable {
     private String roleCode;
     private String phone;
     private String avatarUrl;
+    private String statusNote;
 
     public User() {
     }
@@ -77,6 +78,9 @@ public class User implements Serializable {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getStatusNote() { return statusNote; }
+    public void setStatusNote(String statusNote) { this.statusNote = statusNote; }
 
     @Override
     public String toString() {

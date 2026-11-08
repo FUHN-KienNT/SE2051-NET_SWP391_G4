@@ -76,6 +76,7 @@ public class QuizManagementServlet extends HttpServlet {
         UUID defaultFilterModuleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
         List<UUID> selectedQuestionIds = new ArrayList<>();
         Quiz quiz = null;
+        boolean isUsed = false;
 
         String id = req.getParameter("id");
         if (id != null && !id.isBlank()) {
@@ -86,6 +87,7 @@ public class QuizManagementServlet extends HttpServlet {
                     req.setAttribute("quiz", quiz);
                     defaultFilterModuleId = quiz.getModuleId();
                     selectedQuestionIds = service.getQuestionIds(quizId);
+                    isUsed = service.isUsed(quizId);
 
                     // Khi sửa Quiz đã có, luôn lấy đúng khóa học của module thuộc Quiz đó
                     if (quiz.getCourseId() != null) {
@@ -152,6 +154,7 @@ public class QuizManagementServlet extends HttpServlet {
         req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
         req.setAttribute("selectedQuestionIds", selectedQuestionIds);
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
+        req.setAttribute("isUsed", isUsed);
 
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
     }
@@ -271,6 +274,12 @@ public class QuizManagementServlet extends HttpServlet {
             } else {
                 moduleId = null;
             }
+        }
+
+        // Không cho phép chỉnh sửa bài kiểm tra đã được sử dụng (trong bài học hoặc đã có lượt nộp bài)
+        if (id != null && service.isUsed(id)) {
+            redirectToList(req, resp, courseId, moduleId, "cannotEditUsedQuiz=true");
+            return;
         }
 
         String title = req.getParameter("title");

@@ -7,15 +7,14 @@
 
 <%-- 
 =============================================================================
-MÀN HÌNH KẾT QUẢ BÀI THI & ĐỐI CHIẾU ĐÁP ÁN (QUIZ RESULT)
+MÀN HÌNH KẾT QUẢ BÀI THI (QUIZ RESULT)
 Dành cho Học viên (Student / Learner):
 - Thanh điều hướng & thời gian hoàn thành bài nộp.
 - Thẻ Hero Kết quả:
   + Trạng thái ĐẠT (Passed) / CHƯA ĐẠT (Failed) với hiệu ứng thị giác tương ứng.
   + Thẻ so sánh điểm số thực tế vs Điểm chuẩn đạt yêu cầu (Thang điểm 10).
-  + Các nút hành động chính: Làm lại, Xem lịch sử thi, Về nội dung khóa học.
+  + Các nút hành động chính: Làm lại, Về nội dung khóa học, Khóa học.
 - Lưới 4 Thẻ chỉ số hiệu suất: Số câu đúng, Số câu sai, Tỷ lệ chính xác (%), Kết luận.
-- Khu vực xem lại câu hỏi: Đối chiếu toàn bộ câu hỏi và đáp án đúng chuẩn của hệ thống.
 =============================================================================
 --%>
 
@@ -126,11 +125,6 @@ Dành cho Học viên (Student / Learner):
                         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm Lại Bài Thi
                     </a>
 
-                    <!-- Nút Xem lịch sử thi -->
-                    <a href="${pageContext.request.contextPath}/quiz/history?quizId=${quiz.id}" class="w-full sm:w-auto px-6 py-3 bg-surface hover:bg-slate-100 text-text-primary font-semibold border border-border-default rounded-xl text-sm transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-brand-700" aria-hidden="true"></i> Xem Lịch Sử Thi
-                    </a>
-
                     <!-- Nút Danh sách khóa học -->
                     <a href="${pageContext.request.contextPath}/courses" class="w-full sm:w-auto px-5 py-3 text-text-secondary hover:text-text-primary font-medium text-sm transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-house text-xs" aria-hidden="true"></i> Khóa học
@@ -218,108 +212,7 @@ Dành cho Học viên (Student / Learner):
             </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- PHẦN 4: KHU VỰC ĐỐI CHIẾU CÂU HỎI & ĐÁP ÁN ĐÚNG CỦA HỆ THỐNG      -->
-        <!-- ================================================================= -->
-        <c:if test="${not empty questions}">
-            <div class="bg-surface-card p-6 sm:p-8 rounded-3xl border border-border-default shadow-sm">
-                <!-- Tiêu đề khu vực xem lại -->
-                <div class="flex items-center justify-between mb-6 pb-4 border-b border-border-default">
-                    <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-question text-brand-700" aria-hidden="true"></i>
-                            <span>Xem Lại Danh Sách Câu Hỏi &amp; Đáp Án Chuẩn</span>
-                        </h2>
-                        <p class="text-xs text-text-secondary mt-1">
-                            Đối chiếu câu trả lời của bạn với đáp án chính xác của đề thi
-                        </p>
-                    </div>
-                    <span class="text-xs font-semibold px-3 py-1 bg-surface border border-border-default rounded-full text-text-secondary">
-                        ${questions.size()} câu hỏi
-                    </span>
-                </div>
 
-                <!-- Danh sách các câu hỏi -->
-                <div class="space-y-6">
-                    <c:forEach var="q" items="${questions}" varStatus="status">
-                        <div class="p-5 rounded-2xl border border-border-default bg-surface/60">
-                            <!-- Tiêu đề câu hỏi & Badge phân loại -->
-                            <div class="flex items-start gap-3 mb-3">
-                                <span class="w-7 h-7 rounded-lg bg-surface-card border border-border-default text-text-primary font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
-                                    ${status.count}
-                                </span>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <c:choose>
-                                            <c:when test="${q.fillInBlank}">
-                                                <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-amber-50 text-status-warning border border-amber-200">Điền từ</span>
-                                            </c:when>
-                                            <c:when test="${q.multipleChoice}">
-                                                <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">Chọn nhiều</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-100">Trắc nghiệm</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    <h3 class="text-sm sm:text-base font-semibold text-text-primary leading-relaxed">${q.content}</h3>
-                                </div>
-                            </div>
-
-                            <!-- Phương án đáp án: Đánh dấu nổi bật đáp án chính xác -->
-                            <div class="pl-0 sm:pl-10 space-y-2 pt-2">
-                                <c:choose>
-                                    <%-- LOẠI ĐIỀN CHỖ TRỐNG: Hiển thị các từ khóa được chấp nhận --%>
-                                    <c:when test="${q.fillInBlank}">
-                                        <div class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 text-xs sm:text-sm">
-                                            <div class="flex items-center gap-2 font-bold text-status-success mb-1">
-                                                <i class="fa-solid fa-circle-check text-xs" aria-hidden="true"></i>
-                                                <span>Từ khóa đáp án chuẩn:</span>
-                                            </div>
-                                            <div class="flex flex-wrap gap-1.5 mt-1">
-                                                <c:forEach var="opt" items="${q.options}">
-                                                    <span class="px-2.5 py-1 rounded-lg bg-white border border-emerald-300 font-semibold text-text-primary shadow-xs">
-                                                        ${opt.optionText}
-                                                    </span>
-                                                </c:forEach>
-                                            </div>
-                                        </div>
-                                    </c:when>
-
-                                    <%-- LOẠI TRẮC NGHIỆM: Đánh dấu phương án đúng bằng viền xanh và huy hiệu "Đáp án đúng" --%>
-                                    <c:otherwise>
-                                        <c:forEach var="opt" items="${q.options}">
-                                            <div class="flex items-start gap-3 p-3 rounded-xl border text-xs sm:text-sm font-medium transition ${opt.correct ? 'border-emerald-300 bg-emerald-50/80 text-emerald-900 font-semibold' : 'border-border-default bg-surface-card text-text-secondary'}">
-                                                <div class="mt-0.5 shrink-0">
-                                                    <c:choose>
-                                                        <c:when test="${opt.correct}">
-                                                            <span class="w-4 h-4 rounded-full bg-status-success text-white flex items-center justify-center text-[10px]">
-                                                                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                                                            </span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span class="w-4 h-4 rounded-full border border-slate-300 inline-block bg-white"></span>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </div>
-                                                <div class="flex-1 flex items-center justify-between gap-2">
-                                                    <span>${opt.optionText}</span>
-                                                    <c:if test="${opt.correct}">
-                                                        <span class="text-[10px] uppercase font-bold text-status-success px-2 py-0.5 rounded bg-emerald-100 border border-emerald-200 shrink-0">
-                                                            Đáp án đúng
-                                                        </span>
-                                                    </c:if>
-                                                </div>
-                                            </div>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
-                        </div>
-                    </c:forEach>
-                </div>
-            </div>
-        </c:if>
 
     </div>
 </main>

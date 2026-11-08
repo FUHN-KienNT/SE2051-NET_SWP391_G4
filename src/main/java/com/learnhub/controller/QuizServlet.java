@@ -87,16 +87,12 @@ public class QuizServlet extends HttpServlet {
 
         if ("/quiz/history".equals(path)) {
             String quizIdStr = req.getParameter("quizId");
-            if (quizIdStr != null) {
-                try {
-                    UUID quizId = UUID.fromString(quizIdStr);
-                    List<QuizSubmission> history = quizService.getAttemptHistory(user.getId(), quizId);
-                    req.setAttribute("history", history);
-                    req.getRequestDispatcher("/WEB-INF/views/quiz/history.jsp").forward(req, resp);
-                    return;
-                } catch (Exception ignored) {
-                }
+            if (quizIdStr != null && !quizIdStr.trim().isEmpty()) {
+                resp.sendRedirect(req.getContextPath() + "/quiz?quizId=" + quizIdStr.trim());
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/courses");
             }
+            return;
         }
 
         if ("/quiz/result".equals(path) || "result".equals(req.getParameter("action"))) {

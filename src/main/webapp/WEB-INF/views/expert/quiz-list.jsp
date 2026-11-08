@@ -168,6 +168,12 @@
                         <span>Bài kiểm tra này đã được sử dụng trong khóa học / chương học nên không thể xóa vĩnh viễn. Bạn chỉ có thể ẩn bài kiểm tra để bảo toàn dữ liệu.</span>
                     </div>
                 </c:if>
+                <c:if test="${param.cannotEditUsedQuiz == 'true'}">
+                    <div role="alert" class="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-status-warning text-xs sm:text-sm font-semibold flex items-center gap-2.5">
+                        <i class="fa-solid fa-triangle-exclamation text-status-warning text-base" aria-hidden="true"></i>
+                        <span>Bài kiểm tra này đã được sử dụng trong khóa học hoặc đã có học viên làm bài nên không thể chỉnh sửa để bảo toàn lịch sử dữ liệu thi.</span>
+                    </div>
+                </c:if>
                 <c:if test="${param.hidden == 'true'}">
                     <div role="status" class="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-status-warning text-xs sm:text-sm font-semibold flex items-center gap-2.5">
                         <i class="fa-solid fa-eye-slash text-status-warning text-base" aria-hidden="true"></i>
@@ -358,13 +364,25 @@
                                                 </div>
                                             </td>
 
-                                            <!-- Các nút thao tác (Sửa, Ẩn/Hiện, Xóa khi chưa dùng) -->
+                                            <!-- Các nút thao tác (Xem/Sửa, Ẩn/Hiện, Xóa khi chưa dùng) -->
                                             <td class="px-5 py-4 text-center whitespace-nowrap">
                                                 <div class="flex items-center justify-center gap-1.5">
-                                                    <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
-                                                       class="inline-flex items-center px-3 py-1.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-primary font-semibold text-xs shadow-xs transition">
-                                                        <i class="fa-solid fa-pen-to-square mr-1 text-slate-400" aria-hidden="true"></i>Sửa
-                                                    </a>
+                                                    <c:choose>
+                                                        <c:when test="${isQuizUsed}">
+                                                            <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
+                                                               class="inline-flex items-center px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs shadow-xs transition"
+                                                               title="Xem chi tiết bài kiểm tra (Chế độ chỉ đọc do đã sử dụng)">
+                                                                <i class="fa-solid fa-eye mr-1 text-blue-600" aria-hidden="true"></i>Xem
+                                                            </a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
+                                                               class="inline-flex items-center px-3 py-1.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-primary font-semibold text-xs shadow-xs transition"
+                                                               title="Chỉnh sửa bài kiểm tra">
+                                                                <i class="fa-solid fa-pen-to-square mr-1 text-slate-400" aria-hidden="true"></i>Sửa
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
 
                                                     <c:choose>
                                                         <c:when test="${q.hidden}">

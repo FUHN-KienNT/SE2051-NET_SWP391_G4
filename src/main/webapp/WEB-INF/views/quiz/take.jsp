@@ -14,7 +14,6 @@ Dành cho Học viên (Student / Learner):
   + Nút đánh dấu xem lại câu hỏi (Flag for review).
   + Điều hướng nhanh câu trước / câu sau.
 - Cột bên phải: Ma trận bảng câu hỏi (Question Matrix Navigation) & Thanh tiến độ làm bài.
-- Thanh ghim dưới cùng (Sticky Bottom Bar): Thống kê nhanh số câu đã làm và nút Nộp bài.
 - Hộp thoại Modal xác nhận nộp bài kèm cảnh báo nếu còn câu hỏi chưa làm.
 =============================================================================
 --%>
@@ -74,7 +73,7 @@ Dành cho Học viên (Student / Learner):
         <!-- ================================================================= -->
         <!-- FORM BÀI LÀM QUIZ                                                 -->
         <!-- ================================================================= -->
-        <form id="quiz-form" action="${pageContext.request.contextPath}/quiz" method="post" class="pb-28">
+        <form id="quiz-form" action="${pageContext.request.contextPath}/quiz" method="post" class="pb-8">
             <input type="hidden" name="action" value="submit">
             <input type="hidden" name="quizId" value="${quiz.id}">
             <input type="hidden" name="attemptId" value="${attempt.id}">
@@ -208,11 +207,7 @@ Dành cho Học viên (Student / Learner):
                                             Câu tiếp <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
                                         </button>
                                     </c:when>
-                                    <c:otherwise>
-                                        <button type="button" onclick="openSubmitModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white font-semibold transition shadow-xs">
-                                            <i class="fa-solid fa-paper-plane text-[10px]" aria-hidden="true"></i> Hoàn tất bài thi
-                                        </button>
-                                    </c:otherwise>
+                                    <c:otherwise><div></div></c:otherwise>
                                 </c:choose>
                             </div>
                         </article>
@@ -286,28 +281,7 @@ Dành cho Học viên (Student / Learner):
                 </aside>
             </div>
 
-            <!-- ============================================================= -->
-            <!-- PHẦN 4: THANH THAO TÁC GHIM DƯỚI ĐÁY TRANG (STICKY BOTTOM)     -->
-            <!-- ============================================================= -->
-            <div class="fixed bottom-0 left-0 right-0 p-3.5 sm:p-4 bg-surface-card/95 backdrop-blur-md border-t border-border-default shadow-lg z-40">
-                <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-3 px-4 sm:px-6">
-                    <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-text-secondary font-medium">
-                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-brand-50 text-brand-700 font-bold border border-brand-100">
-                            <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
-                        </span>
-                        <span>
-                            Đã làm: <strong id="bottom-answered-count" class="text-brand-700 font-bold">0</strong>/${questions.size()} câu
-                        </span>
-                        <span id="bottom-flagged-container" class="hidden sm:inline-flex items-center text-amber-700 ml-2">
-                            (<span id="bottom-flagged-count" class="font-semibold">0</span> câu đánh dấu)
-                        </span>
-                    </div>
 
-                    <button type="button" onclick="openSubmitModal()" id="submit-btn" class="px-6 sm:px-8 py-2.5 sm:py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl shadow-sm transition text-xs sm:text-sm flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
-                        <i class="fa-solid fa-paper-plane mr-2 text-xs" aria-hidden="true"></i> Nộp Bài Thi
-                    </button>
-                </div>
-            </div>
         </form>
     </div>
 </main>
@@ -400,21 +374,6 @@ Dành cho Học viên (Student / Learner):
             }
             if (navFlag) navFlag.classList.remove("hidden");
             if (navBtn) navBtn.classList.add("ring-2", "ring-amber-400", "border-amber-400");
-        }
-        updateBottomFlagged();
-    }
-
-    // Cập nhật số lượng câu được đánh dấu dưới thanh ghim đáy
-    function updateBottomFlagged() {
-        var bottomContainer = document.getElementById("bottom-flagged-container");
-        var bottomCount = document.getElementById("bottom-flagged-count");
-        if (bottomContainer && bottomCount) {
-            bottomCount.textContent = flaggedQuestions.size;
-            if (flaggedQuestions.size > 0) {
-                bottomContainer.classList.remove("hidden");
-            } else {
-                bottomContainer.classList.add("hidden");
-            }
         }
     }
 
@@ -532,11 +491,9 @@ Dành cho Học viên (Student / Learner):
             var progressPercent = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
             var sidebarProgressText = document.getElementById("sidebar-progress-text");
             var sidebarProgressBar = document.getElementById("sidebar-progress-bar");
-            var bottomAnsweredCount = document.getElementById("bottom-answered-count");
 
             if (sidebarProgressText) sidebarProgressText.textContent = answeredCount + " / " + totalQuestions + " câu (" + progressPercent + "%)";
             if (sidebarProgressBar) sidebarProgressBar.style.width = progressPercent + "%";
-            if (bottomAnsweredCount) bottomAnsweredCount.textContent = answeredCount;
         }
 
         if (quizForm) {

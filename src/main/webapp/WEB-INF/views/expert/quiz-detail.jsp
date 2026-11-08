@@ -17,10 +17,10 @@
             <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-700 mb-1">
                 <a href="${pageContext.request.contextPath}/expert/quizzes" class="hover:underline">Quiz Management</a>
                 <span class="text-text-secondary">/</span>
-                <span class="text-text-secondary">${empty quiz ? 'Create Quiz' : 'Edit Quiz'}</span>
+                <span class="text-text-secondary">${empty quiz ? 'Create Quiz' : (isUsed ? 'Quiz Details' : 'Edit Quiz')}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">
-                ${empty quiz ? 'Tạo bài kiểm tra mới' : 'Chỉnh sửa bài kiểm tra'}
+                ${empty quiz ? 'Tạo bài kiểm tra mới' : (isUsed ? 'Chi tiết bài kiểm tra (Chỉ đọc)' : 'Chỉnh sửa bài kiểm tra')}
             </h1>
             <c:if test="${not empty course}">
                 <p class="text-xs text-text-secondary mt-1">
@@ -41,6 +41,19 @@
             </a>
         </div>
     </div>
+
+    <!-- 1B. THÔNG BÁO BÀI KIỂM TRA ĐANG Ở CHẾ ĐỘ CHỈ ĐỌC (NẾU ĐÃ ĐƯỢC DÙNG) -->
+    <c:if test="${isUsed}">
+        <div class="mb-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs sm:text-sm font-semibold flex items-start gap-3 shadow-xs">
+            <i class="fa-solid fa-circle-info text-blue-600 text-base mt-0.5 shrink-0" aria-hidden="true"></i>
+            <div>
+                <p class="font-bold text-blue-900">Bài kiểm tra đang ở chế độ Chỉ đọc (Read-only)</p>
+                <p class="text-xs text-blue-800 font-normal mt-0.5">
+                    Bài kiểm tra này đã được sử dụng trong khóa học hoặc đã có học viên làm bài. Để bảo đảm tính công bằng và toàn vẹn lịch sử kết quả thi của học viên, nội dung câu hỏi và thông số bài kiểm tra không thể chỉnh sửa.
+                </p>
+            </div>
+        </div>
+    </c:if>
 
     <!-- 2. THÔNG BÁO LỖI (NẾU CÓ) -->
     <c:if test="${not empty error}">
@@ -64,9 +77,18 @@
                     <span class="w-2.5 h-6 bg-brand-700 rounded-full inline-block"></span>
                     <h2 class="text-base sm:text-lg font-bold text-text-primary">Thông tin cơ bản</h2>
                 </div>
-                <button type="submit" class="inline-flex items-center px-5 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
-                    <i class="fa-solid fa-floppy-disk mr-2 text-xs" aria-hidden="true"></i>Lưu bài kiểm tra
-                </button>
+                <c:choose>
+                    <c:when test="${isUsed}">
+                        <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs shadow-xs">
+                            <i class="fa-solid fa-lock mr-1.5 text-xs text-blue-600" aria-hidden="true"></i>Chỉ đọc
+                        </span>
+                    </c:when>
+                    <c:otherwise>
+                        <button type="submit" class="inline-flex items-center px-5 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+                            <i class="fa-solid fa-floppy-disk mr-2 text-xs" aria-hidden="true"></i>Lưu bài kiểm tra
+                        </button>
+                    </c:otherwise>
+                </c:choose>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -81,9 +103,10 @@
                         </span>
                     </div>
                     <input name="title" id="quizTitleInput" value="${quiz.title}" required maxlength="255"
+                           ${isUsed ? 'readonly' : ''}
                            oninput="onQuizTitleChange(); verifyQuiz();"
                            placeholder="ví dụ: Kiểm tra tổng kết Chương 1 - Lập trình Servlet & JSP"
-                           class="w-full px-4 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
+                           class="w-full px-4 py-3 rounded-xl border border-border-default text-xs sm:text-sm outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface focus:bg-surface-card focus:ring-2 focus:ring-brand-700 focus:border-brand-700'}">
                     <p id="quizTitleWordAlert" class="hidden text-xs text-status-danger font-semibold mt-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
                         <span>Tên bài kiểm tra không được vượt quá 120 từ.</span>
@@ -95,8 +118,8 @@
                     <label class="block text-xs sm:text-sm font-bold text-text-primary mb-2">
                         Khóa học
                     </label>
-                    <select id="courseSelect" onchange="onCourseChange(this.value, false)"
-                            class="w-full px-4 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm font-semibold text-text-primary outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition cursor-pointer">
+                    <select id="courseSelect" onchange="onCourseChange(this.value, false)" ${isUsed ? 'disabled' : ''}
+                            class="w-full px-4 py-3 rounded-xl border border-border-default text-xs sm:text-sm font-semibold outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface text-text-primary focus:bg-surface-card focus:ring-2 focus:ring-brand-700 cursor-pointer'}">
                         <option value="">-- Tất cả khóa học --</option>
                         <c:forEach var="c" items="${courses}">
                             <option value="${c.id}" ${courseId eq c.id ? 'selected' : ''}>
@@ -112,8 +135,8 @@
                     <label class="block text-xs sm:text-sm font-bold text-text-primary mb-2">
                         Chương / Module <span class="text-status-danger">*</span>
                     </label>
-                    <select name="moduleId" id="quizModuleSelect" required onchange="onQuizModuleChange(this.value); verifyQuiz();"
-                            class="w-full px-4 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm font-semibold text-text-primary outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition cursor-pointer">
+                    <select name="moduleId" id="quizModuleSelect" required onchange="onQuizModuleChange(this.value); verifyQuiz();" ${isUsed ? 'disabled' : ''}
+                            class="w-full px-4 py-3 rounded-xl border border-border-default text-xs sm:text-sm font-semibold outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface text-text-primary focus:bg-surface-card focus:ring-2 focus:ring-brand-700 cursor-pointer'}">
                         <option value="">-- Chọn module áp dụng --</option>
                         <c:forEach var="m" items="${modules}">
                             <option value="${m.id}" ${(quiz.moduleId eq m.id or defaultFilterModuleId eq m.id) ? 'selected' : ''} data-course="${m.courseId}">
@@ -133,7 +156,8 @@
                     <label class="block text-xs sm:text-sm font-bold text-text-primary mb-2">
                         Trạng thái hiển thị <span class="text-status-danger">*</span>
                     </label>
-                    <select name="status" class="w-full px-4 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm font-semibold text-text-primary outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition cursor-pointer">
+                    <select name="status" ${isUsed ? 'disabled' : ''}
+                            class="w-full px-4 py-3 rounded-xl border border-border-default text-xs sm:text-sm font-semibold outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface text-text-primary focus:bg-surface-card focus:ring-2 focus:ring-brand-700 cursor-pointer'}">
                         <option value="published" ${empty quiz or quiz.status eq 'published' ? 'selected' : ''}>Công khai (Published - Học viên có thể làm bài)</option>
                         <option value="draft" ${quiz.status eq 'draft' ? 'selected' : ''}>Bản nháp (Draft - Chỉ Expert thấy)</option>
                         <option value="hidden" ${quiz.status eq 'hidden' ? 'selected' : ''}>Ẩn (Hidden - Giữ lịch sử làm bài, học viên không thể thi mới)</option>
@@ -148,9 +172,10 @@
                         </label>
                         <div class="relative">
                             <input type="number" name="timeLimit" id="timeLimitInput" value="${empty quiz.timeLimit ? 15 : quiz.timeLimit}" min="1" max="600" required
+                                   ${isUsed ? 'readonly' : ''}
                                    oninput="verifyQuiz()"
                                    placeholder="Từ 1 đến 600 phút"
-                                   class="w-full pl-4 pr-14 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition">
+                                   class="w-full pl-4 pr-14 py-3 rounded-xl border border-border-default text-xs sm:text-sm outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface focus:bg-surface-card focus:ring-2 focus:ring-brand-700'}">
                             <span class="absolute right-3.5 top-3.5 text-xs text-text-secondary font-semibold">Phút</span>
                         </div>
                     </div>
@@ -161,8 +186,9 @@
                         </label>
                         <div class="relative">
                             <input type="number" step="0.5" name="passScore" id="passScoreInput" value="${empty quiz.passScore ? 5.0 : quiz.passScore}" min="0" max="10" required
+                                   ${isUsed ? 'readonly' : ''}
                                    oninput="verifyQuiz()"
-                                   class="w-full pl-4 pr-12 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm font-bold text-text-primary outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition">
+                                   class="w-full pl-4 pr-12 py-3 rounded-xl border border-border-default text-xs sm:text-sm font-bold outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface text-text-primary focus:bg-surface-card focus:ring-2 focus:ring-brand-700'}">
                             <span class="absolute right-3.5 top-3.5 text-xs text-text-secondary font-semibold">/ 10</span>
                         </div>
                     </div>
@@ -182,9 +208,10 @@
                         <div class="flex-1 w-full space-y-2">
                             <div class="relative">
                                 <input name="imageUrl" id="imageUrlInput" value="${quiz.imageUrl}"
+                                       ${isUsed ? 'readonly' : ''}
                                        placeholder="Dán link ảnh trực tiếp (https://...) hoặc link Google Images..."
                                        oninput="onImageUrlInput(this.value)"
-                                       class="w-full pl-4 pr-10 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition">
+                                       class="w-full pl-4 pr-10 py-3 rounded-xl border border-border-default text-xs sm:text-sm outline-none transition ${isUsed ? 'bg-slate-100 text-text-secondary cursor-not-allowed' : 'bg-surface focus:bg-surface-card focus:ring-2 focus:ring-brand-700'}">
                                 <span class="absolute right-3.5 top-3.5 flex items-center">
                                     <i id="imageStatusIcon" class="fa-solid fa-image text-slate-400 text-sm" aria-hidden="true"></i>
                                 </span>
@@ -196,21 +223,23 @@
                             </div>
 
                             <!-- Gợi ý ảnh mẫu nhanh -->
-                            <div class="pt-1 flex flex-wrap items-center gap-1.5">
-                                <span class="text-[11px] font-bold text-text-secondary mr-1">Gợi ý ảnh mẫu:</span>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    💻 Công nghệ
-                                </button>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    📐 Toán học
-                                </button>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    📚 Tổng quan
-                                </button>
-                            </div>
+                            <c:if test="${not isUsed}">
+                                <div class="pt-1 flex flex-wrap items-center gap-1.5">
+                                    <span class="text-[11px] font-bold text-text-secondary mr-1">Gợi ý ảnh mẫu:</span>
+                                    <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80')"
+                                            class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
+                                        💻 Công nghệ
+                                    </button>
+                                    <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80')"
+                                            class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
+                                        📐 Toán học
+                                    </button>
+                                    <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&auto=format&fit=crop&q=80')"
+                                            class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
+                                        📚 Tổng quan
+                                    </button>
+                                </div>
+                            </c:if>
                         </div>
                     </div>
                 </div>
@@ -237,29 +266,31 @@
                         Đã chọn: <strong id="selectedCountBadge" class="ml-1 text-sm">${empty selectedQuestionIds ? 0 : selectedQuestionIds.size()}</strong> câu
                     </span>
 
-                    <!-- Công cụ Random nhanh câu hỏi -->
-                    <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl p-1 gap-1.5 shadow-xs">
-                        <span class="text-xs font-bold text-indigo-900 pl-2 hidden sm:inline">Số câu:</span>
-                        <input type="number" id="quickRandomCount" min="1" max="10" value="10"
-                               oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
-                               class="w-14 text-center py-1 text-xs font-bold bg-white border border-indigo-200 rounded-lg text-indigo-900 outline-none focus:ring-1 focus:ring-indigo-500">
-                        <span id="quickRandomMaxHint" class="text-[11px] font-semibold text-indigo-700 pr-1 hidden sm:inline"></span>
-                        <button type="button" onclick="quickRandomQuestions()" id="btnQuickRandom"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition shadow-xs"
-                                title="Tự động chọn ngẫu nhiên câu hỏi trong chương này">
-                            <i class="fa-solid fa-dice text-xs" aria-hidden="true"></i>
-                            <span>Random câu hỏi</span>
-                        </button>
-                        <button type="button" onclick="openRandomModal()"
-                                class="px-2 py-1.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition text-xs"
-                                title="Tùy chọn nâng cao">
-                            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                        </button>
-                    </div>
+                    <c:if test="${not isUsed}">
+                        <!-- Công cụ Random nhanh câu hỏi -->
+                        <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl p-1 gap-1.5 shadow-xs">
+                            <span class="text-xs font-bold text-indigo-900 pl-2 hidden sm:inline">Số câu:</span>
+                            <input type="number" id="quickRandomCount" min="1" max="10" value="10"
+                                   oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
+                                   class="w-14 text-center py-1 text-xs font-bold bg-white border border-indigo-200 rounded-lg text-indigo-900 outline-none focus:ring-1 focus:ring-indigo-500">
+                            <span id="quickRandomMaxHint" class="text-[11px] font-semibold text-indigo-700 pr-1 hidden sm:inline"></span>
+                            <button type="button" onclick="quickRandomQuestions()" id="btnQuickRandom"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition shadow-xs"
+                                    title="Tự động chọn ngẫu nhiên câu hỏi trong chương này">
+                                <i class="fa-solid fa-dice text-xs" aria-hidden="true"></i>
+                                <span>Random câu hỏi</span>
+                            </button>
+                            <button type="button" onclick="openRandomModal()"
+                                    class="px-2 py-1.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition text-xs"
+                                    title="Tùy chọn nâng cao">
+                                <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                            </button>
+                        </div>
 
-                    <button type="button" onclick="toggleSelectAllVisible()" class="text-xs text-text-secondary font-semibold hover:text-brand-700 border border-border-default px-3 py-2 rounded-xl bg-surface hover:bg-slate-100 transition">
-                        Chọn/Bỏ chọn tất cả
-                    </button>
+                        <button type="button" onclick="toggleSelectAllVisible()" class="text-xs text-text-secondary font-semibold hover:text-brand-700 border border-border-default px-3 py-2 rounded-xl bg-surface hover:bg-slate-100 transition">
+                            Chọn/Bỏ chọn tất cả
+                        </button>
+                    </c:if>
                 </div>
             </div>
 
@@ -294,15 +325,15 @@
             <div class="p-5 max-h-[560px] overflow-y-auto space-y-3" id="questionList">
                 <c:forEach var="q" items="${questions}" varStatus="s">
                     <c:set var="selected" value="${not empty selectedQuestionIds and selectedQuestionIds.contains(q.id)}"/>
-                    <label class="question-item flex items-start gap-3.5 p-4 rounded-xl border border-border-default hover:bg-slate-50 cursor-pointer transition ${selected ? 'bg-brand-50/30 border-brand-500 ring-1 ring-brand-300' : 'bg-surface-card'}"
+                    <label class="question-item flex items-start gap-3.5 p-4 rounded-xl border border-border-default transition ${isUsed ? 'cursor-default' : 'hover:bg-slate-50 cursor-pointer'} ${selected ? 'bg-brand-50/30 border-brand-500 ring-1 ring-brand-300' : 'bg-surface-card'}"
                            data-text="${q.content}"
                            data-module="${q.moduleId}"
                            data-course="${q.courseId}"
                            data-type="${q.type}"
                            data-selected="${selected ? 'true' : 'false'}">
-                        <input type="checkbox" name="questionId" value="${q.id}" ${selected ? 'checked' : ''}
+                        <input type="checkbox" name="questionId" value="${q.id}" ${selected ? 'checked' : ''} ${isUsed ? 'disabled' : ''}
                                onchange="onQuestionCheckChange(this)"
-                               class="mt-1 question-check w-4 h-4 accent-brand-700 rounded cursor-pointer">
+                               class="mt-1 question-check w-4 h-4 accent-brand-700 rounded ${isUsed ? 'cursor-default opacity-80' : 'cursor-pointer'}">
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2 mb-1.5">
                                 <c:choose>
@@ -370,42 +401,44 @@
             </div>
         </section>
 
-        <!-- ========================================== -->
-        <!-- PHẦN 3: BẢNG KIỂM TRA HỢP LỆ (VERIFY)     -->
-        <!-- ========================================== -->
-        <section class="bg-surface rounded-2xl border border-border-default p-5 shadow-xs">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-brand-700 text-sm" aria-hidden="true"></i>
-                    <h3 class="font-bold text-xs uppercase tracking-wider text-text-primary">Kiểm tra tính hợp lệ của bài kiểm tra (Verification)</h3>
+        <c:if test="${not isUsed}">
+            <!-- ========================================== -->
+            <!-- PHẦN 3: BẢNG KIỂM TRA HỢP LỆ (VERIFY)     -->
+            <!-- ========================================== -->
+            <section class="bg-surface rounded-2xl border border-border-default p-5 shadow-xs">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-brand-700 text-sm" aria-hidden="true"></i>
+                        <h3 class="font-bold text-xs uppercase tracking-wider text-text-primary">Kiểm tra tính hợp lệ của bài kiểm tra (Verification)</h3>
+                    </div>
+                    <button type="button" onclick="verifyQuiz()" class="text-xs font-bold text-brand-700 hover:underline">
+                        <i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i>Kiểm tra lại
+                    </button>
                 </div>
-                <button type="button" onclick="verifyQuiz()" class="text-xs font-bold text-brand-700 hover:underline">
-                    <i class="fa-solid fa-rotate mr-1" aria-hidden="true"></i>Kiểm tra lại
-                </button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="verifyChecklist">
-                <div class="flex items-center gap-2" id="chkQuizTitle">
-                    <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Tên bài kiểm tra không rỗng và &le; 120 từ</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="verifyChecklist">
+                    <div class="flex items-center gap-2" id="chkQuizTitle">
+                        <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
+                        <span class="text-text-secondary">Tên bài kiểm tra không rỗng và &le; 120 từ</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkQuizScore">
+                        <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
+                        <span class="text-text-secondary">Điểm qua môn hợp lệ (0 &le; Điểm &le; 10)</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkQuizModule">
+                        <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
+                        <span class="text-text-secondary">Đã chọn Chương / Module</span>
+                    </div>
+                    <div class="flex items-center gap-2" id="chkQuizTime">
+                        <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
+                        <span class="text-text-secondary">Thời gian làm bài hợp lệ (1 - 600 phút)</span>
+                    </div>
+                    <div class="flex items-center gap-2 sm:col-span-2" id="chkQuizQuestions">
+                        <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
+                        <span class="text-text-secondary">Đã chọn ít nhất 1 câu hỏi vào bài kiểm tra</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2" id="chkQuizScore">
-                    <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Điểm qua môn hợp lệ (0 &le; Điểm &le; 10)</span>
-                </div>
-                <div class="flex items-center gap-2" id="chkQuizModule">
-                    <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Đã chọn Chương / Module</span>
-                </div>
-                <div class="flex items-center gap-2" id="chkQuizTime">
-                    <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Thời gian làm bài hợp lệ (1 - 600 phút)</span>
-                </div>
-                <div class="flex items-center gap-2 sm:col-span-2" id="chkQuizQuestions">
-                    <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Đã chọn ít nhất 1 câu hỏi vào bài kiểm tra</span>
-                </div>
-            </div>
-        </section>
+            </section>
+        </c:if>
 
         <!-- ========================================== -->
         <!-- PHẦN 4: CÁC NÚT HÀNH ĐỘNG DƯỚI ĐÁY TRANG  -->
@@ -414,9 +447,18 @@
             <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}" class="px-6 py-3 rounded-xl border border-border-default text-text-secondary hover:text-text-primary font-semibold text-xs sm:text-sm bg-surface-card hover:bg-slate-100 shadow-xs transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-xs" aria-hidden="true"></i>Quay lại danh sách
             </a>
-            <button type="submit" class="px-8 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
-                <i class="fa-solid fa-floppy-disk mr-2 text-xs" aria-hidden="true"></i>Lưu bài kiểm tra
-            </button>
+            <c:choose>
+                <c:when test="${isUsed}">
+                    <span class="inline-flex items-center px-6 py-3 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 font-bold text-xs sm:text-sm shadow-xs">
+                        <i class="fa-solid fa-lock mr-2 text-xs text-blue-600" aria-hidden="true"></i>Bài kiểm tra chỉ đọc (Đã sử dụng)
+                    </span>
+                </c:when>
+                <c:otherwise>
+                    <button type="submit" class="px-8 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+                        <i class="fa-solid fa-floppy-disk mr-2 text-xs" aria-hidden="true"></i>Lưu bài kiểm tra
+                    </button>
+                </c:otherwise>
+            </c:choose>
         </div>
     </form>
 </main>
@@ -669,6 +711,7 @@
 
     // 4. Xử lý tích chọn câu hỏi
     function onQuestionCheckChange(checkbox) {
+        if (${isUsed ? 'true' : 'false'}) return;
         const item = checkbox.closest('.question-item');
         if (checkbox.checked) {
             item.classList.add('bg-brand-50/30', 'border-brand-500', 'ring-1', 'ring-brand-300');
@@ -993,6 +1036,15 @@
 
     // Khởi tạo trạng thái ban đầu khi tải trang
     document.addEventListener('DOMContentLoaded', function() {
+        const isQuizReadOnly = ${isUsed ? 'true' : 'false'};
+        if (isQuizReadOnly) {
+            document.getElementById('quizForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Bài kiểm tra này đã được sử dụng trong khóa học hoặc đã có học viên làm bài nên không thể chỉnh sửa.');
+                return false;
+            });
+        }
+
         const modSelect = document.getElementById('quizModuleSelect');
         const courseSelect = document.getElementById('courseSelect');
         // Nếu đã có module được chọn sẵn, đồng bộ ngược lại khóa học của module đó trước

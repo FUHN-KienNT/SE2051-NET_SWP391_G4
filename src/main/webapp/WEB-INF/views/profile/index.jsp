@@ -100,20 +100,16 @@
                 <div><p class="text-3xl font-bold text-brand-700">${overview.currentStreak} <span class="text-base font-semibold">days</span></p><p class="mt-1 text-xs text-text-secondary">Current streak</p></div>
                 <div><p class="text-3xl font-bold text-brand-700">${overview.longestStreak} <span class="text-base font-semibold">days</span></p><p class="mt-1 text-xs text-text-secondary">Longest streak</p></div>
             </div>
-            <div class="mt-8" role="img" aria-label="Learning activity by day over the past 52 weeks. Darker green means more completed lessons or submitted quizzes.">
-                <div class="flex gap-1">
+            <div class="mt-8" id="activity-calendar" role="group" aria-label="Learning activity by day over the past 52 weeks. Scroll horizontally for earlier days. Use arrow keys to move between days; select a day for its activity count.">
+                <div class="overflow-x-auto pb-2">
+                <div class="flex w-max gap-1">
                     <div class="flex flex-col gap-1 pr-1 text-xs text-text-secondary" aria-hidden="true">
                         <span class="h-4"></span><span class="h-3"></span><span class="h-3 leading-3">M</span>
                         <span class="h-3"></span><span class="h-3 leading-3">W</span>
                         <span class="h-3"></span><span class="h-3 leading-3">F</span><span class="h-3"></span>
                     </div>
-                    <c:forEach items="${overview.activityWeeks}" var="week" varStatus="weekLoop">
-                        <c:choose>
-                            <c:when test="${weekLoop.index < 26}"><c:set var="weekVisibility" value="hidden lg:flex" /></c:when>
-                            <c:when test="${weekLoop.index < 40}"><c:set var="weekVisibility" value="hidden md:flex" /></c:when>
-                            <c:otherwise><c:set var="weekVisibility" value="flex" /></c:otherwise>
-                        </c:choose>
-                        <div class="${weekVisibility} flex-col gap-1" aria-hidden="true">
+                    <c:forEach items="${overview.activityWeeks}" var="week">
+                        <div class="flex flex-col gap-1">
                             <span class="relative h-4 text-xs text-text-secondary whitespace-nowrap"><c:out value="${week.monthLabel}" /></span>
                             <c:forEach items="${week.days}" var="day">
                                 <c:choose>
@@ -124,12 +120,20 @@
                                     <c:when test="${day.level == 3}"><c:set var="dayColor" value="bg-brand-500" /></c:when>
                                     <c:otherwise><c:set var="dayColor" value="bg-brand-700" /></c:otherwise>
                                 </c:choose>
-                                <span class="block h-3 w-3 rounded-sm ${dayColor}"
-                                      title="${day.date}: ${day.count} learning activities"></span>
+                                <c:choose>
+                                    <c:when test="${day.future}"><span class="block h-3 w-3 rounded-sm" aria-hidden="true"></span></c:when>
+                                    <c:otherwise>
+                                        <button type="button" class="activity-day block h-3 w-3 rounded-sm ${dayColor} hover:ring-2 hover:ring-brand-700 hover:ring-offset-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-1"
+                                                data-date="${day.date}" data-count="${day.count}"
+                                                aria-label="${day.date}: ${day.count} learning activities"></button>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:forEach>
                         </div>
                     </c:forEach>
                 </div>
+                </div>
+                <div id="activity-tooltip" role="tooltip" class="pointer-events-none fixed z-50 hidden rounded-lg bg-text-primary px-3 py-2 text-xs font-medium text-white shadow-sm"></div>
                 <div class="mt-4 flex items-center justify-end gap-1 text-xs text-text-secondary" aria-hidden="true">
                     <span class="mr-1">Less</span>
                     <span class="h-3 w-3 rounded-sm bg-slate-100"></span><span class="h-3 w-3 rounded-sm bg-brand-50"></span>
@@ -173,4 +177,5 @@
         </section>
     </c:if>
 </main>
+<script src="${pageContext.request.contextPath}/assets/js/profile-activity.js" defer></script>
 <jsp:include page="/WEB-INF/views/common/footer.jsp" />

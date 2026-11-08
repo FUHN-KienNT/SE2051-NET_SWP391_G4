@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <div class="flex min-h-screen bg-surface p-4 sm:p-6 lg:p-8">
@@ -32,7 +33,7 @@
             <form action="${pageContext.request.contextPath}/auth/forgot-password" method="post" class="space-y-4">
                 <div>
                     <label for="email" class="mb-1.5 block text-sm font-semibold text-text-primary">Email address</label>
-                    <input id="email" name="email" type="email" required autofocus
+                    <input id="email" name="email" type="email" required autofocus value="${fn:escapeXml(email)}"
                            class="w-full rounded-lg border border-border-default bg-surface-card px-4 py-2.5 text-text-primary placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
                            placeholder="name@example.com">
                 </div>

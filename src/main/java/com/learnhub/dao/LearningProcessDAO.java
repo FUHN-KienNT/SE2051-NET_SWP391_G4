@@ -93,6 +93,15 @@ public class LearningProcessDAO {
      * The first lesson is used when browser storage has no saved lesson.
      */
     public List<ContinueLearningDTO> findStudentCourses(UUID userId) {
+        return findStudentCourses(userId, null);
+    }
+
+    public ContinueLearningDTO findStudentCourse(UUID userId, UUID courseId) {
+        List<ContinueLearningDTO> courses = findStudentCourses(userId, courseId);
+        return courses.isEmpty() ? null : courses.get(0);
+    }
+
+    private List<ContinueLearningDTO> findStudentCourses(UUID userId, UUID courseId) {
         String sql = """
                 SELECT c.id,
                        c.title,
@@ -131,6 +140,7 @@ public class LearningProcessDAO {
                   AND r.status IN ('enrolled', 'completed')
                   AND (COALESCE(c.price, 0) <= 0
                        OR r.payment_status = 'paid')
+                  AND (?::uuid IS NULL OR c.id = ?)
                 ORDER BY r.enrolled_at DESC, c.id
                 """;
 
@@ -140,6 +150,8 @@ public class LearningProcessDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setObject(1, userId);
+            ps.setObject(2, courseId);
+            ps.setObject(3, courseId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -211,6 +223,28 @@ public class LearningProcessDAO {
         }
 
         return null;
+    }
+
+    public String startLessonIfAbsent(UUID registrationId, UUID lessonId) {
+        String sql = """
+                INSERT INTO learning_process (id, registration_id, lesson_id, status)
+                VALUES (gen_random_uuid(), ?, ?, 'in_progress')
+                ON CONFLICT (registration_id, lesson_id) DO NOTHING
+                RETURNING status
+                """;
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setObject(1, registrationId);
+            ps.setObject(2, lessonId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("status");
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Cannot start lesson.", e);
+        }
+        LearningProcess existing = findByRegistrationAndLesson(registrationId, lessonId);
+        if (existing == null) throw new IllegalStateException("Cannot load lesson progress.");
+        return existing.getStatus();
     }
 
     public void save(LearningProcess process) {

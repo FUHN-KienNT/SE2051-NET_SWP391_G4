@@ -25,7 +25,7 @@ public class LearningProcessService {
     private final CourseService courseService = new CourseService();
     public record StudentDashboardData(
             List<ContinueLearningDTO> myCourses,
-            String sort, String status) {}
+            String sort, String status, int totalCourses, long completedCourses, long ongoingCourses) {}
 
     public LearningProcessService() {
         this.learningProcessDAO = new LearningProcessDAO();
@@ -46,13 +46,12 @@ public class LearningProcessService {
     public ContinueLearningDTO getContinueLearning(UUID userId) {
         ContinueLearningDTO suggestion = learningProcessDAO.findContinueLearning(userId);
         if (suggestion != null) {
-            getStudentCourses(userId).stream()
-                    .filter(course -> course.getCourseId().equals(suggestion.getCourseId()))
-                    .findFirst().ifPresent(course -> {
-                        suggestion.setProgressPercent(course.getProgressPercent());
-                        suggestion.setLessonCount(course.getLessonCount());
-                        suggestion.setCompletedLessonCount(course.getCompletedLessonCount());
-                    });
+            ContinueLearningDTO course = findEnrolledCourse(userId, suggestion.getCourseId());
+            if (course != null) {
+                suggestion.setProgressPercent(course.getProgressPercent());
+                suggestion.setLessonCount(course.getLessonCount());
+                suggestion.setCompletedLessonCount(course.getCompletedLessonCount());
+            }
         }
         return suggestion;
     }
@@ -101,7 +100,7 @@ public class LearningProcessService {
 
     public StudentDashboardData buildStudentDashboard(
             List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort, String status) {
-        String keyword = search.toLowerCase(Locale.ROOT);
+        String keyword = search == null ? "" : search.strip().toLowerCase(Locale.ROOT);
         String selectedStatus = "completed".equals(status) || "enrolled".equals(status) ? status : "";
         List<ContinueLearningDTO> myCourses = new ArrayList<>(enrolled.stream()
                 .filter(course -> course.getCourseTitle().toLowerCase(Locale.ROOT).contains(keyword))
@@ -119,7 +118,9 @@ public class LearningProcessService {
             // findStudentCourses supplies newest enrollments first.
             sort = "newest";
         }
-        return new StudentDashboardData(myCourses, sort, selectedStatus);
+        long completedCourses = enrolled.stream().filter(this::isCourseCompleted).count();
+        return new StudentDashboardData(myCourses, sort, selectedStatus, enrolled.size(),
+                completedCourses, enrolled.size() - completedCourses);
     }
 
     public ContinueLearningDTO resolveContinueLesson(
@@ -144,17 +145,7 @@ public class LearningProcessService {
             try {
                 UUID candidate = UUID.fromString(savedLessonValue);
 
-                Course curriculum =
-                        courseService.getPublishedCourseCurriculum(
-                                selected.getCourseId()
-                        );
-
-                boolean belongsToCourse = curriculum != null
-                        && curriculum.getModules().stream()
-                        .flatMap(module ->
-                                module.getLessons().stream())
-                        .anyMatch(lesson ->
-                                lesson.getId().equals(candidate));
+                boolean belongsToCourse = lessonDAO.isVisibleInCourse(candidate, selected.getCourseId());
 
                 if (belongsToCourse) {
                     targetLessonId = candidate;
@@ -168,54 +159,66 @@ public class LearningProcessService {
     }
 
     public ContinueLearningDTO findEnrolledCourse(UUID userId, UUID courseId) {
-        return getStudentCourses(userId).stream()
-                .filter(course -> courseId.equals(course.getCourseId()))
-                .findFirst().orElse(null);
+        ContinueLearningDTO course = learningProcessDAO.findStudentCourse(userId, courseId);
+        if (course != null) {
+            course.setProgressPercent(calculateProgressPercent(course.getCompletedLessonCount(), course.getLessonCount()));
+        }
+        return course;
     }
 
-    public LessonDTO getLessonForStudent(
-            UUID lessonId,
-            UUID registrationId
-    ) {
+    public LessonDTO getLessonForStudent(UUID lessonId, UUID registrationId) {
         Lesson lesson = lessonDAO.findById(lessonId);
         if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) return null;
+        Map<String, String> statuses = new HashMap<>();
+        LearningProcess process = learningProcessDAO.findByRegistrationAndLesson(registrationId, lessonId);
+        if (process != null) statuses.put(lessonId.toString(), process.getStatus());
+        return lessonForStudent(lesson, registrationId, statuses);
+    }
 
-        LessonDTO dto = new LessonDTO(
-                lesson.getId(),
-                lesson.getModuleId(),
-                lesson.getTitle(),
-                lesson.getContent(),
-                lesson.getOrderIndex()
-        );
-
+    private LessonDTO lessonForStudent(Lesson lesson, UUID registrationId, Map<String, String> statuses) {
+        String status = statuses.get(lesson.getId().toString());
+        if (status == null) {
+            status = learningProcessDAO.startLessonIfAbsent(registrationId, lesson.getId());
+            statuses.put(lesson.getId().toString(), status);
+        }
+        LessonDTO dto = new LessonDTO(lesson.getId(), lesson.getModuleId(), lesson.getTitle(),
+                lesson.getContent(), lesson.getOrderIndex());
         dto.setMaterialUrl(lesson.getMaterialUrl());
         dto.setDurationMinutes(lesson.getDurationMinutes());
         dto.setPublicationStatus(lesson.getPublicationStatus());
         dto.setType(lesson.getType());
         dto.setVideoUrl(lesson.getVideoUrl());
         dto.setQuizId(lesson.getQuizId());
-
-        LearningProcess process =
-                learningProcessDAO.findByRegistrationAndLesson(
-                        registrationId, lessonId
-                );
-
-        dto.setStatus(
-                process == null ? "in_progress" : process.getStatus()
-        );
-
-        if (process == null) {
-            LearningProcess newProcess = new LearningProcess(
-                    UUID.randomUUID(),
-                    registrationId,
-                    lessonId,
-                    "in_progress"
-            );
-
-            learningProcessDAO.save(newProcess);
-        }
-
+        dto.setStatus(status);
         return dto;
+    }
+
+    public record LessonViewerData(Course course, Registration registration, LessonDTO lesson,
+                                   Map<String, String> statuses, Lesson previous, Lesson next,
+                                   int completedCount, int totalCount, int progressPercent) {}
+
+    public LessonViewerData getLessonViewer(UUID userId, UUID courseId, UUID lessonId) {
+        Registration registration = findRegistration(userId, courseId);
+        Course course = courseService.getPublishedCourseCurriculum(courseId);
+        if (!isAccessibleRegistration(registration, course)) throw new SecurityException("Course access denied.");
+
+        List<Lesson> lessons = course.getModules().stream().flatMap(module -> module.getLessons().stream()).toList();
+        int index = -1;
+        for (int i = 0; i < lessons.size(); i++) {
+            if (lessonId.equals(lessons.get(i).getId())) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) throw new SecurityException("Lesson access denied.");
+        Map<String, String> statuses = getLessonStatuses(registration.getId());
+        LessonDTO lesson = lessonForStudent(lessons.get(index), registration.getId(), statuses);
+        int completed = (int) lessons.stream()
+                .filter(item -> "completed".equals(statuses.get(item.getId().toString()))).count();
+        return new LessonViewerData(course, registration, lesson, statuses,
+                index > 0 ? lessons.get(index - 1) : null,
+                index + 1 < lessons.size() ? lessons.get(index + 1) : null,
+                completed, lessons.size(), calculateProgressPercent(completed, lessons.size()));
     }
 
     public boolean isAccessibleRegistration(Registration registration, Course course) {
@@ -244,6 +247,16 @@ public class LearningProcessService {
     public boolean isQuizLessonAvailable(LessonDTO lesson) {
         var quiz = new com.learnhub.dao.QuizDAO().findById(lesson.getQuizId());
         return quiz != null && quiz.isPublished() && lesson.getModuleId().equals(quiz.getModuleId());
+    }
+
+    public void completeLessonForStudent(UUID userId, UUID courseId, UUID registrationId, UUID lessonId) {
+        Registration registration = findRegistration(userId, courseId);
+        Course course = courseService.getCourseById(courseId);
+        if (!isAccessibleRegistration(registration, course) || !registrationId.equals(registration.getId())
+                || !lessonDAO.isVisibleInCourse(lessonId, courseId)) {
+            throw new SecurityException("Course access denied.");
+        }
+        markLessonComplete(registrationId, lessonId);
     }
 
     public void markLessonComplete(UUID registrationId, UUID lessonId) {

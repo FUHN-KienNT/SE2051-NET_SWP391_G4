@@ -146,11 +146,14 @@ public class EnrollmentServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Student access required.");
             return;
         }
-        List<ContinueLearningDTO> enrolled = learningService.getStudentCourses(user.getId());
         if ("continue".equals(req.getParameter("action"))) {
-            handleContinue(req, resp, enrolled);
+            UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+            ContinueLearningDTO selected = courseId == null ? null
+                    : learningService.findEnrolledCourse(user.getId(), courseId);
+            handleContinue(req, resp, selected == null ? List.of() : List.of(selected));
             return;
         }
+        List<ContinueLearningDTO> enrolled = learningService.getStudentCourses(user.getId());
         String search = req.getParameter("search");
         search = search == null ? "" : search.trim();
         String categoryValue = req.getParameter("categoryId");
@@ -171,12 +174,9 @@ public class EnrollmentServlet extends HttpServlet {
         var data = learningService.buildStudentDashboard(
                 enrolled, search, categoryId, sort, req.getParameter("status"));
         req.setAttribute("myCourses", data.myCourses());
-        long completedCourseCount = enrolled.stream()
-                .filter(learningService::isCourseCompleted)
-                .count();
-        req.setAttribute("enrolledCourseCount", enrolled.size());
-        req.setAttribute("completedCourseCount", completedCourseCount);
-        req.setAttribute("ongoingCourseCount", enrolled.size() - completedCourseCount);
+        req.setAttribute("enrolledCourseCount", data.totalCourses());
+        req.setAttribute("completedCourseCount", data.completedCourses());
+        req.setAttribute("ongoingCourseCount", data.ongoingCourses());
         req.setAttribute("selectedStatus", data.status());
         req.setAttribute("categories", courseService.getActiveCategories());
         req.setAttribute("search", search);

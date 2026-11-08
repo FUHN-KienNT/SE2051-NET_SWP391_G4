@@ -27,7 +27,7 @@ public class RegistrationDAO {
     public boolean insertRegistration(Registration reg) {
         String sql = "INSERT INTO registration (id, user_id, course_id, enrolled_at, status, progress_percent, " +
                      "amount, payment_method_id, transaction_id, payment_status, paid_at) " +
-                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?)";
+                     "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, NOW(), ?::registration_status, ?, ?, ?, ?, ?::payment_status, ?)";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setObject(1, reg.getId());
@@ -72,12 +72,12 @@ public class RegistrationDAO {
             params.add(term);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND r.status = ? ");
-            params.add(status.trim());
+            sql.append("AND r.status::text = ? ");
+            params.add(status.trim().toLowerCase());
         }
         if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
-            sql.append("AND r.payment_status = ? ");
-            params.add(paymentStatus.trim());
+            sql.append("AND r.payment_status::text = ? ");
+            params.add(paymentStatus.trim().toLowerCase());
         }
 
         sql.append("ORDER BY r.enrolled_at DESC ");
@@ -123,12 +123,12 @@ public class RegistrationDAO {
             params.add(term);
         }
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
-            sql.append("AND r.status = ? ");
-            params.add(status.trim());
+            sql.append("AND r.status::text = ? ");
+            params.add(status.trim().toLowerCase());
         }
         if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
-            sql.append("AND r.payment_status = ? ");
-            params.add(paymentStatus.trim());
+            sql.append("AND r.payment_status::text = ? ");
+            params.add(paymentStatus.trim().toLowerCase());
         }
 
         try (Connection conn = DbConnection.getConnection();
@@ -253,7 +253,7 @@ public class RegistrationDAO {
     }
 
     public boolean updateRegistrationStatus(UUID id, String status, String paymentStatus) {
-        String sql = "UPDATE registration SET status = ?, payment_status = ?, paid_at = CASE WHEN ? = 'paid' THEN NOW() ELSE paid_at END WHERE id = ?";
+        String sql = "UPDATE registration SET status = ?::registration_status, payment_status = ?::payment_status, paid_at = CASE WHEN ? = 'paid' THEN COALESCE(paid_at, NOW()) ELSE paid_at END WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);

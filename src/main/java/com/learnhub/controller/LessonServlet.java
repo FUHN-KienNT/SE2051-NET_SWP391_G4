@@ -63,9 +63,23 @@ public class LessonServlet extends HttpServlet {
             String value = req.getParameter("courseId");
             UUID courseId = value == null || value.isBlank() ? null : UUID.fromString(value.strip());
             switch (req.getServletPath()) {
-                case "/expert/lessons/create" -> showForm(req, resp, user.getId(), courseId, null);
+                case "/expert/lessons/create" -> {
+                    if (courseId == null) {
+                        var assignedCourses = courseService.getAssignedCourseOptions(user.getId());
+                        if (!assignedCourses.isEmpty()) {
+                            resp.sendRedirect(req.getContextPath() + "/expert/lessons/create?courseId=" + assignedCourses.get(0).getId());
+                            return;
+                        }
+                    }
+                    showForm(req, resp, user.getId(), courseId, null);
+                }
                 case "/expert/lessons/edit" -> {
-                    UUID lessonId = UUID.fromString(req.getParameter("id"));
+                    String idParam = req.getParameter("id");
+                    if (idParam == null || idParam.isBlank()) {
+                        resp.sendRedirect(req.getContextPath() + "/expert/lessons" + (courseId == null ? "" : "?courseId=" + courseId));
+                        return;
+                    }
+                    UUID lessonId = UUID.fromString(idParam.strip());
                     LessonDTO lesson = lessonService.getLesson(user.getId(), lessonId);
                     showForm(req, resp, user.getId(), courseId, lesson);
                 }

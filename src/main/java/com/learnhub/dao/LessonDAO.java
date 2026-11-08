@@ -23,6 +23,19 @@ import java.util.logging.Logger;
 public class LessonDAO {
     private static final Logger LOGGER = Logger.getLogger(LessonDAO.class.getName());
 
+    static {
+        ensureDeclineReasonColumn();
+    }
+
+    private static void ensureDeclineReasonColumn() {
+        try (Connection conn = DbConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE lesson ADD COLUMN IF NOT EXISTS decline_reason TEXT");
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Decline reason column check: " + e.getMessage());
+        }
+    }
+
     public List<Lesson> findByModuleId(UUID moduleId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +

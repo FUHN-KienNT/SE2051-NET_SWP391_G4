@@ -4,6 +4,7 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
+<c:set var="registrationPath" value="${not empty registrationPath ? registrationPath : (not empty requestScope['jakarta.servlet.forward.servlet_path'] ? requestScope['jakarta.servlet.forward.servlet_path'] : ((sessionScope.currentUser.roleCode eq 'ROLE_MANAGER' or sessionScope.currentUser.roleCode eq 'manager') ? '/manager/registrations' : '/admin/registrations'))}" />
 
 <%-- 
 =============================================================================
@@ -115,7 +116,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                     <div class="min-w-0">
                         <p class="text-xs font-medium text-text-secondary uppercase tracking-wider">Doanh Thu</p>
                         <p class="text-2xl font-bold text-brand-700 truncate">
-                            <fmt:formatNumber value="${stats.totalRevenue != null ? stats.totalRevenue : 0}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                            <fmt:formatNumber value="${stats.totalRevenue != null ? stats.totalRevenue : 0}" type="number" maxFractionDigits="0"/> ₫
                         </p>
                     </div>
                 </div>
@@ -125,7 +126,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
             <!-- PHẦN 4: THANH TÌM KIẾM VÀ BỘ LỌC (SEARCH & FILTER TOOLBAR)    -->
             <!-- ============================================================= -->
             <div class="bg-surface-card p-5 rounded-2xl border border-border-default shadow-xs mb-6">
-                <form action="${pageContext.request.contextPath}${pageContext.request.servletPath}" method="get" class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <form action="${pageContext.request.contextPath}${registrationPath}" method="get" class="grid grid-cols-1 md:grid-cols-12 gap-3">
                     <input type="hidden" name="pageSize" value="${pageSize}">
 
                     <!-- Ô tìm kiếm từ khóa -->
@@ -164,7 +165,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                             <i class="fa-solid fa-filter text-xs" aria-hidden="true"></i>
                             <span>Lọc</span>
                         </button>
-                        <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}" class="inline-flex items-center justify-center px-3 py-2.5 bg-surface hover:bg-slate-200 border border-border-default text-text-secondary hover:text-text-primary rounded-xl font-medium text-xs sm:text-sm transition" title="Đặt lại bộ lọc">
+                        <a href="${pageContext.request.contextPath}${registrationPath}" class="inline-flex items-center justify-center px-3 py-2.5 bg-surface hover:bg-slate-200 border border-border-default text-text-secondary hover:text-text-primary rounded-xl font-medium text-xs sm:text-sm transition" title="Đặt lại bộ lọc">
                             <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
                         </a>
                     </div>
@@ -197,9 +198,9 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                         <tr class="hover:bg-brand-50/20 transition-colors">
                                             <!-- Mã đăng ký -->
                                             <td class="px-5 py-4 whitespace-nowrap font-mono text-xs font-semibold text-text-primary">
-                                                <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}?action=detail&id=${reg.id}" class="text-brand-700 hover:underline inline-flex items-center gap-1" title="${reg.id}">
+                                                <a href="${pageContext.request.contextPath}${registrationPath}?action=detail&id=${reg.id}" class="text-brand-700 hover:underline inline-flex items-center gap-1" title="${reg.id}">
                                                     <i class="fa-solid fa-hashtag text-[10px]" aria-hidden="true"></i>
-                                                    ${fn:substring(reg.id.toString(), 0, 8)}
+                                                    ${fn:substring(reg.id, 0, 8)}
                                                 </a>
                                             </td>
 
@@ -242,7 +243,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                             <td class="px-5 py-4 whitespace-nowrap font-semibold text-text-primary">
                                                 <c:choose>
                                                     <c:when test="${not empty reg.amount && reg.amount > 0}">
-                                                        <fmt:formatNumber value="${reg.amount}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                                                        <fmt:formatNumber value="${reg.amount}" type="number" maxFractionDigits="0"/> ₫
                                                     </c:when>
                                                     <c:otherwise>
                                                         <span class="text-status-success font-medium">Miễn phí</span>
@@ -284,6 +285,11 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                                             <i class="fa-solid fa-ban text-[10px]" aria-hidden="true"></i> Đã hủy
                                                         </span>
                                                     </c:when>
+                                                    <c:when test="${reg.paymentStatus eq 'pending' && not empty reg.amount && reg.amount > 0}">
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-status-warning border border-amber-200">
+                                                            <i class="fa-solid fa-hourglass-half text-[10px]" aria-hidden="true"></i> Chờ kích hoạt
+                                                        </span>
+                                                    </c:when>
                                                     <c:otherwise>
                                                         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                                                             <i class="fa-solid fa-book-open-reader text-[10px]" aria-hidden="true"></i> Đang học
@@ -304,7 +310,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
 
                                             <!-- Nút Xem chi tiết -->
                                             <td class="px-5 py-4 whitespace-nowrap text-right">
-                                                <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}?action=detail&id=${reg.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-default hover:border-brand-700 hover:text-brand-700 font-semibold text-xs transition bg-surface hover:bg-brand-50">
+                                                <a href="${pageContext.request.contextPath}${registrationPath}?action=detail&id=${reg.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-default hover:border-brand-700 hover:text-brand-700 font-semibold text-xs transition bg-surface hover:bg-brand-50">
                                                     <i class="fa-regular fa-eye text-xs" aria-hidden="true"></i>
                                                     <span>Chi tiết</span>
                                                 </a>
@@ -320,7 +326,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                             </div>
                                             <p class="text-base font-bold text-text-primary">Không có dữ liệu đăng ký</p>
                                             <p class="text-xs text-text-secondary mt-1">Không tìm thấy bản ghi đăng ký nào phù hợp với bộ lọc hiện tại.</p>
-                                            <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}" class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-semibold transition">
+                                            <a href="${pageContext.request.contextPath}${registrationPath}" class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-semibold transition">
                                                 <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Xóa bộ lọc
                                             </a>
                                         </td>
@@ -343,7 +349,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                         <div class="flex items-center gap-1">
                             <!-- Nút trang trước -->
                             <c:if test="${currentPage > 1}">
-                                <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}?page=${currentPage - 1}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-200 transition font-medium">
+                                <a href="${pageContext.request.contextPath}${registrationPath}?page=${currentPage - 1}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-200 transition font-medium">
                                     <i class="fa-solid fa-chevron-left text-[10px]" aria-hidden="true"></i> Trước
                                 </a>
                             </c:if>
@@ -351,7 +357,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                             <!-- Các số trang lân cận -->
                             <c:forEach var="p" begin="1" end="${totalPages}">
                                 <c:if test="${p >= currentPage - 2 and p <= currentPage + 2}">
-                                    <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}?page=${p}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${p eq currentPage ? 'bg-brand-700 text-white border-brand-700 shadow-xs' : 'border-border-default hover:bg-slate-200 text-text-primary'}">
+                                    <a href="${pageContext.request.contextPath}${registrationPath}?page=${p}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${p eq currentPage ? 'bg-brand-700 text-white border-brand-700 shadow-xs' : 'border-border-default hover:bg-slate-200 text-text-primary'}">
                                         ${p}
                                     </a>
                                 </c:if>
@@ -359,7 +365,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
 
                             <!-- Nút trang sau -->
                             <c:if test="${currentPage < totalPages}">
-                                <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}?page=${currentPage + 1}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-200 transition font-medium">
+                                <a href="${pageContext.request.contextPath}${registrationPath}?page=${currentPage + 1}&search=${search}&status=${status}&paymentStatus=${paymentStatus}&pageSize=${pageSize}" class="px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-200 transition font-medium">
                                     Sau <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
                                 </a>
                             </c:if>

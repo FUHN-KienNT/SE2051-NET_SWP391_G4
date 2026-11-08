@@ -4,6 +4,7 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
+<c:set var="registrationPath" value="${not empty registrationPath ? registrationPath : (not empty requestScope['jakarta.servlet.forward.servlet_path'] ? requestScope['jakarta.servlet.forward.servlet_path'] : ((sessionScope.currentUser.roleCode eq 'ROLE_MANAGER' or sessionScope.currentUser.roleCode eq 'manager') ? '/manager/registrations' : '/admin/registrations'))}" />
 
 <%-- 
 =============================================================================
@@ -64,7 +65,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <nav class="mb-1 text-xs font-semibold text-brand-700 tracking-wide uppercase flex items-center gap-1.5">
-                        <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}" class="hover:underline">Quản lý đăng ký</a>
+                        <a href="${pageContext.request.contextPath}${registrationPath}" class="hover:underline">Quản lý đăng ký</a>
                         <span class="text-text-secondary">/</span>
                         <span class="text-text-secondary">Chi tiết đơn</span>
                     </nav>
@@ -78,21 +79,18 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                     </div>
                 </div>
 
-                <a href="${pageContext.request.contextPath}${pageContext.request.servletPath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
+                <a href="${pageContext.request.contextPath}${registrationPath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
                     <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
                     <span>Quay lại danh sách</span>
                 </a>
             </div>
 
             <!-- ============================================================= -->
-            <!-- PHẦN 3: BỐ CỤC NỘI DUNG 2 CỘT (MAIN LAYOUT GRID)              -->
+            <!-- PHẦN 3: BỐ CỤC NỘI DUNG CHI TIẾT ĐƠN ĐĂNG KÝ                  -->
             <!-- ============================================================= -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            <div class="space-y-6">
 
-                <!-- --------------------------------------------------------- -->
-                <!-- CỘT TRÁI (8 CỘT): CHI TIẾT DỮ LIỆU ĐĂNG KÝ                 -->
-                <!-- --------------------------------------------------------- -->
-                <div class="lg:col-span-8 space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     <!-- KHỐI 1: THÔNG TIN HỌC VIÊN -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
@@ -183,7 +181,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                         <p class="font-bold text-text-primary mt-0.5">
                                             <c:choose>
                                                 <c:when test="${not empty course.price && course.price > 0}">
-                                                    <fmt:formatNumber value="${course.price}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                                                    <fmt:formatNumber value="${course.price}" type="number" maxFractionDigits="0"/> ₫
                                                 </c:when>
                                                 <c:otherwise><span class="text-status-success">Miễn phí</span></c:otherwise>
                                             </c:choose>
@@ -197,6 +195,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                             </c:if>
                         </div>
                     </div>
+                </div>
 
                     <!-- KHỐI 3: CHI TIẾT THANH TOÁN & GIAO DỊCH -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
@@ -233,7 +232,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                 <p class="text-xl font-black text-brand-700 mt-0.5">
                                     <c:choose>
                                         <c:when test="${not empty registration.amount && registration.amount > 0}">
-                                            <fmt:formatNumber value="${registration.amount}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
+                                            <fmt:formatNumber value="${registration.amount}" type="number" maxFractionDigits="0"/> ₫
                                         </c:when>
                                         <c:otherwise>0 ₫ (Miễn phí)</c:otherwise>
                                     </c:choose>
@@ -307,84 +306,28 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                             <div class="flex items-center justify-between text-xs text-text-secondary font-medium">
                                 <span>Bắt đầu học</span>
                                 <span>
-                                    Trạng thái học: 
-                                    <strong class="text-text-primary uppercase font-bold ml-1">${registration.status}</strong>
+                                    Trạng thái học:
+                                    <c:choose>
+                                        <c:when test="${registration.status eq 'completed'}">
+                                            <strong class="text-brand-700 font-bold ml-1">Hoàn thành</strong>
+                                        </c:when>
+                                        <c:when test="${registration.status eq 'cancelled'}">
+                                            <strong class="text-slate-600 font-bold ml-1">Đã hủy</strong>
+                                        </c:when>
+                                        <c:when test="${registration.paymentStatus eq 'pending' && not empty registration.amount && registration.amount > 0}">
+                                            <strong class="text-status-warning font-bold ml-1">Chờ kích hoạt (Chưa thanh toán)</strong>
+                                        </c:when>
+                                        <c:when test="${registration.paymentStatus eq 'refunded'}">
+                                            <strong class="text-status-danger font-bold ml-1">Đã hoàn tiền</strong>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <strong class="text-text-primary font-bold ml-1">Đang học</strong>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </span>
                             </div>
                         </div>
                     </div>
-
-                </div>
-
-                <!-- --------------------------------------------------------- -->
-                <!-- CỘT PHẢI (4 CỘT): FORM CẬP NHẬT TRẠNG THÁI & CHÍNH SÁCH    -->
-                <!-- --------------------------------------------------------- -->
-                <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-
-                    <!-- KHỐI 5: FORM CẬP NHẬT ĐƠN ĐĂNG KÝ -->
-                    <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
-                        <div class="pb-4 mb-5 border-b border-border-default">
-                            <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
-                                <i class="fa-solid fa-sliders text-brand-700" aria-hidden="true"></i>
-                                <span>Cập Nhật Đơn Đăng Ký</span>
-                            </h2>
-                            <p class="text-xs text-text-secondary mt-1">
-                                Điều chỉnh trạng thái học và tình trạng thanh toán của học viên.
-                            </p>
-                        </div>
-
-                        <form action="${pageContext.request.contextPath}${pageContext.request.servletPath}" method="post" class="space-y-4">
-                            <input type="hidden" name="action" value="updateStatus">
-                            <input type="hidden" name="id" value="${registration.id}">
-
-                            <!-- Lựa chọn trạng thái học -->
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">
-                                    Trạng thái học (Course Status)
-                                </label>
-                                <select name="status" class="w-full px-3.5 py-2.5 border border-border-default rounded-xl text-xs sm:text-sm font-semibold text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-700 cursor-pointer">
-                                    <option value="enrolled" ${registration.status eq 'enrolled' ? 'selected' : ''}>Đang học (Enrolled)</option>
-                                    <option value="completed" ${registration.status eq 'completed' ? 'selected' : ''}>Hoàn thành (Completed)</option>
-                                    <option value="cancelled" ${registration.status eq 'cancelled' ? 'selected' : ''}>Hủy bỏ (Cancelled)</option>
-                                </select>
-                            </div>
-
-                            <!-- Lựa chọn tình trạng thanh toán -->
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">
-                                    Tình trạng thanh toán (Payment Status)
-                                </label>
-                                <select name="paymentStatus" class="w-full px-3.5 py-2.5 border border-border-default rounded-xl text-xs sm:text-sm font-semibold text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-700 cursor-pointer">
-                                    <option value="paid" ${registration.paymentStatus eq 'paid' ? 'selected' : ''}>Đã thanh toán (Paid)</option>
-                                    <option value="pending" ${registration.paymentStatus eq 'pending' ? 'selected' : ''}>Chờ thanh toán (Pending)</option>
-                                    <option value="refunded" ${registration.paymentStatus eq 'refunded' ? 'selected' : ''}>Hoàn tiền (Refunded)</option>
-                                </select>
-                            </div>
-
-                            <!-- Nút Lưu thay đổi -->
-                            <div class="pt-3">
-                                <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
-                                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-                                    <span>Lưu Thay Đổi</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- KHỐI 6: LƯU Ý VỀ CHÍNH SÁCH QUYỀN TRUY CẬP -->
-                    <div class="bg-surface p-5 rounded-2xl border border-border-default text-xs text-text-secondary space-y-2.5">
-                        <div class="flex items-center gap-2 font-bold text-text-primary">
-                            <i class="fa-solid fa-circle-info text-brand-700" aria-hidden="true"></i>
-                            <span>Lưu ý về quyền truy cập:</span>
-                        </div>
-                        <ul class="space-y-1.5 pl-4 list-disc leading-relaxed">
-                            <li>Trạng thái thanh toán <strong>Đã thanh toán (Paid)</strong> cho phép học viên truy cập toàn bộ bài học và làm bài thi.</li>
-                            <li>Trạng thái <strong>Chờ thanh toán (Pending)</strong> sẽ chuyển hướng học viên đến trang thanh toán checkout.</li>
-                            <li>Khi chọn <strong>Đã thanh toán</strong>, thời gian thanh toán sẽ được hệ thống tự động ghi nhận nếu trước đó chưa có.</li>
-                        </ul>
-                    </div>
-
-                </div>
 
             </div>
 

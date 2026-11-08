@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<fmt:setLocale value="vi_VN" scope="request" />
 <!DOCTYPE html>
 <html lang="${not empty pageLanguage ? pageLanguage : 'vi'}" class="h-full bg-surface">
 <head>

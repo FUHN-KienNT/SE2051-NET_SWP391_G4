@@ -260,10 +260,29 @@
                                             <!-- Số thứ tự -->
                                             <td class="px-5 py-4 text-center font-bold text-text-secondary text-xs">${loop.count}</td>
 
-                                            <!-- Tên bài kiểm tra -->
-                                            <td class="px-5 py-4 max-w-sm">
-                                                <div class="font-bold text-text-primary text-sm line-clamp-1">
-                                                    <c:out value="${q.title}" />
+                                            <!-- Ảnh đại diện & Tên bài kiểm tra -->
+                                            <td class="px-5 py-4 max-w-xs sm:max-w-md">
+                                                <div class="flex items-center gap-3.5">
+                                                    <div class="w-12 h-12 rounded-xl border border-border-default bg-surface flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                                                        <c:choose>
+                                                            <c:when test="${not empty q.imageUrl}">
+                                                                <img src="${fn:escapeXml(q.imageUrl)}" alt="${fn:escapeXml(q.title)}" referrerpolicy="no-referrer"
+                                                                     class="w-full h-full object-cover"
+                                                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';">
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="w-full h-full bg-brand-50 text-brand-700 flex items-center justify-center font-bold">
+                                                                    <i class="fa-solid fa-clipboard-question text-base" aria-hidden="true"></i>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <a href="${pageContext.request.contextPath}/expert/quizzes/detail?id=${q.id}&courseId=${courseId}"
+                                                           class="rounded font-bold text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 transition leading-snug line-clamp-2 text-sm">
+                                                            <c:out value="${q.title}" />
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </td>
 

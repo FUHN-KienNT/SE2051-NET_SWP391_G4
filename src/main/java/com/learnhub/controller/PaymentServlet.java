@@ -72,8 +72,8 @@ public class PaymentServlet extends HttpServlet {
         
         // Ngân hàng MB Bank (hoặc Vietcombank) mặc định của LearnHub
         String bankCode = "MB"; // MBBank
-        String bankAccount = "0987654321"; // STK trường/hệ thống LearnHub
-        String accountName = "CONG TY CONG NGHE LEARNHUB";
+        String bankAccount = "0964902684"; // STK trường/hệ thống LearnHub
+        String accountName = "LE DOAN ANH HUY";
         long amountVnd = reg.getAmount() != null ? reg.getAmount().longValue() : 0;
 
         // URL sinh ảnh VietQR chuẩn Napas qua SePay Gateway

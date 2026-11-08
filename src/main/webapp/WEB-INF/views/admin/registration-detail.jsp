@@ -4,7 +4,8 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
-<c:set var="registrationPath" value="${not empty registrationPath ? registrationPath : (not empty requestScope['jakarta.servlet.forward.servlet_path'] ? requestScope['jakarta.servlet.forward.servlet_path'] : ((sessionScope.currentUser.roleCode eq 'ROLE_MANAGER' or sessionScope.currentUser.roleCode eq 'manager') ? '/manager/registrations' : '/admin/registrations'))}" />
+
+<c:set var="regBasePath" value="${not empty basePath ? basePath : (not empty registrationPath ? registrationPath : '/manager/registrations')}" />
 
 <%-- 
 =============================================================================
@@ -15,10 +16,8 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
     * Khối 1: Thông tin học viên (Họ tên, email, SĐT, trạng thái tài khoản).
     * Khối 2: Thông tin khóa học (Tên, danh mục, học phí niêm yết, link xem khóa học).
     * Khối 3: Chi tiết thanh toán & giao dịch (Số tiền, phương thức, mã Txn, ngày giờ).
-    * Khối 4: Tiến độ học tập thực tế của học viên trong khóa học.
   + Cột phải (4 cột, Ghim sticky khi cuộn):
-    * Form cập nhật trạng thái học (enrolled / completed / cancelled).
-    * Form cập nhật tình trạng thanh toán (paid / pending / refunded).
+    * Form cập nhật tình trạng thanh toán (paid / pending / failed).
     * Bảng hướng dẫn & chính sách quyền truy cập của học viên.
 =============================================================================
 --%>
@@ -65,7 +64,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <nav class="mb-1 text-xs font-semibold text-brand-700 tracking-wide uppercase flex items-center gap-1.5">
-                        <a href="${pageContext.request.contextPath}${registrationPath}" class="hover:underline">Quản lý đăng ký</a>
+                        <a href="${pageContext.request.contextPath}${regBasePath}" class="hover:underline">Quản lý đăng ký</a>
                         <span class="text-text-secondary">/</span>
                         <span class="text-text-secondary">Chi tiết đơn</span>
                     </nav>
@@ -79,18 +78,21 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                     </div>
                 </div>
 
-                <a href="${pageContext.request.contextPath}${registrationPath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
+                <a href="${pageContext.request.contextPath}${regBasePath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
                     <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
                     <span>Quay lại danh sách</span>
                 </a>
             </div>
 
             <!-- ============================================================= -->
-            <!-- PHẦN 3: BỐ CỤC NỘI DUNG CHI TIẾT ĐƠN ĐĂNG KÝ                  -->
+            <!-- PHẦN 3: BỐ CỤC NỘI DUNG 2 CỘT (MAIN LAYOUT GRID)              -->
             <!-- ============================================================= -->
-            <div class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- --------------------------------------------------------- -->
+                <!-- CỘT TRÁI (8 CỘT): CHI TIẾT DỮ LIỆU ĐĂNG KÝ                 -->
+                <!-- --------------------------------------------------------- -->
+                <div class="lg:col-span-8 space-y-6">
 
                     <!-- KHỐI 1: THÔNG TIN HỌC VIÊN -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
@@ -157,7 +159,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                 <span>Thông Tin Khóa Học</span>
                             </h2>
                             <c:if test="${not empty course}">
-                                <a href="${pageContext.request.contextPath}/course-detail?id=${course.id}" target="_blank" class="text-xs font-semibold text-brand-700 hover:underline flex items-center gap-1">
+                                <a href="${pageContext.request.contextPath}/courses?action=detail&id=${course.id}" target="_blank" class="text-xs font-semibold text-brand-700 hover:underline flex items-center gap-1">
                                     <span>Xem khóa học</span>
                                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
                                 </a>
@@ -195,7 +197,6 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                             </c:if>
                         </div>
                     </div>
-                </div>
 
                     <!-- KHỐI 3: CHI TIẾT THANH TOÁN & GIAO DỊCH -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
@@ -211,9 +212,9 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                                             <i class="fa-solid fa-circle-check text-xs" aria-hidden="true"></i> Đã thanh toán
                                         </span>
                                     </c:when>
-                                    <c:when test="${registration.paymentStatus eq 'refunded'}">
+                                    <c:when test="${registration.paymentStatus eq 'failed' or registration.paymentStatus eq 'refunded'}">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-status-danger border border-rose-200 uppercase">
-                                            <i class="fa-solid fa-rotate-left text-xs" aria-hidden="true"></i> Đã hoàn tiền
+                                            <i class="fa-solid fa-ban text-xs" aria-hidden="true"></i> Đã hủy / Lỗi
                                         </span>
                                     </c:when>
                                     <c:otherwise>
@@ -289,45 +290,65 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                         </div>
                     </div>
 
-                    <!-- KHỐI 4: TIẾN ĐỘ HỌC TẬP -->
+                </div>
+
+                <!-- --------------------------------------------------------- -->
+                <!-- CỘT PHẢI (4 CỘT): FORM CẬP NHẬT TRẠNG THÁI & CHÍNH SÁCH    -->
+                <!-- --------------------------------------------------------- -->
+                <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+
+                    <!-- KHỐI 4: FORM CẬP NHẬT ĐƠN ĐĂNG KÝ -->
                     <div class="bg-surface-card p-6 rounded-2xl border border-border-default shadow-xs">
-                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-border-default">
+                        <div class="pb-4 mb-5 border-b border-border-default">
                             <h2 class="text-base font-bold text-text-primary flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-brand-700" aria-hidden="true"></i>
-                                <span>Tiến Độ Học Tập Của Học Viên</span>
+                                <i class="fa-solid fa-sliders text-brand-700" aria-hidden="true"></i>
+                                <span>Cập Nhật Đơn Đăng Ký</span>
                             </h2>
-                            <span class="text-xs font-bold text-brand-700">${registration.progressPercent}% Hoàn thành</span>
+                            <p class="text-xs text-text-secondary mt-1">
+                                Điều chỉnh tình trạng thanh toán của đơn đăng ký.
+                            </p>
                         </div>
 
-                        <div class="space-y-3">
-                            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                                <div class="bg-brand-600 h-3 rounded-full transition-all duration-300" style="width: ${registration.progressPercent}%"></div>
+                        <form action="${pageContext.request.contextPath}${regBasePath}" method="post" class="space-y-4">
+                            <input type="hidden" name="action" value="updateStatus">
+                            <input type="hidden" name="id" value="${registration.id}">
+
+                            <!-- Lựa chọn tình trạng thanh toán -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1.5">
+                                    Tình trạng thanh toán (Payment Status)
+                                </label>
+                                <select name="paymentStatus" class="w-full px-3.5 py-2.5 border border-border-default rounded-xl text-xs sm:text-sm font-semibold text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-brand-700 cursor-pointer">
+                                    <option value="paid" ${registration.paymentStatus eq 'paid' ? 'selected' : ''}>Đã thanh toán (Paid)</option>
+                                    <option value="pending" ${registration.paymentStatus eq 'pending' ? 'selected' : ''}>Chờ thanh toán (Pending)</option>
+                                    <option value="failed" ${registration.paymentStatus eq 'failed' or registration.paymentStatus eq 'refunded' ? 'selected' : ''}>Đã hủy / Lỗi (Failed)</option>
+                                </select>
                             </div>
-                            <div class="flex items-center justify-between text-xs text-text-secondary font-medium">
-                                <span>Bắt đầu học</span>
-                                <span>
-                                    Trạng thái học:
-                                    <c:choose>
-                                        <c:when test="${registration.status eq 'completed'}">
-                                            <strong class="text-brand-700 font-bold ml-1">Hoàn thành</strong>
-                                        </c:when>
-                                        <c:when test="${registration.status eq 'cancelled'}">
-                                            <strong class="text-slate-600 font-bold ml-1">Đã hủy</strong>
-                                        </c:when>
-                                        <c:when test="${registration.paymentStatus eq 'pending' && not empty registration.amount && registration.amount > 0}">
-                                            <strong class="text-status-warning font-bold ml-1">Chờ kích hoạt (Chưa thanh toán)</strong>
-                                        </c:when>
-                                        <c:when test="${registration.paymentStatus eq 'refunded'}">
-                                            <strong class="text-status-danger font-bold ml-1">Đã hoàn tiền</strong>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <strong class="text-text-primary font-bold ml-1">Đang học</strong>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </span>
+
+                            <!-- Nút Lưu thay đổi -->
+                            <div class="pt-3">
+                                <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 cursor-pointer">
+                                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                                    <span>Lưu Thay Đổi</span>
+                                </button>
                             </div>
-                        </div>
+                        </form>
                     </div>
+
+                    <!-- KHỐI 5: LƯU Ý VỀ CHÍNH SÁCH QUYỀN TRUY CẬP -->
+                    <div class="bg-surface p-5 rounded-2xl border border-border-default text-xs text-text-secondary space-y-2.5">
+                        <div class="flex items-center gap-2 font-bold text-text-primary">
+                            <i class="fa-solid fa-circle-info text-brand-700" aria-hidden="true"></i>
+                            <span>Lưu ý về quyền truy cập:</span>
+                        </div>
+                        <ul class="space-y-1.5 pl-4 list-disc leading-relaxed">
+                            <li>Trạng thái thanh toán <strong>Đã thanh toán (Paid)</strong> cho phép học viên truy cập toàn bộ bài học và làm bài thi.</li>
+                            <li>Trạng thái <strong>Chờ thanh toán (Pending)</strong> sẽ chuyển hướng học viên đến trang thanh toán checkout.</li>
+                            <li>Khi chọn <strong>Đã thanh toán</strong>, thời gian thanh toán sẽ được hệ thống tự động ghi nhận nếu trước đó chưa có.</li>
+                        </ul>
+                    </div>
+
+                </div>
 
             </div>
 

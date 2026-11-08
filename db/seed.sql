@@ -447,7 +447,7 @@ INSERT INTO course (id, title, description, price, thumbnail_url, status, catego
     ('d0000000-0000-0000-0000-000000000025',
      'Redis & Caching Strategies for High-Performance Apps',
      'Master Redis data structures, pub/sub, Lua scripting, Redis Cluster, and caching patterns (Cache Aside, Write Through, Write Behind).',
-     650000.00,
+     3000.00,
      'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop',
      'published', 'b0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000006', NOW() - INTERVAL '65 days'),
 
@@ -461,7 +461,7 @@ INSERT INTO course (id, title, description, price, thumbnail_url, status, catego
     ('d0000000-0000-0000-0000-000000000027',
      'Natural Language Processing with Python',
      'Text preprocessing, sentiment analysis, NER, transformers, BERT fine-tuning, and building chatbots with LangChain.',
-     1290000.00,
+     1000.00,
      'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&auto=format&fit=crop',
      'published', 'b0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000060', NOW() - INTERVAL '45 days'),
 

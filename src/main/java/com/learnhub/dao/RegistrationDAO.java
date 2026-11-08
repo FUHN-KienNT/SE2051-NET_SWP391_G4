@@ -76,8 +76,12 @@ public class RegistrationDAO {
             params.add(status.trim().toLowerCase());
         }
         if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
-            sql.append("AND r.payment_status::text = ? ");
-            params.add(paymentStatus.trim().toLowerCase());
+            if ("failed".equalsIgnoreCase(paymentStatus.trim())) {
+                sql.append("AND r.payment_status::text IN ('failed', 'refunded') ");
+            } else {
+                sql.append("AND r.payment_status::text = ? ");
+                params.add(paymentStatus.trim().toLowerCase());
+            }
         }
 
         sql.append("ORDER BY r.enrolled_at DESC ");
@@ -127,8 +131,12 @@ public class RegistrationDAO {
             params.add(status.trim().toLowerCase());
         }
         if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
-            sql.append("AND r.payment_status::text = ? ");
-            params.add(paymentStatus.trim().toLowerCase());
+            if ("failed".equalsIgnoreCase(paymentStatus.trim())) {
+                sql.append("AND r.payment_status::text IN ('failed', 'refunded') ");
+            } else {
+                sql.append("AND r.payment_status::text = ? ");
+                params.add(paymentStatus.trim().toLowerCase());
+            }
         }
 
         try (Connection conn = DbConnection.getConnection();
@@ -148,25 +156,62 @@ public class RegistrationDAO {
     }
 
     public java.util.Map<String, Object> getRegistrationStats() {
+        return getRegistrationStats(null, null, null);
+    }
+
+    public java.util.Map<String, Object> getRegistrationStats(String search, String status, String paymentStatus) {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("total", 0);
         stats.put("paidCount", 0);
         stats.put("pendingCount", 0);
+        stats.put("failedCount", 0);
         stats.put("totalRevenue", java.math.BigDecimal.ZERO);
 
-        String sql = "SELECT COUNT(*) as total, " +
-                     "COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count, " +
-                     "COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_count, " +
-                     "COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN amount ELSE 0 END), 0) as total_revenue " +
-                     "FROM registration";
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) as total, " +
+                "COUNT(CASE WHEN r.payment_status::text = 'paid' THEN 1 END) as paid_count, " +
+                "COUNT(CASE WHEN r.payment_status::text = 'pending' THEN 1 END) as pending_count, " +
+                "COUNT(CASE WHEN r.payment_status::text IN ('failed', 'refunded') THEN 1 END) as failed_count, " +
+                "COALESCE(SUM(CASE WHEN r.payment_status::text = 'paid' THEN r.amount ELSE 0 END), 0) as total_revenue " +
+                "FROM registration r " +
+                "JOIN \"user\" u ON r.user_id = u.id " +
+                "JOIN course c ON r.course_id = c.id " +
+                "WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ? OR LOWER(c.title) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) {
+            sql.append("AND r.status::text = ? ");
+            params.add(status.trim().toLowerCase());
+        }
+        if (paymentStatus != null && !paymentStatus.trim().isEmpty() && !paymentStatus.equalsIgnoreCase("all")) {
+            if ("failed".equalsIgnoreCase(paymentStatus.trim())) {
+                sql.append("AND r.payment_status::text IN ('failed', 'refunded') ");
+            } else {
+                sql.append("AND r.payment_status::text = ? ");
+                params.add(paymentStatus.trim().toLowerCase());
+            }
+        }
+
         try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                stats.put("total", rs.getInt("total"));
-                stats.put("paidCount", rs.getInt("paid_count"));
-                stats.put("pendingCount", rs.getInt("pending_count"));
-                stats.put("totalRevenue", rs.getBigDecimal("total_revenue"));
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.put("total", rs.getInt("total"));
+                    stats.put("paidCount", rs.getInt("paid_count"));
+                    stats.put("pendingCount", rs.getInt("pending_count"));
+                    stats.put("failedCount", rs.getInt("failed_count"));
+                    stats.put("totalRevenue", rs.getBigDecimal("total_revenue"));
+                }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in getRegistrationStats: " + e.getMessage(), e);
@@ -253,7 +298,8 @@ public class RegistrationDAO {
     }
 
     public boolean updateRegistrationStatus(UUID id, String status, String paymentStatus) {
-        String sql = "UPDATE registration SET status = ?::registration_status, payment_status = ?::payment_status, paid_at = CASE WHEN ? = 'paid' THEN COALESCE(paid_at, NOW()) ELSE paid_at END WHERE id = ?";
+        String sql = "UPDATE registration SET status = ?::registration_status, payment_status = ?::payment_status, " +
+                     "paid_at = CASE WHEN ? = 'paid' THEN COALESCE(paid_at, NOW()) ELSE paid_at END WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -303,6 +349,7 @@ public class RegistrationDAO {
         }
         return r;
     }
+
     public void lockRegistration(Connection conn, UUID registrationId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT id FROM registration WHERE id = ? FOR UPDATE")) {
@@ -312,6 +359,7 @@ public class RegistrationDAO {
             }
         }
     }
+
     public void updateLearningProgress(Connection conn, UUID registrationId, int percent, boolean completed)
             throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
@@ -328,7 +376,6 @@ public class RegistrationDAO {
     }
 
     public void refreshCourseLearningProgress(Connection conn, UUID courseId) throws SQLException {
-        // Serialize recalculation with individual lesson completion before reading the counts.
         try (PreparedStatement lock = conn.prepareStatement("""
                 SELECT id FROM registration WHERE course_id = ?
                     AND status IN ('enrolled', 'completed') ORDER BY id FOR UPDATE

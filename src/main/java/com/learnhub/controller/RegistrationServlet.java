@@ -47,6 +47,8 @@ public class RegistrationServlet extends HttpServlet {
             return;
         }
 
+        req.setAttribute("basePath", req.getServletPath());
+
         String action = req.getParameter("action");
         String idParam = req.getParameter("id");
         req.setAttribute("registrationPath", req.getServletPath());
@@ -82,7 +84,7 @@ public class RegistrationServlet extends HttpServlet {
         List<Registration> list = registrationDAO.findRegistrations(search, status, paymentStatus, offset, pageSize);
         int totalCount = registrationDAO.countRegistrations(search, status, paymentStatus);
         int totalPages = totalCount > 0 ? (int) Math.ceil((double) totalCount / pageSize) : 1;
-        Map<String, Object> stats = registrationDAO.getRegistrationStats();
+        Map<String, Object> stats = registrationDAO.getRegistrationStats(search, status, paymentStatus);
 
         req.setAttribute("registrations", list);
         req.setAttribute("currentPage", page);
@@ -99,7 +101,7 @@ public class RegistrationServlet extends HttpServlet {
 
     private void handleDetail(HttpServletRequest req, HttpServletResponse resp, String idParam) throws ServletException, IOException {
         try {
-            UUID id = UUID.fromString(idParam);
+            UUID id = UUID.fromString(idParam.trim());
             Registration reg = registrationDAO.findById(id);
             if (reg == null) {
                 resp.sendRedirect(req.getContextPath() + req.getServletPath() + "?error=not_found");
@@ -140,9 +142,20 @@ public class RegistrationServlet extends HttpServlet {
 
         if ("updateStatus".equalsIgnoreCase(action) || "update".equalsIgnoreCase(action)) {
             try {
-                UUID id = UUID.fromString(idParam);
+                UUID id = UUID.fromString(idParam.trim());
                 String newStatus = req.getParameter("status");
                 String newPaymentStatus = req.getParameter("paymentStatus");
+
+                if (newStatus == null || newStatus.trim().isEmpty()) {
+                    Registration existing = registrationDAO.findById(id);
+                    if ("failed".equalsIgnoreCase(newPaymentStatus)) {
+                        newStatus = "cancelled";
+                    } else if (existing != null && "completed".equalsIgnoreCase(existing.getStatus())) {
+                        newStatus = "completed";
+                    } else {
+                        newStatus = "enrolled";
+                    }
+                }
 
                 boolean updated = registrationDAO.updateRegistrationStatus(id, newStatus, newPaymentStatus);
                 String redirectUrl = req.getContextPath() + req.getServletPath() + "?action=detail&id=" + id;

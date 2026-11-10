@@ -131,6 +131,21 @@ public class AuthServlet extends HttpServlet {
         String password = req.getParameter("password");
         UserService.LoginResult result = userService.authenticate(email, password);
 
+        if (result.getStatus() == UserService.LoginStatus.EMAIL_VERIFICATION_REQUIRED) {
+            User pendingUser = result.getUser();
+            HttpSession session = req.getSession(true);
+            PendingRegistration pending = (PendingRegistration) session.getAttribute(PENDING_REGISTRATION);
+            if (pending == null || !pending.getEmail().equalsIgnoreCase(pendingUser.getEmail())) {
+                pending = PendingRegistration.awaitingResend(pendingUser);
+                session.setAttribute(PENDING_REGISTRATION, pending);
+            }
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", "Your account was created, but your email has not been verified. Use the button below to send a verification code before signing in.");
+            req.setAttribute("pendingEmailVerification", true);
+            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+            return;
+        }
+
         if (result.getStatus() == UserService.LoginStatus.ACCOUNT_INACTIVE) {
             req.setAttribute("email", email);
             String note = result.getStatusNote();
@@ -205,6 +220,11 @@ public class AuthServlet extends HttpServlet {
                 req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
                 return;
             }
+            if (userService.registerPending(username, fullName, email, candidate.getPasswordHash()) == null) {
+                req.setAttribute("errorMessage", "Account creation failed. This email or username may already be in use.");
+                req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(req, resp);
+                return;
+            }
             session.setAttribute(PENDING_REGISTRATION, candidate);
         }
         resp.sendRedirect(req.getContextPath() + "/auth/verify-email?sent=1");
@@ -224,9 +244,7 @@ public class AuthServlet extends HttpServlet {
             }
             VerificationResult result = pending.checkCode(req.getParameter("code"), Instant.now());
             if (result == VerificationResult.VALID) {
-                User registered = userService.registerVerified(
-                        pending.getUsername(), pending.getFullName(), pending.getEmail(), pending.getPasswordHash());
-                if (registered != null) {
+                if (userService.activateVerifiedEmail(pending.getEmail())) {
                     session.removeAttribute(PENDING_REGISTRATION);
                     resp.sendRedirect(req.getContextPath() + "/auth/login?verified=success");
                     return;
@@ -314,6 +332,12 @@ public class AuthServlet extends HttpServlet {
             this.email = email;
             this.passwordHash = passwordHash;
             replaceCode(code, now);
+        }
+
+        private static PendingRegistration awaitingResend(User user) {
+            PendingRegistration pending = new PendingRegistration(user.getUsername(), user.getFullName(),
+                    user.getEmail(), user.getPassword(), newCode(), Instant.EPOCH);
+            return pending;
         }
 
         private String getUsername() { return username; }

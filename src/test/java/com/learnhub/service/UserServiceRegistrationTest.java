@@ -17,6 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceRegistrationTest {
+    @Test
+    void registrationCreatesInactiveAccountPendingEmailVerification() {
+        RegistrationDao dao = new RegistrationDao();
+        UserService service = new UserService(dao, new RolesDao());
+        String hash = PasswordHashUtil.hashPassword("password123");
+
+        User created = service.registerPending("alex", "Nguyễn Văn A", "alex@example.com", hash);
+
+        assertNotNull(created);
+        assertEquals("inactive", created.getStatus());
+        assertEquals(UserService.EMAIL_VERIFICATION_PENDING, created.getStatusNote());
+        assertEquals(created, dao.inserted);
+    }
+
     private static class RegistrationDao extends UserDAO {
         User inserted;
         String takenIdentity;

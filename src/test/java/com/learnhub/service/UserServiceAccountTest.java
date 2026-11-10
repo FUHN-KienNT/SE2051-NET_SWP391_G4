@@ -21,6 +21,19 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceAccountTest {
+    @Test
+    void pendingEmailRequiresVerificationOnlyWithCorrectPassword() {
+        AccountDao dao = new AccountDao();
+        dao.user.setStatus("inactive");
+        dao.user.setStatusNote(UserService.EMAIL_VERIFICATION_PENDING);
+        UserService service = new UserService(dao, new SettingDAO());
+
+        assertEquals(UserService.LoginStatus.EMAIL_VERIFICATION_REQUIRED,
+                service.authenticate(dao.user.getEmail(), "current-password").getStatus());
+        assertEquals(UserService.LoginStatus.INVALID_CREDENTIALS,
+                service.authenticate(dao.user.getEmail(), "wrong-password").getStatus());
+    }
+
     private static class AccountDao extends UserDAO {
         final User user = new User();
         boolean taken;

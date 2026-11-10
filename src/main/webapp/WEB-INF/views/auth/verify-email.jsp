@@ -29,6 +29,11 @@
                     <span>Verification code sent. Check your inbox.</span>
                 </div>
             </c:if>
+            <c:if test="${param.wait eq '1'}">
+                <div role="status" class="mb-6 rounded-xl border border-brand-100 bg-brand-50 p-4 text-sm text-status-success">
+                    A verification code was sent recently. Check your inbox, or request a new code when the resend timer ends.
+                </div>
+            </c:if>
 
             <form action="${pageContext.request.contextPath}/auth/verify-email" method="post" class="space-y-4">
                 <div>

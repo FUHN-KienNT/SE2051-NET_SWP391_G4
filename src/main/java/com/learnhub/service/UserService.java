@@ -32,6 +32,7 @@ import java.util.logging.Logger;
  * - authenticate()
  */
 public class UserService {
+    public static final String EMAIL_VERIFICATION_PENDING = "EMAIL_VERIFICATION_PENDING";
     public enum UsernameUpdateResult { SUCCESS, INVALID, TAKEN, FAILED }
     public enum ProfileUpdateResult { SUCCESS, INVALID_USERNAME, INVALID_FULL_NAME, INVALID_PHONE, PHONE_TAKEN, TAKEN, FAILED }
     public enum PasswordChangeResult { SUCCESS, INVALID_CURRENT, INVALID_NEW, SAME_PASSWORD, FAILED }
@@ -39,7 +40,8 @@ public class UserService {
     public enum LoginStatus {
         SUCCESS,
         INVALID_CREDENTIALS,
-        ACCOUNT_INACTIVE
+        ACCOUNT_INACTIVE,
+        EMAIL_VERIFICATION_REQUIRED
     }
 
     public static class LoginResult {
@@ -63,6 +65,10 @@ public class UserService {
 
         public static LoginResult inactive(User user, String statusNote) {
             return new LoginResult(LoginStatus.ACCOUNT_INACTIVE, user, statusNote);
+        }
+
+        public static LoginResult verificationRequired(User user) {
+            return new LoginResult(LoginStatus.EMAIL_VERIFICATION_REQUIRED, user, null);
         }
 
         public LoginStatus getStatus() { return status; }
@@ -506,6 +512,10 @@ public class UserService {
             return LoginResult.success(user);
         }
 
+        if (EMAIL_VERIFICATION_PENDING.equals(user.getStatusNote())) {
+            return LoginResult.verificationRequired(user);
+        }
+
         // Account is inactive (or non-active)
         String note = user.getStatusNote();
         if (note == null || note.isBlank()) {
@@ -566,6 +576,28 @@ public class UserService {
             return newUser;
         }
         return null;
+    }
+
+    public User registerPending(String username, String fullName, String email, String passwordHash) {
+        if (isRegistrationIdentityTaken(username, email)) return null;
+        Setting studentRole = null;
+        for (Setting role : settingDAO.findAllRoles()) {
+            if ("ROLE_STUDENT".equalsIgnoreCase(role.getCode())) { studentRole = role; break; }
+        }
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setUsername(username);
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPassword(passwordHash);
+        user.setRoleId(studentRole != null ? studentRole.getId() : UUID.fromString("a0000000-0000-0000-0000-000000000004"));
+        user.setStatus("inactive");
+        user.setStatusNote(EMAIL_VERIFICATION_PENDING);
+        return userDAO.insert(user) ? user : null;
+    }
+
+    public boolean activateVerifiedEmail(String email) {
+        return userDAO.activatePendingEmail(email, EMAIL_VERIFICATION_PENDING);
     }
 
     /** Checks whether either registration identifier is already in use. */

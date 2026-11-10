@@ -24,9 +24,22 @@
             </p>
 
             <c:if test="${not empty errorMessage}">
-                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center">
-                    <i class="fa-solid fa-circle-exclamation mr-3 text-rose-500"></i>
-                    <span><c:out value="${errorMessage}" /></span>
+                <div role="alert" class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-status-danger">
+                    <c:choose>
+                        <c:when test="${pendingEmailVerification}">
+                            <p class="font-semibold">Email not verified</p>
+                            <p class="mt-2 leading-relaxed text-text-secondary"><c:out value="${errorMessage}" /></p>
+                            <form action="${pageContext.request.contextPath}/auth/resend-code" method="post" class="mt-3">
+                                <button type="submit" class="rounded-lg border border-border-default bg-surface-card px-3 py-2 text-sm font-semibold text-text-primary shadow-sm hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">Resend verification code</button>
+                            </form>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                <span><c:out value="${errorMessage}" /></span>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </c:if>
             <c:if test="${not empty message}">

@@ -204,6 +204,20 @@ public class UserDAO {
         }
     }
 
+    public boolean activatePendingEmail(String email, String pendingNote) {
+        String sql = "UPDATE \"user\" SET status = 'active', status_note = NULL, updated_at = NOW() " +
+                "WHERE LOWER(email) = LOWER(?) AND status = 'inactive' AND status_note = ?";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setString(2, pendingNote);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error in UserDAO.activatePendingEmail", e);
+            return false;
+        }
+    }
+
     public boolean update(User user) {
         String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, phone = ?, role_id = ?, status = ?::user_status, status_note = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();

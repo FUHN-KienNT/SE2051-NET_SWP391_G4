@@ -11,8 +11,9 @@
 <aside id="managementSidebar" data-collapsed="false" class="management-sidebar relative z-40 flex w-full shrink-0 flex-col border-b border-border-default bg-surface-card shadow-sm lg:min-h-screen lg:w-64 lg:rounded-r-2xl lg:border-b-0 lg:border-r" aria-label="Management workspace">
     <div>
         <div class="management-sidebar-header flex items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
-            <a href="${pageContext.request.contextPath}/home" class="management-sidebar-brand inline-flex min-w-0 items-center rounded-lg text-text-primary hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="LearnHub home" title="LearnHub home">
-                <span class="whitespace-nowrap text-2xl font-bold tracking-tight">LearnHub</span>
+            <a href="${pageContext.request.contextPath}/home" class="management-sidebar-brand group inline-flex min-w-0 items-center rounded-lg text-text-primary transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="LearnHub home" title="LearnHub home">
+                <span class="management-sidebar-brand-name whitespace-nowrap text-2xl font-bold tracking-tight">LearnHub</span>
+                <img src="${pageContext.request.contextPath}/assets/images/favicon.svg" class="management-sidebar-brand-icon h-8 w-8 motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:scale-110" alt="" />
             </a>
             <button type="button" id="managementMenuButton" class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border-default text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 lg:hidden" aria-label="Open management menu" aria-controls="managementNavigation" aria-expanded="false">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
@@ -122,8 +123,8 @@
             <span class="management-sidebar-label">Notifications</span>
             <span id="notificationUnreadDot" class="absolute right-3 top-2 hidden h-2 w-2 rounded-full bg-status-success" aria-hidden="true"></span>
         </button>
-        <div class="management-sidebar-account mt-2 flex items-center gap-1 rounded-xl border border-border-default bg-surface p-1">
-            <a href="${pageContext.request.contextPath}/profile" class="management-sidebar-profile flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="My profile" title="My profile">
+        <div class="management-sidebar-account relative mt-2 rounded-xl border border-border-default bg-surface p-1">
+            <button type="button" id="managementAccountButton" class="management-sidebar-profile flex w-full min-w-0 items-center gap-2 rounded-lg p-1 text-left text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="Account menu" aria-controls="managementAccountMenu" aria-expanded="false" title="Account menu">
                 <jsp:include page="/WEB-INF/views/common/avatar.jsp">
                     <jsp:param name="avatarUrl" value="${sessionScope.currentUser.avatarUrl}" />
                     <jsp:param name="avatarName" value="${sessionScope.currentUser.fullName}" />
@@ -133,8 +134,11 @@
                     <span class="block truncate text-xs font-semibold"><c:out value="${empty sessionScope.currentUser.fullName ? sessionScope.currentUser.username : sessionScope.currentUser.fullName}" /></span>
                     <span class="block text-xs text-text-secondary"><c:choose><c:when test="${isAdmin}">Admin</c:when><c:when test="${isManager}">Manager</c:when><c:when test="${isExpert}">Expert</c:when></c:choose></span>
                 </span>
-            </a>
-            <a href="${pageContext.request.contextPath}/auth/logout" class="management-sidebar-signout inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700" aria-label="Sign out" title="Sign out"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i></a>
+            </button>
+            <div id="managementAccountMenu" class="absolute bottom-full left-0 z-50 mb-2 hidden w-48 rounded-xl border border-border-default bg-surface-card p-1 shadow-lg" aria-label="Account options">
+                <a href="${pageContext.request.contextPath}/profile" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text-primary hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-regular fa-user w-5 text-center" aria-hidden="true"></i>View profile</a>
+                <a href="${pageContext.request.contextPath}/auth/logout" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-status-danger hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center" aria-hidden="true"></i>Sign out</a>
+            </div>
         </div>
     </div>
 
@@ -161,13 +165,31 @@
         const brand = sidebar && sidebar.querySelector('.management-sidebar-brand');
         const navigation = document.getElementById('managementNavigation');
         const footer = document.getElementById('managementSidebarFooter');
+        const accountButton = document.getElementById('managementAccountButton');
+        const accountMenu = document.getElementById('managementAccountMenu');
         if (!sidebar || !menuButton || !collapseButton || !collapseIcon || !brand || !navigation || !footer) return;
+
+        function setAccountMenuOpen(open) {
+            if (!accountButton || !accountMenu) return;
+            accountButton.setAttribute('aria-expanded', String(open));
+            accountMenu.classList.toggle('hidden', !open);
+        }
+
+        accountButton.addEventListener('click', function () {
+            setAccountMenuOpen(accountButton.getAttribute('aria-expanded') !== 'true');
+        });
+        document.addEventListener('click', function (event) {
+            if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) setAccountMenuOpen(false);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && accountButton.getAttribute('aria-expanded') === 'true') {
+                setAccountMenuOpen(false);
+                accountButton.focus();
+            }
+        });
 
         function setCollapsed(collapsed) {
             sidebar.dataset.collapsed = String(collapsed);
-            brand.style.display = collapsed && window.matchMedia('(min-width: 1024px)').matches
-                ? 'none'
-                : 'inline-flex';
             collapseButton.setAttribute('aria-expanded', String(!collapsed));
             collapseButton.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
             collapseButton.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
@@ -182,6 +204,7 @@
         }
 
         collapseButton.addEventListener('click', function () {
+            setAccountMenuOpen(false);
             const collapsed = sidebar.dataset.collapsed !== 'true';
             setCollapsed(collapsed);
             try { localStorage.setItem('learnhub-management-sidebar-collapsed', String(collapsed)); } catch (error) { /* Storage can be disabled. */ }
@@ -192,6 +215,7 @@
         });
 
         menuButton.addEventListener('click', function () {
+            setAccountMenuOpen(false);
             const expanded = menuButton.getAttribute('aria-expanded') === 'true';
             menuButton.setAttribute('aria-expanded', String(!expanded));
             menuButton.setAttribute('aria-label', expanded ? 'Open management menu' : 'Close management menu');

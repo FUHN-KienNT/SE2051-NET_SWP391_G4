@@ -2,6 +2,10 @@
     transition: width 200ms ease;
 }
 
+.management-sidebar-brand-icon {
+    display: none;
+}
+
 @media (min-width: 1024px) {
     .management-sidebar[data-collapsed="true"] {
         width: 5rem;
@@ -12,8 +16,16 @@
         padding-right: .5rem;
     }
 
-    .management-sidebar[data-collapsed="true"] .management-sidebar-brand {
+    .management-sidebar[data-collapsed="true"] .management-sidebar-brand-name {
         display: none;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-brand-icon {
+        display: block;
+    }
+
+    .management-sidebar[data-collapsed="true"] .management-sidebar-brand {
+        width: 100%;
     }
 
     .management-sidebar[data-collapsed="true"] .management-sidebar-label {
@@ -45,14 +57,8 @@
         padding-right: .5rem;
     }
 
-    .management-sidebar[data-collapsed="true"] .management-sidebar-account {
-        flex-direction: column;
-    }
-
-    .management-sidebar[data-collapsed="true"] .management-sidebar-profile,
-    .management-sidebar[data-collapsed="true"] .management-sidebar-signout {
+    .management-sidebar[data-collapsed="true"] .management-sidebar-profile {
         width: 100%;
-        flex: none;
     }
 }
 

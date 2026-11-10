@@ -6,8 +6,8 @@
         <!-- Brand Logo -->
         <div class="flex items-center gap-6">
             <a href="${pageContext.request.contextPath}/home" class="flex items-center gap-2 rounded-lg text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
-                <i class="fa-solid fa-dolphin hidden text-2xl text-brand-500 sm:inline-block" aria-hidden="true"></i>
                 <span class="text-lg font-bold tracking-tight sm:text-xl">LearnHub</span>
+                <img src="${pageContext.request.contextPath}/assets/images/favicon.svg" class="h-7 w-7" alt="" />
             </a>
             
             <!-- Main Navigation Links -->

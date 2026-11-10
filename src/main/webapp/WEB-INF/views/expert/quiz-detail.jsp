@@ -306,7 +306,7 @@
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2 mb-1.5">
                                 <c:choose>
-                                    <c:when test="${q.type eq 'fill_in_blank' or q.type eq 'text'}">
+                                    <c:when test="${q.type eq 'fill_in_blank'}">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-status-warning border border-amber-200">
                                             <i class="fa-solid fa-pen-nib mr-1 text-[10px]" aria-hidden="true"></i>Điền chỗ trống
                                         </span>

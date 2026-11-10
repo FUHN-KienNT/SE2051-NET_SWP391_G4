@@ -85,7 +85,7 @@ public class Question implements Serializable {
     }
 
     public boolean isFillInBlank() {
-        return "fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type);
+        return "fill_in_blank".equalsIgnoreCase(type);
     }
 
     public boolean isSingleChoice() {

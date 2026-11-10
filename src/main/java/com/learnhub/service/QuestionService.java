@@ -85,7 +85,7 @@ public class QuestionService {
         String normalizedType = "single_choice";
         if ("multiple_choice".equalsIgnoreCase(type)) {
             normalizedType = "multiple_choice";
-        } else if ("fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type)) {
+        } else if ("fill_in_blank".equalsIgnoreCase(type)) {
             normalizedType = "fill_in_blank";
         }
 

@@ -193,7 +193,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                     <!-- Điền vào chỗ trống -->
                     <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                         <input type="radio" name="type" value="fill_in_blank"
-                        ${question.type eq 'fill_in_blank' or question.type eq 'text' ? 'checked' : ''}
+                        ${question.type eq 'fill_in_blank' ? 'checked' : ''}
                                onchange="onTypeChanged('fill_in_blank')" class="mt-1 accent-emerald-600">
                         <div>
                             <div class="font-bold text-xs text-slate-800">Điền vào chỗ trống (Fill in blank)</div>
@@ -226,7 +226,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
 
             <div id="choiceRows" class="space-y-3">
                 <c:choose>
-                    <c:when test="${not empty question.options and question.type ne 'fill_in_blank' and question.type ne 'text'}">
+                    <c:when test="${not empty question.options and question.type ne 'fill_in_blank'}">
                         <c:forEach var="o" items="${question.options}" varStatus="status">
                             <div class="choice-row flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50/50">
                                 <input type="hidden" name="optionId" value="${o.id}">
@@ -295,7 +295,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
 
             <div id="keywordRows" class="space-y-3">
                 <c:choose>
-                    <c:when test="${not empty question.options and (question.type eq 'fill_in_blank' or question.type eq 'text')}">
+                    <c:when test="${not empty question.options and (question.type eq 'fill_in_blank')}">
                         <c:forEach var="o" items="${question.options}" varStatus="status">
                             <div class="keyword-row flex items-center gap-3 p-2.5 rounded-xl border border-purple-200 bg-purple-50/20">
                                 <input type="hidden" name="optionId" value="${o.id}">

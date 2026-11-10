@@ -30,8 +30,6 @@ public class QuestionDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT q.id, q.module_id, q.content, q.type, COALESCE(q.status, 'public') status, q.created_at, q.updated_at, "
                         + "m.title module_title, c.id course_id, c.title course_title, "
-                        + "(SELECT COUNT(*) FROM question_option qo "
-                        + " WHERE qo.question_id=q.id) option_count, "
                         + "(SELECT COUNT(*) FROM quiz_question qq "
                         + " WHERE qq.question_id=q.id) quiz_count "
                         + "FROM question q "
@@ -48,12 +46,8 @@ public class QuestionDAO {
         }
 
         if (type != null && !type.trim().isEmpty()) {
-            if ("fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type)) {
-                sql.append("AND (q.type = 'fill_in_blank'::question_type OR q.type = 'text'::question_type) ");
-            } else {
-                sql.append("AND q.type = ?::question_type ");
-                params.add(type.trim());
-            }
+            sql.append("AND q.type = ?::question_type ");
+            params.add(type.trim());
         }
 
         if (moduleId != null) {
@@ -785,11 +779,7 @@ public class QuestionDAO {
             q.setModuleId((UUID) rs.getObject("module_id"));
         } catch (SQLException ignored) {}
         q.setContent(rs.getString("content"));
-        String type = rs.getString("type");
-        if ("text".equalsIgnoreCase(type)) {
-            type = "fill_in_blank";
-        }
-        q.setType(type);
+        q.setType(rs.getString("type"));
         try {
             q.setStatus(rs.getString("status"));
         } catch (SQLException ignored) {
@@ -815,7 +805,7 @@ public class QuestionDAO {
             return "multiple_choice";
         }
 
-        if ("fill_in_blank".equalsIgnoreCase(type) || "text".equalsIgnoreCase(type)) {
+        if ("fill_in_blank".equalsIgnoreCase(type)) {
             return "fill_in_blank";
         }
 

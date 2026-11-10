@@ -62,7 +62,7 @@ CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'failed', 'refunded');
 
 CREATE TYPE learning_status AS ENUM ('not_started', 'in_progress', 'completed');
 
-CREATE TYPE question_type AS ENUM ('text', 'single_choice', 'multiple_choice', 'fill_in_blank');
+CREATE TYPE question_type AS ENUM ('single_choice', 'multiple_choice', 'fill_in_blank');
 
 CREATE TYPE notification_status AS ENUM ('unread', 'read', 'sent', 'failed');
 

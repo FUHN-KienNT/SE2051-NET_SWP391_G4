@@ -275,7 +275,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                                 <option value="">-- Tất cả loại câu hỏi --</option>
                                 <option value="single_choice" ${type eq 'single_choice' ? 'selected' : ''}>Một đáp án (Single choice)</option>
                                 <option value="multiple_choice" ${type eq 'multiple_choice' ? 'selected' : ''}>Nhiều đáp án (Multiple choice)</option>
-                                <option value="fill_in_blank" ${type eq 'fill_in_blank' or type eq 'text' ? 'selected' : ''}>Điền vào chỗ trống</option>
+                                <option value="fill_in_blank" ${type eq 'fill_in_blank' ? 'selected' : ''}>Điền vào chỗ trống</option>
                             </select>
                         </div>
 
@@ -362,7 +362,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                                         <!-- Badge Loại câu hỏi -->
                                         <td class="px-5 py-4">
                                             <c:choose>
-                                                <c:when test="${q.type eq 'fill_in_blank' or q.type eq 'text'}">
+                                                <c:when test="${q.type eq 'fill_in_blank'}">
                                                     <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold border border-purple-200 whitespace-nowrap">
                                                         <i class="fa-solid fa-pen-nib mr-1.5 text-[10px]" aria-hidden="true"></i>Điền chỗ trống
                                                     </span>

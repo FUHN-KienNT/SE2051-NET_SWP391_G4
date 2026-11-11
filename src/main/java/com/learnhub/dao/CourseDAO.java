@@ -418,7 +418,7 @@ public class CourseDAO {
         List<Course> list = new ArrayList<>();
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
                      "c.category_id, c.created_by, c.expert_id, c.created_at, c.updated_at, " +
-                     "s.name as category_name, u.username as expert_name, " +
+                     "s.name as category_name, s.status as category_status, u.username as expert_name, " +
                      "(SELECT COUNT(*) FROM module m WHERE m.course_id = c.id) as module_count, " +
                      "0 as lesson_count " +
                      "FROM course c " +

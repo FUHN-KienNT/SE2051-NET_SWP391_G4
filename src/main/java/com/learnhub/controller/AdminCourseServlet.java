@@ -168,6 +168,8 @@ public class AdminCourseServlet extends HttpServlet {
             req.setAttribute("errorMessage", "Tên khóa học (Course Title) không được để trống.");
         } else if ("save_failed".equals(req.getParameter("error"))) {
             req.setAttribute("errorMessage", "Không thể lưu khóa học. Vui lòng kiểm tra lại thông tin.");
+        } else if ("invalid_expert".equals(req.getParameter("error"))) {
+            req.setAttribute("errorMessage", "Khóa học chỉ được phép phân công (assign) cho người dùng có vai trò Chuyên gia (ROLE_EXPERT).");
         }
 
         req.getRequestDispatcher("/WEB-INF/views/admin/course-detail.jsp").forward(req, resp);
@@ -311,6 +313,20 @@ public class AdminCourseServlet extends HttpServlet {
         UUID categoryId = ControllerSupport.optionalUuid(categoryIdStr);
 
         UUID expertId = ControllerSupport.optionalUuid(expertIdStr);
+        if (expertId != null) {
+            com.learnhub.dao.UserDAO userDAO = new com.learnhub.dao.UserDAO();
+            if (!userDAO.isExpert(expertId)) {
+                LOGGER.warning("Validation failed: User " + expertId + " is not an active expert.");
+                if (isDetailRequest && idStr != null && !idStr.isBlank()) {
+                    resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + idStr + "&error=invalid_expert");
+                } else if (isDetailRequest) {
+                    resp.sendRedirect(req.getContextPath() + "/manager/course-detail?action=new&error=invalid_expert");
+                } else {
+                    resp.sendRedirect(req.getContextPath() + "/manager/courses?error=invalid_expert");
+                }
+                return;
+            }
+        }
 
         if (status == null || status.isBlank()) {
             status = "draft";

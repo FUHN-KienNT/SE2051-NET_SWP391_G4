@@ -263,6 +263,10 @@ public class DashboardService {
 
     public boolean assignExpertToCourse(UUID courseId, UUID expertId, String managerEmail) {
         if (courseId == null) return false;
+        if (expertId != null && !userDAO.isExpert(expertId)) {
+            LOGGER.warning("Cannot assign expert: user " + expertId + " is not an active expert");
+            return false;
+        }
         boolean ok = courseDAO.assignExpert(courseId, expertId);
         if (ok) {
             Course c = courseDAO.findById(courseId);

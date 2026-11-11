@@ -165,24 +165,25 @@
                         </div>
                     </div>
 
-                    <!-- Row 3: Assigned Instructor (Optional) -->
+                    <!-- Row 3: Assigned Expert (Only ROLE_EXPERT allowed) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                Assigned Instructor / Expert
+                                Assigned Expert (Chuyên gia phụ trách)
                             </label>
                             <div class="relative">
                                 <select name="expertId"
                                         class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-brand-700 cursor-pointer appearance-none">
-                                    <option value="">Select Instructor</option>
+                                    <option value="">-- None (Chưa phân công) --</option>
                                     <c:forEach var="inst" items="${instructors}">
-                                        <option value="${inst.id}" ${course.expertId eq inst.id ? 'selected' : ''}>
-                                            ${inst.username} (${inst.email})
+                                        <option value="${inst.id}" ${(course.expertId eq inst.id or course.expertId.toString() eq inst.id.toString()) ? 'selected' : ''}>
+                                            <c:out value="${not empty inst.fullName ? inst.fullName : inst.username}" /> (<c:out value="${inst.email}" />) - Expert
                                         </option>
                                     </c:forEach>
                                 </select>
                                 <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                             </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Chỉ được phân công khóa học cho người dùng có vai trò Chuyên gia (ROLE_EXPERT).</p>
                         </div>
                     </div>
 

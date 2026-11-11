@@ -33,6 +33,7 @@ public class UserDAO {
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS phone VARCHAR(50)");
             stmt.executeUpdate("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS status_note TEXT");
+            stmt.executeUpdate("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS avatar_url TEXT");
         } catch (Exception e) {
             LOGGER.log(Level.FINE, "User columns check: " + e.getMessage());
         }
@@ -388,8 +389,11 @@ public class UserDAO {
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "JOIN setting s ON u.role_id = s.id " +
-                     "WHERE (s.code = 'ROLE_EXPERT' OR s.code = 'ROLE_ADMIN' OR s.code = 'ROLE_MANAGER') AND u.status = 'active' " +
-                     "ORDER BY u.username ASC";
+                     "WHERE (s.type IS NULL OR s.type = 'role') " +
+                     "AND (UPPER(TRIM(s.code)) = 'ROLE_EXPERT' OR UPPER(TRIM(s.code)) = 'EXPERT' OR LOWER(TRIM(s.name)) = 'expert' OR LOWER(s.name) LIKE 'expert%') " +
+                     "AND NOT (UPPER(TRIM(s.code)) IN ('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_STUDENT')) " +
+                     "AND LOWER(u.status::text) = 'active' " +
+                     "ORDER BY COALESCE(u.full_name, u.username) ASC";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -400,6 +404,24 @@ public class UserDAO {
             LOGGER.log(Level.SEVERE, "Error in UserDAO.findInstructors: " + e.getMessage(), e);
         }
         return list;
+    }
+
+    public boolean isExpert(UUID userId) {
+        if (userId == null) return false;
+        User u = findById(userId);
+        if (u == null) return false;
+        String status = u.getStatus() != null ? u.getStatus().trim().toLowerCase() : "";
+        if (!"active".equals(status)) {
+            return false;
+        }
+        String rCode = u.getRoleCode() != null ? u.getRoleCode().trim().toUpperCase() : "";
+        String rName = u.getRoleName() != null ? u.getRoleName().trim().toLowerCase() : "";
+        boolean isOtherRole = "ROLE_ADMIN".equals(rCode) || "ROLE_MANAGER".equals(rCode) || "ROLE_STUDENT".equals(rCode)
+                || rName.contains("admin") || rName.contains("manager") || rName.contains("student");
+        if (isOtherRole) {
+            return false;
+        }
+        return "ROLE_EXPERT".equals(rCode) || "EXPERT".equals(rCode) || "expert".equals(rName) || rName.startsWith("expert");
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {

@@ -17,7 +17,6 @@
         day: 'numeric', month: 'numeric', year: 'numeric'
     });
 
-    let csrfToken = null;
     let notifications = [];
     let unreadCount = 0;
     let mutationPending = false;
@@ -129,7 +128,6 @@
             const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
             const body = await readJson(response);
             if (version !== requestVersion) return false;
-            csrfToken = body.csrfToken;
             renderItems(body.notifications || []);
             unreadCount = body.unreadCount;
             readAll.disabled = unreadCount === 0;
@@ -137,7 +135,6 @@
             return true;
         } catch (error) {
             if (version !== requestVersion) return false;
-            csrfToken = null;
             notifications = [];
             unreadCount = 0;
             unreadDot.classList.add('hidden');
@@ -149,12 +146,10 @@
     }
 
     async function post(path, parameters) {
-        if (!csrfToken) throw new Error('Hãy tải lại thông báo.');
         const response = await fetch(url + path, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
-                'X-CSRF-Token': csrfToken,
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
             },
             body: parameters || ''

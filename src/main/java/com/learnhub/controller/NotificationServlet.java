@@ -9,7 +9,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -25,7 +24,6 @@ import java.util.logging.Logger;
 public class NotificationServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(NotificationServlet.class.getName());
     private static final int POPUP_LIMIT = 20;
-    private static final String CSRF_SESSION_KEY = "notificationCsrfToken";
 
     private final NotificationService notificationService = new NotificationService();
 
@@ -64,7 +62,6 @@ public class NotificationServlet extends HttpServlet {
             JsonObject body = new JsonObject();
             body.add("notifications", items);
             body.addProperty("unreadCount", unreadCount);
-            body.addProperty("csrfToken", csrfToken(req.getSession(false)));
             write(resp, body);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Could not load notifications", e);
@@ -85,14 +82,6 @@ public class NotificationServlet extends HttpServlet {
             error(resp, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Phương thức không được hỗ trợ.");
             return;
         }
-        HttpSession session = req.getSession(false);
-        Object token = session.getAttribute(CSRF_SESSION_KEY);
-        if (!(token instanceof String)
-                || !token.equals(req.getHeader("X-CSRF-Token"))) {
-            error(resp, HttpServletResponse.SC_FORBIDDEN, "Yêu cầu không hợp lệ. Hãy tải lại thông báo.");
-            return;
-        }
-
         try {
             if ("/notifications/read-all".equals(path)) {
                 int updated = notificationService.markAllAsRead(user.getId());
@@ -119,18 +108,6 @@ public class NotificationServlet extends HttpServlet {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Could not update notifications", e);
             error(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể cập nhật thông báo.");
-        }
-    }
-
-    private String csrfToken(HttpSession session) {
-        synchronized (session) {
-            Object existing = session.getAttribute(CSRF_SESSION_KEY);
-            if (existing instanceof String) {
-                return (String) existing;
-            }
-            String token = UUID.randomUUID().toString();
-            session.setAttribute(CSRF_SESSION_KEY, token);
-            return token;
         }
     }
 

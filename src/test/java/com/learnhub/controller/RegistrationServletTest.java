@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegistrationServletTest {
@@ -24,7 +25,14 @@ class RegistrationServletTest {
         WebServlet mapping = RegistrationServlet.class.getAnnotation(WebServlet.class);
         List<String> routes = Arrays.asList(mapping.urlPatterns());
         assertTrue(routes.contains("/manager/registrations"));
-        assertTrue(routes.contains("/admin/registrations"));
+        assertFalse(routes.contains("/admin/registrations"));
+    }
+
+    @Test
+    void adminCannotAccessRegistrationManagement() throws Exception {
+        Exchange exchange = new Exchange(AppConstants.Role.ADMIN, "/manager/registrations");
+        new RegistrationServlet().doGet(exchange.request, exchange.response);
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
     }
 
     @Test

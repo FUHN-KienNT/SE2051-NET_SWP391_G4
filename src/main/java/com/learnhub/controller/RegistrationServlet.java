@@ -1,5 +1,6 @@
 package com.learnhub.controller;
 
+import com.learnhub.constant.AppConstants;
 import com.learnhub.dao.CourseDAO;
 import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.dao.UserDAO;
@@ -11,7 +12,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,9 +22,9 @@ import java.util.logging.Logger;
 
 /**
  * Controller for Course Registrations management (List & Detail).
- * Accessible to Admin and Manager roles.
+ * Accessible to Manager only.
  */
-@WebServlet(name = "RegistrationServlet", urlPatterns = {"/manager/registrations", "/admin/registrations"})
+@WebServlet(name = "RegistrationServlet", urlPatterns = {"/manager/registrations"})
 public class RegistrationServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(RegistrationServlet.class.getName());
 
@@ -40,10 +40,8 @@ public class RegistrationServlet extends HttpServlet {
             return;
         }
 
-        HttpSession session = req.getSession(false);
-        String sessionRole = session != null ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedRole(currentUser, sessionRole)) {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager or Admin privileges required.");
+        if (!isAuthorizedRole(currentUser)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
             return;
         }
 
@@ -130,10 +128,8 @@ public class RegistrationServlet extends HttpServlet {
             return;
         }
 
-        HttpSession session = req.getSession(false);
-        String sessionRole = session != null ? (String) session.getAttribute("userRole") : null;
-        if (!isAuthorizedRole(currentUser, sessionRole)) {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager or Admin privileges required.");
+        if (!isAuthorizedRole(currentUser)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
             return;
         }
 
@@ -175,18 +171,7 @@ public class RegistrationServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + req.getServletPath());
     }
 
-    private boolean isAuthorizedRole(User user, String sessionRole) {
-        if (user == null) return false;
-        String rCode = user.getRoleCode() != null ? user.getRoleCode() : "";
-        String rName = user.getRoleName() != null ? user.getRoleName() : "";
-        String sRole = sessionRole != null ? sessionRole : "";
-
-        return "ROLE_ADMIN".equalsIgnoreCase(rCode)
-                || "ROLE_MANAGER".equalsIgnoreCase(rCode)
-                || "admin".equalsIgnoreCase(sRole)
-                || "manager".equalsIgnoreCase(sRole)
-                || "Administrator".equalsIgnoreCase(rName)
-                || "Admin".equalsIgnoreCase(rName)
-                || "Manager".equalsIgnoreCase(rName);
+    private boolean isAuthorizedRole(User user) {
+        return user != null && AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode());
     }
 }

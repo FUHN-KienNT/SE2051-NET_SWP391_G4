@@ -18,6 +18,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthorizationFilterManagerTest {
     @Test
+    void retiredAdminRegistrationRouteIsForbiddenForReadingAndWriting() throws Exception {
+        for (String method : new String[]{"GET", "POST"}) {
+            for (String role : new String[]{AppConstants.Role.ADMIN, AppConstants.Role.MANAGER}) {
+                Exchange exchange = new Exchange(role, "/admin/registrations", method);
+                new AuthorizationFilter().doFilter(exchange.request, exchange.response, exchange.chain);
+                assertFalse(exchange.chainCalled.get());
+                assertEquals(HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
+            }
+        }
+    }
+
+    @Test
+    void managerRegistrationRouteRequiresManagerForReadingAndWriting() throws Exception {
+        for (String method : new String[]{"GET", "POST"}) {
+            for (String role : new String[]{AppConstants.Role.ADMIN, AppConstants.Role.MANAGER}) {
+                Exchange exchange = new Exchange(role, "/manager/registrations", method);
+                new AuthorizationFilter().doFilter(exchange.request, exchange.response, exchange.chain);
+                boolean allowed = AppConstants.Role.MANAGER.equals(role);
+                assertEquals(allowed, exchange.chainCalled.get());
+                assertEquals(allowed ? 0 : HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
+            }
+        }
+    }
+
+    @Test
     void courseRoutesAllowManagerAndExpertButRejectAdminAndStudent() throws Exception {
         for (String path : new String[]{"/manager/courses", "/manager/course-detail", "/manager/course-status"}) {
             for (String method : new String[]{"GET", "POST"}) {

@@ -23,7 +23,6 @@ class ControllerRoutesTest {
                 "/manager/lesson-review",
                 "/manager/lessons",
                 "/lessons/preview",
-                "/admin/registrations",
                 "/admin/reset-password",
                 "/admin/setting-detail",
                 "/admin/setting-reorder",

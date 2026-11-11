@@ -84,6 +84,12 @@ public class AuthorizationFilter implements Filter {
             }
         }
 
+        // Retired registration URL must stay inaccessible even when an old link is used.
+        if (isUnder(path, "/admin/registrations")) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Registration management requires Manager privileges.");
+            return;
+        }
+
         boolean isCourseManagement = isUnder(path, "/manager/courses")
                 || isUnder(path, "/manager/course-status")
                 || isUnder(path, "/manager/course-detail");

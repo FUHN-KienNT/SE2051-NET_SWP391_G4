@@ -39,7 +39,7 @@
                         </p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2.5">
-                        <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}&moduleId=${moduleId}"
+                        <a href="${pageContext.request.contextPath}/expert/questions"
                            class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-50 text-text-primary font-semibold text-xs sm:text-sm shadow-xs transition">
                             <i class="fa-solid fa-list-check mr-2 text-brand-700" aria-hidden="true"></i>Ngân hàng câu hỏi
                         </a>

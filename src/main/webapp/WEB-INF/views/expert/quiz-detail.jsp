@@ -30,13 +30,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <a id="linkToQuestionBank" href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}&moduleId=${not empty quiz.moduleId ? quiz.moduleId : defaultFilterModuleId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-primary hover:bg-slate-100 shadow-xs transition">
+            <a id="linkToQuestionBank" href="${pageContext.request.contextPath}/expert/questions" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-primary hover:bg-slate-100 shadow-xs transition">
                 <i class="fa-solid fa-list-check mr-2 text-brand-700" aria-hidden="true"></i>Ngân hàng câu hỏi
             </a>
-            <a id="linkToNewQuestion" href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}&moduleId=${not empty quiz.moduleId ? quiz.moduleId : defaultFilterModuleId}" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold shadow-sm transition">
+            <a id="linkToNewQuestion" href="${pageContext.request.contextPath}/expert/questions/detail" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold shadow-sm transition">
                 <i class="fa-solid fa-plus mr-2 text-xs" aria-hidden="true"></i>Tạo câu hỏi mới
             </a>
-            <a id="linkToQuizListTop" href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}&moduleId=${not empty quiz.moduleId ? quiz.moduleId : defaultFilterModuleId}" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary hover:bg-slate-100 transition">
+            <a id="linkToQuizListTop" href="${pageContext.request.contextPath}/expert/quizzes" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary hover:bg-slate-100 transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-xs" aria-hidden="true"></i>Danh sách Quiz
             </a>
         </div>
@@ -357,7 +357,7 @@
                     <div class="text-center py-12 text-text-secondary text-xs sm:text-sm">
                         <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-300 block" aria-hidden="true"></i>
                         Chưa có câu hỏi nào trong Question Bank.
-                        <a class="text-brand-700 font-bold hover:underline" href="${pageContext.request.contextPath}/expert/questions/detail?courseId=${courseId}">
+                        <a class="text-brand-700 font-bold hover:underline" href="${pageContext.request.contextPath}/expert/questions/detail">
                             Tạo câu hỏi đầu tiên
                         </a>.
                     </div>
@@ -411,7 +411,7 @@
         <!-- PHẦN 4: CÁC NÚT HÀNH ĐỘNG DƯỚI ĐÁY TRANG  -->
         <!-- ========================================== -->
         <div class="flex items-center justify-between pt-2">
-            <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}" class="px-6 py-3 rounded-xl border border-border-default text-text-secondary hover:text-text-primary font-semibold text-xs sm:text-sm bg-surface-card hover:bg-slate-100 shadow-xs transition">
+            <a href="${pageContext.request.contextPath}/expert/quizzes" class="px-6 py-3 rounded-xl border border-border-default text-text-secondary hover:text-text-primary font-semibold text-xs sm:text-sm bg-surface-card hover:bg-slate-100 shadow-xs transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-xs" aria-hidden="true"></i>Quay lại danh sách
             </a>
             <button type="submit" class="px-8 py-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
@@ -658,13 +658,15 @@
         const query = '?courseId=' + encodeURIComponent(cId) + '&moduleId=' + encodeURIComponent(mId);
 
         const qBank = document.getElementById('linkToQuestionBank');
-        if (qBank) qBank.href = ctx + '/expert/questions' + query;
+        if (qBank) qBank.href = ctx + '/expert/questions';
 
         const qNew = document.getElementById('linkToNewQuestion');
-        if (qNew) qNew.href = ctx + '/expert/questions/detail' + query;
+        if (qNew) qNew.href = ctx + '/expert/questions/detail';
 
         const qListTop = document.getElementById('linkToQuizListTop');
-        if (qListTop) qListTop.href = ctx + '/expert/quizzes' + query;
+        if (qListTop) {
+            qListTop.href = ctx + '/expert/quizzes';
+        }
     }
 
     // 4. Xử lý tích chọn câu hỏi

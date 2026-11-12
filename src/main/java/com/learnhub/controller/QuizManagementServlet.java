@@ -80,7 +80,7 @@ public class QuizManagementServlet extends HttpServlet {
             if (quizId != null) {
                 // Không cho phép truy cập màn hình chỉnh sửa với Quiz đã được sử dụng
                 if (service.isUsed(quizId)) {
-                    redirectToList(req, resp, courseId, defaultFilterModuleId, "cannotEditUsedQuiz=true");
+                    redirectToList(req, resp, "cannotEditUsedQuiz=true");
                     return;
                 }
                 quiz = service.get(quizId);
@@ -193,12 +193,12 @@ public class QuizManagementServlet extends HttpServlet {
         if ("delete".equalsIgnoreCase(action)) {
             UUID quizId = ControllerSupport.optionalUuid(req.getParameter("id"));
             if (service.isUsed(quizId)) {
-                redirectToList(req, resp, courseId, moduleId, "cannotDelete=true");
+                redirectToList(req, resp, courseId, "cannotDelete=true");
                 return;
             }
 
             boolean ok = service.delete(user.getId(), quizId);
-            redirectToList(req, resp, courseId, moduleId, "deleted=" + ok);
+            redirectToList(req, resp, courseId, "deleted=" + ok);
             return;
         }
 
@@ -207,7 +207,7 @@ public class QuizManagementServlet extends HttpServlet {
 
             boolean ok = service.hide(user.getId(), quizId);
 
-            redirectToList(req, resp, courseId, moduleId, "hidden=" + ok);
+            redirectToList(req, resp, courseId, "hidden=" + ok);
 
             return;
         }
@@ -216,7 +216,7 @@ public class QuizManagementServlet extends HttpServlet {
             UUID quizId = ControllerSupport.optionalUuid(req.getParameter("id"));
             boolean ok = service.unhide(user.getId(), quizId);
 
-            redirectToList(req, resp, courseId, moduleId, "unhidden=" + ok);
+            redirectToList(req, resp, courseId, "unhidden=" + ok);
             return;
         }
 
@@ -261,7 +261,7 @@ public class QuizManagementServlet extends HttpServlet {
 
         // Không cho phép chỉnh sửa bài kiểm tra đã được sử dụng (trong bài học hoặc đã có lượt nộp bài)
         if (id != null && service.isUsed(id)) {
-            redirectToList(req, resp, courseId, moduleId, "cannotEditUsedQuiz=true");
+            redirectToList(req, resp, "cannotEditUsedQuiz=true");
             return;
         }
 
@@ -332,7 +332,7 @@ public class QuizManagementServlet extends HttpServlet {
                 timeLimit, passScore, status, imageUrl, questionIds);
 
         if (ok) {
-            redirectToList(req, resp, courseId, moduleId, "saved=true");
+            redirectToList(req, resp, "saved=true");
 
             return;
         }
@@ -410,13 +410,19 @@ public class QuizManagementServlet extends HttpServlet {
     private void redirectToList(
             HttpServletRequest req,
             HttpServletResponse resp,
+            String result)
+            throws IOException {
+        resp.sendRedirect(req.getContextPath() + "/expert/quizzes?" + result);
+    }
+
+    private void redirectToList(
+            HttpServletRequest req,
+            HttpServletResponse resp,
             UUID courseId,
-            UUID moduleId,
             String result)
             throws IOException {
         resp.sendRedirect(req.getContextPath() + "/expert/quizzes?" + result
-                + (courseId == null ? "" : "&courseId=" + courseId)
-                + (moduleId == null ? "" : "&moduleId=" + moduleId));
+                + (courseId == null ? "" : "&courseId=" + courseId));
     }
 
     /**

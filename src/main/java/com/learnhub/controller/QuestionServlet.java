@@ -102,7 +102,6 @@ public class QuestionServlet extends HttpServlet {
                         resp.sendRedirect(
                                 req.getContextPath()
                                         + "/expert/questions?cannotEditUsedQuestion=true"
-                                        + courseSuffix(courseId)
                         );
                         return;
                     }
@@ -315,7 +314,6 @@ public class QuestionServlet extends HttpServlet {
             resp.sendRedirect(
                     req.getContextPath()
                             + "/expert/questions?cannotEditUsedQuestion=true"
-                            + courseSuffix(courseId)
             );
             return;
         }
@@ -358,7 +356,6 @@ public class QuestionServlet extends HttpServlet {
             resp.sendRedirect(
                     req.getContextPath()
                             + "/expert/questions?saved=true"
-                            + courseSuffix(courseId)
             );
             return;
         }

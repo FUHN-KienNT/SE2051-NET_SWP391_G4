@@ -26,7 +26,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">
-                <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}" class="hover:underline">Question Bank</a>
+                <a href="${pageContext.request.contextPath}/expert/questions" class="hover:underline">Question Bank</a>
                 <span>/</span>
                 <span class="text-slate-500">${empty question ? 'Create Question' : 'Edit Question'}</span>
             </div>
@@ -37,11 +37,11 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
 
         <!-- Các nút điều hướng nhanh -->
         <div class="flex flex-wrap items-center gap-2.5">
-            <a href="${pageContext.request.contextPath}/expert/quizzes?courseId=${courseId}&moduleId=${not empty question.moduleId ? question.moduleId : moduleId}"
+            <a href="${pageContext.request.contextPath}/expert/quizzes"
                class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                 <i class="fa-solid fa-clipboard-question mr-1.5 text-slate-500" aria-hidden="true"></i>Quản lý Quiz
             </a>
-            <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}&moduleId=${not empty question.moduleId ? question.moduleId : moduleId}"
+            <a href="${pageContext.request.contextPath}/expert/questions"
                class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                 <i class="fa-solid fa-arrow-left mr-1.5 text-slate-500" aria-hidden="true"></i>Danh sách câu hỏi
             </a>
@@ -379,7 +379,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
         <!-- PHẦN 7: CÁC NÚT ĐIỀU HƯỚNG & LƯU CÂU HỎI CUỐI TRANG               -->
         <!-- ================================================================= -->
         <div class="flex items-center justify-between pt-2">
-            <a href="${pageContext.request.contextPath}/expert/questions?courseId=${courseId}"
+            <a href="${pageContext.request.contextPath}/expert/questions"
                class="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm bg-white hover:bg-slate-50 transition shadow-sm">
                 <i class="fa-solid fa-arrow-left mr-2 text-slate-400" aria-hidden="true"></i>Quay lại danh sách
             </a>

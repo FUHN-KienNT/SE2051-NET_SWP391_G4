@@ -33,6 +33,42 @@ final class ControllerSupport {
         }
     }
 
+    static UUID resolveUuidFilter(HttpServletRequest req, HttpSession session,
+                                  String paramName, String sessionKey, boolean isFilterSubmit) {
+        String raw = req.getParameter(paramName);
+        if (isFilterSubmit || (raw != null && !raw.isBlank())) {
+            UUID val = optionalUuid(raw);
+            session.setAttribute(sessionKey, val);
+            return val;
+        }
+        Object saved = session.getAttribute(sessionKey);
+        return saved instanceof UUID id ? id : null;
+    }
+
+    static String resolveStringFilter(HttpServletRequest req, HttpSession session,
+                                      String paramName, String sessionKey, boolean isFilterSubmit) {
+        String raw = req.getParameter(paramName);
+        if (isFilterSubmit || (raw != null && !raw.isBlank())) {
+            String val = raw == null ? "" : raw.trim();
+            session.setAttribute(sessionKey, val);
+            return val;
+        }
+        Object saved = session.getAttribute(sessionKey);
+        return saved instanceof String s ? s : "";
+    }
+
+    static UUID resolveCoursePickerFilter(HttpServletRequest req, HttpSession session,
+                                          String courseKey, String moduleKey) {
+        if ("all".equalsIgnoreCase(req.getParameter("courseFilter"))) {
+            session.removeAttribute(courseKey);
+            session.removeAttribute(moduleKey);
+            return null;
+        }
+        UUID courseId = optionalUuid(req.getParameter("courseId"));
+        session.setAttribute(courseKey, courseId);
+        return courseId;
+    }
+
     static int pageNumber(String value) {
         try {
             return Math.max(1, Integer.parseInt(value == null ? "" : value.trim()));

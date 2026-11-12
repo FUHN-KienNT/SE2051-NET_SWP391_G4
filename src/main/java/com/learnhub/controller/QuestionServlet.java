@@ -42,6 +42,12 @@ public class QuestionServlet extends HttpServlet {
     static final long MAX_IMPORT_FILE_BYTES = 5L * 1024 * 1024;
     private static final String IMPORT_RESULT_KEY = "questionImportResult";
 
+    private static final String SESS_QUESTION_COURSE_ID = "questionList_courseId";
+    private static final String SESS_QUESTION_MODULE_ID = "questionList_moduleId";
+    private static final String SESS_QUESTION_TYPE = "questionList_type";
+    private static final String SESS_QUESTION_STATUS = "questionList_status";
+    private static final String SESS_QUESTION_KEYWORD = "questionList_keyword";
+
     private final QuestionService service =
             new QuestionService();
     private final CourseDAO courseDAO =
@@ -93,6 +99,17 @@ public class QuestionServlet extends HttpServlet {
         if ("/expert/questions/detail".equals(path)) {
 
             String id = req.getParameter("id");
+            if (id == null || id.isBlank()) {
+                HttpSession sess = req.getSession(false);
+                if (sess != null) {
+                    if (courseId == null) {
+                        courseId = (UUID) sess.getAttribute(SESS_QUESTION_COURSE_ID);
+                    }
+                    if (moduleId == null) {
+                        moduleId = (UUID) sess.getAttribute(SESS_QUESTION_MODULE_ID);
+                    }
+                }
+            }
 
             if (id != null && !id.isBlank()) {
                 UUID questionId = ControllerSupport.optionalUuid(id);
@@ -134,6 +151,7 @@ public class QuestionServlet extends HttpServlet {
             }
 
             req.setAttribute("courseId", courseId);
+            req.setAttribute("moduleId", moduleId);
             Course selectedCourse = courseId != null ? courseDAO.findById(courseId) : null;
             req.setAttribute("course", selectedCourse);
 
@@ -180,6 +198,74 @@ public class QuestionServlet extends HttpServlet {
         /*
          * QUESTION LIST
          */
+        HttpSession session = req.getSession(true);
+        String resetParam = req.getParameter("reset");
+        boolean isReset = "true".equalsIgnoreCase(resetParam) || "1".equals(resetParam);
+
+        if (isReset) {
+            session.removeAttribute(SESS_QUESTION_COURSE_ID);
+            session.removeAttribute(SESS_QUESTION_MODULE_ID);
+            session.removeAttribute(SESS_QUESTION_TYPE);
+            session.removeAttribute(SESS_QUESTION_STATUS);
+            session.removeAttribute(SESS_QUESTION_KEYWORD);
+        }
+
+        courseId = null;
+        moduleId = null;
+        String type = "";
+        String status = "";
+        String keyword = "";
+
+        if (!isReset) {
+            boolean isFilterSubmit = req.getParameter("filter") != null;
+            boolean isCourseFilter = req.getParameter("courseFilter") != null;
+
+            if (isCourseFilter) {
+                courseId = ControllerSupport.resolveCoursePickerFilter(
+                        req, session, SESS_QUESTION_COURSE_ID, SESS_QUESTION_MODULE_ID);
+                if (courseId != null) {
+                    Object savedMod = session.getAttribute(SESS_QUESTION_MODULE_ID);
+                    if (savedMod instanceof UUID prevModId) {
+                        Module pm = moduleDAO.findById(prevModId);
+                        if (pm != null && courseId.equals(pm.getCourseId())) {
+                            moduleId = prevModId;
+                        } else {
+                            session.removeAttribute(SESS_QUESTION_MODULE_ID);
+                        }
+                    }
+                }
+            } else {
+                courseId = ControllerSupport.resolveUuidFilter(
+                        req, session, "courseId", SESS_QUESTION_COURSE_ID, isFilterSubmit);
+                moduleId = ControllerSupport.resolveUuidFilter(
+                        req, session, "moduleId", SESS_QUESTION_MODULE_ID, isFilterSubmit);
+            }
+
+            type = ControllerSupport.resolveStringFilter(
+                    req, session, "type", SESS_QUESTION_TYPE, isFilterSubmit);
+            status = ControllerSupport.resolveStringFilter(
+                    req, session, "status", SESS_QUESTION_STATUS, isFilterSubmit);
+            keyword = ControllerSupport.resolveStringFilter(
+                    req, session, "keyword", SESS_QUESTION_KEYWORD, isFilterSubmit);
+        }
+
+        if (moduleId != null) {
+            Module m = moduleDAO.findById(moduleId);
+            if (m != null) {
+                if (courseId != null && !courseId.equals(m.getCourseId())) {
+                    courseId = m.getCourseId();
+                    session.setAttribute(SESS_QUESTION_COURSE_ID, courseId);
+                }
+            } else {
+                moduleId = null;
+                session.removeAttribute(SESS_QUESTION_MODULE_ID);
+            }
+        }
+
+        req.setAttribute("courseId", courseId);
+        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
+        req.setAttribute("moduleId", moduleId);
+
         List<Module> modules;
         if (courseId != null) {
             List<Module> courseModules = moduleDAO.findByCourseId(courseId);
@@ -195,10 +281,6 @@ public class QuestionServlet extends HttpServlet {
             modules = moduleDAO.findByExpertId(user.getId());
         }
         req.setAttribute("modules", modules);
-
-        String keyword = req.getParameter("keyword");
-        String type = req.getParameter("type");
-        String status = req.getParameter("status");
 
         req.setAttribute("keyword", keyword == null ? "" : keyword);
         req.setAttribute("type", type == null ? "" : type);
@@ -254,8 +336,7 @@ public class QuestionServlet extends HttpServlet {
         }
 
         // Kết quả import (thành công / danh sách lỗi) được lưu trong session ở lần POST trước
-        HttpSession session = req.getSession(false);
-        if (session != null && session.getAttribute(IMPORT_RESULT_KEY) != null) {
+        if (session.getAttribute(IMPORT_RESULT_KEY) != null) {
             req.setAttribute("importResult", session.getAttribute(IMPORT_RESULT_KEY));
             session.removeAttribute(IMPORT_RESULT_KEY);
         }

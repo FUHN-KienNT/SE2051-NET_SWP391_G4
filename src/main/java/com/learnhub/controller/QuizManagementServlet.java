@@ -15,6 +15,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -35,6 +36,11 @@ import java.util.HashSet;
         }
 )
 public class QuizManagementServlet extends HttpServlet {
+    private static final String SESS_QUIZ_COURSE_ID = "quizList_courseId";
+    private static final String SESS_QUIZ_MODULE_ID = "quizList_moduleId";
+    private static final String SESS_QUIZ_STATUS = "quizList_status";
+    private static final String SESS_QUIZ_KEYWORD = "quizList_keyword";
+
     private final QuizManagementService service = new QuizManagementService();
     private final ModuleDAO moduleDAO = new ModuleDAO();
 
@@ -71,10 +77,23 @@ public class QuizManagementServlet extends HttpServlet {
             throws ServletException, IOException {
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
         UUID defaultFilterModuleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+
+        String id = req.getParameter("id");
+        if ((id == null || id.isBlank())) {
+            HttpSession session = req.getSession(false);
+            if (session != null) {
+                if (courseId == null) {
+                    courseId = (UUID) session.getAttribute(SESS_QUIZ_COURSE_ID);
+                }
+                if (defaultFilterModuleId == null) {
+                    defaultFilterModuleId = (UUID) session.getAttribute(SESS_QUIZ_MODULE_ID);
+                }
+            }
+        }
+
         List<UUID> selectedQuestionIds = new ArrayList<>();
         Quiz quiz = null;
 
-        String id = req.getParameter("id");
         if (id != null && !id.isBlank()) {
             UUID quizId = ControllerSupport.optionalUuid(id);
             if (quizId != null) {
@@ -163,23 +182,66 @@ public class QuizManagementServlet extends HttpServlet {
             HttpServletResponse resp,
             User user)
             throws ServletException, IOException {
-        String keyword = req.getParameter("keyword");
+        HttpSession session = req.getSession(true);
 
-        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
+        String resetParam = req.getParameter("reset");
+        boolean isReset = "true".equalsIgnoreCase(resetParam) || "1".equals(resetParam);
 
-        UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
+        if (isReset) {
+            session.removeAttribute(SESS_QUIZ_COURSE_ID);
+            session.removeAttribute(SESS_QUIZ_MODULE_ID);
+            session.removeAttribute(SESS_QUIZ_STATUS);
+            session.removeAttribute(SESS_QUIZ_KEYWORD);
+        }
+
+        UUID courseId = null;
+        UUID moduleId = null;
+        String status = "";
+        String keyword = "";
+
+        if (!isReset) {
+            boolean isFilterSubmit = req.getParameter("filter") != null;
+            boolean isCourseFilter = req.getParameter("courseFilter") != null;
+
+            if (isCourseFilter) {
+                courseId = ControllerSupport.resolveCoursePickerFilter(
+                        req, session, SESS_QUIZ_COURSE_ID, SESS_QUIZ_MODULE_ID);
+                if (courseId != null) {
+                    Object savedMod = session.getAttribute(SESS_QUIZ_MODULE_ID);
+                    if (savedMod instanceof UUID prevModId) {
+                        Module pm = moduleDAO.findById(prevModId);
+                        if (pm != null && courseId.equals(pm.getCourseId())) {
+                            moduleId = prevModId;
+                        } else {
+                            session.removeAttribute(SESS_QUIZ_MODULE_ID);
+                        }
+                    }
+                }
+            } else {
+                courseId = ControllerSupport.resolveUuidFilter(
+                        req, session, "courseId", SESS_QUIZ_COURSE_ID, isFilterSubmit);
+                moduleId = ControllerSupport.resolveUuidFilter(
+                        req, session, "moduleId", SESS_QUIZ_MODULE_ID, isFilterSubmit);
+            }
+
+            status = ControllerSupport.resolveStringFilter(
+                    req, session, "status", SESS_QUIZ_STATUS, isFilterSubmit);
+            keyword = ControllerSupport.resolveStringFilter(
+                    req, session, "keyword", SESS_QUIZ_KEYWORD, isFilterSubmit);
+        }
+
         if (moduleId != null) {
             Module m = moduleDAO.findById(moduleId);
             if (m != null) {
                 if (courseId != null && !courseId.equals(m.getCourseId())) {
                     courseId = m.getCourseId();
+                    session.setAttribute(SESS_QUIZ_COURSE_ID, courseId);
                 }
             } else {
                 moduleId = null;
+                session.removeAttribute(SESS_QUIZ_MODULE_ID);
             }
         }
-
-        String status = req.getParameter("status");
 
         loadCourseOptions(req, user, courseId);
 

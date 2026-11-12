@@ -80,7 +80,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                         <div class="absolute inset-x-0 top-full z-30 mt-1.5 rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
                             <ul id="questionCourseOptions" aria-label="Danh sách khóa học" class="max-h-60 overflow-y-auto divide-y divide-slate-100">
                                 <li>
-                                    <a href="${pageContext.request.contextPath}/expert/questions"
+                                    <a href="${pageContext.request.contextPath}/expert/questions?courseFilter=all"
                                        class="flex h-11 items-center justify-between px-3.5 text-xs sm:text-sm hover:bg-emerald-50 hover:text-emerald-900 transition ${empty courseId ? 'bg-emerald-50 font-bold text-emerald-800' : 'text-slate-700'}">
                                         <span class="flex items-center truncate">
                                             <i class="fa-solid fa-layer-group text-slate-400 mr-2 text-xs" aria-hidden="true"></i>
@@ -91,6 +91,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                                 <c:forEach items="${courses}" var="assignedCourse">
                                     <c:url var="assignedCourseUrl" value="/expert/questions">
                                         <c:param name="courseId" value="${assignedCourse.id}" />
+                                        <c:param name="courseFilter" value="true" />
                                     </c:url>
                                     <li data-course-option>
                                         <a href="${fn:escapeXml(assignedCourseUrl)}" title="${fn:escapeXml(assignedCourse.title)}"
@@ -127,7 +128,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                             <i class="fa-solid fa-filter text-emerald-700 shrink-0" aria-hidden="true"></i>
                             <span>Đang lọc theo khóa học: <strong class="text-emerald-950"><c:out value="${not empty course.title ? course.title : currentCourseTitle}" /></strong></span>
                         </div>
-                        <a href="${pageContext.request.contextPath}/expert/questions"
+                        <a href="${pageContext.request.contextPath}/expert/questions?courseFilter=all"
                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-xs shrink-0 shadow-xs transition"
                            title="Hiển thị tất cả các câu hỏi từ tất cả khóa học">
                             <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
@@ -252,6 +253,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                 <!-- PHẦN 4: BỘ LỌC TÌM KIẾM CÂU HỎI (FILTERS & SEARCH)        -->
                 <!-- ========================================================= -->
                 <form method="get" action="${pageContext.request.contextPath}/expert/questions" class="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <input type="hidden" name="filter" value="true">
                     <c:if test="${not empty courseId}">
                         <input type="hidden" name="courseId" value="${courseId}">
                     </c:if>
@@ -302,7 +304,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                             <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition">
                                 <i class="fa-solid fa-filter mr-1.5" aria-hidden="true"></i>Lọc câu hỏi
                             </button>
-                            <a href="${pageContext.request.contextPath}/expert/questions"
+                            <a href="${pageContext.request.contextPath}/expert/questions?reset=true"
                                class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold text-xs transition"
                                title="Đặt lại tất cả bộ lọc và xem toàn bộ câu hỏi">
                                 Đặt lại

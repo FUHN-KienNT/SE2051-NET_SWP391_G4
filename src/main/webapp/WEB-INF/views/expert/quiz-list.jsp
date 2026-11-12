@@ -74,7 +74,7 @@
                         <div class="absolute left-0 z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border-default bg-surface-card shadow-lg">
                             <ul id="quizCourseOptions" aria-label="Danh sách khóa học" class="max-h-[240px] overflow-y-auto divide-y divide-border-default">
                                 <li>
-                                    <a href="${pageContext.request.contextPath}/expert/quizzes"
+                                    <a href="${pageContext.request.contextPath}/expert/quizzes?courseFilter=all"
                                        class="flex h-11 items-center justify-between px-3.5 text-xs sm:text-sm hover:bg-brand-50 hover:text-brand-900 transition ${empty courseId ? 'bg-brand-50 font-bold text-brand-900' : 'text-text-primary'}">
                                         <span class="flex items-center truncate">
                                             <i class="fa-solid fa-layer-group text-text-secondary mr-2 text-xs" aria-hidden="true"></i>
@@ -85,6 +85,7 @@
                                 <c:forEach items="${courses}" var="assignedCourse">
                                     <c:url var="assignedCourseUrl" value="/expert/quizzes">
                                         <c:param name="courseId" value="${assignedCourse.id}" />
+                                        <c:param name="courseFilter" value="true" />
                                     </c:url>
                                     <li data-course-option>
                                         <a href="${fn:escapeXml(assignedCourseUrl)}" title="${fn:escapeXml(assignedCourse.title)}"
@@ -121,7 +122,7 @@
                             <i class="fa-solid fa-filter text-brand-700 shrink-0" aria-hidden="true"></i>
                             <span>Đang lọc theo khóa học: <strong class="text-brand-950"><c:out value="${not empty course.title ? course.title : currentCourseTitle}" /></strong></span>
                         </div>
-                        <a href="${pageContext.request.contextPath}/expert/quizzes"
+                        <a href="${pageContext.request.contextPath}/expert/quizzes?courseFilter=all"
                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-card border border-brand-200 text-brand-800 hover:bg-brand-100 font-bold text-xs shrink-0 shadow-xs transition"
                            title="Hiển thị tất cả các bài kiểm tra từ tất cả khóa học">
                             <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
@@ -195,6 +196,7 @@
 
                 <!-- 4. BỘ LỌC TÌM KIẾM (FILTER TOOLBAR: MODULE, TRẠNG THÁI, TỪ KHÓA) -->
                 <form method="get" action="${pageContext.request.contextPath}/expert/quizzes" class="mt-4 p-4 bg-surface rounded-2xl border border-border-default space-y-3">
+                    <input type="hidden" name="filter" value="true">
                     <c:if test="${not empty courseId}">
                         <input type="hidden" name="courseId" value="${courseId}">
                     </c:if>
@@ -236,7 +238,7 @@
                             <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-xs transition">
                                 <i class="fa-solid fa-filter mr-1.5" aria-hidden="true"></i>Lọc Quiz
                             </button>
-                            <a href="${pageContext.request.contextPath}/expert/quizzes"
+                            <a href="${pageContext.request.contextPath}/expert/quizzes?reset=true"
                                class="px-4 py-2.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-secondary hover:text-text-primary font-semibold text-xs sm:text-sm transition"
                                title="Đặt lại tất cả bộ lọc và xem toàn bộ bài kiểm tra">
                                 Đặt lại

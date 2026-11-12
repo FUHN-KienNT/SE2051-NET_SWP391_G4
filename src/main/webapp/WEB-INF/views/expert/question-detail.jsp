@@ -138,10 +138,10 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                     <span class="w-2.5 h-6 bg-emerald-600 rounded-full inline-block"></span>
                     <h2 class="text-lg font-black text-slate-900">Nội dung câu hỏi</h2>
                 </div>
-                <!-- Huy hiệu đếm số từ theo thời gian thực (giới hạn 120 từ) -->
-                <div id="wordCountBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 transition-colors">
-                    <i class="fa-solid fa-pen-nib mr-1.5 text-slate-400" aria-hidden="true"></i>
-                    Số từ: <span id="wordCountNum" class="mx-1">0</span> / 120 từ
+                <!-- Huy hiệu đếm số ký tự theo thời gian thực (giới hạn 120 ký tự cả khoảng trắng) -->
+                <div id="charCountBadge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 transition-colors">
+                    <i class="fa-solid fa-font mr-1.5 text-slate-400" aria-hidden="true"></i>
+                    Số ký tự: <span id="charCountNum" class="mx-1">0</span> / 120 ký tự
                 </div>
             </div>
 
@@ -150,15 +150,15 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
                     Nội dung chi tiết / Tiêu đề câu hỏi <span class="text-rose-500">*</span>
                 </label>
-                <textarea name="content" id="questionContent" rows="4" required
+                <textarea name="content" id="questionContent" rows="4" required maxlength="120"
                           oninput="onContentChange()"
                           placeholder="Nhập nội dung câu hỏi tại đây... (Ví dụ: Trong Java Servlet, phương thức nào được gọi khi có yêu cầu HTTP GET?)"
                           class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition leading-relaxed">${question.content}</textarea>
 
-                <!-- Cảnh báo khi vượt quá 120 từ -->
-                <div id="wordCountAlert" class="hidden mt-1.5 text-xs font-bold text-rose-600 flex items-center gap-1.5">
+                <!-- Cảnh báo khi vượt quá 120 ký tự -->
+                <div id="charCountAlert" class="hidden mt-1.5 text-xs font-bold text-rose-600 flex items-center gap-1.5">
                     <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                    <span>Nội dung đã vượt quá giới hạn 120 từ! Vui lòng rút gọn nội dung câu hỏi.</span>
+                    <span>Nội dung đã vượt quá giới hạn 120 ký tự (bao gồm cả khoảng trắng)! Vui lòng rút gọn nội dung câu hỏi.</span>
                 </div>
             </div>
 
@@ -360,9 +360,9 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                     <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
                     <span class="text-slate-600">Nội dung câu hỏi không rỗng</span>
                 </div>
-                <div class="flex items-center gap-2" id="chkWords">
+                <div class="flex items-center gap-2" id="chkChars">
                     <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-slate-600">Độ dài câu hỏi &le; 120 từ</span>
+                    <span class="text-slate-600">Độ dài câu hỏi &le; 120 ký tự</span>
                 </div>
                 <div class="flex items-center gap-2" id="chkModule">
                     <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
@@ -394,7 +394,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
 <!-- PHẦN 8: JAVASCRIPT HỖ TRỢ XỬ LÝ GIAO DIỆN & TÍNH TOÁN DỮ LIỆU             -->
 <!-- ========================================================================= -->
 <script>
-    const MAX_WORDS = 120;
+    const MAX_CHARS = 120;
 
     // 1. Lọc danh sách Module khi chọn Khóa học (an toàn cả khi khóa học chưa có module)
     function onCourseChange(selectedCourseId, isInitialLoad) {
@@ -464,25 +464,22 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
         verifyQuestion();
     }
 
-    // 3. Đếm số từ trong đoạn văn bản
-    function countWords(str) {
-        if (!str) return 0;
-        const trimmed = str.trim();
-        if (!trimmed) return 0;
-        return trimmed.split(/\s+/).length;
+    // 3. Đếm số ký tự trong đoạn văn bản (tính cả khoảng trắng)
+    function countCharacters(str) {
+        return str ? str.length : 0;
     }
 
-    // 4. Xử lý sự kiện khi gõ nội dung câu hỏi: cập nhật đếm từ và cảnh báo
+    // 4. Xử lý sự kiện khi gõ nội dung câu hỏi: cập nhật đếm ký tự và cảnh báo
     function onContentChange() {
-        const text = document.getElementById('questionContent').value;
-        const words = countWords(text);
-        const numSpan = document.getElementById('wordCountNum');
-        const badge = document.getElementById('wordCountBadge');
-        const alertBox = document.getElementById('wordCountAlert');
+        const text = document.getElementById('questionContent').value || '';
+        const chars = text.length; // tính từng ký tự nhập vào cả khoảng trắng
+        const numSpan = document.getElementById('charCountNum');
+        const badge = document.getElementById('charCountBadge');
+        const alertBox = document.getElementById('charCountAlert');
 
-        if (numSpan) numSpan.textContent = words;
+        if (numSpan) numSpan.textContent = chars;
 
-        if (words > MAX_WORDS) {
+        if (chars > MAX_CHARS) {
             badge.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-200');
             badge.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-300');
             alertBox.classList.remove('hidden');
@@ -628,13 +625,14 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
 
     // 13. Kiểm tra tính hợp lệ toàn diện của câu hỏi
     function verifyQuestion() {
-        const content = (document.getElementById('questionContent').value || '').trim();
-        const words = countWords(content);
+        const rawContent = document.getElementById('questionContent').value || '';
+        const content = rawContent.trim();
+        const chars = rawContent.length; // tính từng ký tự nhập vào cả khoảng trắng
         const moduleId = (document.getElementById('moduleSelect').value || '').trim();
         const type = getCurrentType();
 
         const isContentValid = content.length > 0;
-        const isWordsValid = words > 0 && words <= MAX_WORDS;
+        const isCharsValid = chars > 0 && chars <= MAX_CHARS;
         const isModuleValid = moduleId.length > 0;
 
         let isAnswersValid = false;
@@ -656,11 +654,11 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
         }
 
         setCheckStatus('chkContent', isContentValid);
-        setCheckStatus('chkWords', isWordsValid);
+        setCheckStatus('chkChars', isCharsValid);
         setCheckStatus('chkModule', isModuleValid);
         setCheckStatus('chkAnswers', isAnswersValid);
 
-        return isContentValid && isWordsValid && isModuleValid && isAnswersValid;
+        return isContentValid && isCharsValid && isModuleValid && isAnswersValid;
     }
 
     // Khởi tạo trạng thái ban đầu khi tải xong trang
@@ -695,9 +693,9 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                         e.preventDefault();
                         return;
                     }
-                    const words = countWords(document.getElementById('questionContent').value);
-                    if (words > MAX_WORDS) {
-                        alert('Nội dung câu hỏi quá dài (' + words + ' từ). Vui lòng giới hạn tối đa 120 từ.');
+                    const chars = (document.getElementById('questionContent').value || '').length;
+                    if (chars > MAX_CHARS) {
+                        alert('Nội dung câu hỏi quá dài (' + chars + ' ký tự). Vui lòng giới hạn tối đa 120 ký tự (bao gồm cả khoảng trắng).');
                         e.preventDefault();
                         return;
                     }

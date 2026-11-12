@@ -17,7 +17,7 @@ public class QuestionService {
     private static final Logger LOGGER = Logger.getLogger(QuestionService.class.getName());
     private final QuestionDAO dao;
 
-    public static final int MAX_WORDS_QUESTION_CONTENT = 120;
+    public static final int MAX_CHARS_QUESTION_CONTENT = 120;
 
     public QuestionService() {
         this(new QuestionDAO());
@@ -58,9 +58,8 @@ public class QuestionService {
             return false;
         }
 
-        // Limit question words
-        int wordCount = countWords(content);
-        if (wordCount > MAX_WORDS_QUESTION_CONTENT) {
+        // Limit question characters: max 120 chars including whitespaces
+        if (content.length() > MAX_CHARS_QUESTION_CONTENT) {
             return false;
         }
 
@@ -173,14 +172,6 @@ public class QuestionService {
 
     public boolean isUsedInQuiz(UUID id) {
         return dao.isUsedInQuiz(id);
-    }
-
-    public static int countWords(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return 0;
-        }
-        String trimmed = text.trim().replaceAll("\\s+", " ");
-        return trimmed.split(" ").length;
     }
 
     /**

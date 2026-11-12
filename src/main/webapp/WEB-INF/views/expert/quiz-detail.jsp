@@ -76,17 +76,17 @@
                         <label class="block text-xs sm:text-sm font-bold text-text-primary">
                             Tên bài kiểm tra <span class="text-status-danger">*</span>
                         </label>
-                        <span id="quizTitleWordCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-surface text-text-secondary border-border-default">
-                            <span id="quizTitleWordCount">0</span>/120 từ
+                        <span id="quizTitleCharCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-surface text-text-secondary border-border-default">
+                            <span id="quizTitleCharCount">0</span>/120 ký tự
                         </span>
                     </div>
-                    <input name="title" id="quizTitleInput" value="${quiz.title}" required maxlength="255"
+                    <input name="title" id="quizTitleInput" value="${quiz.title}" required maxlength="120"
                            oninput="onQuizTitleChange(); verifyQuiz();"
                            placeholder="ví dụ: Kiểm tra tổng kết Chương 1 - Lập trình Servlet & JSP"
                            class="w-full px-4 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition">
-                    <p id="quizTitleWordAlert" class="hidden text-xs text-status-danger font-semibold mt-1.5 flex items-center gap-1.5">
+                    <p id="quizTitleCharAlert" class="hidden text-xs text-status-danger font-semibold mt-1.5 flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-                        <span>Tên bài kiểm tra không được vượt quá 120 từ.</span>
+                        <span>Tên bài kiểm tra không được vượt quá 120 ký tự (bao gồm cả khoảng trắng).</span>
                     </p>
                 </div>
 
@@ -240,9 +240,17 @@
                     <!-- Công cụ Random nhanh câu hỏi -->
                     <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl p-1 gap-1.5 shadow-xs">
                         <span class="text-xs font-bold text-indigo-900 pl-2 hidden sm:inline">Số câu:</span>
-                        <input type="number" id="quickRandomCount" min="1" max="10" value="10"
-                               oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
-                               class="w-14 text-center py-1 text-xs font-bold bg-white border border-indigo-200 rounded-lg text-indigo-900 outline-none focus:ring-1 focus:ring-indigo-500">
+                        <div class="inline-flex items-center bg-white border border-indigo-200 rounded-lg overflow-hidden shadow-xs">
+                            <button type="button" onclick="stepQuickRandom(-1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Giảm 1 câu">
+                                <i class="fa-solid fa-chevron-down text-[10px]" aria-hidden="true"></i>
+                            </button>
+                            <input type="text" id="quickRandomCount" value="10" readonly
+                                   onkeydown="handleStepperKey(event, 'quickRandomCount')"
+                                   class="w-9 text-center py-0.5 text-xs font-bold bg-white text-indigo-900 outline-none select-none cursor-default border-x border-indigo-100">
+                            <button type="button" onclick="stepQuickRandom(1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Tăng 1 câu">
+                                <i class="fa-solid fa-chevron-up text-[10px]" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <span id="quickRandomMaxHint" class="text-[11px] font-semibold text-indigo-700 pr-1 hidden sm:inline"></span>
                         <button type="button" onclick="quickRandomQuestions()" id="btnQuickRandom"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition shadow-xs"
@@ -386,7 +394,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" id="verifyChecklist">
                 <div class="flex items-center gap-2" id="chkQuizTitle">
                     <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
-                    <span class="text-text-secondary">Tên bài kiểm tra không rỗng và &le; 120 từ</span>
+                    <span class="text-text-secondary">Tên bài kiểm tra không rỗng và &le; 120 ký tự</span>
                 </div>
                 <div class="flex items-center gap-2" id="chkQuizScore">
                     <i class="fa-solid fa-circle-check text-slate-300" aria-hidden="true"></i>
@@ -458,9 +466,17 @@
                     Số lượng câu hỏi muốn chọn <span class="text-status-danger">*</span>
                 </label>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="modalRandomCount" min="1" max="10" value="10"
-                           oninput="validateRandomInput(this)" onchange="validateRandomInput(this)"
-                           class="flex-1 px-4 py-2.5 rounded-xl bg-surface border border-border-default font-bold text-xs sm:text-sm text-text-primary outline-none focus:bg-surface-card focus:ring-2 focus:ring-indigo-500 transition">
+                    <div class="flex items-center rounded-xl bg-surface border border-border-default overflow-hidden shadow-xs">
+                        <button type="button" onclick="stepModalRandom(-1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Giảm 1 câu">
+                            <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
+                        </button>
+                        <input type="text" id="modalRandomCount" value="10" readonly
+                               onkeydown="handleStepperKey(event, 'modalRandomCount')"
+                               class="w-16 text-center py-2.5 font-bold text-xs sm:text-sm text-text-primary outline-none bg-surface select-none cursor-default border-x border-border-default">
+                        <button type="button" onclick="stepModalRandom(1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Tăng 1 câu">
+                            <i class="fa-solid fa-chevron-up text-xs" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span id="modalMaxHint" class="text-xs font-bold text-text-secondary">câu</span>
                 </div>
                 <!-- Chọn nhanh số lượng -->
@@ -522,28 +538,21 @@
      JAVASCRIPT: HỖ TRỢ SINH VIÊN DỄ HỌC & THEO DÕI
      =========================================================================== -->
 <script>
-    const MAX_QUIZ_TITLE_WORDS = 120;
+    const MAX_QUIZ_TITLE_CHARS = 120;
     let activeCourseFilterId = '';
 
-    // 1. Đếm số từ trong chuỗi
-    function countWords(str) {
-        if (!str) return 0;
-        const trimmed = str.trim();
-        return trimmed ? trimmed.split(/\s+/).length : 0;
-    }
-
-    // 2. Lắng nghe thay đổi tên Quiz để cập nhật bộ đếm từ
+    // 1. Lắng nghe thay đổi tên Quiz để cập nhật bộ đếm ký tự (tính cả khoảng trắng)
     function onQuizTitleChange() {
         const titleInput = document.getElementById('quizTitleInput');
-        const title = (titleInput ? titleInput.value : '').trim();
-        const words = countWords(title);
-        const wordCountSpan = document.getElementById('quizTitleWordCount');
-        const badge = document.getElementById('quizTitleWordCountBadge');
-        const alertBox = document.getElementById('quizTitleWordAlert');
+        const rawTitle = titleInput ? titleInput.value : '';
+        const chars = rawTitle.length; // tính từng ký tự nhập vào cả khoảng trắng
+        const charCountSpan = document.getElementById('quizTitleCharCount');
+        const badge = document.getElementById('quizTitleCharCountBadge');
+        const alertBox = document.getElementById('quizTitleCharAlert');
 
-        if (wordCountSpan) wordCountSpan.textContent = words;
+        if (charCountSpan) charCountSpan.textContent = chars;
 
-        if (words > MAX_QUIZ_TITLE_WORDS) {
+        if (chars > MAX_QUIZ_TITLE_CHARS) {
             if (badge) badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full border bg-rose-50 text-status-danger border-rose-300';
             if (alertBox) alertBox.classList.remove('hidden');
         } else {
@@ -759,9 +768,10 @@
     }
 
     function verifyQuiz() {
-        const title = (document.getElementById('quizTitleInput')?.value || '').trim();
-        const titleWords = countWords(title);
-        const isTitleValid = title.length > 0 && title.length <= 255 && titleWords <= MAX_QUIZ_TITLE_WORDS;
+        const rawTitle = document.getElementById('quizTitleInput')?.value || '';
+        const title = rawTitle.trim();
+        const chars = rawTitle.length;
+        const isTitleValid = title.length > 0 && chars <= MAX_QUIZ_TITLE_CHARS;
 
         const moduleId = (document.getElementById('quizModuleSelect')?.value || '').trim();
         const isModuleValid = moduleId.length > 0;
@@ -870,8 +880,64 @@
         }
 
         if (count > 0) {
-            if (quickInput) { quickInput.max = count; if (quickInput.value > count) quickInput.value = count; }
-            if (modalInput) { modalInput.max = count; if (modalInput.value > count) modalInput.value = count; }
+            if (quickInput) {
+                let currentVal = parseInt(quickInput.value, 10);
+                if (isNaN(currentVal) || currentVal < 1) currentVal = Math.min(10, count);
+                quickInput.value = Math.min(currentVal, count);
+            }
+            if (modalInput) {
+                let currentVal = parseInt(modalInput.value, 10);
+                if (isNaN(currentVal) || currentVal < 1) currentVal = Math.min(10, count);
+                modalInput.value = Math.min(currentVal, count);
+            }
+        } else {
+            if (quickInput) quickInput.value = 0;
+            if (modalInput) modalInput.value = 0;
+        }
+    }
+
+    function stepQuickRandom(delta) {
+        const input = document.getElementById('quickRandomCount');
+        if (!input) return;
+        const modSelect = document.getElementById('quizModuleSelect');
+        const maxCount = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
+        if (maxCount <= 0) {
+            input.value = 0;
+            return;
+        }
+        let val = (parseInt(input.value, 10) || 1) + delta;
+        if (val < 1) val = 1;
+        if (val > maxCount) val = maxCount;
+        input.value = val;
+    }
+
+    function stepModalRandom(delta) {
+        const input = document.getElementById('modalRandomCount');
+        if (!input) return;
+        const modSelect = document.getElementById('quizModuleSelect');
+        const maxCount = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
+        if (maxCount <= 0) {
+            input.value = 0;
+            return;
+        }
+        let val = (parseInt(input.value, 10) || 1) + delta;
+        if (val < 1) val = 1;
+        if (val > maxCount) val = maxCount;
+        input.value = val;
+    }
+
+    function handleStepperKey(e, inputId) {
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (inputId === 'quickRandomCount') stepQuickRandom(1);
+            else if (inputId === 'modalRandomCount') stepModalRandom(1);
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (inputId === 'quickRandomCount') stepQuickRandom(-1);
+            else if (inputId === 'modalRandomCount') stepModalRandom(-1);
+        } else {
+            // Không cho phép điền số, chữ, dấu thực hay ký hiệu linh tinh
+            e.preventDefault();
         }
     }
 
@@ -1017,8 +1083,14 @@
 
         document.getElementById('quizForm')?.addEventListener('submit', function(e) {
             if (!verifyQuiz()) {
-                const title = document.getElementById('quizTitleInput')?.value.trim();
+                const rawTitle = document.getElementById('quizTitleInput')?.value || '';
+                const title = rawTitle.trim();
                 if (!title) { alert('Vui lòng nhập tên bài kiểm tra.'); e.preventDefault(); return; }
+                if (rawTitle.length > MAX_QUIZ_TITLE_CHARS) {
+                    alert('Tên bài kiểm tra không được vượt quá 120 ký tự (bao gồm cả khoảng trắng).');
+                    e.preventDefault();
+                    return;
+                }
                 const moduleId = document.getElementById('quizModuleSelect')?.value.trim();
                 if (!moduleId) { alert('Vui lòng chọn Chương / Module áp dụng cho bài kiểm tra.'); e.preventDefault(); return; }
                 const timeLimitVal = document.getElementById('timeLimitInput')?.value.trim() || '';

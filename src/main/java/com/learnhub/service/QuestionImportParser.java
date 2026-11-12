@@ -110,8 +110,8 @@ public final class QuestionImportParser {
         String content = getCell(row, 0);
         if (content.isEmpty()) {
             errors.add("thiếu nội dung câu hỏi.");
-        } else if (QuestionService.countWords(content) > QuestionService.MAX_WORDS_QUESTION_CONTENT) {
-            errors.add("nội dung câu hỏi vượt quá " + QuestionService.MAX_WORDS_QUESTION_CONTENT + " từ.");
+        } else if (content.length() > QuestionService.MAX_CHARS_QUESTION_CONTENT) {
+            errors.add("nội dung câu hỏi vượt quá " + QuestionService.MAX_CHARS_QUESTION_CONTENT + " ký tự (bao gồm cả khoảng trắng).");
         }
         question.setContent(content);
 

@@ -55,7 +55,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                 </div>
 
                 <!-- ========================================================= -->
-                <!-- PHẦN 2: CHỌN KHÓA HỌC & TÌM KIẾM KHÓA HỌC (GIỐNG LESSON LIST) -->
+                <!-- PHẦN 2: CHỌN KHÓA HỌC & TÌM KIẾM KHÓA HỌC -->
                 <!-- ========================================================= -->
                 <c:set var="currentCourseTitle" value="-- Tất cả khóa học --" />
                 <c:forEach items="${courses}" var="assignedCourse">
@@ -297,8 +297,12 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                     <div class="flex flex-col sm:flex-row gap-3 pt-1 items-center">
                         <div class="relative flex-1 w-full">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" aria-hidden="true"></i>
-                            <input name="keyword" value="${keyword}" placeholder="Tìm kiếm nội dung câu hỏi..."
-                                   class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                            <input name="keyword" id="questionKeywordInput" value="${keyword}" placeholder="Tìm kiếm nội dung câu hỏi..."
+                                   maxlength="120" oninput="onKeywordInput(this)"
+                                   class="w-full pl-9 pr-16 py-2.5 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                            <span id="keywordCountBadge" class="absolute right-3.5 top-2.5 text-[11px] font-semibold text-slate-400 pointer-events-none">
+                                <span id="keywordCharCount">${empty keyword ? 0 : fn:length(keyword)}</span>/120
+                            </span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                             <button type="submit" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition">
@@ -730,6 +734,18 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
             closeDeleteModal();
         }
     });
+
+    // Kiểm tra độ dài từ khóa tìm kiếm (tối đa 120 ký tự cả khoảng trắng)
+    function onKeywordInput(input) {
+        const span = document.getElementById('keywordCharCount');
+        if (span) {
+            span.textContent = input.value.length;
+        }
+        if (input.value.length > 120) {
+            input.value = input.value.substring(0, 120);
+            if (span) span.textContent = 120;
+        }
+    }
 </script>
 
 <jsp:include page="/WEB-INF/views/common/management-footer.jsp" />

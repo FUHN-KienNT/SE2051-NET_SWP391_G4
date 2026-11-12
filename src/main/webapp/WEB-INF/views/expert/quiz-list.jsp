@@ -231,7 +231,7 @@
                     <div class="flex flex-col sm:flex-row gap-3 pt-1 items-center">
                         <div class="relative flex-1 w-full">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs pointer-events-none" aria-hidden="true"></i>
-                            <input name="keyword" value="${keyword}" placeholder="Tìm kiếm tên bài kiểm tra..."
+                            <input name="keyword" value="${keyword}" placeholder="Tìm kiếm tên bài kiểm tra..." maxlength="120"
                                    class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-card border border-border-default text-xs sm:text-sm outline-none focus:ring-2 focus:ring-brand-700 transition">
                         </div>
                         <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">

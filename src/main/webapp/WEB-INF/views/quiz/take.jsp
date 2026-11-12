@@ -189,26 +189,6 @@ Dành cho Học viên (Student / Learner):
                                 </c:choose>
                             </div>
 
-                            <!-- Nút chuyển tiếp giữa các câu hỏi dưới chân mỗi thẻ -->
-                            <div class="mt-5 pt-4 border-t border-border-default/60 flex items-center justify-between text-xs text-text-secondary">
-                                <c:choose>
-                                    <c:when test="${status.count > 1}">
-                                        <button type="button" onclick="scrollToQuestion(${status.count - 1})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-100 font-medium transition">
-                                            <i class="fa-solid fa-chevron-left text-[10px]" aria-hidden="true"></i> Câu trước
-                                        </button>
-                                    </c:when>
-                                    <c:otherwise><div></div></c:otherwise>
-                                </c:choose>
-
-                                <c:choose>
-                                    <c:when test="${status.count < questions.size()}">
-                                        <button type="button" onclick="scrollToQuestion(${status.count + 1})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-default hover:bg-slate-100 font-medium text-text-primary transition">
-                                            Câu tiếp <i class="fa-solid fa-chevron-right text-[10px]" aria-hidden="true"></i>
-                                        </button>
-                                    </c:when>
-                                    <c:otherwise><div></div></c:otherwise>
-                                </c:choose>
-                            </div>
                         </article>
                     </c:forEach>
                 </div>

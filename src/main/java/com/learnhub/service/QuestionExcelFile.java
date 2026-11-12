@@ -112,7 +112,7 @@ public final class QuestionExcelFile {
                 "4. Cột \"Loại câu hỏi\": single_choice, multiple_choice hoặc fill_in_blank (để trống hệ thống tự nhận diện).",
                 "5. Câu hỏi trắc nghiệm: điền Đáp án A-D, cột \"Đáp án đúng\" điền chữ cái A, B, C, D (ví dụ: A hoặc A,C).",
                 "6. Câu hỏi điền từ: để trống Đáp án A-D, cột \"Đáp án đúng\" nhập các từ khóa đúng cách nhau bằng dấu phẩy.",
-                "7. Nội dung câu hỏi tối đa " + QuestionService.MAX_WORDS_QUESTION_CONTENT + " từ.",
+                "7. Nội dung câu hỏi tối đa " + QuestionService.MAX_CHARS_QUESTION_CONTENT + " ký tự (bao gồm cả khoảng trắng).",
                 "8. Toàn bộ file sẽ được kiểm tra: nếu có bất kỳ lỗi nào hệ thống sẽ báo rõ số dòng để bạn sửa lại."
             };
             for (int i = 0; i < guideLines.length; i++) {

@@ -228,6 +228,9 @@ public class QuizManagementServlet extends HttpServlet {
                     req, session, "status", SESS_QUIZ_STATUS, isFilterSubmit);
             keyword = ControllerSupport.resolveStringFilter(
                     req, session, "keyword", SESS_QUIZ_KEYWORD, isFilterSubmit);
+            if (keyword != null && keyword.length() > 120) {
+                keyword = keyword.substring(0, 120);
+            }
         }
 
         if (moduleId != null) {
@@ -375,12 +378,12 @@ public class QuizManagementServlet extends HttpServlet {
 
         questionIds.removeAll(rejectedIds);
 
-        int titleWords = (title == null) ? 0 : com.learnhub.service.QuestionService.countWords(title);
-        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề (tối đa 120 từ), thời gian (1-600 phút), điểm đạt (0-10) và các câu hỏi được chọn.";
+        int titleChars = (title == null) ? 0 : title.length();
+        String errorMessage = "Không thể lưu Quiz. Vui lòng kiểm tra Module, tiêu đề (tối đa 120 ký tự), thời gian (1-600 phút), điểm đạt (0-10) và các câu hỏi được chọn.";
         if (title == null || title.trim().isEmpty()) {
             errorMessage = "Tên bài kiểm tra không được để trống.";
-        } else if (titleWords > 120) {
-            errorMessage = "Tên bài kiểm tra không được vượt quá 120 từ (hiện tại: " + titleWords + " từ).";
+        } else if (titleChars > 120) {
+            errorMessage = "Tên bài kiểm tra không được vượt quá 120 ký tự (bao gồm cả khoảng trắng, hiện tại: " + titleChars + " ký tự).";
         } else if (timeLimit == null || timeLimit < 1 || timeLimit > 600) {
             errorMessage = "Thời gian làm bài phải từ 1 đến 600 phút (không để trống).";
         }
@@ -390,7 +393,7 @@ public class QuizManagementServlet extends HttpServlet {
                     "Không thể thêm câu hỏi đã ẩn vào Quiz. Các câu hỏi đó đã được bỏ chọn.";
         }
 
-        boolean ok = rejectedIds.isEmpty() && (titleWords <= 120) && service.save(user.getId(), id, moduleId, title,
+        boolean ok = rejectedIds.isEmpty() && (titleChars <= 120) && service.save(user.getId(), id, moduleId, title,
                 timeLimit, passScore, status, imageUrl, questionIds);
 
         if (ok) {

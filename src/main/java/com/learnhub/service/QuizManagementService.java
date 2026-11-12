@@ -121,10 +121,10 @@ public class QuizManagementService {
         title = title.trim();
 
         // -----------------------------------------------------
-        // Title word limit: max 120 words
+        // Title character limit: max 120 characters
         // -----------------------------------------------------
 
-        if (QuestionService.countWords(title) > 120) {
+        if (title.length() > 120) {
             return false;
         }
 

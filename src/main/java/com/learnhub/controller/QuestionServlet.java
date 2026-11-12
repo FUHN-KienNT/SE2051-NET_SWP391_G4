@@ -202,21 +202,22 @@ public class QuestionServlet extends HttpServlet {
         String resetParam = req.getParameter("reset");
         boolean isReset = "true".equalsIgnoreCase(resetParam) || "1".equals(resetParam);
 
+        String type = "";
+        String status = "";
+        String keyword = "";
+
         if (isReset) {
+            // Xóa sạch bộ lọc trong session
             session.removeAttribute(SESS_QUESTION_COURSE_ID);
             session.removeAttribute(SESS_QUESTION_MODULE_ID);
             session.removeAttribute(SESS_QUESTION_TYPE);
             session.removeAttribute(SESS_QUESTION_STATUS);
             session.removeAttribute(SESS_QUESTION_KEYWORD);
-        }
 
-        courseId = null;
-        moduleId = null;
-        String type = "";
-        String status = "";
-        String keyword = "";
-
-        if (!isReset) {
+            courseId = null;
+            moduleId = null;
+        } else {
+            // Đọc filter từ request hoặc fallback về session
             boolean isFilterSubmit = req.getParameter("filter") != null;
             boolean isCourseFilter = req.getParameter("courseFilter") != null;
 
@@ -247,6 +248,9 @@ public class QuestionServlet extends HttpServlet {
                     req, session, "status", SESS_QUESTION_STATUS, isFilterSubmit);
             keyword = ControllerSupport.resolveStringFilter(
                     req, session, "keyword", SESS_QUESTION_KEYWORD, isFilterSubmit);
+            if (keyword != null && keyword.length() > 120) {
+                keyword = keyword.substring(0, 120);
+            }
         }
 
         if (moduleId != null) {
@@ -406,12 +410,12 @@ public class QuestionServlet extends HttpServlet {
             status = "public";
         }
 
-        // Check word limit on title / question content
-        int wordCount = QuestionService.countWords(content);
-        if (wordCount > QuestionService.MAX_WORDS_QUESTION_CONTENT) {
+        // Check character limit on question content (max 120 chars including whitespaces)
+        int charCount = content == null ? 0 : content.length();
+        if (charCount > QuestionService.MAX_CHARS_QUESTION_CONTENT) {
             forwardWithError(req, resp, questionId, moduleId, content, type, status,
-                    "Nội dung câu hỏi quá dài (" + wordCount + " từ). Giới hạn tối đa là "
-                            + QuestionService.MAX_WORDS_QUESTION_CONTENT + " từ.");
+                    "Nội dung câu hỏi quá dài (" + charCount + " ký tự). Giới hạn tối đa là "
+                            + QuestionService.MAX_CHARS_QUESTION_CONTENT + " ký tự (bao gồm cả khoảng trắng).");
             return;
         }
 
@@ -536,7 +540,6 @@ public class QuestionServlet extends HttpServlet {
             String errorMsg) throws ServletException, IOException {
 
         User user = ControllerSupport.currentUser(req);
-        UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
 
         Question question = new Question(questionId, content, type);
         question.setModuleId(moduleId);

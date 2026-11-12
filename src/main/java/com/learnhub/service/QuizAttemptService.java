@@ -117,17 +117,6 @@ public class QuizAttemptService {
         return dto;
     }
 
-    public int autoSubmitExpired() {
-        List<QuizSubmission> expired = quizAttemptDAO.findExpiredAttempts();
-        int count = 0;
-        for (QuizSubmission a : expired) {
-            submitQuizAttempt(a.getId(), Collections.emptyMap());
-            count++;
-        }
-        LOGGER.info("Auto-submitted " + count + " expired quiz attempts.");
-        return count;
-    }
-
     public QuizSubmission getAttempt(UUID attemptId) {
         return quizAttemptDAO.findById(attemptId);
     }
@@ -215,16 +204,5 @@ public class QuizAttemptService {
 
         Set<UUID> userSelected = new HashSet<>(selectedOptionIds);
         return correctOptionIds.equals(userSelected);
-    }
-
-    public BigDecimal getBestAttemptScore(UUID userId, UUID quizId) {
-        List<QuizSubmission> attempts = quizAttemptDAO.findAttemptsByStudent(userId, quizId);
-        BigDecimal maxScore = BigDecimal.ZERO;
-        for (QuizSubmission a : attempts) {
-            if (a.getScore() != null && a.getScore().compareTo(maxScore) > 0) {
-                maxScore = a.getScore();
-            }
-        }
-        return maxScore;
     }
 }

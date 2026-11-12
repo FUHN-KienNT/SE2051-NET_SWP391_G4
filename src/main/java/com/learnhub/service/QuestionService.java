@@ -27,10 +27,6 @@ public class QuestionService {
         this.dao = dao;
     }
 
-    public List<Question> search(String keyword, String type) {
-        return search(keyword, type, null, null, null);
-    }
-
     public List<Question> search(
             String keyword,
             String type,
@@ -43,16 +39,6 @@ public class QuestionService {
 
     public Question get(UUID id) {
         return dao.findById(id);
-    }
-
-    public boolean save(
-            UUID id,
-            String content,
-            String type,
-            String[] optionIds,
-            String[] optionTexts,
-            String[] correctIndexes) {
-        return save(id, null, content, type, "public", optionIds, optionTexts, correctIndexes);
     }
 
     /**

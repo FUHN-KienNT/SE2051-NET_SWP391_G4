@@ -1,6 +1,5 @@
 package com.learnhub.controller;
 
-import com.learnhub.dao.AnswerDAO;
 import com.learnhub.dao.ModuleDAO;
 import com.learnhub.dao.QuestionDAO;
 import com.learnhub.dao.QuizDAO;
@@ -39,7 +38,6 @@ public class QuizServlet extends HttpServlet {
     private final QuizAttemptService quizService = new QuizAttemptService();
     private final QuizDAO quizDAO = new QuizDAO();
     private final QuestionDAO questionDAO = new QuestionDAO();
-    private final AnswerDAO answerDAO = new AnswerDAO();
     private final ModuleDAO moduleDAO = new ModuleDAO();
     private final CourseService courseService = new CourseService();
     private final LearningProcessService learningService = new LearningProcessService();
@@ -232,14 +230,9 @@ public class QuizServlet extends HttpServlet {
         }
         // Bấm nút "Bắt đầu làm bài" ở màn hình giới thiệu: tạo lượt làm bài rồi redirect sang trang làm bài
         if ("/quiz/take".equals(req.getServletPath())) {
-            User user = ControllerSupport.currentUser(req);
-            if (user == null) {
-                resp.sendRedirect(req.getContextPath() + "/auth/login?error=must_login");
-                return;
-            }
             try {
                 UUID quizId = UUID.fromString(req.getParameter("quizId"));
-                QuizSubmission attempt = quizService.startQuizAttempt(user.getId(), quizId);
+                QuizSubmission attempt = quizService.startQuizAttempt(student.getId(), quizId);
                 resp.sendRedirect(req.getContextPath() + "/quiz/take?attemptId=" + attempt.getId());
                 return;
             } catch (Exception ignored) {

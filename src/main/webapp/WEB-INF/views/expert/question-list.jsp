@@ -58,7 +58,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                 <!-- PHẦN 2: CHỌN KHÓA HỌC & TÌM KIẾM KHÓA HỌC (GIỐNG LESSON LIST) -->
                 <!-- ========================================================= -->
                 <c:set var="currentCourseTitle" value="-- Tất cả khóa học --" />
-                <c:forEach items="${not empty courses ? courses : assignedCourses}" var="assignedCourse">
+                <c:forEach items="${courses}" var="assignedCourse">
                     <c:if test="${assignedCourse.id eq courseId}">
                         <c:set var="currentCourseTitle" value="${assignedCourse.title}" />
                     </c:if>
@@ -88,7 +88,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                                         </span>
                                     </a>
                                 </li>
-                                <c:forEach items="${not empty courses ? courses : assignedCourses}" var="assignedCourse">
+                                <c:forEach items="${courses}" var="assignedCourse">
                                     <c:url var="assignedCourseUrl" value="/expert/questions">
                                         <c:param name="courseId" value="${assignedCourse.id}" />
                                     </c:url>

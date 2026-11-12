@@ -38,33 +38,6 @@ public class QuizManagementService {
     public List<Quiz> findByExpert(
             UUID expertId,
             String keyword,
-            UUID moduleId) {
-
-        return quizDAO.findByExpertId(
-                expertId,
-                keyword,
-                moduleId
-        );
-    }
-
-    public List<Quiz> findByExpert(
-            UUID expertId,
-            String keyword,
-            UUID moduleId,
-            UUID courseId) {
-
-        return quizDAO.findByExpertId(
-                expertId,
-                keyword,
-                moduleId,
-                courseId,
-                null
-        );
-    }
-
-    public List<Quiz> findByExpert(
-            UUID expertId,
-            String keyword,
             UUID moduleId,
             UUID courseId,
             String status) {

@@ -52,7 +52,7 @@
 
                 <!-- 3. THANH CHỌN KHÓA HỌC & TÌM KIẾM KHÓA HỌC (GIỐNG LESSON LIST, HÒA HỢP VỚI QUIZ LIST) -->
                 <c:set var="currentCourseTitle" value="-- Tất cả khóa học --" />
-                <c:forEach items="${not empty courses ? courses : assignedCourses}" var="assignedCourse">
+                <c:forEach items="${courses}" var="assignedCourse">
                     <c:if test="${assignedCourse.id eq courseId}">
                         <c:set var="currentCourseTitle" value="${assignedCourse.title}" />
                     </c:if>
@@ -82,7 +82,7 @@
                                         </span>
                                     </a>
                                 </li>
-                                <c:forEach items="${not empty courses ? courses : assignedCourses}" var="assignedCourse">
+                                <c:forEach items="${courses}" var="assignedCourse">
                                     <c:url var="assignedCourseUrl" value="/expert/quizzes">
                                         <c:param name="courseId" value="${assignedCourse.id}" />
                                     </c:url>
@@ -347,7 +347,7 @@
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
-                                                <c:set var="isQuizUsed" value="${q.used or q.usedCount > 0 or (not empty usedQuizIds and usedQuizIds.contains(q.id))}" />
+                                                <c:set var="isQuizUsed" value="${q.used or q.usedCount > 0}" />
                                                 <div class="mt-1">
                                                     <c:choose>
                                                         <c:when test="${isQuizUsed}">

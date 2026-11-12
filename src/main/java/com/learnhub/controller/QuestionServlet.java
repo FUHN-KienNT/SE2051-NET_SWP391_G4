@@ -7,7 +7,6 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.QuestionOption;
 import com.learnhub.entity.User;
-import com.learnhub.service.CourseService;
 import com.learnhub.service.QuestionExcelFile;
 import com.learnhub.service.QuestionImportResult;
 import com.learnhub.service.QuestionService;
@@ -21,7 +20,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -48,7 +46,6 @@ public class QuestionServlet extends HttpServlet {
             new QuestionService();
     private final CourseDAO courseDAO =
             new CourseDAO();
-    private final CourseService courseService = new CourseService();
     private final ModuleDAO moduleDAO =
             new ModuleDAO();
 
@@ -86,39 +83,9 @@ public class QuestionServlet extends HttpServlet {
 
         List<Course> courses = courseDAO.findByExpertId(user.getId());
         req.setAttribute("courses", courses);
-
-        List<Module> modules;
-        if (courseId != null) {
-            List<Module> courseModules = moduleDAO.findByCourseId(courseId);
-            if (courseModules.isEmpty()) {
-                req.setAttribute("courseHasNoModules", true);
-                modules = moduleDAO.findByExpertId(user.getId());
-            } else {
-                req.setAttribute("courseHasNoModules", false);
-                modules = courseModules;
-            }
-        } else {
-            req.setAttribute("courseHasNoModules", false);
-            modules = moduleDAO.findByExpertId(user.getId());
-        }
-        req.setAttribute("modules", modules);
         req.setAttribute("courseId", courseId);
         req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
-
-        // Match Lesson List and Quiz List: show searchable assigned courses in the sidebar.
-        int coursePage = 1;
-        try {
-            coursePage = Integer.parseInt(req.getParameter("coursePage"));
-        } catch (NumberFormatException ignored) {
-        }
-        var navigation = courseService.getAssignedCourseNavigation(
-                user.getId(), req.getParameter("courseSearch"), coursePage);
-        req.setAttribute("assignedCourses", navigation.courses());
-        req.setAttribute("courseSearch", navigation.search());
-        req.setAttribute("coursePage", navigation.page());
-        req.setAttribute("courseTotalPages", navigation.totalPages());
-        req.setAttribute("courseTotal", navigation.totalCourses());
 
         /*
          * QUESTION DETAIL
@@ -214,6 +181,22 @@ public class QuestionServlet extends HttpServlet {
         /*
          * QUESTION LIST
          */
+        List<Module> modules;
+        if (courseId != null) {
+            List<Module> courseModules = moduleDAO.findByCourseId(courseId);
+            if (courseModules.isEmpty()) {
+                req.setAttribute("courseHasNoModules", true);
+                modules = moduleDAO.findByExpertId(user.getId());
+            } else {
+                req.setAttribute("courseHasNoModules", false);
+                modules = courseModules;
+            }
+        } else {
+            req.setAttribute("courseHasNoModules", false);
+            modules = moduleDAO.findByExpertId(user.getId());
+        }
+        req.setAttribute("modules", modules);
+
         String keyword = req.getParameter("keyword");
         String type = req.getParameter("type");
         String status = req.getParameter("status");

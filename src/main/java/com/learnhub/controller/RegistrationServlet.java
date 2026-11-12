@@ -49,7 +49,6 @@ public class RegistrationServlet extends HttpServlet {
 
         String action = req.getParameter("action");
         String idParam = req.getParameter("id");
-        req.setAttribute("registrationPath", req.getServletPath());
 
         if ("detail".equalsIgnoreCase(action) || (idParam != null && !idParam.trim().isEmpty() && action == null)) {
             handleDetail(req, resp, idParam);

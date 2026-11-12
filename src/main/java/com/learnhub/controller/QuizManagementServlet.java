@@ -8,7 +8,6 @@ import com.learnhub.entity.Module;
 import com.learnhub.entity.Question;
 import com.learnhub.entity.Quiz;
 import com.learnhub.entity.User;
-import com.learnhub.service.CourseService;
 import com.learnhub.service.QuizManagementService;
 
 import jakarta.servlet.ServletException;
@@ -37,8 +36,6 @@ import java.util.HashSet;
 )
 public class QuizManagementServlet extends HttpServlet {
     private final QuizManagementService service = new QuizManagementService();
-    private final CourseService courseService = new CourseService();
-
     private final ModuleDAO moduleDAO = new ModuleDAO();
 
     private final QuestionDAO questionDAO = new QuestionDAO();
@@ -186,19 +183,6 @@ public class QuizManagementServlet extends HttpServlet {
 
         loadCourseOptions(req, user, courseId);
 
-        int coursePage = 1;
-        try {
-            coursePage = Integer.parseInt(req.getParameter("coursePage"));
-        } catch (NumberFormatException ignored) {
-        }
-        var navigation = courseService.getAssignedCourseNavigation(
-                user.getId(), req.getParameter("courseSearch"), coursePage);
-        req.setAttribute("assignedCourses", navigation.courses());
-        req.setAttribute("courseSearch", navigation.search());
-        req.setAttribute("coursePage", navigation.page());
-        req.setAttribute("courseTotalPages", navigation.totalPages());
-        req.setAttribute("courseTotal", navigation.totalCourses());
-
         req.setAttribute("keyword", keyword == null ? "" : keyword);
 
         req.setAttribute("moduleId", moduleId);
@@ -237,15 +221,12 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         List<Quiz> quizzes = service.findByExpert(user.getId(), keyword, moduleId, courseId, status);
-        Set<UUID> usedQuizIds = new HashSet<>();
         for (Quiz q : quizzes) {
             if (service.isUsed(q.getId())) {
                 q.setUsedCount(1);
-                usedQuizIds.add(q.getId());
             }
         }
         req.setAttribute("quizzes", quizzes);
-        req.setAttribute("usedQuizIds", usedQuizIds);
 
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-list.jsp").forward(req, resp);
     }

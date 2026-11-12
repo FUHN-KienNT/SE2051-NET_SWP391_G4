@@ -5,7 +5,7 @@
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-<c:set var="regBasePath" value="${not empty basePath ? basePath : (not empty registrationPath ? registrationPath : '/manager/registrations')}" />
+<c:set var="regBasePath" value="${not empty basePath ? basePath : '/manager/registrations'}" />
 
 <%-- 
 =============================================================================

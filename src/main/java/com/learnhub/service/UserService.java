@@ -200,7 +200,10 @@ public class UserService {
         }
         if (dto.getFullName() != null) {
             String norm = FullNameUtil.normalizeOrNull(dto.getFullName());
-            user.setFullName(norm != null ? norm : dto.getFullName().trim());
+            if (norm == null) {
+                return false;
+            }
+            user.setFullName(norm);
         }
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             user.setEmail(dto.getEmail().trim());

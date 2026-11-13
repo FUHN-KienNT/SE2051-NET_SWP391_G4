@@ -326,6 +326,24 @@ class UserServiceAccountTest {
     }
 
     @Test
+    void updateUserProfileRejectsInvalidFullName() {
+        AccountDao dao = new AccountDao();
+        MockDashboardDao dashboardDao = new MockDashboardDao();
+        MockNotificationDao notificationDao = new MockNotificationDao();
+        UserService service = new UserService(dao, new SettingDAO(), dashboardDao, notificationDao);
+        UUID userId = dao.user.getId();
+        String originalName = dao.user.getFullName();
+
+        UserDTO dto = new UserDTO();
+        dto.setId(userId);
+        dto.setFullName("Lê Đình Nguyên1232");
+
+        boolean success = service.updateUserProfile(dto, "admin@learnhub.com", null);
+        assertFalse(success);
+        assertEquals(originalName, dao.user.getFullName());
+    }
+
+    @Test
     void authenticateActiveUserSuccess() {
         AccountDao dao = new AccountDao();
         UserService service = new UserService(dao, new SettingDAO());

@@ -243,7 +243,7 @@
                                 <label for="fullName" class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Full Name <span class="text-rose-500">*</span>
                                 </label>
-                                <input type="text" id="fullName" name="fullName" required
+                                <input type="text" id="fullName" name="fullName" required maxlength="255"
                                        value="<c:out value='${user.fullName}'/>"
                                        placeholder="Nhập họ và tên..."
                                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition shadow-sm">
@@ -408,6 +408,17 @@
     }
 
     document.getElementById('userProfileForm')?.addEventListener('submit', function(e) {
+        const fullNameInput = document.getElementById('fullName');
+        if (fullNameInput && fullNameInput.value) {
+            const val = fullNameInput.value.trim();
+            if (/\d/.test(val)) {
+                e.preventDefault();
+                alert('Họ và tên không hợp lệ (không được chứa chữ số).');
+                fullNameInput.focus();
+                return;
+            }
+        }
+
         const statusSelect = document.getElementById('status');
         const noteInput = document.getElementById('statusNote');
         if (statusSelect && statusSelect.value === 'inactive') {

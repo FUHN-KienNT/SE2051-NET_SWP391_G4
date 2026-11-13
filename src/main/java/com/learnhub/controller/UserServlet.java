@@ -3,6 +3,7 @@ package com.learnhub.controller;
 import com.learnhub.dto.UserDTO;
 import com.learnhub.entity.Setting;
 import com.learnhub.service.UserService;
+import com.learnhub.util.FullNameUtil;
 import com.learnhub.util.PaginationHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -273,6 +274,13 @@ public class UserServlet extends HttpServlet {
                         return;
                     }
 
+                    String normalizedFullName = FullNameUtil.normalizeOrNull(fullName);
+                    if (normalizedFullName == null) {
+                        req.getSession().setAttribute("flashError", "Họ và tên không hợp lệ.");
+                        resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
+                        return;
+                    }
+
                     if (phone != null && !phone.trim().isEmpty()) {
                         String p = phone.trim();
                         if (!p.matches("^0[0-9]{9}$")) {
@@ -286,7 +294,7 @@ public class UserServlet extends HttpServlet {
                     UUID roleId = roleIdStr != null && !roleIdStr.trim().isEmpty() ? UUID.fromString(roleIdStr.trim()) : null;
                     UserDTO dto = new UserDTO();
                     dto.setId(userId);
-                    dto.setFullName(fullName.trim());
+                    dto.setFullName(normalizedFullName);
                     dto.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
                     dto.setRoleId(roleId);
                     dto.setStatus(status != null ? status.trim() : null);

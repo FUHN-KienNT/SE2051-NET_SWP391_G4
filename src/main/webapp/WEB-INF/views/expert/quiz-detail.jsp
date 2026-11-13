@@ -175,42 +175,30 @@
                     </label>
                     <div class="flex flex-col sm:flex-row items-start gap-4">
                         <div class="w-20 h-20 rounded-2xl border border-border-default bg-surface flex items-center justify-center overflow-hidden shrink-0 shadow-xs relative">
-                            <img id="imagePreview" src="${empty quiz.imageUrl ? 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80' : quiz.imageUrl}"
-                                  alt="Preview" referrerpolicy="no-referrer" class="w-full h-full object-cover"
-                                  onerror="this.src='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80'">
+                            <img id="imagePreview" src="<c:out value='${quiz.imageUrl}'/>"
+                                 alt="Preview" referrerpolicy="no-referrer"
+                                 class="w-full h-full object-cover <c:if test='${empty quiz.imageUrl}'>hidden</c:if>"
+                                 onload="handleImageSuccess()" onerror="handleImageError()">
+                            <div id="imagePlaceholder" class="flex flex-col items-center justify-center text-slate-400 <c:if test='${not empty quiz.imageUrl}'>hidden</c:if>">
+                                <i class="fa-regular fa-image text-2xl" aria-hidden="true"></i>
+                            </div>
                         </div>
                         <div class="flex-1 w-full space-y-2">
                             <div class="relative">
-                                <input name="imageUrl" id="imageUrlInput" value="${quiz.imageUrl}"
-                                       placeholder="Dán link ảnh trực tiếp (https://...) hoặc link Google Images..."
+                                <input name="imageUrl" id="imageUrlInput" value="<c:out value='${quiz.imageUrl}'/>"
+                                       placeholder="Dán địa chỉ hình ảnh trực tiếp (Copy image address)..."
                                        oninput="onImageUrlInput(this.value)"
                                        class="w-full pl-4 pr-10 py-3 rounded-xl bg-surface border border-border-default text-xs sm:text-sm outline-none focus:bg-surface-card focus:ring-2 focus:ring-brand-700 transition">
                                 <span class="absolute right-3.5 top-3.5 flex items-center">
                                     <i id="imageStatusIcon" class="fa-solid fa-image text-slate-400 text-sm" aria-hidden="true"></i>
                                 </span>
                             </div>
-                            <span id="imageStatusText" class="text-text-secondary text-[11px] block">Chưa chọn ảnh (dùng ảnh mặc định)</span>
-                            <div id="googleExtractedNotice" class="hidden text-[11px] font-semibold text-brand-700 bg-brand-50 border border-brand-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-                                <span>Đã tự động trích xuất link ảnh gốc từ đường dẫn Google Images!</span>
-                            </div>
-
-                            <!-- Gợi ý ảnh mẫu nhanh -->
-                            <div class="pt-1 flex flex-wrap items-center gap-1.5">
-                                <span class="text-[11px] font-bold text-text-secondary mr-1">Gợi ý ảnh mẫu:</span>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    💻 Công nghệ
-                                </button>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    📐 Toán học
-                                </button>
-                                <button type="button" onclick="selectPresetImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&auto=format&fit=crop&q=80')"
-                                        class="px-2.5 py-1 rounded-lg bg-surface hover:bg-brand-50 hover:text-brand-700 text-text-secondary text-xs font-semibold border border-border-default transition">
-                                    📚 Tổng quan
-                                </button>
-                            </div>
+                            <span id="imageStatusText" class="text-text-secondary text-[11px] block">
+                                <c:choose>
+                                    <c:when test="${not empty quiz.imageUrl}">Đang tải xem trước ảnh...</c:when>
+                                    <c:otherwise>Chưa có ảnh đại diện</c:otherwise>
+                                </c:choose>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -796,55 +784,84 @@
         return isTitleValid && isModuleValid && isQuestionsValid && isPassScoreValid && isTimeLimitValid;
     }
 
-    // 7. Xử lý ảnh đại diện, tự động tách link ảnh gốc từ Google Images & Preset
-    function extractCleanImageUrl(rawUrl) {
-        if (!rawUrl) return { url: '', extracted: false };
-        const trimmed = rawUrl.trim();
-        try {
-            if (trimmed.includes('google.') && (trimmed.includes('imgurl=') || trimmed.includes('/imgres'))) {
-                const parsed = new URL(trimmed);
-                const imgurl = parsed.searchParams.get('imgurl');
-                if (imgurl) return { url: decodeURIComponent(imgurl), extracted: true };
-            }
-        } catch (e) {
-            const match = trimmed.match(/[?&]imgurl=([^&]+)/);
-            if (match && match[1]) {
-                try { return { url: decodeURIComponent(match[1]), extracted: true }; } catch (err) {}
-            }
-        }
-        return { url: trimmed, extracted: false };
-    }
-
-    function selectPresetImage(url) {
-        const input = document.getElementById('imageUrlInput');
-        if (input) {
-            input.value = url;
-            onImageUrlInput(url);
-        }
-    }
-
+    // 7. Xử lý ảnh đại diện Quiz (nhập đúng image address mới hiển thị, không dùng ảnh mặc định)
     function onImageUrlInput(val) {
         const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePlaceholder');
         const statusText = document.getElementById('imageStatusText');
-        const extractedNotice = document.getElementById('googleExtractedNotice');
-        const input = document.getElementById('imageUrlInput');
+        const statusIcon = document.getElementById('imageStatusIcon');
 
-        const result = extractCleanImageUrl(val);
-        if (result.extracted && input) {
-            input.value = result.url;
-            if (extractedNotice) extractedNotice.classList.remove('hidden');
-        } else if (extractedNotice) {
-            extractedNotice.classList.add('hidden');
-        }
+        const trimmed = (val || '').trim();
 
-        const trimmed = result.url;
         if (!trimmed) {
-            if (preview) preview.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=100&auto=format&fit=crop&q=80';
-            if (statusText) statusText.textContent = 'Chưa chọn ảnh (dùng ảnh mặc định)';
+            if (preview) {
+                preview.src = '';
+                preview.classList.add('hidden');
+            }
+            if (placeholder) placeholder.classList.remove('hidden');
+            if (statusText) {
+                statusText.textContent = 'Chưa có ảnh đại diện';
+                statusText.className = 'text-text-secondary text-[11px] block';
+            }
+            if (statusIcon) statusIcon.className = 'fa-solid fa-image text-slate-400 text-sm';
             return;
         }
-        if (preview) preview.src = trimmed;
-        if (statusText) statusText.textContent = 'Đã áp dụng đường dẫn ảnh.';
+
+        if (statusText) {
+            statusText.textContent = 'Đang tải xem trước ảnh...';
+            statusText.className = 'text-text-secondary text-[11px] block';
+        }
+        if (statusIcon) statusIcon.className = 'fa-solid fa-spinner fa-spin text-slate-400 text-sm';
+
+        if (preview) {
+            preview.src = trimmed;
+        }
+    }
+
+    function handleImageSuccess() {
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePlaceholder');
+        const statusText = document.getElementById('imageStatusText');
+        const statusIcon = document.getElementById('imageStatusIcon');
+
+        if (preview && preview.getAttribute('src')) {
+            preview.classList.remove('hidden');
+            if (placeholder) placeholder.classList.add('hidden');
+            if (statusText) {
+                statusText.textContent = 'Đã tải ảnh thành công';
+                statusText.className = 'text-status-success text-[11px] block font-medium';
+            }
+            if (statusIcon) statusIcon.className = 'fa-solid fa-circle-check text-status-success text-sm';
+        }
+    }
+
+    function handleImageError() {
+        const preview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('imagePlaceholder');
+        const statusText = document.getElementById('imageStatusText');
+        const statusIcon = document.getElementById('imageStatusIcon');
+        const input = document.getElementById('imageUrlInput');
+
+        if (preview) {
+            preview.classList.add('hidden');
+        }
+        if (placeholder) placeholder.classList.remove('hidden');
+
+        const hasValue = input && input.value.trim().length > 0;
+        if (statusText) {
+            if (hasValue) {
+                statusText.textContent = 'Không tải được ảnh (địa chỉ hình ảnh không đúng hoặc bị chặn)';
+                statusText.className = 'text-status-danger text-[11px] block font-medium';
+            } else {
+                statusText.textContent = 'Chưa có ảnh đại diện';
+                statusText.className = 'text-text-secondary text-[11px] block';
+            }
+        }
+        if (statusIcon) {
+            statusIcon.className = hasValue
+                ? 'fa-solid fa-circle-xmark text-status-danger text-sm'
+                : 'fa-solid fa-image text-slate-400 text-sm';
+        }
     }
 
     // 8. Tự động chọn ngẫu nhiên câu hỏi (Fisher-Yates Shuffle)

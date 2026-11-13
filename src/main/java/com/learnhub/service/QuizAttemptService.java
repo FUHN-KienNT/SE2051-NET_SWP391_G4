@@ -55,10 +55,6 @@ public class QuizAttemptService {
         return attempt;
     }
 
-    public QuizAttemptDTO submitQuizAttempt(UUID submissionId, Map<UUID, List<UUID>> selectedAnswers) {
-        return submitQuizAttempt(submissionId, selectedAnswers, Collections.emptyMap());
-    }
-
     public QuizAttemptDTO submitQuizAttempt(
             UUID submissionId,
             Map<UUID, List<UUID>> selectedAnswers,
@@ -144,16 +140,10 @@ public class QuizAttemptService {
                     String normUserText = userText.trim().toLowerCase();
                     for (com.learnhub.entity.QuestionOption opt : options) {
                         String optText = opt.getOptionText() != null ? opt.getOptionText().trim().toLowerCase() : "";
-                        if (!optText.isEmpty() && (normUserText.equals(optText) || normUserText.contains(optText))) {
+                        if (!optText.isEmpty() && (normUserText.equals(optText))) {
                             isCorrect = true;
                             break;
                         }
-                    }
-                }
-                if (!isCorrect && selectedAnswers != null && selectedAnswers.containsKey(q.getId())) {
-                    List<UUID> selOptIds = selectedAnswers.get(q.getId());
-                    if (selOptIds != null && !selOptIds.isEmpty()) {
-                        isCorrect = true;
                     }
                 }
                 if (isCorrect) {
@@ -167,10 +157,6 @@ public class QuizAttemptService {
             }
         }
         return correctCount;
-    }
-
-    public BigDecimal calculateScore(UUID quizId, Map<UUID, List<UUID>> selectedAnswers) {
-        return calculateScore(quizId, selectedAnswers, Collections.emptyMap());
     }
 
     public BigDecimal calculateScore(

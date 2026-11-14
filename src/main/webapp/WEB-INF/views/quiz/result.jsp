@@ -121,9 +121,13 @@ Dành cho Học viên (Student / Learner):
                     </c:if>
 
                     <!-- Nút Làm lại bài thi -->
-                    <a href="${pageContext.request.contextPath}/quiz?quizId=${quiz.id}" class="w-full sm:w-auto px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm Lại Bài Thi
-                    </a>
+                    <form action="${pageContext.request.contextPath}/quiz/take" method="post" class="w-full sm:w-auto">
+                        <input type="hidden" name="quizId" value="${quiz.id}">
+                        <button type="submit"
+                                class="w-full px-6 py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm Lại Bài Thi
+                        </button>
+                    </form>
 
                     <!-- Nút Danh sách khóa học -->
                     <a href="${pageContext.request.contextPath}/courses" class="w-full sm:w-auto px-5 py-3 text-text-secondary hover:text-text-primary font-medium text-sm transition flex items-center justify-center gap-1.5">

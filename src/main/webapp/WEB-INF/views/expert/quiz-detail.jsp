@@ -229,13 +229,13 @@
                     <div class="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl p-1 gap-1.5 shadow-xs">
                         <span class="text-xs font-bold text-indigo-900 pl-2 hidden sm:inline">Số câu:</span>
                         <div class="inline-flex items-center bg-white border border-indigo-200 rounded-lg overflow-hidden shadow-xs">
-                            <button type="button" onclick="stepQuickRandom(-1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Giảm 1 câu">
+                            <button type="button" onclick="stepRandomCount('quickRandomCount', -1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Giảm 1 câu">
                                 <i class="fa-solid fa-chevron-down text-[10px]" aria-hidden="true"></i>
                             </button>
                             <input type="text" id="quickRandomCount" value="10" readonly
                                    onkeydown="handleStepperKey(event, 'quickRandomCount')"
                                    class="w-9 text-center py-0.5 text-xs font-bold bg-white text-indigo-900 outline-none select-none cursor-default border-x border-indigo-100">
-                            <button type="button" onclick="stepQuickRandom(1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Tăng 1 câu">
+                            <button type="button" onclick="stepRandomCount('quickRandomCount', 1)" class="w-6 h-6 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 active:bg-indigo-200 transition font-bold" title="Tăng 1 câu">
                                 <i class="fa-solid fa-chevron-up text-[10px]" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -455,13 +455,13 @@
                 </label>
                 <div class="flex items-center gap-2">
                     <div class="flex items-center rounded-xl bg-surface border border-border-default overflow-hidden shadow-xs">
-                        <button type="button" onclick="stepModalRandom(-1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Giảm 1 câu">
+                        <button type="button" onclick="stepRandomCount('modalRandomCount', -1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Giảm 1 câu">
                             <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
                         </button>
                         <input type="text" id="modalRandomCount" value="10" readonly
                                onkeydown="handleStepperKey(event, 'modalRandomCount')"
                                class="w-16 text-center py-2.5 font-bold text-xs sm:text-sm text-text-primary outline-none bg-surface select-none cursor-default border-x border-border-default">
-                        <button type="button" onclick="stepModalRandom(1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Tăng 1 câu">
+                        <button type="button" onclick="stepRandomCount('modalRandomCount', 1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Tăng 1 câu">
                             <i class="fa-solid fa-chevron-up text-xs" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -523,7 +523,7 @@
 </div>
 
 <!-- ===========================================================================
-     JAVASCRIPT: HỖ TRỢ SINH VIÊN DỄ HỌC & THEO DÕI
+     JAVASCRIPT: CẤU HÌNH QUIZ, LỌC CÂU HỎI & CHỌN NGẪU NHIÊN
      =========================================================================== -->
 <script>
     const MAX_QUIZ_TITLE_CHARS = 120;
@@ -613,7 +613,6 @@
             qModFilter.value = modSelect.value || '';
         }
 
-        syncNavigationLinks();
         filterQuestions();
         syncRandomCountsWithModule();
         verifyQuiz();
@@ -642,28 +641,9 @@
         if (moduleFilter) {
             moduleFilter.value = selectedModuleId || '';
         }
-        syncNavigationLinks();
         filterQuestions();
         syncRandomCountsWithModule();
         verifyQuiz();
-    }
-
-    function syncNavigationLinks() {
-        const cId = (document.getElementById('courseIdInput')?.value || '').trim();
-        const mId = (document.getElementById('quizModuleSelect')?.value || '').trim();
-        const ctx = '${pageContext.request.contextPath}';
-        const query = '?courseId=' + encodeURIComponent(cId) + '&moduleId=' + encodeURIComponent(mId);
-
-        const qBank = document.getElementById('linkToQuestionBank');
-        if (qBank) qBank.href = ctx + '/expert/questions';
-
-        const qNew = document.getElementById('linkToNewQuestion');
-        if (qNew) qNew.href = ctx + '/expert/questions/detail';
-
-        const qListTop = document.getElementById('linkToQuizListTop');
-        if (qListTop) {
-            qListTop.href = ctx + '/expert/quizzes';
-        }
     }
 
     // 4. Xử lý tích chọn câu hỏi
@@ -913,23 +893,8 @@
         }
     }
 
-    function stepQuickRandom(delta) {
-        const input = document.getElementById('quickRandomCount');
-        if (!input) return;
-        const modSelect = document.getElementById('quizModuleSelect');
-        const maxCount = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
-        if (maxCount <= 0) {
-            input.value = 0;
-            return;
-        }
-        let val = (parseInt(input.value, 10) || 1) + delta;
-        if (val < 1) val = 1;
-        if (val > maxCount) val = maxCount;
-        input.value = val;
-    }
-
-    function stepModalRandom(delta) {
-        const input = document.getElementById('modalRandomCount');
+    function stepRandomCount(inputId, delta) {
+        const input = document.getElementById(inputId);
         if (!input) return;
         const modSelect = document.getElementById('quizModuleSelect');
         const maxCount = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
@@ -946,24 +911,14 @@
     function handleStepperKey(e, inputId) {
         if (e.key === 'ArrowUp') {
             e.preventDefault();
-            if (inputId === 'quickRandomCount') stepQuickRandom(1);
-            else if (inputId === 'modalRandomCount') stepModalRandom(1);
+            stepRandomCount(inputId, 1);
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
-            if (inputId === 'quickRandomCount') stepQuickRandom(-1);
-            else if (inputId === 'modalRandomCount') stepModalRandom(-1);
+            stepRandomCount(inputId, -1);
         } else {
             // Không cho phép điền số, chữ, dấu thực hay ký hiệu linh tinh
             e.preventDefault();
         }
-    }
-
-    function validateRandomInput(input) {
-        const modSelect = document.getElementById('quizModuleSelect');
-        const count = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
-        let val = parseInt(input.value, 10);
-        if (isNaN(val) || val < 1) input.value = count > 0 ? 1 : 0;
-        else if (val > count) input.value = count;
     }
 
     function quickRandomQuestions() {

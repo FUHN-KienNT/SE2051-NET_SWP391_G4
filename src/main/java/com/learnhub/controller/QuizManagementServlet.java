@@ -135,42 +135,8 @@ public class QuizManagementServlet extends HttpServlet {
             }
         }
 
-        loadCourseOptions(req, user, courseId);
-        // Luôn nạp toàn bộ module của Expert cho màn hình Detail để người dùng có thể đổi khóa học / module linh hoạt
-        List<Module> allModules = new ArrayList<>(moduleDAO.findByExpertId(user.getId()));
-        if (courseId != null) {
-            Set<UUID> existingModIds = new HashSet<>();
-            for (Module m : allModules) {
-                existingModIds.add(m.getId());
-            }
-            for (Module cm : moduleDAO.findByCourseId(courseId)) {
-                if (!existingModIds.contains(cm.getId())) {
-                    allModules.add(cm);
-                }
-            }
-        }
-        req.setAttribute("modules", allModules);
-
-        List<Question> questions = questionDAO.search(null, null, null, null, null);
-
-        if (!selectedQuestionIds.isEmpty()) {
-            Set<UUID> loadedIds = new HashSet<>();
-            for (Question q : questions) {
-                loadedIds.add(q.getId());
-            }
-            for (UUID qId : selectedQuestionIds) {
-                if (!loadedIds.contains(qId)) {
-                    Question extra = questionDAO.findById(qId);
-                    if (extra != null) {
-                        questions.add(extra);
-                        loadedIds.add(qId);
-                    }
-                }
-            }
-        }
-
-        // Ẩn các câu hỏi đã ẩn (trừ câu đang nằm sẵn trong quiz đang sửa)
-        req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
+        loadDetailReferenceData(req, user, courseId);
+        loadQuestionsForDetail(req, selectedQuestionIds);
         req.setAttribute("selectedQuestionIds", selectedQuestionIds);
         req.setAttribute("defaultFilterModuleId", defaultFilterModuleId);
 
@@ -420,22 +386,44 @@ public class QuizManagementServlet extends HttpServlet {
         }
 
         req.setAttribute("quiz", formQuiz);
-
         req.setAttribute("selectedQuestionIds", questionIds);
-
         req.setAttribute("error", errorMessage);
+        req.setAttribute("defaultFilterModuleId", moduleId);
 
-        loadCourseOptions(req, user, courseId);
-        req.setAttribute("modules", moduleDAO.findByExpertId(user.getId()));
+        loadDetailReferenceData(req, user, courseId);
+        loadQuestionsForDetail(req, questionIds);
 
+        req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
+    }
+
+    private void loadDetailReferenceData(HttpServletRequest req, User user, UUID courseId) {
+        req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
+        req.setAttribute("courseId", courseId);
+        req.setAttribute("course", courseId == null ? null : courseDAO.findById(courseId));
+
+        List<Module> allModules = new ArrayList<>(moduleDAO.findByExpertId(user.getId()));
+        if (courseId != null) {
+            Set<UUID> existingModIds = new HashSet<>();
+            for (Module m : allModules) {
+                existingModIds.add(m.getId());
+            }
+            for (Module cm : moduleDAO.findByCourseId(courseId)) {
+                if (!existingModIds.contains(cm.getId())) {
+                    allModules.add(cm);
+                }
+            }
+        }
+        req.setAttribute("modules", allModules);
+    }
+
+    private void loadQuestionsForDetail(HttpServletRequest req, List<UUID> selectedQuestionIds) {
         List<Question> questions = questionDAO.search(null, null, null, null, null);
-
-        if (!questionIds.isEmpty()) {
+        if (!selectedQuestionIds.isEmpty()) {
             Set<UUID> loadedIds = new HashSet<>();
             for (Question q : questions) {
                 loadedIds.add(q.getId());
             }
-            for (UUID qId : questionIds) {
+            for (UUID qId : selectedQuestionIds) {
                 if (!loadedIds.contains(qId)) {
                     Question extra = questionDAO.findById(qId);
                     if (extra != null) {
@@ -445,12 +433,7 @@ public class QuizManagementServlet extends HttpServlet {
                 }
             }
         }
-
-        req.setAttribute("questions", filterHidden(questions, questionIds));
-
-        req.setAttribute("defaultFilterModuleId", moduleId);
-
-        req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
+        req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
     }
 
     private void loadCourseOptions(HttpServletRequest req, User user, UUID courseId) {

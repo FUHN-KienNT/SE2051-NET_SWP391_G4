@@ -3,8 +3,6 @@ package com.learnhub.entity;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class QuizSubmission implements Serializable {
@@ -17,22 +15,7 @@ public class QuizSubmission implements Serializable {
     private Timestamp submittedAt;
     private Boolean passStatus;
 
-    // Helper / joined fields
-    private String quizTitle;
-    private String userName;
-    private int totalQuestions;
-    private int correctAnswers;
-    private List<QuizAnswer> answers = new ArrayList<>();
-
     public QuizSubmission() {
-    }
-
-    public QuizSubmission(UUID id, UUID quizId, UUID userId, BigDecimal score, Boolean passStatus) {
-        this.id = id;
-        this.quizId = quizId;
-        this.userId = userId;
-        this.score = score;
-        this.passStatus = passStatus;
     }
 
     public UUID getId() { return id; }
@@ -52,21 +35,6 @@ public class QuizSubmission implements Serializable {
 
     public Boolean getPassStatus() { return passStatus; }
     public void setPassStatus(Boolean passStatus) { this.passStatus = passStatus; }
-
-    public String getQuizTitle() { return quizTitle; }
-    public void setQuizTitle(String quizTitle) { this.quizTitle = quizTitle; }
-
-    public String getUserName() { return userName; }
-    public void setUserName(String userName) { this.userName = userName; }
-
-    public int getTotalQuestions() { return totalQuestions; }
-    public void setTotalQuestions(int totalQuestions) { this.totalQuestions = totalQuestions; }
-
-    public int getCorrectAnswers() { return correctAnswers; }
-    public void setCorrectAnswers(int correctAnswers) { this.correctAnswers = correctAnswers; }
-
-    public List<QuizAnswer> getAnswers() { return answers; }
-    public void setAnswers(List<QuizAnswer> answers) { this.answers = answers; }
 
     @Override
     public String toString() {

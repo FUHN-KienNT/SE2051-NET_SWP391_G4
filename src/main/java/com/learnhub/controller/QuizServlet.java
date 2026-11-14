@@ -105,9 +105,6 @@ public class QuizServlet extends HttpServlet {
                         List<Question> questions = questionDAO.findQuestionsByQuizId(attempt.getQuizId());
 
                         QuizAttemptDTO result = new QuizAttemptDTO();
-                        result.setAttemptId(attempt.getId());
-                        result.setQuizId(attempt.getQuizId());
-                        result.setQuizTitle(quiz != null ? quiz.getTitle() : "Quiz");
                         result.setScore(attempt.getScore());
                         result.setPassed(attempt.getPassStatus() != null && attempt.getPassStatus());
                         result.setTotalQuestions(questions != null ? questions.size() : 0);
@@ -118,14 +115,7 @@ public class QuizServlet extends HttpServlet {
                             result.setCorrectAnswers(correct);
                         }
 
-                        req.setAttribute("quiz", quiz);
-                        req.setAttribute("result", result);
-                        req.setAttribute("questions", questions);
-                        Module resultModule = quiz == null ? null : moduleDAO.findById(quiz.getModuleId());
-                        if (resultModule != null) {
-                            req.setAttribute("resultCourseId", resultModule.getCourseId());
-                        }
-                        req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
+                        forwardToResult(req, resp, quiz, result);
                         return;
                     }
                 } catch (Exception ignored) {
@@ -292,13 +282,7 @@ public class QuizServlet extends HttpServlet {
 
                 QuizAttemptDTO result = quizService.submitQuizAttempt(attemptId, selectedAnswers, textAnswers);
                 Quiz quiz = quizDAO.findById(result.getQuizId());
-                List<Question> questions = questionDAO.findQuestionsByQuizId(result.getQuizId());
-                req.setAttribute("quiz", quiz);
-                req.setAttribute("result", result);
-                req.setAttribute("questions", questions);
-                Module resultModule = quiz == null ? null : moduleDAO.findById(quiz.getModuleId());
-                if (resultModule != null) req.setAttribute("resultCourseId", resultModule.getCourseId());
-                req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
+                forwardToResult(req, resp, quiz, result);
                 return;
             } catch (IllegalStateException e) {
                 throw new ServletException("Cannot save quiz result or learning progress.", e);
@@ -306,5 +290,16 @@ public class QuizServlet extends HttpServlet {
             }
         }
         resp.sendRedirect(req.getContextPath() + "/courses");
+    }
+
+    private void forwardToResult(HttpServletRequest req, HttpServletResponse resp, Quiz quiz, QuizAttemptDTO result)
+            throws ServletException, IOException {
+        req.setAttribute("quiz", quiz);
+        req.setAttribute("result", result);
+        Module resultModule = quiz == null ? null : moduleDAO.findById(quiz.getModuleId());
+        if (resultModule != null) {
+            req.setAttribute("resultCourseId", resultModule.getCourseId());
+        }
+        req.getRequestDispatcher("/WEB-INF/views/quiz/result.jsp").forward(req, resp);
     }
 }

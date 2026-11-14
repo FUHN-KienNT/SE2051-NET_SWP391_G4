@@ -5,8 +5,6 @@
 
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 
-<c:set var="regBasePath" value="${not empty basePath ? basePath : '/manager/registrations'}" />
-
 <%-- 
 =============================================================================
 MÀN HÌNH CHI TIẾT ĐƠN ĐĂNG KÝ KHÓA HỌC (REGISTRATION DETAIL)
@@ -38,7 +36,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <nav class="mb-1 text-xs font-semibold text-brand-700 tracking-wide uppercase flex items-center gap-1.5">
-                        <a href="${pageContext.request.contextPath}${regBasePath}" class="hover:underline">Quản lý đăng ký</a>
+                        <a href="${pageContext.request.contextPath}${basePath}" class="hover:underline">Quản lý đăng ký</a>
                         <span class="text-text-secondary">/</span>
                         <span class="text-text-secondary">Chi tiết đơn</span>
                     </nav>
@@ -52,7 +50,7 @@ Dành cho Quản trị viên (Admin) / Quản lý (Manager):
                     </div>
                 </div>
 
-                <a href="${pageContext.request.contextPath}${regBasePath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
+                <a href="${pageContext.request.contextPath}${basePath}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border-default hover:bg-slate-100 text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary transition self-start sm:self-auto">
                     <i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
                     <span>Quay lại danh sách</span>
                 </a>

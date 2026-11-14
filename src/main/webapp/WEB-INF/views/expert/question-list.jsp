@@ -265,7 +265,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
                             <select name="moduleId" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer">
                                 <option value="">-- Tất cả Module --</option>
                                 <c:forEach var="m" items="${modules}">
-                                    <option value="${m.id}" ${moduleId eq m.id or param.moduleId eq m.id.toString() ? 'selected' : ''}><c:if test="${(empty courseId or courseHasNoModules) and not empty m.courseTitle}">[<c:out value="${m.courseTitle}" />] </c:if><c:out value="${m.title}" /></option>
+                                    <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}><c:if test="${(empty courseId or courseHasNoModules) and not empty m.courseTitle}">[<c:out value="${m.courseTitle}" />] </c:if><c:out value="${m.title}" /></option>
                                 </c:forEach>
                             </select>
                         </div>
@@ -644,15 +644,6 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
         document.addEventListener('click', event => {
             if (!picker.contains(event.target) && event.target !== search) picker.open = false;
         });
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && picker.open) {
-                picker.open = false;
-                if (picker.contains(document.activeElement)) {
-                    const summary = picker.querySelector('summary');
-                    if (summary) summary.focus();
-                }
-            }
-        });
     })();
 
     // Kiểm tra định dạng và dung lượng file Excel tải lên
@@ -726,12 +717,19 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên quản lý kho đề t
         document.getElementById('hideConfirmModal').classList.add('hidden');
     }
 
-    // Đóng toàn bộ Modal khi nhấn phím Escape
+    // Đóng toàn bộ Modal & Course Picker khi nhấn phím Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeImportModal();
             closeHideModal();
             closeDeleteModal();
+            const picker = document.getElementById('questionCoursePicker');
+            if (picker && picker.open) {
+                picker.open = false;
+                if (picker.contains(document.activeElement)) {
+                    picker.querySelector('summary')?.focus();
+                }
+            }
         }
     });
 

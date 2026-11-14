@@ -169,7 +169,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                 </label>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <!-- Trắc nghiệm 1 đáp án -->
-                    <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                         <input type="radio" name="type" value="single_choice"
                         ${empty question.type or question.type eq 'single_choice' ? 'checked' : ''}
                                onchange="onTypeChanged('single_choice')" class="mt-1 accent-emerald-600">
@@ -180,7 +180,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                     </label>
 
                     <!-- Trắc nghiệm nhiều đáp án -->
-                    <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                         <input type="radio" name="type" value="multiple_choice"
                         ${question.type eq 'multiple_choice' ? 'checked' : ''}
                                onchange="onTypeChanged('multiple_choice')" class="mt-1 accent-emerald-600">
@@ -191,7 +191,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
                     </label>
 
                     <!-- Điền vào chỗ trống -->
-                    <label class="type-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                         <input type="radio" name="type" value="fill_in_blank"
                         ${question.type eq 'fill_in_blank' ? 'checked' : ''}
                                onchange="onTypeChanged('fill_in_blank')" class="mt-1 accent-emerald-600">
@@ -464,12 +464,7 @@ Dành cho Chuyên gia nội dung (Expert) / Giảng viên:
         verifyQuestion();
     }
 
-    // 3. Đếm số ký tự trong đoạn văn bản (tính cả khoảng trắng)
-    function countCharacters(str) {
-        return str ? str.length : 0;
-    }
-
-    // 4. Xử lý sự kiện khi gõ nội dung câu hỏi: cập nhật đếm ký tự và cảnh báo
+    // 3. Xử lý sự kiện khi gõ nội dung câu hỏi: cập nhật đếm ký tự và cảnh báo
     function onContentChange() {
         const text = document.getElementById('questionContent').value || '';
         const chars = text.length; // tính từng ký tự nhập vào cả khoảng trắng

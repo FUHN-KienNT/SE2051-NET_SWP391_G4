@@ -208,7 +208,7 @@
                             <select name="moduleId" onchange="this.form.submit()" class="w-full px-3 py-2.5 rounded-xl bg-surface-card border border-border-default text-xs sm:text-sm font-semibold text-text-primary outline-none focus:ring-2 focus:ring-brand-700 transition cursor-pointer">
                                 <option value="">-- Tất cả Module --</option>
                                 <c:forEach var="m" items="${modules}">
-                                    <option value="${m.id}" ${moduleId eq m.id or param.moduleId eq m.id.toString() ? 'selected' : ''}>
+                                    <option value="${m.id}" ${moduleId eq m.id ? 'selected' : ''}>
                                         <c:if test="${(empty courseId or courseHasNoModules) and not empty m.courseTitle}">[<c:out value="${m.courseTitle}" />] </c:if><c:out value="${m.title}" />
                                     </option>
                                 </c:forEach>
@@ -349,7 +349,7 @@
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
-                                                <c:set var="isQuizUsed" value="${q.used or q.usedCount > 0}" />
+                                                <c:set var="isQuizUsed" value="${q.used}" />
                                                 <div class="mt-1">
                                                     <c:choose>
                                                         <c:when test="${isQuizUsed}">
@@ -512,6 +512,13 @@
         if (e.key === 'Escape') {
             closeDeleteModal();
             closeHideModal();
+            const picker = document.getElementById('quizCoursePicker');
+            if (picker && picker.open) {
+                picker.open = false;
+                if (picker.contains(document.activeElement)) {
+                    picker.querySelector('summary')?.focus();
+                }
+            }
         }
     });
 
@@ -545,15 +552,6 @@
         });
         document.addEventListener('click', event => {
             if (!picker.contains(event.target) && event.target !== search) picker.open = false;
-        });
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && picker.open) {
-                picker.open = false;
-                if (picker.contains(document.activeElement)) {
-                    const summary = picker.querySelector('summary');
-                    if (summary) summary.focus();
-                }
-            }
         });
     })();
 </script>

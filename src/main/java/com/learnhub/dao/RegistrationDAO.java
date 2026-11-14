@@ -107,10 +107,6 @@ public class RegistrationDAO {
         return list;
     }
 
-    public int countRegistrations(String search, String status) {
-        return countRegistrations(search, status, null);
-    }
-
     public int countRegistrations(String search, String status, String paymentStatus) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM registration r " +
@@ -243,10 +239,6 @@ public class RegistrationDAO {
         return null;
     }
 
-    public Registration findRegistrationById(UUID id) {
-        return findById(id);
-    }
-
     public Registration findByUserAndCourse(UUID userId, UUID courseId) {
         if (userId == null || courseId == null) return null;
         String sql = "SELECT r.id, r.user_id, r.course_id, r.enrolled_at, r.status, r.progress_percent, " +
@@ -309,19 +301,6 @@ public class RegistrationDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in updateRegistrationStatus: " + e.getMessage(), e);
-            return false;
-        }
-    }
-
-    public boolean updateProgressPercent(UUID registrationId, int percent) {
-        String sql = "UPDATE registration SET progress_percent = ? WHERE id = ?";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, Math.min(100, Math.max(0, percent)));
-            ps.setObject(2, registrationId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in updateProgressPercent: " + e.getMessage(), e);
             return false;
         }
     }

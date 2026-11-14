@@ -73,135 +73,82 @@ public class QuestionServlet extends HttpServlet {
         }
 
         String path = req.getServletPath();
+        if ("/expert/questions/detail".equals(path)) {
+            handleDetailGet(req, resp, user);
+            return;
+        }
+        handleListGet(req, resp, user);
+    }
+
+    private void handleDetailGet(
+            HttpServletRequest req,
+            HttpServletResponse resp,
+            User user)
+            throws ServletException, IOException {
 
         UUID courseId = ControllerSupport.optionalUuid(req.getParameter("courseId"));
         UUID moduleId = ControllerSupport.optionalUuid(req.getParameter("moduleId"));
-        if (moduleId != null && !"/expert/questions/detail".equals(path)) {
-            Module m = moduleDAO.findById(moduleId);
-            if (m != null) {
-                if (courseId != null && !courseId.equals(m.getCourseId())) {
-                    courseId = m.getCourseId();
+        String id = req.getParameter("id");
+
+        if (id == null || id.isBlank()) {
+            HttpSession sess = req.getSession(false);
+            if (sess != null) {
+                if (courseId == null) {
+                    courseId = (UUID) sess.getAttribute(SESS_QUESTION_COURSE_ID);
                 }
-            } else {
-                moduleId = null;
+                if (moduleId == null) {
+                    moduleId = (UUID) sess.getAttribute(SESS_QUESTION_MODULE_ID);
+                }
+            }
+        } else {
+            UUID questionId = ControllerSupport.optionalUuid(id);
+            if (questionId != null) {
+                // Không cho phép chỉnh sửa câu hỏi đã được sử dụng trong bài kiểm tra
+                if (service.isUsedInQuiz(questionId)) {
+                    resp.sendRedirect(req.getContextPath() + "/expert/questions?cannotEditUsedQuestion=true");
+                    return;
+                }
+                Question question = service.get(questionId);
+                if (question != null) {
+                    req.setAttribute("question", question);
+                    if (question.getModuleId() != null) {
+                        moduleId = question.getModuleId();
+                    }
+                }
             }
         }
 
-        List<Course> courses = courseDAO.findByExpertId(user.getId());
-        req.setAttribute("courses", courses);
+        if (moduleId != null) {
+            Module mod = moduleDAO.findById(moduleId);
+            if (mod != null) {
+                courseId = mod.getCourseId();
+            }
+        } else if (courseId != null) {
+            List<Module> courseModules = moduleDAO.findByCourseId(courseId);
+            if (!courseModules.isEmpty()) {
+                moduleId = courseModules.get(0).getId();
+            }
+        }
+
         req.setAttribute("courseId", courseId);
-        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
+        loadDetailReferenceData(req, user, courseId);
 
-        /*
-         * QUESTION DETAIL
-         */
-        if ("/expert/questions/detail".equals(path)) {
+        req.getRequestDispatcher("/WEB-INF/views/expert/question-detail.jsp").forward(req, resp);
+    }
 
-            String id = req.getParameter("id");
-            if (id == null || id.isBlank()) {
-                HttpSession sess = req.getSession(false);
-                if (sess != null) {
-                    if (courseId == null) {
-                        courseId = (UUID) sess.getAttribute(SESS_QUESTION_COURSE_ID);
-                    }
-                    if (moduleId == null) {
-                        moduleId = (UUID) sess.getAttribute(SESS_QUESTION_MODULE_ID);
-                    }
-                }
-            }
+    private void handleListGet(
+            HttpServletRequest req,
+            HttpServletResponse resp,
+            User user)
+            throws ServletException, IOException {
 
-            if (id != null && !id.isBlank()) {
-                UUID questionId = ControllerSupport.optionalUuid(id);
-                if (questionId != null) {
-                    // Không cho phép chỉnh sửa câu hỏi đã được sử dụng trong bài kiểm tra
-                    if (service.isUsedInQuiz(questionId)) {
-                        resp.sendRedirect(
-                                req.getContextPath()
-                                        + "/expert/questions?cannotEditUsedQuestion=true"
-                        );
-                        return;
-                    }
-                    Question question = service.get(questionId);
-                    if (question != null) {
-                        req.setAttribute("question", question);
-                        if (question.getModuleId() != null) {
-                            moduleId = question.getModuleId();
-                            req.setAttribute("moduleId", moduleId);
-                            Module mod = moduleDAO.findById(moduleId);
-                            if (mod != null) {
-                                courseId = mod.getCourseId();
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (moduleId != null) {
-                Module mod = moduleDAO.findById(moduleId);
-                if (mod != null) {
-                    courseId = mod.getCourseId();
-                }
-            } else if (courseId != null) {
-                List<Module> courseModules = moduleDAO.findByCourseId(courseId);
-                if (!courseModules.isEmpty()) {
-                    moduleId = courseModules.get(0).getId();
-                    req.setAttribute("moduleId", moduleId);
-                }
-            }
-
-            req.setAttribute("courseId", courseId);
-            req.setAttribute("moduleId", moduleId);
-            Course selectedCourse = courseId != null ? courseDAO.findById(courseId) : null;
-            req.setAttribute("course", selectedCourse);
-
-            List<Course> detailCourses = new ArrayList<>(courses);
-            if (selectedCourse != null) {
-                boolean foundCourse = false;
-                for (Course c : detailCourses) {
-                    if (selectedCourse.getId().equals(c.getId())) {
-                        foundCourse = true;
-                        break;
-                    }
-                }
-                if (!foundCourse) {
-                    detailCourses.add(selectedCourse);
-                }
-            }
-            req.setAttribute("courses", detailCourses);
-
-            // Luôn nạp toàn bộ module của Expert (và bổ sung module của khóa học hiện tại nếu thiếu)
-            List<Module> detailModules = new ArrayList<>(moduleDAO.findByExpertId(user.getId()));
-            if (courseId != null) {
-                Set<UUID> existingModIds = new HashSet<>();
-                for (Module m : detailModules) {
-                    existingModIds.add(m.getId());
-                }
-                for (Module cm : moduleDAO.findByCourseId(courseId)) {
-                    if (!existingModIds.contains(cm.getId())) {
-                        if (selectedCourse != null) {
-                            cm.setCourseTitle(selectedCourse.getTitle());
-                        }
-                        detailModules.add(cm);
-                    }
-                }
-            }
-            req.setAttribute("modules", detailModules);
-
-            req.getRequestDispatcher(
-                    "/WEB-INF/views/expert/question-detail.jsp"
-            ).forward(req, resp);
-
-            return;
-        }
-
-        /*
-         * QUESTION LIST
-         */
         HttpSession session = req.getSession(true);
         String resetParam = req.getParameter("reset");
         boolean isReset = "true".equalsIgnoreCase(resetParam) || "1".equals(resetParam);
 
+        UUID courseId = null;
+        UUID moduleId = null;
         String type = "";
         String status = "";
         String keyword = "";
@@ -213,9 +160,6 @@ public class QuestionServlet extends HttpServlet {
             session.removeAttribute(SESS_QUESTION_TYPE);
             session.removeAttribute(SESS_QUESTION_STATUS);
             session.removeAttribute(SESS_QUESTION_KEYWORD);
-
-            courseId = null;
-            moduleId = null;
         } else {
             // Đọc filter từ request hoặc fallback về session
             boolean isFilterSubmit = req.getParameter("filter") != null;
@@ -224,15 +168,12 @@ public class QuestionServlet extends HttpServlet {
             if (isCourseFilter) {
                 courseId = ControllerSupport.resolveCoursePickerFilter(
                         req, session, SESS_QUESTION_COURSE_ID, SESS_QUESTION_MODULE_ID);
-                if (courseId != null) {
-                    Object savedMod = session.getAttribute(SESS_QUESTION_MODULE_ID);
-                    if (savedMod instanceof UUID prevModId) {
-                        Module pm = moduleDAO.findById(prevModId);
-                        if (pm != null && courseId.equals(pm.getCourseId())) {
-                            moduleId = prevModId;
-                        } else {
-                            session.removeAttribute(SESS_QUESTION_MODULE_ID);
-                        }
+                if (courseId != null && session.getAttribute(SESS_QUESTION_MODULE_ID) instanceof UUID prevModId) {
+                    Module pm = moduleDAO.findById(prevModId);
+                    if (pm != null && courseId.equals(pm.getCourseId())) {
+                        moduleId = prevModId;
+                    } else {
+                        session.removeAttribute(SESS_QUESTION_MODULE_ID);
                     }
                 }
             } else {
@@ -266,8 +207,29 @@ public class QuestionServlet extends HttpServlet {
             }
         }
 
+        String action = req.getParameter("action");
+        if ("delete".equalsIgnoreCase(action)) {
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
+            if (service.isUsedInQuiz(questionId)) {
+                redirectListAction(req, resp, "cannotDelete", true, courseId);
+            } else {
+                redirectListAction(req, resp, "deleted", service.delete(questionId), courseId);
+            }
+            return;
+        }
+        if ("hide".equalsIgnoreCase(action)) {
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
+            redirectListAction(req, resp, "hidden", service.hide(questionId), courseId);
+            return;
+        }
+        if ("unhide".equalsIgnoreCase(action)) {
+            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
+            redirectListAction(req, resp, "unhidden", service.unhide(questionId), courseId);
+            return;
+        }
+
+        req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
         req.setAttribute("courseId", courseId);
-        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
 
         List<Module> modules;
@@ -290,69 +252,14 @@ public class QuestionServlet extends HttpServlet {
         req.setAttribute("type", type == null ? "" : type);
         req.setAttribute("status", status == null ? "" : status);
 
-        /*
-         * HIDE / UNHIDE / DELETE
-         */
-        String action = req.getParameter("action");
-        if ("delete".equalsIgnoreCase(action)) {
-            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
-            if (service.isUsedInQuiz(questionId)) {
-                resp.sendRedirect(
-                        req.getContextPath()
-                                + "/expert/questions?cannotDelete=true"
-                                + courseSuffix(courseId)
-                );
-                return;
-            }
-
-            boolean ok = service.delete(questionId);
-            resp.sendRedirect(
-                    req.getContextPath()
-                            + "/expert/questions?deleted="
-                            + ok
-                            + courseSuffix(courseId)
-            );
-            return;
-        }
-
-        if ("hide".equalsIgnoreCase(action)) {
-            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
-            boolean ok = service.hide(questionId);
-            resp.sendRedirect(
-                    req.getContextPath()
-                            + "/expert/questions?hidden="
-                            + ok
-                            + courseSuffix(courseId)
-            );
-            return;
-        }
-
-        if ("unhide".equalsIgnoreCase(action)) {
-            UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
-            boolean ok = service.unhide(questionId);
-            resp.sendRedirect(
-                    req.getContextPath()
-                            + "/expert/questions?unhidden="
-                            + ok
-                            + courseSuffix(courseId)
-            );
-            return;
-        }
-
         // Kết quả import (thành công / danh sách lỗi) được lưu trong session ở lần POST trước
         if (session.getAttribute(IMPORT_RESULT_KEY) != null) {
             req.setAttribute("importResult", session.getAttribute(IMPORT_RESULT_KEY));
             session.removeAttribute(IMPORT_RESULT_KEY);
         }
 
-        req.setAttribute(
-                "questions",
-                service.search(keyword, type, moduleId, courseId, status)
-        );
-
-        req.getRequestDispatcher(
-                "/WEB-INF/views/expert/question-list.jsp"
-        ).forward(req, resp);
+        req.setAttribute("questions", service.search(keyword, type, moduleId, courseId, status));
+        req.getRequestDispatcher("/WEB-INF/views/expert/question-list.jsp").forward(req, resp);
     }
 
     @Override
@@ -391,7 +298,6 @@ public class QuestionServlet extends HttpServlet {
             }
         }
         req.setAttribute("courseId", courseId);
-        req.setAttribute("course", courseId != null ? courseDAO.findById(courseId) : null);
         req.setAttribute("moduleId", moduleId);
 
         UUID questionId = ControllerSupport.optionalUuid(req.getParameter("id"));
@@ -581,16 +487,46 @@ public class QuestionServlet extends HttpServlet {
         req.setAttribute("error", errorMsg);
 
         if (user != null) {
-            req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
-            req.setAttribute("modules", moduleDAO.findByExpertId(user.getId()));
+            UUID courseId = (UUID) req.getAttribute("courseId");
+            loadDetailReferenceData(req, user, courseId);
         }
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/expert/question-detail.jsp"
-        ).forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/expert/question-detail.jsp").forward(req, resp);
     }
 
-    private static String courseSuffix(UUID courseId) {
-        return courseId == null ? "" : "&courseId=" + courseId;
+    private void loadDetailReferenceData(HttpServletRequest req, User user, UUID courseId) {
+        List<Course> detailCourses = new ArrayList<>(courseDAO.findByExpertId(user.getId()));
+        Course selectedCourse = courseId != null ? courseDAO.findById(courseId) : null;
+        if (selectedCourse != null && detailCourses.stream().noneMatch(c -> selectedCourse.getId().equals(c.getId()))) {
+            detailCourses.add(selectedCourse);
+        }
+        req.setAttribute("courses", detailCourses);
+
+        List<Module> detailModules = new ArrayList<>(moduleDAO.findByExpertId(user.getId()));
+        if (courseId != null) {
+            Set<UUID> existingModIds = new HashSet<>();
+            for (Module m : detailModules) {
+                existingModIds.add(m.getId());
+            }
+            for (Module cm : moduleDAO.findByCourseId(courseId)) {
+                if (!existingModIds.contains(cm.getId())) {
+                    if (selectedCourse != null) {
+                        cm.setCourseTitle(selectedCourse.getTitle());
+                    }
+                    detailModules.add(cm);
+                }
+            }
+        }
+        req.setAttribute("modules", detailModules);
+    }
+
+    private void redirectListAction(
+            HttpServletRequest req,
+            HttpServletResponse resp,
+            String paramName,
+            boolean value,
+            UUID courseId) throws IOException {
+        String suffix = courseId == null ? "" : "&courseId=" + courseId;
+        resp.sendRedirect(req.getContextPath() + "/expert/questions?" + paramName + "=" + value + suffix);
     }
 }

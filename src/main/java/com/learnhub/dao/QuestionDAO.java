@@ -20,10 +20,6 @@ public class QuestionDAO {
     private static final Logger LOGGER =
             Logger.getLogger(QuestionDAO.class.getName());
 
-    public List<Question> search(String keyword, String type) {
-        return search(keyword, type, null, null, null);
-    }
-
     public List<Question> search(String keyword, String type, UUID moduleId, UUID courseId, String status) {
         List<Question> list = new ArrayList<>();
 
@@ -146,9 +142,7 @@ public class QuestionDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Question q = mapQuestion(rs);
-                    q.setOrderIndex(rs.getInt("order_index"));
-                    list.add(q);
+                    list.add(mapQuestion(rs));
                 }
             }
 

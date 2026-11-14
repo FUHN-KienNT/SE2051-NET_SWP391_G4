@@ -188,9 +188,7 @@ Dành cho Học viên (Student / Learner):
                             <c:when test="${result.totalQuestions > 0 && result.correctAnswers != null}">
                                 <fmt:formatNumber value="${(result.correctAnswers / result.totalQuestions) * 100}" maxFractionDigits="0"/>%
                             </c:when>
-                            <c:otherwise>
-                                <fmt:formatNumber value="${(result.score / 10.0) * 100}" maxFractionDigits="0"/>%
-                            </c:otherwise>
+                            <c:otherwise>0%</c:otherwise>
                         </c:choose>
                     </p>
                 </div>

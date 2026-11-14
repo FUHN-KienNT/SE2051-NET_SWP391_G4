@@ -106,46 +106,6 @@ public class RegistrationServlet extends HttpServlet {
         }
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        User currentUser = ControllerSupport.currentUser(req);
-        if (currentUser == null) {
-            ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), null);
-            return;
-        }
-
-        if (!isAuthorizedRole(currentUser)) {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
-            return;
-        }
-
-        String action = req.getParameter("action");
-        String idParam = req.getParameter("id");
-
-        if ("updateStatus".equalsIgnoreCase(action) || "update".equalsIgnoreCase(action)) {
-            try {
-                UUID id = UUID.fromString(idParam.trim());
-                String newStatus = req.getParameter("status");
-                String newPaymentStatus = req.getParameter("paymentStatus");
-
-                boolean updated = registrationService.updateRegistrationStatus(id, newStatus, newPaymentStatus);
-                String redirectUrl = req.getContextPath() + req.getServletPath() + "?action=detail&id=" + id;
-                if (updated) {
-                    resp.sendRedirect(redirectUrl + "&success=updated");
-                } else {
-                    resp.sendRedirect(redirectUrl + "&error=update_failed");
-                }
-                return;
-            } catch (Exception ex) {
-                LOGGER.log(Level.WARNING, "Error updating registration: " + ex.getMessage(), ex);
-                resp.sendRedirect(req.getContextPath() + req.getServletPath() + "?error=invalid_data");
-                return;
-            }
-        }
-
-        resp.sendRedirect(req.getContextPath() + req.getServletPath());
-    }
-
     private boolean isAuthorizedRole(User user) {
         return user != null && AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode());
     }

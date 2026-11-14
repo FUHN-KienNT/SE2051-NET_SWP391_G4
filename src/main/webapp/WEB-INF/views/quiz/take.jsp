@@ -73,8 +73,6 @@ Dành cho Học viên (Student / Learner):
         <!-- FORM BÀI LÀM QUIZ                                                 -->
         <!-- ================================================================= -->
         <form id="quiz-form" action="${pageContext.request.contextPath}/quiz" method="post" class="pb-8">
-            <input type="hidden" name="action" value="submit">
-            <input type="hidden" name="quizId" value="${quiz.id}">
             <input type="hidden" name="attemptId" value="${attempt.id}">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -354,27 +352,28 @@ Dành cho Học viên (Student / Learner):
         }
     }
 
+    function isQuestionAnswered(qId) {
+        var textInput = document.querySelector("input[name='question_" + qId + "_text']");
+        if (textInput && textInput.value.trim().length > 0) {
+            return true;
+        }
+        var inputs = document.querySelectorAll("input[name='question_" + qId + "']");
+        for (var i = 0; i < inputs.length; i++) {
+            if ((inputs[i].type === 'radio' || inputs[i].type === 'checkbox') && inputs[i].checked) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Mở hộp thoại Modal xác nhận nộp bài và tính toán thống kê
     function openSubmitModal() {
         var total = ${empty questions ? 0 : questions.size()};
         var answered = 0;
-        var navButtons = document.querySelectorAll(".q-nav-btn");
-
-        navButtons.forEach(function(btn) {
-            var qId = btn.getAttribute("data-q-nav");
-            var inputs = document.querySelectorAll("input[name='question_" + qId + "']");
-            var textInput = document.querySelector("input[name='question_" + qId + "_text']");
-            var isAnswered = false;
-
-            if (textInput && textInput.value.trim().length > 0) {
-                isAnswered = true;
+        document.querySelectorAll(".q-nav-btn").forEach(function(btn) {
+            if (isQuestionAnswered(btn.getAttribute("data-q-nav"))) {
+                answered++;
             }
-            inputs.forEach(function(inp) {
-                if ((inp.type === 'radio' || inp.type === 'checkbox') && inp.checked) {
-                    isAnswered = true;
-                }
-            });
-            if (isAnswered) answered++;
         });
 
         var unanswered = total - answered;
@@ -409,7 +408,7 @@ Dành cho Học viên (Student / Learner):
     function confirmAndSubmitQuiz() {
         var quizForm = document.getElementById("quiz-form");
         if (quizForm) {
-            var submitBtns = document.querySelectorAll("button[type='button'], button[type='submit']");
+            var submitBtns = document.querySelectorAll("button[type='button']");
             submitBtns.forEach(function(b) { b.disabled = true; });
             var confirmBtn = document.getElementById("modal-confirm-submit-btn");
             if (confirmBtn) {
@@ -431,22 +430,7 @@ Dành cho Học viên (Student / Learner):
 
             navButtons.forEach(function(btn) {
                 var qId = btn.getAttribute("data-q-nav");
-                var inputs = document.querySelectorAll("input[name='question_" + qId + "']");
-                var textInput = document.querySelector("input[name='question_" + qId + "_text']");
-                var isAnswered = false;
-
-                if (textInput && textInput.value.trim().length > 0) {
-                    isAnswered = true;
-                }
-
-                inputs.forEach(function(input) {
-                    if (input.type === 'radio' || input.type === 'checkbox') {
-                        if (input.checked) isAnswered = true;
-                    } else if (input.value.trim().length > 0) {
-                        isAnswered = true;
-                    }
-                });
-
+                var isAnswered = isQuestionAnswered(qId);
                 var qBadge = document.getElementById("q-badge-" + qId);
 
                 if (isAnswered) {

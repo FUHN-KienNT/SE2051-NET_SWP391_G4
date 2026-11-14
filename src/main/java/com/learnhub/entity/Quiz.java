@@ -27,16 +27,8 @@ public class Quiz implements Serializable {
     private String moduleTitle;
     private int questionCount;
     private int usedCount;
-    private List<Question> questions = new ArrayList<>();
 
     public Quiz() {
-    }
-
-    public Quiz(UUID id, UUID moduleId, String title, Integer timeLimit) {
-        this.id = id;
-        this.moduleId = moduleId;
-        this.title = title;
-        this.timeLimit = timeLimit;
     }
 
     public UUID getId() { return id; }
@@ -83,19 +75,12 @@ public class Quiz implements Serializable {
 
     public boolean isUsed() { return usedCount > 0; }
 
-    public List<Question> getQuestions() { return questions; }
-    public void setQuestions(List<Question> questions) { this.questions = questions; }
-
     public boolean isHidden() {
         return AppConstants.QuizStatus.HIDDEN.equalsIgnoreCase(status);
     }
 
     public boolean isPublished() {
         return AppConstants.QuizStatus.PUBLISHED.equalsIgnoreCase(status);
-    }
-
-    public boolean isDraft() {
-        return AppConstants.QuizStatus.DRAFT.equalsIgnoreCase(status);
     }
 
     @Override

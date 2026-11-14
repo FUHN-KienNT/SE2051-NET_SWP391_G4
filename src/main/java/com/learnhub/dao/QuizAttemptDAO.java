@@ -111,32 +111,6 @@ public class QuizAttemptDAO {
         }
     }
 
-    public void updateBestFlag(UUID attemptId) {
-        LOGGER.info("Updated best attempt flag for attempt ID: " + attemptId);
-    }
-
-    public List<QuizSubmission> findExpiredAttempts() {
-        List<QuizSubmission> list = new ArrayList<>();
-        String sql = "SELECT qs.id, qs.quiz_id, qs.user_id, qs.score, qs.submitted_at, qs.pass_status, " +
-                     "q.title as quiz_title, u.username as user_name, " +
-                     "(SELECT COUNT(*) FROM quiz_question qq WHERE qq.quiz_id = qs.quiz_id) as total_questions " +
-                     "FROM quiz_submission qs " +
-                     "JOIN quiz q ON qs.quiz_id = q.id " +
-                     "JOIN \"user\" u ON qs.user_id = u.id " +
-                     "WHERE qs.score IS NULL AND q.time_limit IS NOT NULL " +
-                     "AND qs.submitted_at < (NOW() - (q.time_limit || ' minutes')::interval)";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapResultSetToSubmission(rs));
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in findExpiredAttempts: " + e.getMessage(), e);
-        }
-        return list;
-    }
-
     private QuizSubmission mapResultSetToSubmission(ResultSet rs) throws SQLException {
         QuizSubmission qs = new QuizSubmission();
         qs.setId((UUID) rs.getObject("id"));
@@ -146,30 +120,6 @@ public class QuizAttemptDAO {
         qs.setSubmittedAt(rs.getTimestamp("submitted_at"));
         Object pass = rs.getObject("pass_status");
         qs.setPassStatus(pass != null ? (Boolean) pass : null);
-        try {
-            qs.setQuizTitle(rs.getString("quiz_title"));
-            qs.setUserName(rs.getString("user_name"));
-            qs.setTotalQuestions(rs.getInt("total_questions"));
-        } catch (SQLException ignored) {
-        }
         return qs;
-    }
-
-    public Double getAverageScoreByUser(UUID userId) {
-        if (userId == null) return null;
-        String sql = "SELECT AVG(score) FROM quiz_submission WHERE user_id = ? AND score IS NOT NULL";
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setObject(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    BigDecimal avg = rs.getBigDecimal(1);
-                    return avg != null ? avg.doubleValue() : null;
-                }
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error in getAverageScoreByUser: " + e.getMessage(), e);
-        }
-        return null;
     }
 }

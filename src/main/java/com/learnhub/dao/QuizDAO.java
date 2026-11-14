@@ -47,18 +47,6 @@ public class QuizDAO {
         return null;
     }
 
-    public List<Quiz> findByExpertId(UUID expertId, String keyword, UUID moduleId) {
-        return findByExpertId(expertId, keyword, moduleId, null, null);
-    }
-
-    public List<Quiz> findByExpertId(
-            UUID expertId,
-            String keyword,
-            UUID moduleId,
-            UUID courseId) {
-        return findByExpertId(expertId, keyword, moduleId, courseId, null);
-    }
-
     public List<Quiz> findByExpertId(
             UUID expertId,
             String keyword,
@@ -132,142 +120,6 @@ public class QuizDAO {
         return quizzes;
     }
 
-    public List<Quiz> findByModuleId(UUID moduleId) {
-
-        List<Quiz> list = new ArrayList<>();
-
-        String sql = baseSelect()
-                + " WHERE q.module_id=? AND q.status != 'hidden' ORDER BY q.created_at ASC";
-
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setObject(1, moduleId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(map(rs));
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuizDAO.findByModuleId", e);
-        }
-
-        return list;
-    }
-
-    // =========================================================
-    // CREATE QUIZ
-    // =========================================================
-
-    public boolean insert(Quiz quiz) {
-
-        if (quiz == null || quiz.getModuleId() == null
-                || quiz.getTitle() == null
-                || quiz.getTitle().trim().isEmpty()
-                || quiz.getTimeLimit() == null
-                || quiz.getTimeLimit() < 1
-                || quiz.getTimeLimit() > 600) {
-            return false;
-        }
-
-        String sql =
-                "INSERT INTO quiz " +
-                "(id,module_id,title,time_limit,pass_score,status,image_url,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?::quiz_status,?,NOW(),NOW())";
-
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            UUID id = quiz.getId() != null
-                    ? quiz.getId()
-                    : UUID.randomUUID();
-
-            ps.setObject(1, id);
-            ps.setObject(2, quiz.getModuleId());
-            ps.setString(3, quiz.getTitle().trim());
-            ps.setInt(4, quiz.getTimeLimit());
-
-            if (quiz.getPassScore() == null) {
-                ps.setBigDecimal(5, new BigDecimal("5.0"));
-            } else {
-                ps.setBigDecimal(5, quiz.getPassScore());
-            }
-
-            String st = quiz.getStatus();
-            ps.setString(6, (st == null || st.isBlank()) ? AppConstants.QuizStatus.PUBLISHED : st.trim());
-
-            String img = quiz.getImageUrl();
-            ps.setString(7, (img == null || img.isBlank()) ? null : img.trim());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuizDAO.insert", e);
-            return false;
-        }
-    }
-
-    // =========================================================
-    // UPDATE QUIZ
-    // =========================================================
-
-    public boolean update(Quiz quiz) {
-
-        if (quiz == null || quiz.getId() == null
-                || quiz.getModuleId() == null
-                || quiz.getTitle() == null
-                || quiz.getTitle().trim().isEmpty()
-                || quiz.getTimeLimit() == null
-                || quiz.getTimeLimit() < 1
-                || quiz.getTimeLimit() > 600) {
-            return false;
-        }
-
-        String sql =
-                "UPDATE quiz SET " +
-                "module_id=?," +
-                "title=?," +
-                "time_limit=?," +
-                "pass_score=?," +
-                "status=?::quiz_status," +
-                "image_url=?," +
-                "updated_at=NOW() " +
-                "WHERE id=?";
-
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setObject(1, quiz.getModuleId());
-            ps.setString(2, quiz.getTitle().trim());
-            ps.setInt(3, quiz.getTimeLimit());
-
-            if (quiz.getPassScore() == null) {
-                ps.setBigDecimal(4, new BigDecimal("5.0"));
-            } else {
-                ps.setBigDecimal(4, quiz.getPassScore());
-            }
-
-            String st = quiz.getStatus();
-            ps.setString(5, (st == null || st.isBlank()) ? AppConstants.QuizStatus.PUBLISHED : st.trim());
-
-            String img = quiz.getImageUrl();
-            ps.setString(6, (img == null || img.isBlank()) ? null : img.trim());
-
-            ps.setObject(7, quiz.getId());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuizDAO.update", e);
-            return false;
-        }
-    }
-
     // =========================================================
     // SAVE QUIZ + QUESTIONS IN ONE TRANSACTION
     // =========================================================
@@ -275,27 +127,7 @@ public class QuizDAO {
     /**
      * Creates or updates a quiz and its question relationships
      * in ONE database transaction.
-     *
-     * This prevents the following bad situation:
-     *
-     * Quiz inserted successfully
-     *       ↓
-     * Question relationship fails
-     *       ↓
-     * Quiz remains as an incomplete record
      */
-    public boolean saveWithQuestions(
-            UUID expertId,
-            UUID quizId,
-            UUID moduleId,
-            String title,
-            Integer timeLimit,
-            BigDecimal passScore,
-            List<UUID> questionIds) {
-        return saveWithQuestions(expertId, quizId, moduleId, title, timeLimit, passScore,
-                AppConstants.QuizStatus.PUBLISHED, null, questionIds);
-    }
-
     public boolean saveWithQuestions(
             UUID expertId,
             UUID quizId,
@@ -676,39 +508,6 @@ public class QuizDAO {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE,
                     "Error in QuizDAO.belongsToExpert", e);
-            return false;
-        }
-    }
-
-    public boolean moduleBelongsToExpert(
-            UUID moduleId,
-            UUID expertId) {
-
-        if (moduleId == null || expertId == null) {
-            return false;
-        }
-
-        String sql =
-                "SELECT EXISTS(" +
-                "SELECT 1 " +
-                "FROM module m " +
-                "JOIN course c ON m.course_id=c.id " +
-                "WHERE m.id=? AND c.expert_id=?" +
-                ")";
-
-        try (Connection conn = DbConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setObject(1, moduleId);
-            ps.setObject(2, expertId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getBoolean(1);
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE,
-                    "Error in QuizDAO.moduleBelongsToExpert", e);
             return false;
         }
     }

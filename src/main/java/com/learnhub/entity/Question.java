@@ -21,7 +21,6 @@ public class Question implements Serializable {
     private String moduleTitle;
     private UUID courseId;
     private String courseTitle;
-    private int orderIndex;
     private int quizCount; // Số bài thi/quiz đang sử dụng câu hỏi này
     private List<QuestionOption> options = new ArrayList<>();
 
@@ -67,12 +66,8 @@ public class Question implements Serializable {
     public String getCourseTitle() { return courseTitle; }
     public void setCourseTitle(String courseTitle) { this.courseTitle = courseTitle; }
 
-    public int getOrderIndex() { return orderIndex; }
-    public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
-
     public int getQuizCount() { return quizCount; }
     public void setQuizCount(int quizCount) { this.quizCount = quizCount; }
-    public boolean isUsed() { return quizCount > 0; }
 
     public List<QuestionOption> getOptions() { return options; }
     public void setOptions(List<QuestionOption> options) { this.options = options; }
@@ -88,20 +83,8 @@ public class Question implements Serializable {
         return "fill_in_blank".equalsIgnoreCase(type);
     }
 
-    public boolean isSingleChoice() {
-        return "single_choice".equalsIgnoreCase(type);
-    }
-
     public boolean isMultipleChoice() {
         return "multiple_choice".equalsIgnoreCase(type);
-    }
-
-    public boolean isHidden() {
-        return "hidden".equalsIgnoreCase(status);
-    }
-
-    public boolean isPublic() {
-        return "public".equalsIgnoreCase(status);
     }
 
     @Override

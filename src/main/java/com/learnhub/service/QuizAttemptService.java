@@ -10,14 +10,13 @@ import com.learnhub.entity.Quiz;
 import com.learnhub.entity.QuizSubmission;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * Service managing Quiz attempts, scoring submissions, and auto-submits.
  */
 public class QuizAttemptService {
-    private static final Logger LOGGER = Logger.getLogger(QuizAttemptService.class.getName());
 
     private final QuizAttemptDAO quizAttemptDAO;
     private final AnswerDAO answerDAO;
@@ -92,24 +91,20 @@ public class QuizAttemptService {
 
         answerDAO.saveAnswers(submissionId, mergedAnswers);
         int correctAnswers = countCorrectAnswers(questions, mergedAnswers, textAnswers);
-        BigDecimal score = calculateScore(attempt.getQuizId(), mergedAnswers, textAnswers);
+        BigDecimal score = computeScore(correctAnswers, questions.size());
         boolean passed = score.compareTo(passScoreThreshold) >= 0;
 
         if (!quizAttemptDAO.updateScore(submissionId, score, passed)) {
             throw new IllegalStateException("Cannot save quiz result.");
         }
-        quizAttemptDAO.updateBestFlag(submissionId);
         if (passed) new LearningProcessService().completeQuizLessons(attempt.getUserId(), attempt.getQuizId());
 
         QuizAttemptDTO dto = new QuizAttemptDTO();
-        dto.setAttemptId(submissionId);
         dto.setQuizId(attempt.getQuizId());
-        dto.setQuizTitle(quiz != null ? quiz.getTitle() : "Quiz");
         dto.setScore(score);
         dto.setPassed(passed);
         dto.setTotalQuestions(questions.size());
         dto.setCorrectAnswers(correctAnswers);
-        dto.setSelectedAnswers(mergedAnswers);
         return dto;
     }
 
@@ -121,7 +116,7 @@ public class QuizAttemptService {
         return quizAttemptDAO.findAttemptsByStudent(userId, quizId);
     }
 
-    public int countCorrectAnswers(
+    private int countCorrectAnswers(
             List<Question> questions,
             Map<UUID, List<UUID>> selectedAnswers,
             Map<UUID, String> textAnswers) {
@@ -140,7 +135,7 @@ public class QuizAttemptService {
                     String normUserText = userText.trim().toLowerCase();
                     for (com.learnhub.entity.QuestionOption opt : options) {
                         String optText = opt.getOptionText() != null ? opt.getOptionText().trim().toLowerCase() : "";
-                        if (!optText.isEmpty() && (normUserText.equals(optText))) {
+                        if (!optText.isEmpty() && normUserText.equals(optText)) {
                             isCorrect = true;
                             break;
                         }
@@ -159,23 +154,15 @@ public class QuizAttemptService {
         return correctCount;
     }
 
-    public BigDecimal calculateScore(
-            UUID quizId,
-            Map<UUID, List<UUID>> selectedAnswers,
-            Map<UUID, String> textAnswers) {
-
-        List<Question> questions = questionDAO.findQuestionsByQuizId(quizId);
-        if (questions == null || questions.isEmpty()) {
+    private static BigDecimal computeScore(int correctCount, int totalQuestions) {
+        if (totalQuestions <= 0) {
             return BigDecimal.ZERO;
         }
-
-        int totalQuestions = questions.size();
-        int correctCount = countCorrectAnswers(questions, selectedAnswers, textAnswers);
         double scoreVal = ((double) correctCount / totalQuestions) * 10.0;
-        return BigDecimal.valueOf(scoreVal).setScale(2, java.math.RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(scoreVal).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public boolean isAllOrNothingCorrect(UUID questionId, List<UUID> selectedOptionIds) {
+    private boolean isAllOrNothingCorrect(UUID questionId, List<UUID> selectedOptionIds) {
         if (selectedOptionIds == null || selectedOptionIds.isEmpty()) {
             return false;
         }

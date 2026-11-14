@@ -1,12 +1,8 @@
 package com.learnhub.controller;
 
 import com.learnhub.constant.AppConstants;
-import com.learnhub.dao.CourseDAO;
-import com.learnhub.dao.RegistrationDAO;
-import com.learnhub.dao.UserDAO;
-import com.learnhub.entity.Course;
-import com.learnhub.entity.Registration;
 import com.learnhub.entity.User;
+import com.learnhub.service.RegistrationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,8 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,14 +17,13 @@ import java.util.logging.Logger;
 /**
  * Controller for Course Registrations management (List & Detail).
  * Accessible to Manager only.
+ * Enforces Controller -> Service -> DAO clean architecture.
  */
 @WebServlet(name = "RegistrationServlet", urlPatterns = {"/manager/registrations"})
 public class RegistrationServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(RegistrationServlet.class.getName());
 
-    private final RegistrationDAO registrationDAO = new RegistrationDAO();
-    private final UserDAO userDAO = new UserDAO();
-    private final CourseDAO courseDAO = new CourseDAO();
+    private final RegistrationService registrationService = new RegistrationService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -77,21 +70,18 @@ public class RegistrationServlet extends HttpServlet {
             }
         } catch (NumberFormatException ignored) {}
 
-        int offset = (page - 1) * pageSize;
-        List<Registration> list = registrationDAO.findRegistrations(search, status, paymentStatus, offset, pageSize);
-        int totalCount = registrationDAO.countRegistrations(search, status, paymentStatus);
-        int totalPages = totalCount > 0 ? (int) Math.ceil((double) totalCount / pageSize) : 1;
-        Map<String, Object> stats = registrationDAO.getRegistrationStats(search, status, paymentStatus);
+        RegistrationService.RegistrationPageData data = registrationService.getRegistrations(
+                search, status, paymentStatus, page, pageSize);
 
-        req.setAttribute("registrations", list);
-        req.setAttribute("currentPage", page);
-        req.setAttribute("pageSize", pageSize);
-        req.setAttribute("totalCount", totalCount);
-        req.setAttribute("totalPages", totalPages);
+        req.setAttribute("registrations", data.list());
+        req.setAttribute("currentPage", data.currentPage());
+        req.setAttribute("pageSize", data.pageSize());
+        req.setAttribute("totalCount", data.totalCount());
+        req.setAttribute("totalPages", data.totalPages());
         req.setAttribute("search", search != null ? search.trim() : "");
         req.setAttribute("status", status != null ? status.trim() : "all");
         req.setAttribute("paymentStatus", paymentStatus != null ? paymentStatus.trim() : "all");
-        req.setAttribute("stats", stats);
+        req.setAttribute("stats", data.stats());
 
         req.getRequestDispatcher("/WEB-INF/views/admin/registration-list.jsp").forward(req, resp);
     }
@@ -99,18 +89,15 @@ public class RegistrationServlet extends HttpServlet {
     private void handleDetail(HttpServletRequest req, HttpServletResponse resp, String idParam) throws ServletException, IOException {
         try {
             UUID id = UUID.fromString(idParam.trim());
-            Registration reg = registrationDAO.findById(id);
-            if (reg == null) {
+            RegistrationService.RegistrationDetailData detail = registrationService.getRegistrationDetail(id);
+            if (detail == null || detail.registration() == null) {
                 resp.sendRedirect(req.getContextPath() + req.getServletPath() + "?error=not_found");
                 return;
             }
 
-            User student = userDAO.findById(reg.getUserId());
-            Course course = courseDAO.findById(reg.getCourseId());
-
-            req.setAttribute("registration", reg);
-            req.setAttribute("student", student);
-            req.setAttribute("course", course);
+            req.setAttribute("registration", detail.registration());
+            req.setAttribute("student", detail.student());
+            req.setAttribute("course", detail.course());
 
             req.getRequestDispatcher("/WEB-INF/views/admin/registration-detail.jsp").forward(req, resp);
         } catch (Exception ex) {
@@ -141,18 +128,7 @@ public class RegistrationServlet extends HttpServlet {
                 String newStatus = req.getParameter("status");
                 String newPaymentStatus = req.getParameter("paymentStatus");
 
-                if (newStatus == null || newStatus.trim().isEmpty()) {
-                    Registration existing = registrationDAO.findById(id);
-                    if ("failed".equalsIgnoreCase(newPaymentStatus)) {
-                        newStatus = "cancelled";
-                    } else if (existing != null && "completed".equalsIgnoreCase(existing.getStatus())) {
-                        newStatus = "completed";
-                    } else {
-                        newStatus = "enrolled";
-                    }
-                }
-
-                boolean updated = registrationDAO.updateRegistrationStatus(id, newStatus, newPaymentStatus);
+                boolean updated = registrationService.updateRegistrationStatus(id, newStatus, newPaymentStatus);
                 String redirectUrl = req.getContextPath() + req.getServletPath() + "?action=detail&id=" + id;
                 if (updated) {
                     resp.sendRedirect(redirectUrl + "&success=updated");

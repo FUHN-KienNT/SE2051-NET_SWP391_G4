@@ -8,6 +8,7 @@ import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 import com.learnhub.service.CourseService;
 import com.learnhub.service.LearningProcessService;
+import com.learnhub.service.UserService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,6 +28,8 @@ public class EnrollmentServlet extends HttpServlet {
 
     private final LearningProcessService learningService =
             new LearningProcessService();
+
+    private final UserService userService = new UserService();
 
     @Override
     protected void doGet(
@@ -252,9 +255,12 @@ public class EnrollmentServlet extends HttpServlet {
                     return;
                 }
 
-                // Kiểm tra validation số điện thoại nếu khóa học có phí
                 boolean isFree = course.getPrice() == null || course.getPrice().compareTo(BigDecimal.ZERO) <= 0;
                 if (!isFree) {
+                    if ((phone == null || phone.trim().isEmpty()) && user.getPhone() != null && !user.getPhone().isBlank()) {
+                        phone = user.getPhone();
+                    }
+
                     String phoneRegex = "^(0[35789])[0-9]{8}$";
                     if (phone == null || phone.trim().isEmpty() || !phone.trim().matches(phoneRegex)) {
                         String phoneErrorMsg = (phone == null || phone.trim().isEmpty())
@@ -268,7 +274,16 @@ public class EnrollmentServlet extends HttpServlet {
                         req.getRequestDispatcher("/WEB-INF/views/courses/enrollment.jsp").forward(req, resp);
                         return;
                     }
-                    user.setPhone(phone.trim());
+
+                    String cleanPhone = phone.trim();
+                    // Cách 1: Tự động lưu số điện thoại vào hồ sơ cá nhân nếu trong profile chưa có hoặc đã thay đổi
+                    if (user.getPhone() == null || user.getPhone().isBlank() || !cleanPhone.equals(user.getPhone())) {
+                        boolean phoneUpdated = userService.updateUserPhone(user.getId(), cleanPhone);
+                        if (phoneUpdated) {
+                            user.setPhone(cleanPhone);
+                            req.getSession().setAttribute(AppConstants.SessionKey.CURRENT_USER, user);
+                        }
+                    }
                 }
 
                 UUID paymentMethodId = null;

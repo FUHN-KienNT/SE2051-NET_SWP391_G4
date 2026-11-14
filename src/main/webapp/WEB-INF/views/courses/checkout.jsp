@@ -60,25 +60,6 @@
                             <i class="fa-solid fa-rotate fa-spin text-brand-600"></i>
                             <span>Hệ thống đang tự động kiểm tra giao dịch...</span>
                         </p>
-
-                        <!-- Box Demo Review Cho Giảng Viên (Giả lập thanh toán thành công) -->
-                        <div class="mt-6 pt-5 border-t border-dashed border-border-default">
-                            <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 text-left mb-3">
-                                <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5 mb-1">
-                                    <i class="fa-solid fa-flask text-amber-600"></i> Dành Cho Review & Demo:
-                                </p>
-                                <p class="text-[11px] text-amber-800 leading-relaxed">
-                                    Khi review đồ án hoặc không có app ngân hàng, bấm nút bên dưới để mô phỏng sự kiện SePay Webhook nhận tiền thành công.
-                                </p>
-                            </div>
-                            <form action="${pageContext.request.contextPath}/payment/checkout" method="post">
-                                <input type="hidden" name="action" value="mock-pay">
-                                <input type="hidden" name="regId" value="${registration.id}">
-                                <button type="submit" class="w-full py-2.5 px-4 text-xs font-bold text-amber-900 bg-amber-200 hover:bg-amber-300 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-bolt"></i> Giả Lập Đã Nhận Tiền Thành Công (Mock Pay)
-                                </button>
-                            </form>
-                        </div>
                     </div>
 
                     <!-- CỘT PHẢI: Thông tin chuyển khoản & Hướng dẫn -->

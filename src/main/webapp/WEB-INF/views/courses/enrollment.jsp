@@ -102,11 +102,18 @@
                                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
                                                 <i class="fa-solid fa-phone"></i>
                                             </div>
-                                            <input type="tel" id="studentPhone" name="phone" value="${student.phone != null ? student.phone : param.phone}" 
+                                            <input type="tel" id="studentPhone" name="phone" 
+                                                   value="${not empty student.phone ? student.phone : param.phone}" 
                                                    maxlength="10"
                                                    placeholder="Nhập số điện thoại 10 chữ số (VD: 0912345678)" 
                                                    class="w-full pl-10 pr-4 py-2.5 bg-white border <c:choose><c:when test="${not empty phoneError}">border-red-500 ring-1 ring-red-500</c:when><c:otherwise>border-border-default</c:otherwise></c:choose> rounded-xl text-text-primary text-sm focus:ring-2 focus:ring-brand-700 focus:border-brand-700 transition outline-none">
                                         </div>
+                                        <c:if test="${empty student.phone}">
+                                            <p class="mt-1.5 text-xs text-text-secondary flex items-center gap-1.5">
+                                                <i class="fa-solid fa-circle-info text-brand-600"></i>
+                                                <span>Số điện thoại này sẽ được tự động lưu vào hồ sơ cá nhân của bạn.</span>
+                                            </p>
+                                        </c:if>
                                         <p id="phoneErrorMsg" class="mt-1.5 text-xs text-red-600 flex items-center gap-1.5 <c:if test="${empty phoneError}">hidden</c:if>">
                                             <i class="fa-solid fa-circle-exclamation shrink-0"></i>
                                             <span id="phoneErrorText">${phoneError}</span>
@@ -242,11 +249,6 @@
                                         </span>
                                     </div>
 
-                                    <div class="flex justify-between items-center text-brand-700">
-                                        <span>Ưu đãi áp dụng:</span>
-                                        <span class="font-semibold">0 ₫</span>
-                                    </div>
-
                                     <div class="border-t border-border-default pt-3 flex justify-between items-baseline">
                                         <span class="text-base font-bold text-text-primary">Tổng thanh toán:</span>
                                         <span class="text-2xl font-black text-brand-700">
@@ -334,7 +336,6 @@
         function validatePhone(showMsg) {
             if (!phoneInput) return true;
             const val = phoneInput.value.trim();
-            
             const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
 
             if (val === '') {
@@ -357,7 +358,6 @@
         }
 
         if (phoneInput) {
-            // Tự động chặn và loại bỏ mọi ký tự không phải là số khi người dùng gõ hoặc paste
             phoneInput.addEventListener('input', function () {
                 const cleaned = this.value.replace(/[^0-9]/g, '');
                 if (this.value !== cleaned) {

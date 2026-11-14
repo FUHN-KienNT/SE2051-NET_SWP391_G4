@@ -430,6 +430,16 @@ public class UserService {
         return ProfileUpdateResult.FAILED;
     }
 
+    public boolean updateUserPhone(UUID userId, String phone) {
+        if (userId == null || phone == null || phone.isBlank()) return false;
+        String cleanPhone = phone.trim();
+        if (!cleanPhone.matches("0[0-9]{9}")) return false;
+        User user = userDAO.findById(userId);
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return false;
+        if (userDAO.isPhoneTakenByOther(userId, cleanPhone)) return false;
+        return userDAO.updateOwnProfile(userId, user.getUsername(), user.getFullName(), cleanPhone);
+    }
+
     public PasswordChangeResult changeOwnPassword(UUID userId, String currentPassword,
                                                    String newPassword) {
         if (userId == null || currentPassword == null || newPassword == null) {

@@ -1,8 +1,8 @@
 package com.learnhub.controller;
 
-import com.learnhub.dao.RegistrationDAO;
 import com.learnhub.entity.Registration;
 import com.learnhub.entity.User;
+import com.learnhub.service.PaymentService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 @WebServlet(name = "PaymentServlet", urlPatterns = {"/payment/checkout", "/my-payments", "/payment/history"})
 public class PaymentServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(PaymentServlet.class.getName());
-    private final RegistrationDAO registrationDAO = new RegistrationDAO();
+    private final PaymentService paymentService = new PaymentService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -50,8 +50,15 @@ public class PaymentServlet extends HttpServlet {
             return;
         }
 
-        Registration reg = registrationDAO.findById(regId);
+        Registration reg = paymentService.getRegistrationById(regId);
         if (reg == null) {
+            resp.sendRedirect(req.getContextPath() + "/courses");
+            return;
+        }
+
+        // Chống lỗ hổng IDOR: Kiểm tra người dùng hiện tại có phải chính chủ đơn hàng này không
+        User currentUser = ControllerSupport.currentUser(req);
+        if (currentUser != null && !currentUser.getId().equals(reg.getUserId())) {
             resp.sendRedirect(req.getContextPath() + "/courses");
             return;
         }
@@ -70,13 +77,11 @@ public class PaymentServlet extends HttpServlet {
         // Quy ước mã chuyển khoản: LH + 8 ký tự đầu của Registration ID (không dấu gạch nối)
         String transferCode = "LH" + reg.getId().toString().replace("-", "").substring(0, 8).toUpperCase();
         
-        // Ngân hàng MB Bank (hoặc Vietcombank) mặc định của LearnHub
         String bankCode = "MB"; // MBBank
-        String bankAccount = "0964902684"; // STK trường/hệ thống LearnHub
+        String bankAccount = "0964902684"; 
         String accountName = "LE DOAN ANH HUY";
         long amountVnd = reg.getAmount() != null ? reg.getAmount().longValue() : 0;
 
-        // URL sinh ảnh VietQR chuẩn Napas qua SePay Gateway
         String qrImageUrl = String.format("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%d&des=%s",
                 bankAccount, bankCode, amountVnd, transferCode);
 
@@ -106,12 +111,8 @@ public class PaymentServlet extends HttpServlet {
         if ("mock-pay".equalsIgnoreCase(action) && regIdStr != null) {
             try {
                 UUID regId = UUID.fromString(regIdStr.trim());
-                Registration reg = registrationDAO.findById(regId);
-                if (reg != null) {
-                    reg.setTransactionId("SP" + System.currentTimeMillis());
-                    registrationDAO.updateRegistrationStatus(reg.getId(), "enrolled", "paid");
-                    LOGGER.info("Mock Pay Triggered: Registration " + reg.getId() + " is now paid.");
-                }
+                paymentService.mockPayment(regId);
+                LOGGER.info("Mock Pay Triggered for registration: " + regId);
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error triggering mock payment", e);
             }
@@ -131,8 +132,8 @@ public class PaymentServlet extends HttpServlet {
             return;
         }
 
-        // Lấy toàn bộ danh sách đăng ký & thanh toán của học viên này
-        List<Registration> payments = registrationDAO.findByUserId(currentUser.getId());
+        // Lấy toàn bộ danh sách đăng ký & thanh toán của học viên này qua PaymentService
+        List<Registration> payments = paymentService.getPaymentHistory(currentUser.getId());
 
         req.setAttribute("payments", payments);
         req.setAttribute("pageTitle", "Lịch sử thanh toán - LearnHub");

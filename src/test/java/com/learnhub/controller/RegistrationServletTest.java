@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegistrationServletTest {
 
+    /**
+     * Servlet has dedicated url mappings.
+     */
     @Test
     void servletHasDedicatedUrlMappings() {
         WebServlet mapping = RegistrationServlet.class.getAnnotation(WebServlet.class);
@@ -28,6 +31,11 @@ class RegistrationServletTest {
         assertFalse(routes.contains("/admin/registrations"));
     }
 
+    /**
+     * Admin cannot access registration management.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void adminCannotAccessRegistrationManagement() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.ADMIN, "/manager/registrations");
@@ -35,6 +43,11 @@ class RegistrationServletTest {
         assertEquals(HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
     }
 
+    /**
+     * Student cannot access registration management.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void studentCannotAccessRegistrationManagement() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.STUDENT, "/manager/registrations");
@@ -42,6 +55,11 @@ class RegistrationServletTest {
         assertEquals(HttpServletResponse.SC_FORBIDDEN, exchange.errorCode.get());
     }
 
+    /**
+     * Unauthenticated user redirects to login.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void unauthenticatedUserRedirectsToLogin() throws Exception {
         Exchange exchange = new Exchange(null, "/manager/registrations");
@@ -55,6 +73,12 @@ class RegistrationServletTest {
         final HttpServletRequest request;
         final HttpServletResponse response;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param role the role
+         * @param path the path
+         */
         Exchange(String role, String path) {
             User user = null;
             if (role != null) {

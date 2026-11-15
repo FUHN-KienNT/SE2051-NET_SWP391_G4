@@ -12,6 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class QuestionExcelFileTest {
 
+    /**
+     * Verifies write and read template.
+     *
+     * @throws IOException if the operation cannot complete
+     */
     @Test
     @DisplayName("Tạo file mẫu và đọc lại các dòng tiêu đề và dữ liệu ví dụ")
     void testWriteAndReadTemplate() throws IOException {

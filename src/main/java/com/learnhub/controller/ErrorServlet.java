@@ -19,16 +19,40 @@ import java.util.logging.Logger;
 public class ErrorServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(ErrorServlet.class.getName());
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handleError(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         handleError(req, resp);
     }
 
+    /**
+     * Handle error.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleError(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Retrieve standard Jakarta servlet error attributes
         Integer statusCode = (Integer) req.getAttribute("jakarta.servlet.error.status_code");

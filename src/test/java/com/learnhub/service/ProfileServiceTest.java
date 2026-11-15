@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProfileServiceTest {
     private static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
+    /**
+     * Summarizes courses quizzes and streaks without counting future activity.
+     */
     @Test
     void summarizesCoursesQuizzesAndStreaksWithoutCountingFutureActivity() {
         LocalDate today = LocalDate.now(ZONE);
@@ -33,17 +36,35 @@ class ProfileServiceTest {
         course.setCompletedLessonCount(5);
 
         LearningProcessService learning = new LearningProcessService() {
+            /**
+             * Returns student courses.
+             *
+             * @param userId the user id identifier
+             * @return the student courses
+             */
             @Override
             public List<ContinueLearningDTO> getStudentCourses(UUID userId) {
                 return List.of(course);
             }
         };
         ProfileDAO dao = new ProfileDAO() {
+            /**
+             * Finds quiz summary.
+             *
+             * @param userId the user id identifier
+             * @return the matching quiz summary, if present
+             */
             @Override
             public QuizSummary findQuizSummary(UUID userId) {
                 return new QuizSummary(7, 4, new BigDecimal("8.2"));
             }
 
+            /**
+             * Finds daily activity.
+             *
+             * @param userId the user id identifier
+             * @return the matching daily activity, if present
+             */
             @Override
             public Map<LocalDate, Integer> findDailyActivity(UUID userId) {
                 return activity;
@@ -64,20 +85,41 @@ class ProfileServiceTest {
                 .allMatch(day -> day.isFuture() && day.getCount() == 0));
     }
 
+    /**
+     * Empty activity has no streak.
+     */
     @Test
     void emptyActivityHasNoStreak() {
         LearningProcessService learning = new LearningProcessService() {
+            /**
+             * Returns student courses.
+             *
+             * @param userId the user id identifier
+             * @return the student courses
+             */
             @Override
             public List<ContinueLearningDTO> getStudentCourses(UUID userId) {
                 return List.of();
             }
         };
         ProfileDAO dao = new ProfileDAO() {
+            /**
+             * Finds quiz summary.
+             *
+             * @param userId the user id identifier
+             * @return the matching quiz summary, if present
+             */
             @Override
             public QuizSummary findQuizSummary(UUID userId) {
                 return new QuizSummary(0, 0, null);
             }
 
+            /**
+             * Finds daily activity.
+             *
+             * @param userId the user id identifier
+             * @return the matching daily activity, if present
+             */
             @Override
             public Map<LocalDate, Integer> findDailyActivity(UUID userId) {
                 return Map.of();

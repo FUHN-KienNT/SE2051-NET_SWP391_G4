@@ -5,7 +5,8 @@ import com.learnhub.entity.Setting;
 import com.learnhub.entity.User;
 import com.learnhub.service.CourseService;
 import com.learnhub.service.DashboardService;
-import com.learnhub.util.CloudinaryClient;
+import com.learnhub.util.AvatarCloudinary;
+import com.learnhub.service.AvatarService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -18,7 +19,7 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.file.Paths;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -48,6 +49,14 @@ public class AdminCourseServlet extends HttpServlet {
     private final CourseService courseService = new CourseService();
     private final DashboardService dashboardService = new DashboardService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -133,6 +142,14 @@ public class AdminCourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/course-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle course detail.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         Course course = null;
@@ -168,6 +185,8 @@ public class AdminCourseServlet extends HttpServlet {
             req.setAttribute("successMessage", "Trạng thái công khai khóa học đã được cập nhật!");
         } else if ("missing_title".equals(req.getParameter("error"))) {
             req.setAttribute("errorMessage", "Tên khóa học (Course Title) không được để trống.");
+        } else if ("thumbnail_failed".equals(req.getParameter("error"))) {
+            req.setAttribute("errorMessage", "Không thể tải ảnh lên. Hãy chọn ảnh JPEG hoặc PNG tối đa 5 MB và thử lại.");
         } else if ("save_failed".equals(req.getParameter("error"))) {
             req.setAttribute("errorMessage", "Không thể lưu khóa học. Vui lòng kiểm tra lại thông tin.");
         } else if ("invalid_expert".equals(req.getParameter("error"))) {
@@ -177,6 +196,14 @@ public class AdminCourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/course-detail.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -206,6 +233,15 @@ public class AdminCourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle publish toggle.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param actor the actor
+     * @param publish the publish
+     * @throws IOException if the operation cannot complete
+     */
     private void handlePublishToggle(HttpServletRequest req, HttpServletResponse resp, User actor, boolean publish) throws IOException {
         String idStr = req.getParameter("id");
         if (idStr != null && !idStr.isBlank()) {
@@ -233,6 +269,14 @@ public class AdminCourseServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/manager/courses?error=status_failed");
     }
 
+    /**
+     * Handle change status.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param actor the actor
+     * @throws IOException if the operation cannot complete
+     */
     private void handleChangeStatus(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
         String idStr = req.getParameter("courseId");
         if (idStr == null || idStr.isBlank()) {
@@ -264,6 +308,14 @@ public class AdminCourseServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/manager/courses?error=status_failed");
     }
 
+    /**
+     * Handle save course.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param actor the actor
+     * @throws IOException if the operation cannot complete
+     */
     private void handleSaveCourse(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
         String idStr = req.getParameter("id");
         String title = req.getParameter("title");
@@ -283,22 +335,6 @@ public class AdminCourseServlet extends HttpServlet {
                 resp.sendRedirect(req.getContextPath() + "/manager/courses?error=missing_title");
             }
             return;
-        }
-
-        // Handle Cloudinary file upload if present
-        try {
-            Part filePart = req.getPart("thumbnailFile");
-            if (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isBlank()) {
-                String filename = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                try (InputStream is = filePart.getInputStream()) {
-                    String uploadedUrl = CloudinaryClient.uploadFile(is, filename);
-                    if (uploadedUrl != null && !uploadedUrl.isBlank()) {
-                        thumbnailUrl = uploadedUrl;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Thumbnail upload issue: " + e.getMessage());
         }
 
         BigDecimal price = BigDecimal.ZERO;
@@ -336,7 +372,8 @@ public class AdminCourseServlet extends HttpServlet {
 
         boolean isUpdate = idStr != null && !idStr.trim().isEmpty();
 
-        // Preserve previous thumbnail if not updated
+        // Preserve the stored thumbnail; the detail form never submits a URL.
+        if (isDetailRequest) thumbnailUrl = null;
         if (isUpdate && (thumbnailUrl == null || thumbnailUrl.isBlank())) {
             try {
                 Course existing = courseService.getCourseById(UUID.fromString(idStr.trim()));
@@ -344,6 +381,31 @@ public class AdminCourseServlet extends HttpServlet {
                     thumbnailUrl = existing.getThumbnailUrl();
                 }
             } catch (Exception ignored) {}
+        }
+
+        String uploadedPublicId = null;
+        AvatarCloudinary imageStorage = new AvatarCloudinary();
+        if (isDetailRequest) {
+            try {
+                Part filePart = req.getPart("thumbnailFile");
+                if (filePart != null && filePart.getSize() > 0) {
+                    if (filePart.getSize() > AvatarService.MAX_BYTES) throw new IOException("Thumbnail is too large");
+                    byte[] bytes;
+                    try (InputStream input = filePart.getInputStream()) {
+                        bytes = input.readNBytes(AvatarService.MAX_BYTES + 1);
+                    }
+                    if (!AvatarService.validImage(bytes)) throw new IOException("Invalid thumbnail image");
+                    uploadedPublicId = "learnhub/course-thumbnails/" + UUID.randomUUID();
+                    thumbnailUrl = imageStorage.upload(bytes, uploadedPublicId);
+                }
+            } catch (Exception e) {
+                if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+                LOGGER.log(Level.WARNING, "Thumbnail upload failed", e);
+                UUID courseId = ControllerSupport.optionalUuid(idStr);
+                String target = courseId == null ? "/manager/course-detail?action=new" : "/manager/course-detail?id=" + courseId;
+                resp.sendRedirect(req.getContextPath() + target + "&error=thumbnail_failed");
+                return;
+            }
         }
 
         Course course = new Course();
@@ -391,6 +453,11 @@ public class AdminCourseServlet extends HttpServlet {
             }
         }
 
+        if (!result && uploadedPublicId != null) {
+            try { imageStorage.delete(uploadedPublicId); }
+            catch (InterruptedException e) { Thread.currentThread().interrupt(); LOGGER.log(Level.WARNING, "Thumbnail cleanup interrupted", e); }
+            catch (IOException e) { LOGGER.log(Level.WARNING, "Thumbnail cleanup failed", e); }
+        }
         if (result) {
             if (isDetailRequest && savedId != null) {
                 resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + savedId + "&save_success=true");
@@ -406,6 +473,13 @@ public class AdminCourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle get course json.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     private void handleGetCourseJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         resp.setContentType("application/json;charset=UTF-8");
@@ -434,6 +508,12 @@ public class AdminCourseServlet extends HttpServlet {
         resp.getWriter().write("{\"error\":\"not_found\"}");
     }
 
+    /**
+     * Escape json.
+     *
+     * @param s the s
+     * @return the result of escape json
+     */
     private String escapeJson(String s) {
         if (s == null) {
             return "";
@@ -444,6 +524,13 @@ public class AdminCourseServlet extends HttpServlet {
                 .replace("\r", "\\r");
     }
 
+    /**
+     * Checks whether authorized role.
+     *
+     * @param user the user
+     * @param role the role
+     * @return true when the condition holds; false otherwise
+     */
     private boolean isAuthorizedRole(User user, String role) {
         if (user == null) {
             return false;

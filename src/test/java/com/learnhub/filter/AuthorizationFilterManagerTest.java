@@ -17,6 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthorizationFilterManagerTest {
+    /**
+     * Retired admin registration route is forbidden for reading and writing.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void retiredAdminRegistrationRouteIsForbiddenForReadingAndWriting() throws Exception {
         for (String method : new String[]{"GET", "POST"}) {
@@ -29,6 +34,11 @@ class AuthorizationFilterManagerTest {
         }
     }
 
+    /**
+     * Manager registration route requires manager for reading and writing.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void managerRegistrationRouteRequiresManagerForReadingAndWriting() throws Exception {
         for (String method : new String[]{"GET", "POST"}) {
@@ -42,6 +52,11 @@ class AuthorizationFilterManagerTest {
         }
     }
 
+    /**
+     * Course routes allow manager and expert but reject admin and student.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void courseRoutesAllowManagerAndExpertButRejectAdminAndStudent() throws Exception {
         for (String path : new String[]{"/manager/courses", "/manager/course-detail", "/manager/course-status"}) {
@@ -58,6 +73,11 @@ class AuthorizationFilterManagerTest {
         }
     }
 
+    /**
+     * Sets tings routes require admin for reading and writing.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void settingsRoutesRequireAdminForReadingAndWriting() throws Exception {
         for (String path : new String[]{"/admin/settings", "/admin/setting-detail", "/admin/setting-status"}) {
@@ -74,6 +94,11 @@ class AuthorizationFilterManagerTest {
         }
     }
 
+    /**
+     * Expert content routes require expert for reading and writing.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void expertContentRoutesRequireExpertForReadingAndWriting() throws Exception {
         for (String path : new String[]{"/expert/lessons", "/expert/lessons/create",
@@ -92,6 +117,11 @@ class AuthorizationFilterManagerTest {
         }
     }
 
+    /**
+     * Manager can open manager dashboard.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void managerCanOpenManagerDashboard() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.MANAGER);
@@ -100,6 +130,11 @@ class AuthorizationFilterManagerTest {
         assertEquals(0, exchange.errorCode.get());
     }
 
+    /**
+     * Other roles cannot open manager dashboard.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void otherRolesCannotOpenManagerDashboard() throws Exception {
         for (String role : new String[]{AppConstants.Role.ADMIN, AppConstants.Role.EXPERT,
@@ -118,10 +153,22 @@ class AuthorizationFilterManagerTest {
         final HttpServletRequest request;
         final HttpServletResponse response;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param role the role
+         */
         Exchange(String role) {
             this(role, "/manager/dashboard", "GET");
         }
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param role the role
+         * @param path the path
+         * @param methodName the method name
+         */
         Exchange(String role, String path, String methodName) {
             User user = new User();
             user.setRoleCode(role);

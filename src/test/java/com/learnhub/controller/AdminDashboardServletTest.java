@@ -17,12 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdminDashboardServletTest {
+    /**
+     * Manager has dedicated servlet url.
+     */
     @Test
     void managerHasDedicatedServletUrl() {
         WebServlet mapping = ManagerDashboardServlet.class.getAnnotation(WebServlet.class);
         assertTrue(Arrays.asList(mapping.urlPatterns()).contains("/manager/dashboard"));
     }
 
+    /**
+     * Old admin dashboard link redirects manager to manager dashboard.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void oldAdminDashboardLinkRedirectsManagerToManagerDashboard() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.MANAGER, "/admin/dashboard");
@@ -30,6 +38,11 @@ class AdminDashboardServletTest {
         assertEquals("/learnhub/manager/dashboard", exchange.redirect.get());
     }
 
+    /**
+     * Admin cannot open manager dashboard.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void adminCannotOpenManagerDashboard() throws Exception {
         Exchange exchange = new Exchange(AppConstants.Role.ADMIN, "/manager/dashboard");
@@ -43,6 +56,12 @@ class AdminDashboardServletTest {
         final HttpServletRequest request;
         final HttpServletResponse response;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param role the role
+         * @param path the path
+         */
         Exchange(String role, String path) {
             User user = new User();
             user.setRoleCode(role);

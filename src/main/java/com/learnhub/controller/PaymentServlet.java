@@ -28,6 +28,14 @@ public class PaymentServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(PaymentServlet.class.getName());
     private final PaymentService paymentService = new PaymentService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (!"/payment/checkout".equals(req.getServletPath())) {
@@ -98,6 +106,14 @@ public class PaymentServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/courses/checkout.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (!"/payment/checkout".equals(req.getServletPath())) {
@@ -123,6 +139,14 @@ public class PaymentServlet extends HttpServlet {
         doGet(req, resp);
     }
 
+    /**
+     * Show history.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showHistory(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         User currentUser = ControllerSupport.currentUser(req);

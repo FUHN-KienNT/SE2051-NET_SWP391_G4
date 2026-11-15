@@ -14,10 +14,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class QuestionImportParserTest {
 
+    /**
+     * Create header.
+     *
+     * @return the result of create header
+     */
     private String[] createHeader() {
         return Arrays.copyOf(QuestionImportParser.HEADERS, QuestionImportParser.HEADERS.length);
     }
 
+    /**
+     * Verifies empty or null rows.
+     */
     @Test
     @DisplayName("Empty or null rows should return error")
     void testEmptyOrNullRows() {
@@ -30,6 +38,9 @@ class QuestionImportParserTest {
         assertTrue(res2.getErrorCount() > 0);
     }
 
+    /**
+     * Verifies invalid header.
+     */
     @Test
     @DisplayName("Invalid header row should fail with clear message")
     void testInvalidHeader() {
@@ -42,6 +53,9 @@ class QuestionImportParserTest {
         assertTrue(res.getErrors().get(0).contains("Hàng 1 không đúng mẫu"));
     }
 
+    /**
+     * Verifies unaccented header.
+     */
     @Test
     @DisplayName("Unaccented Vietnamese header should pass validation")
     void testUnaccentedHeader() {
@@ -59,6 +73,9 @@ class QuestionImportParserTest {
         assertEquals("single_choice", res.getQuestions().get(0).getType());
     }
 
+    /**
+     * Verifies valid single choice.
+     */
     @Test
     @DisplayName("Single choice question with 4 options parsed correctly")
     void testValidSingleChoice() {
@@ -83,6 +100,9 @@ class QuestionImportParserTest {
         assertEquals(1, res.getSingleCount());
     }
 
+    /**
+     * Verifies valid multiple choice.
+     */
     @Test
     @DisplayName("Multiple choice question with comma-separated letters and numbers parsed correctly")
     void testValidMultipleChoice() {
@@ -108,6 +128,9 @@ class QuestionImportParserTest {
         assertEquals(1, res.getMultipleCount());
     }
 
+    /**
+     * Verifies flexible answer format.
+     */
     @Test
     @DisplayName("Answer column accepting numbers (1, 3 for A, C) or punctuation (A., (C))")
     void testFlexibleAnswerFormat() {
@@ -130,6 +153,9 @@ class QuestionImportParserTest {
         assertTrue(q.getOptions().get(2).isCorrect()); // Option '4'
     }
 
+    /**
+     * Verifies fill in blank.
+     */
     @Test
     @DisplayName("Fill in blank question with keywords and empty options A-D")
     void testFillInBlank() {
@@ -155,6 +181,9 @@ class QuestionImportParserTest {
         assertEquals(1, res.getFillCount());
     }
 
+    /**
+     * Verifies auto infer fill in blank.
+     */
     @Test
     @DisplayName("Auto-infer fill in blank when type is empty and options A-D are empty")
     void testAutoInferFillInBlank() {
@@ -172,6 +201,9 @@ class QuestionImportParserTest {
         assertEquals("fill_in_blank", res.getQuestions().get(0).getType());
     }
 
+    /**
+     * Verifies vietnamese type aliases.
+     */
     @Test
     @DisplayName("Vietnamese type aliases: trắc nghiệm, nhiều đáp án, điền chỗ trống")
     void testVietnameseTypeAliases() {
@@ -190,6 +222,9 @@ class QuestionImportParserTest {
     }
 
 
+    /**
+     * Verifies gap in options.
+     */
     @Test
     @DisplayName("Gap in options (A filled, B empty, C filled) should report error")
     void testGapInOptions() {
@@ -206,6 +241,9 @@ class QuestionImportParserTest {
         assertTrue(res.getErrors().get(0).contains("đang để trống"));
     }
 
+    /**
+     * Verifies correct answer pointing to empty option.
+     */
     @Test
     @DisplayName("Correct answer pointing to empty option should report error")
     void testCorrectAnswerPointingToEmptyOption() {

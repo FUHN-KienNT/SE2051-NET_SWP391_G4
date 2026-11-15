@@ -21,6 +21,15 @@ import java.util.logging.Logger;
 public class CourseDAO {
     private static final Logger LOGGER = Logger.getLogger(CourseDAO.class.getName());
 
+    /**
+     * Finds published courses.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching published courses, if present
+     */
     public List<Course> findPublishedCourses(String search, UUID categoryId, int offset, int limit) {
         List<Course> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -66,6 +75,13 @@ public class CourseDAO {
         return list;
     }
 
+    /**
+     * Finds popular published courses.
+     *
+     * @param excludedCourseId the excluded course id identifier
+     * @param limit the limit
+     * @return the matching popular published courses, if present
+     */
     public List<Course> findPopularPublishedCourses(UUID excludedCourseId, int limit) {
         List<Course> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -104,6 +120,13 @@ public class CourseDAO {
         return list;
     }
 
+    /**
+     * Counts published courses.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @return the number of published courses
+     */
     public int countPublishedCourses(String search, UUID categoryId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM course c LEFT JOIN setting s ON c.category_id = s.id WHERE c.status = 'published' AND (s.id IS NULL OR s.status = TRUE) ");
         List<Object> params = new ArrayList<>();
@@ -135,6 +158,12 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param id the id identifier
+     * @return the matching by id, if present
+     */
     public Course findById(UUID id) {
         if (id == null) return null;
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
@@ -160,14 +189,33 @@ public class CourseDAO {
         return null;
     }
 
+    /**
+     * Finds course with modules and lessons.
+     *
+     * @param courseId the course id identifier
+     * @return the matching course with modules and lessons, if present
+     */
     public Course findCourseWithModulesAndLessons(UUID courseId) {
         return findCourseCurriculum(courseId, true);
     }
 
+    /**
+     * Finds course with lesson summaries.
+     *
+     * @param courseId the course id identifier
+     * @return the matching course with lesson summaries, if present
+     */
     public Course findCourseWithLessonSummaries(UUID courseId) {
         return findCourseCurriculum(courseId, false);
     }
 
+    /**
+     * Finds course curriculum.
+     *
+     * @param courseId the course id identifier
+     * @param includeContent the include content
+     * @return the matching course curriculum, if present
+     */
     private Course findCourseCurriculum(UUID courseId, boolean includeContent) {
         Course course = findById(courseId);
         if (course == null) return null;
@@ -189,6 +237,12 @@ public class CourseDAO {
         return course;
     }
 
+    /**
+     * Insert.
+     *
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insert(Course course) {
         String sql = "INSERT INTO course (id, title, description, price, thumbnail_url, status, category_id, created_by, expert_id, created_at, updated_at) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?::course_status, ?, ?, ?, NOW(), NOW())";
@@ -210,6 +264,12 @@ public class CourseDAO {
         }
     }
 
+    /**
+     * Update.
+     *
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean update(Course course) {
         String sql = "UPDATE course SET title = ?, description = ?, price = ?, thumbnail_url = ?, status = ?::course_status, category_id = ?, expert_id = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -229,6 +289,13 @@ public class CourseDAO {
         }
     }
 
+    /**
+     * Map result set to course.
+     *
+     * @param rs the current result set
+     * @return the result of map result set to course
+     * @throws SQLException if the operation cannot complete
+     */
     private Course mapResultSetToCourse(ResultSet rs) throws SQLException {
         Course c = new Course();
         c.setId((UUID) rs.getObject("id"));
@@ -257,6 +324,19 @@ public class CourseDAO {
         return c;
     }
 
+    /**
+     * Finds all courses for management.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param status the status
+     * @param priceType the price type
+     * @param sortBy the sort by
+     * @param sortOrder the sort order
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching all courses for management, if present
+     */
     public List<Course> findAllCoursesForManagement(String search, UUID categoryId, String status, String priceType, String sortBy, String sortOrder, int offset, int limit) {
         List<Course> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -332,6 +412,15 @@ public class CourseDAO {
         return list;
     }
 
+    /**
+     * Counts all courses for management.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param status the status
+     * @param priceType the price type
+     * @return the number of all courses for management
+     */
     public int countAllCoursesForManagement(String search, UUID categoryId, String status, String priceType) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM course c " +
@@ -378,6 +467,13 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Update status.
+     *
+     * @param courseId the course id identifier
+     * @param status the status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateStatus(UUID courseId, String status) {
         String sql = "UPDATE course SET status = ?::course_status, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -390,6 +486,12 @@ public class CourseDAO {
             return false;
         }
     }
+    /**
+     * Finds assigned course options.
+     *
+     * @param expertId the expert id identifier
+     * @return the matching assigned course options, if present
+     */
     public List<Course> findAssignedCourseOptions(UUID expertId) {
         List<Course> courses = new ArrayList<>();
         try (Connection conn = DbConnection.getConnection();
@@ -410,10 +512,27 @@ public class CourseDAO {
         return courses;
     }
 
+    /**
+     * Finds by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching by expert id, if present
+     */
     public List<Course> findByExpertId(UUID expertId, int offset, int limit) {
         return findByExpertId(expertId, offset, limit, "");
     }
 
+    /**
+     * Finds by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @param offset the offset
+     * @param limit the limit
+     * @param search the search
+     * @return the matching by expert id, if present
+     */
     public List<Course> findByExpertId(UUID expertId, int offset, int limit, String search) {
         List<Course> list = new ArrayList<>();
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
@@ -444,6 +563,13 @@ public class CourseDAO {
         return list;
     }
 
+    /**
+     * Counts assigned by status.
+     *
+     * @param expertId the expert id identifier
+     * @param search the search
+     * @return the number of assigned by status
+     */
     public CourseStatusCounts countAssignedByStatus(UUID expertId, String search) {
         String sql = """
                 SELECT COUNT(*) AS total,
@@ -466,14 +592,35 @@ public class CourseDAO {
         }
     }
 
+    /**
+     * Counts by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @return the number of by expert id
+     */
     public int countByExpertId(UUID expertId) {
         return countByExpertId(expertId, null);
     }
 
+    /**
+     * Counts by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @param status the status
+     * @return the number of by expert id
+     */
     public int countByExpertId(UUID expertId, String status) {
         return countByExpertId(expertId, status, "");
     }
 
+    /**
+     * Counts by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @param status the status
+     * @param search the search
+     * @return the number of by expert id
+     */
     public int countByExpertId(UUID expertId, String status, String search) {
         String sql = "SELECT COUNT(*) FROM course WHERE expert_id = ? "
                 + "AND strpos(lower(title), lower(?)) > 0"
@@ -495,10 +642,21 @@ public class CourseDAO {
         }
     }
 
+    /**
+     * Finds by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @return the matching by expert id, if present
+     */
     public List<Course> findByExpertId(UUID expertId) {
         return findByExpertId(expertId, 0, 100);
     }
 
+    /**
+     * Counts total courses.
+     *
+     * @return the number of total courses
+     */
     public int countTotalCourses() {
         String sql = "SELECT COUNT(*) FROM course";
         try (Connection conn = DbConnection.getConnection();
@@ -511,6 +669,11 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Counts published courses.
+     *
+     * @return the number of published courses
+     */
     public int countPublishedCourses() {
         String sql = "SELECT COUNT(*) FROM course WHERE status = 'published'";
         try (Connection conn = DbConnection.getConnection();
@@ -523,6 +686,11 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Counts unpublished courses.
+     *
+     * @return the number of unpublished courses
+     */
     public int countUnpublishedCourses() {
         String sql = "SELECT COUNT(*) FROM course WHERE status != 'published'";
         try (Connection conn = DbConnection.getConnection();
@@ -535,6 +703,11 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Counts unassigned courses.
+     *
+     * @return the number of unassigned courses
+     */
     public int countUnassignedCourses() {
         String sql = "SELECT COUNT(*) FROM course WHERE expert_id IS NULL AND status != 'archived'";
         try (Connection conn = DbConnection.getConnection();
@@ -547,6 +720,12 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Finds unassigned courses.
+     *
+     * @param limit the limit
+     * @return the matching unassigned courses, if present
+     */
     public List<Course> findUnassignedCourses(int limit) {
         List<Course> list = new ArrayList<>();
         String sql = "SELECT c.id, c.title, c.description, c.price, c.thumbnail_url, c.status, " +
@@ -572,6 +751,13 @@ public class CourseDAO {
         return list;
     }
 
+    /**
+     * Assign expert.
+     *
+     * @param courseId the course id identifier
+     * @param expertId the expert id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean assignExpert(UUID courseId, UUID expertId) {
         String sql = "UPDATE course SET expert_id = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -584,6 +770,12 @@ public class CourseDAO {
             return false;
         }
     }
+    /**
+     * Counts courses by category id.
+     *
+     * @param categoryId the category id identifier
+     * @return the number of courses by category id
+     */
     public int countCoursesByCategoryId(UUID categoryId) {
         if (categoryId == null) return 0;
         String sql = "SELECT COUNT(*) FROM course WHERE category_id = ?";
@@ -599,6 +791,11 @@ public class CourseDAO {
         return 0;
     }
 
+    /**
+     * Counts courses grouped by category.
+     *
+     * @return the number of courses grouped by category
+     */
     public Map<UUID, Integer> countCoursesGroupedByCategory() {
         Map<UUID, Integer> map = new HashMap<>();
         String sql = "SELECT category_id, COUNT(*) FROM course WHERE category_id IS NOT NULL GROUP BY category_id";

@@ -22,15 +22,30 @@ public class ProfileService {
     private final LearningProcessService learningService;
     private final ProfileDAO profileDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public ProfileService() {
         this(new LearningProcessService(), new ProfileDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param learningService the learning service
+     * @param profileDAO the profile dao
+     */
     public ProfileService(LearningProcessService learningService, ProfileDAO profileDAO) {
         this.learningService = learningService;
         this.profileDAO = profileDAO;
     }
 
+    /**
+     * Returns overview.
+     *
+     * @param userId the user id identifier
+     * @return the overview
+     */
     public ProfileOverview getOverview(UUID userId) {
         List<ContinueLearningDTO> courses = learningService.getStudentCourses(userId);
         int totalLessons = courses.stream().mapToInt(ContinueLearningDTO::getLessonCount).sum();

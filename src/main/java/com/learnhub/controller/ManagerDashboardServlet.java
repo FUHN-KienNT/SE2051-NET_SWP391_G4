@@ -30,6 +30,14 @@ public class ManagerDashboardServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(ManagerDashboardServlet.class.getName());
     private final DashboardService dashboardService = new DashboardService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -80,6 +88,14 @@ public class ManagerDashboardServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/manager/dashboard.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -154,6 +170,13 @@ public class ManagerDashboardServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/manager/dashboard?error=status_failed" + periodParam);
     }
 
+    /**
+     * Checks whether authorized manager.
+     *
+     * @param req the incoming request
+     * @param user the user
+     * @return true when the condition holds; false otherwise
+     */
     private boolean isAuthorizedManager(HttpServletRequest req, User user) {
         if (user == null) {
             return false;

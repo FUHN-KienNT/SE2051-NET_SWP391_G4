@@ -18,14 +18,28 @@ public class QuizManagementService {
     private final QuizDAO quizDAO;
     private final QuizQuestionDAO qqDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public QuizManagementService() {
         this(new QuizDAO(), new QuizQuestionDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param quizDAO the quiz dao
+     */
     public QuizManagementService(QuizDAO quizDAO) {
         this(quizDAO, new QuizQuestionDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param quizDAO the quiz dao
+     * @param qqDAO the qq dao
+     */
     public QuizManagementService(QuizDAO quizDAO, QuizQuestionDAO qqDAO) {
         this.quizDAO = quizDAO;
         this.qqDAO = qqDAO;
@@ -35,6 +49,16 @@ public class QuizManagementService {
     // FIND QUIZZES
     // =========================================================
 
+    /**
+     * Finds by expert.
+     *
+     * @param expertId the expert id identifier
+     * @param keyword the keyword
+     * @param moduleId the module id identifier
+     * @param courseId the course id identifier
+     * @param status the status
+     * @return the matching by expert, if present
+     */
     public List<Quiz> findByExpert(
             UUID expertId,
             String keyword,
@@ -55,6 +79,12 @@ public class QuizManagementService {
     // GET QUIZ
     // =========================================================
 
+    /**
+     * Get.
+     *
+     * @param id the id identifier
+     * @return the result of get
+     */
     public Quiz get(UUID id) {
         return quizDAO.findById(id);
     }
@@ -63,6 +93,12 @@ public class QuizManagementService {
     // GET QUESTION IDS
     // =========================================================
 
+    /**
+     * Returns question ids.
+     *
+     * @param quizId the quiz id identifier
+     * @return the question ids
+     */
     public List<UUID> getQuestionIds(UUID quizId) {
 
         if (quizId == null) {
@@ -76,6 +112,18 @@ public class QuizManagementService {
     // SAVE QUIZ
     // =========================================================
 
+    /**
+     * Save.
+     *
+     * @param expertId the expert id identifier
+     * @param id the id identifier
+     * @param moduleId the module id identifier
+     * @param title the title
+     * @param timeLimit the time limit
+     * @param passScore the pass score
+     * @param questionIds the question ids
+     * @return true when the condition holds; false otherwise
+     */
     public boolean save(
             UUID expertId,
             UUID id,
@@ -188,6 +236,13 @@ public class QuizManagementService {
     // HIDE / UNHIDE / DELETE QUIZ
     // =========================================================
 
+    /**
+     * Hide.
+     *
+     * @param expertId the expert id identifier
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean hide(UUID expertId, UUID id) {
         if (expertId == null || id == null) {
             return false;
@@ -200,6 +255,13 @@ public class QuizManagementService {
         return quizDAO.hide(id);
     }
 
+    /**
+     * Unhide.
+     *
+     * @param expertId the expert id identifier
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean unhide(UUID expertId, UUID id) {
         if (expertId == null || id == null) {
             return false;
@@ -212,6 +274,12 @@ public class QuizManagementService {
         return quizDAO.unhide(id);
     }
 
+    /**
+     * Checks whether used.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isUsed(UUID id) {
         if (id == null) {
             return false;

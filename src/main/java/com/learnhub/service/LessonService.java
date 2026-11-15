@@ -44,6 +44,12 @@ public class LessonService {
     private final ModuleDAO moduleDAO;
     private final QuizDAO quizDAO;
 
+    /**
+     * Require course access.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     */
     public void requireCourseAccess(UUID expertId, UUID courseId) {
         Course course = courseId == null ? null : courseDAO.findById(courseId);
         if (expertId == null || course == null
@@ -52,6 +58,13 @@ public class LessonService {
         }
     }
 
+    /**
+     * Require module access.
+     *
+     * @param expertId the expert id identifier
+     * @param moduleId the module id identifier
+     * @return the result of require module access
+     */
     private Module requireModuleAccess(UUID expertId, UUID moduleId) {
         Module module = moduleId == null ? null : moduleDAO.findById(moduleId);
         if (module == null) {
@@ -61,6 +74,13 @@ public class LessonService {
         return module;
     }
 
+    /**
+     * Require lesson access.
+     *
+     * @param expertId the expert id identifier
+     * @param lessonId the lesson id identifier
+     * @return the result of require lesson access
+     */
     private Lesson requireLessonAccess(UUID expertId, UUID lessonId) {
         Lesson lesson = lessonId == null ? null : lessonDAO.findById(lessonId);
         if (lesson == null) {
@@ -70,18 +90,41 @@ public class LessonService {
         return lesson;
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public LessonService() {
         this(new LessonDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param lessonDAO the lesson dao
+     */
     public LessonService(LessonDAO lessonDAO) {
         this(lessonDAO, new CourseDAO(), new ModuleDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param lessonDAO the lesson dao
+     * @param courseDAO the course dao
+     * @param moduleDAO the module dao
+     */
     public LessonService(LessonDAO lessonDAO, CourseDAO courseDAO, ModuleDAO moduleDAO) {
         this(lessonDAO, courseDAO, moduleDAO, new QuizDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param lessonDAO the lesson dao
+     * @param courseDAO the course dao
+     * @param moduleDAO the module dao
+     * @param quizDAO the quiz dao
+     */
     public LessonService(LessonDAO lessonDAO, CourseDAO courseDAO, ModuleDAO moduleDAO, QuizDAO quizDAO) {
         this.lessonDAO = lessonDAO;
         this.courseDAO = courseDAO;
@@ -89,6 +132,13 @@ public class LessonService {
         this.quizDAO = quizDAO;
     }
 
+    /**
+     * Returns course for expert.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @return the course for expert
+     */
     public Course getCourseForExpert(UUID expertId, UUID courseId) {
         Course course = courseDAO.findCourseWithLessonSummaries(courseId);
         if (expertId == null || course == null || !expertId.equals(course.getExpertId())) {
@@ -97,6 +147,13 @@ public class LessonService {
         return course;
     }
 
+    /**
+     * Returns next lesson orders.
+     *
+     * @param course the course
+     * @param editedLessonId the edited lesson id identifier
+     * @return the next lesson orders
+     */
     public Map<UUID, Integer> getNextLessonOrders(Course course, UUID editedLessonId) {
         Map<UUID, Integer> orders = new LinkedHashMap<>();
         if (course == null || course.getModules() == null) return orders;
@@ -108,6 +165,13 @@ public class LessonService {
         return orders;
     }
 
+    /**
+     * Returns lesson.
+     *
+     * @param expertId the expert id identifier
+     * @param lessonId the lesson id identifier
+     * @return the lesson
+     */
     public LessonDTO getLesson(UUID expertId, UUID lessonId) {
         Lesson l = requireLessonAccess(expertId, lessonId);
         LessonDTO dto = new LessonDTO(l.getId(), l.getModuleId(), l.getTitle(), l.getContent(), l.getOrderIndex());
@@ -121,12 +185,27 @@ public class LessonService {
     }
 
     public record LessonListRow(Module module, Lesson lesson) {
+        /**
+         * Returns module.
+         *
+         * @return the module
+         */
         public Module getModule() { return module; }
+        /**
+         * Returns lesson.
+         *
+         * @return the lesson
+         */
         public Lesson getLesson() { return lesson; }
     }
 
     public record LessonListData(List<LessonListRow> rows, String sort,
                                  String direction, String status, UUID moduleId) {
+        /**
+         * Lessons by module.
+         *
+         * @return the result of lessons by module
+         */
         public Map<Module, List<Lesson>> lessonsByModule() {
             Map<Module, List<Lesson>> groups = new LinkedHashMap<>();
             rows.stream().sorted(Comparator
@@ -140,11 +219,32 @@ public class LessonService {
         }
     }
 
+    /**
+     * Build lesson list.
+     *
+     * @param modules the modules
+     * @param sort the sort
+     * @param direction the direction
+     * @param status the status
+     * @param moduleId the module id identifier
+     * @return the result of build lesson list
+     */
     public LessonListData buildLessonList(List<Module> modules, String sort,
                                           String direction, String status, UUID moduleId) {
         return buildLessonList(modules, sort, direction, status, moduleId, "");
     }
 
+    /**
+     * Build lesson list.
+     *
+     * @param modules the modules
+     * @param sort the sort
+     * @param direction the direction
+     * @param status the status
+     * @param moduleId the module id identifier
+     * @param search the search
+     * @return the result of build lesson list
+     */
     public LessonListData buildLessonList(List<Module> modules, String sort,
                                           String direction, String status, UUID moduleId, String search) {
         String keyword = search == null ? "" : search.strip().toLowerCase(Locale.ROOT);
@@ -197,10 +297,25 @@ public class LessonService {
 
     public record LessonSaveResult(boolean saved, Map<String, String> errors) {}
 
+    /**
+     * Save lesson.
+     *
+     * @param expertId the expert id identifier
+     * @param dto the dto
+     * @return true when the condition holds; false otherwise
+     */
     public boolean saveLesson(UUID expertId, LessonDTO dto) {
         return saveLesson(expertId, null, dto).saved();
     }
 
+    /**
+     * Save lesson.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @param dto the dto
+     * @return the result of save lesson
+     */
     public LessonSaveResult saveLesson(UUID expertId, UUID courseId, LessonDTO dto) {
         if (dto == null) return new LessonSaveResult(false, Map.of("lesson", "Missing lesson."));
         dto.setPublicationStatus(AppConstants.LessonStatus.DRAFT);
@@ -218,6 +333,16 @@ public class LessonService {
         return new LessonSaveResult(lessonDAO.save(lesson), Map.of());
     }
 
+    /**
+     * Change lesson availability.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param activate the activate
+     * @return true when the condition holds; false otherwise
+     */
     public boolean changeLessonAvailability(UUID expertId, UUID courseId, UUID lessonId,
                                             Timestamp expectedUpdatedAt, boolean activate) {
         requireCourseAccess(expertId, courseId);
@@ -235,10 +360,25 @@ public class LessonService {
                 expectedUpdatedAt, expectedStatus, targetStatus);
     }
 
+    /**
+     * Validate lesson.
+     *
+     * @param expertId the expert id identifier
+     * @param dto the dto
+     * @return the result of validate lesson
+     */
     public Map<String, String> validateLesson(UUID expertId, LessonDTO dto) {
         return validateLesson(expertId, null, dto);
     }
 
+    /**
+     * Validate lesson.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @param dto the dto
+     * @return the result of validate lesson
+     */
     private Map<String, String> validateLesson(UUID expertId, UUID courseId, LessonDTO dto) {
         if (courseId != null) requireCourseAccess(expertId, courseId);
         Map<String, String> errors = new LinkedHashMap<>();
@@ -299,6 +439,17 @@ public class LessonService {
     public record LessonListFilter(String sort, String direction, String status,
                                    UUID moduleId, String search) {}
 
+    /**
+     * Lesson list filter.
+     *
+     * @param sort the sort
+     * @param direction the direction
+     * @param durationSort the duration sort
+     * @param status the status
+     * @param moduleId the module id identifier
+     * @param search the search
+     * @return the result of lesson list filter
+     */
     public LessonListFilter lessonListFilter(String sort, String direction, String durationSort,
                                              String status, String moduleId, String search) {
         if (durationSort != null) {
@@ -311,11 +462,25 @@ public class LessonService {
                 search == null ? "" : search.strip());
     }
 
+    /**
+     * Build lesson list.
+     *
+     * @param modules the modules
+     * @param filter the filter
+     * @return the result of build lesson list
+     */
     public LessonListData buildLessonList(List<Module> modules, LessonListFilter filter) {
         return buildLessonList(modules, filter.sort(), filter.direction(), filter.status(),
                 filter.moduleId(), filter.search());
     }
 
+    /**
+     * Returns lesson for manager.
+     *
+     * @param manager the manager
+     * @param lessonId the lesson id identifier
+     * @return the lesson for manager
+     */
     public Lesson getLessonForManager(User manager, UUID lessonId) {
         requireManager(manager);
         Lesson lesson = lessonDAO.findById(lessonId);
@@ -326,6 +491,13 @@ public class LessonService {
     public record LessonPreviewData(Lesson lesson, Quiz quiz,
                                     List<Question> questions) {}
 
+    /**
+     * Returns lesson preview.
+     *
+     * @param user the user
+     * @param lessonId the lesson id identifier
+     * @return the lesson preview
+     */
     public LessonPreviewData getLessonPreview(User user, UUID lessonId) {
         if (user == null || !(AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())
                 || AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode()))) {
@@ -352,12 +524,24 @@ public class LessonService {
     }
     public record LessonReviewData(Course course, List<Lesson> lessons) {}
 
+    /**
+     * Require manager.
+     *
+     * @param manager the manager
+     */
     private void requireManager(User manager) {
         if (manager == null || !AppConstants.Role.MANAGER.equalsIgnoreCase(manager.getRoleCode())) {
             throw new SecurityException("Manager access required.");
         }
     }
 
+    /**
+     * Returns lessons for review.
+     *
+     * @param manager the manager
+     * @param courseId the course id identifier
+     * @return the lessons for review
+     */
     public LessonReviewData getLessonsForReview(User manager, UUID courseId) {
         requireManager(manager);
         Course course = courseDAO.findById(courseId);
@@ -365,6 +549,13 @@ public class LessonService {
         return new LessonReviewData(course, lessonDAO.findByCourseId(courseId));
     }
 
+    /**
+     * Returns course for lesson review.
+     *
+     * @param manager the manager
+     * @param courseId the course id identifier
+     * @return the course for lesson review
+     */
     public Course getCourseForLessonReview(User manager, UUID courseId) {
         requireManager(manager);
         Course course = courseDAO.findCourseWithLessonSummaries(courseId);
@@ -372,16 +563,43 @@ public class LessonService {
         return course;
     }
 
+    /**
+     * Returns courses awaiting review.
+     *
+     * @param manager the manager
+     * @return the courses awaiting review
+     */
     public List<ManagerDashboardDTO.PendingReviewItem> getCoursesAwaitingReview(User manager) {
         requireManager(manager);
         return lessonDAO.findCoursesAwaitingReview(0);
     }
 
+    /**
+     * Review lesson.
+     *
+     * @param manager the manager
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param decision the decision
+     * @return true when the condition holds; false otherwise
+     */
     public boolean reviewLesson(User manager, UUID courseId, UUID lessonId,
                                 Timestamp expectedUpdatedAt, String decision) {
         return reviewLesson(manager, courseId, lessonId, expectedUpdatedAt, decision, null);
     }
 
+    /**
+     * Review lesson.
+     *
+     * @param manager the manager
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param decision the decision
+     * @param declineReason the decline reason
+     * @return true when the condition holds; false otherwise
+     */
     public boolean reviewLesson(User manager, UUID courseId, UUID lessonId,
                                 Timestamp expectedUpdatedAt, String decision, String declineReason) {
         requireManager(manager);
@@ -402,6 +620,15 @@ public class LessonService {
         return lessonDAO.reviewPublication(courseId, lessonId, expectedUpdatedAt, decision, reason);
     }
 
+    /**
+     * Attach material.
+     *
+     * @param expertId the expert id identifier
+     * @param lessonId the lesson id identifier
+     * @param fileStream the file stream
+     * @param filename the filename
+     * @return the result of attach material
+     */
     public String attachMaterial(UUID expertId, UUID lessonId,
                                  InputStream fileStream, String filename) {
         Lesson lesson = requireLessonAccess(expertId, lessonId);

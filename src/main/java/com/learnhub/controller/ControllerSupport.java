@@ -15,6 +15,9 @@ import java.util.UUID;
 
 /** Shared HTTP mechanics; authorization and endpoint-specific errors stay in each servlet. */
 final class ControllerSupport {
+    /**
+     * Creates an instance with the supplied values.
+     */
     private ControllerSupport() {}
 
     /** Returns the signed in user stored in the HTTP session, if present. */
@@ -34,6 +37,16 @@ final class ControllerSupport {
         }
     }
 
+    /**
+     * Resolve uuid filter.
+     *
+     * @param req the incoming request
+     * @param session the session
+     * @param paramName the param name
+     * @param sessionKey the session key
+     * @param isFilterSubmit the is filter submit
+     * @return the result of resolve uuid filter
+     */
     static UUID resolveUuidFilter(HttpServletRequest req, HttpSession session,
                                   String paramName, String sessionKey, boolean isFilterSubmit) {
         String raw = req.getParameter(paramName);
@@ -46,6 +59,16 @@ final class ControllerSupport {
         return saved instanceof UUID id ? id : null;
     }
 
+    /**
+     * Resolve string filter.
+     *
+     * @param req the incoming request
+     * @param session the session
+     * @param paramName the param name
+     * @param sessionKey the session key
+     * @param isFilterSubmit the is filter submit
+     * @return the result of resolve string filter
+     */
     static String resolveStringFilter(HttpServletRequest req, HttpSession session,
                                       String paramName, String sessionKey, boolean isFilterSubmit) {
         String raw = req.getParameter(paramName);
@@ -58,6 +81,15 @@ final class ControllerSupport {
         return saved instanceof String s ? s : "";
     }
 
+    /**
+     * Resolve course picker filter.
+     *
+     * @param req the incoming request
+     * @param session the session
+     * @param courseKey the course key
+     * @param moduleKey the module key
+     * @return the result of resolve course picker filter
+     */
     static UUID resolveCoursePickerFilter(HttpServletRequest req, HttpSession session,
                                           String courseKey, String moduleKey) {
         if ("all".equalsIgnoreCase(req.getParameter("courseFilter"))) {
@@ -70,6 +102,12 @@ final class ControllerSupport {
         return courseId;
     }
 
+    /**
+     * Page number.
+     *
+     * @param value the value
+     * @return the result of page number
+     */
     static int pageNumber(String value) {
         try {
             return Math.max(1, Integer.parseInt(value == null ? "" : value.trim()));
@@ -92,6 +130,13 @@ final class ControllerSupport {
         return request.getRequestURI() + (query == null ? "" : "?" + query);
     }
 
+    /**
+     * Lesson list attributes.
+     *
+     * @param req the incoming request
+     * @param data the data
+     * @param search the search
+     */
     static void lessonListAttributes(HttpServletRequest req,
                                      LessonService.LessonListData data, String search) {
         req.setAttribute("lessonsByModule", data.lessonsByModule());

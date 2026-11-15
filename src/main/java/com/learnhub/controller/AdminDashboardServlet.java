@@ -35,6 +35,14 @@ public class AdminDashboardServlet extends HttpServlet {
 
     private final DashboardService dashboardService = new DashboardService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

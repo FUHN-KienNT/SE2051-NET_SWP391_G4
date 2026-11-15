@@ -16,6 +16,12 @@ import java.util.UUID;
 public class ProfileDAO {
     public record QuizSummary(int submissions, int passed, BigDecimal averageScore) {}
 
+    /**
+     * Finds quiz summary.
+     *
+     * @param userId the user id identifier
+     * @return the matching quiz summary, if present
+     */
     public QuizSummary findQuizSummary(UUID userId) {
         String sql = """
                 SELECT COUNT(*) AS submissions,
@@ -37,6 +43,12 @@ public class ProfileDAO {
         }
     }
 
+    /**
+     * Finds daily activity.
+     *
+     * @param userId the user id identifier
+     * @return the matching daily activity, if present
+     */
     public Map<LocalDate, Integer> findDailyActivity(UUID userId) {
         String sql = """
                 SELECT activity_day, COUNT(*) AS activity_count

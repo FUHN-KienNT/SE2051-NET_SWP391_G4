@@ -22,6 +22,12 @@ public class QuizDAO {
     // FIND QUIZ
     // =========================================================
 
+    /**
+     * Finds by id.
+     *
+     * @param id the id identifier
+     * @return the matching by id, if present
+     */
     public Quiz findById(UUID id) {
         if (id == null) {
             return null;
@@ -105,6 +111,12 @@ public class QuizDAO {
         return list;
     }
 
+    /**
+     * Finds by course id.
+     *
+     * @param courseId the course id identifier
+     * @return the matching by course id, if present
+     */
     public List<Quiz> findByCourseId(UUID courseId) {
         List<Quiz> quizzes = new ArrayList<>();
         try (Connection conn = DbConnection.getConnection();
@@ -343,6 +355,12 @@ public class QuizDAO {
     // HIDE / UNHIDE / HARD DELETE QUIZ
     // =========================================================
 
+    /**
+     * Hide.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean hide(UUID id) {
         if (id == null) {
             return false;
@@ -362,6 +380,12 @@ public class QuizDAO {
         }
     }
 
+    /**
+     * Unhide.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean unhide(UUID id) {
         if (id == null) {
             return false;
@@ -480,6 +504,13 @@ public class QuizDAO {
     // EXPERT OWNERSHIP
     // =========================================================
 
+    /**
+     * Belongs to expert.
+     *
+     * @param quizId the quiz id identifier
+     * @param expertId the expert id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean belongsToExpert(UUID quizId, UUID expertId) {
 
         if (quizId == null || expertId == null) {
@@ -516,6 +547,15 @@ public class QuizDAO {
     // HELPER OWNERSHIP METHODS FOR TRANSACTION
     // =========================================================
 
+    /**
+     * Module belongs to expert.
+     *
+     * @param conn the database connection
+     * @param moduleId the module id identifier
+     * @param expertId the expert id identifier
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     private boolean moduleBelongsToExpert(
             Connection conn,
             UUID moduleId,
@@ -540,6 +580,15 @@ public class QuizDAO {
         }
     }
 
+    /**
+     * Belongs to expert.
+     *
+     * @param conn the database connection
+     * @param quizId the quiz id identifier
+     * @param expertId the expert id identifier
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     private boolean belongsToExpert(
             Connection conn,
             UUID quizId,
@@ -569,6 +618,12 @@ public class QuizDAO {
     // OTHER METHODS
     // =========================================================
 
+    /**
+     * Finds questions.
+     *
+     * @param quizId the quiz id identifier
+     * @return the matching questions, if present
+     */
     public List<Question> findQuestions(UUID quizId) {
         return new QuestionDAO().findQuestionsByQuizId(quizId);
     }
@@ -577,6 +632,11 @@ public class QuizDAO {
     // SQL MAPPING
     // =========================================================
 
+    /**
+     * Base select.
+     *
+     * @return the result of base select
+     */
     private String baseSelect() {
 
         return "SELECT " +
@@ -600,6 +660,13 @@ public class QuizDAO {
                 "JOIN course c ON m.course_id=c.id";
     }
 
+    /**
+     * Map.
+     *
+     * @param rs the current result set
+     * @return the result of map
+     * @throws SQLException if the operation cannot complete
+     */
     private Quiz map(ResultSet rs) throws SQLException {
 
         Quiz q = new Quiz();

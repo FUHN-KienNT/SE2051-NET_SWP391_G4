@@ -10,17 +10,32 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class QuestionServiceTest {
 
+    /**
+     * Verifies cannot delete used question.
+     */
     @Test
     @DisplayName("Câu hỏi đã được dùng trong quiz/course thì KHÔNG THỂ xóa vĩnh viễn (chỉ được ẩn)")
     void testCannotDeleteUsedQuestion() {
         UUID usedQuestionId = UUID.randomUUID();
 
         QuestionDAO stubDao = new QuestionDAO() {
+            /**
+             * Checks whether used in quiz.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean isUsedInQuiz(UUID id) {
                 return usedQuestionId.equals(id);
             }
 
+            /**
+             * Delete.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean delete(UUID id) {
                 // Nếu được gọi xóa, chỉ xóa nếu chưa dùng
@@ -36,17 +51,32 @@ class QuestionServiceTest {
         assertFalse(deleteResult, "Câu hỏi đã được gán vào quiz thì không được phép xóa");
     }
 
+    /**
+     * Verifies can delete unused question.
+     */
     @Test
     @DisplayName("Câu hỏi chưa được dùng trong bài thi nào thì CÓ THỂ xóa vĩnh viễn")
     void testCanDeleteUnusedQuestion() {
         UUID unusedQuestionId = UUID.randomUUID();
 
         QuestionDAO stubDao = new QuestionDAO() {
+            /**
+             * Checks whether used in quiz.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean isUsedInQuiz(UUID id) {
                 return false; // Chưa từng được dùng
             }
 
+            /**
+             * Delete.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean delete(UUID id) {
                 return true; // Xóa thành công
@@ -59,17 +89,32 @@ class QuestionServiceTest {
         assertTrue(deleteResult, "Câu hỏi chưa dùng phải cho phép xóa vĩnh viễn");
     }
 
+    /**
+     * Verifies hide and unhide question.
+     */
     @Test
     @DisplayName("Chức năng ẩn (hide) và hiện (unhide) hoạt động đúng")
     void testHideAndUnhideQuestion() {
         UUID qId = UUID.randomUUID();
 
         QuestionDAO stubDao = new QuestionDAO() {
+            /**
+             * Hide.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean hide(UUID id) {
                 return true;
             }
 
+            /**
+             * Unhide.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean unhide(UUID id) {
                 return true;

@@ -297,6 +297,12 @@ public class DashboardDAO {
     // Private Helpers
     // -------------------------------------------------------------------------
 
+    /**
+     * Query single int.
+     *
+     * @param sql the sql
+     * @return the result of query single int
+     */
     private int querySingleInt(String sql) {
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -310,6 +316,13 @@ public class DashboardDAO {
         return 0;
     }
 
+    /**
+     * Map audit log.
+     *
+     * @param rs the current result set
+     * @return the result of map audit log
+     * @throws SQLException if the operation cannot complete
+     */
     private AuditLog mapAuditLog(ResultSet rs) throws SQLException {
         AuditLog log = new AuditLog();
         log.setId((UUID) rs.getObject("id"));

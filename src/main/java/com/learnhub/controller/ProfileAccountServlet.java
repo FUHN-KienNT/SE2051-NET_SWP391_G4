@@ -27,6 +27,14 @@ public class ProfileAccountServlet extends HttpServlet {
     private final UserService userService = new UserService();
     private final ProfileService profileService = new ProfileService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -47,6 +55,14 @@ public class ProfileAccountServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -65,6 +81,14 @@ public class ProfileAccountServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Load current user.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @return the result of load current user
+     * @throws IOException if the operation cannot complete
+     */
     private User loadCurrentUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         HttpSession session = req.getSession(false);
         Object account = session == null ? null : session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
@@ -80,6 +104,15 @@ public class ProfileAccountServlet extends HttpServlet {
         return fresh;
     }
 
+    /**
+     * Show account.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showAccount(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -91,6 +124,15 @@ public class ProfileAccountServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/profile/account.jsp").forward(req, resp);
     }
 
+    /**
+     * Show set password.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showSetPassword(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
         if (!user.isRequiresPasswordChange()) {
@@ -105,6 +147,15 @@ public class ProfileAccountServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/auth/set-password.jsp").forward(req, resp);
     }
 
+    /**
+     * Sets initial password.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void setInitialPassword(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
         if (!user.isRequiresPasswordChange()) {
@@ -135,6 +186,15 @@ public class ProfileAccountServlet extends HttpServlet {
         showSetPassword(req, resp, user);
     }
 
+    /**
+     * Update profile.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void updateProfile(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
         String requestedUsername = req.getParameter("username");
@@ -161,6 +221,15 @@ public class ProfileAccountServlet extends HttpServlet {
         showAccount(req, resp, user);
     }
 
+    /**
+     * Change password.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void changePassword(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
         String newPassword = req.getParameter("newPassword");
@@ -187,6 +256,12 @@ public class ProfileAccountServlet extends HttpServlet {
         showAccount(req, resp, user);
     }
 
+    /**
+     * Refresh session user.
+     *
+     * @param req the incoming request
+     * @param userId the user id identifier
+     */
     private void refreshSessionUser(HttpServletRequest req, UUID userId) {
         User refreshed = userDAO.findById(userId);
         if (refreshed != null) {
@@ -197,6 +272,12 @@ public class ProfileAccountServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Checks whether this object has valid csrf token.
+     *
+     * @param req the incoming request
+     * @return true when the condition holds; false otherwise
+     */
     private boolean hasValidCsrfToken(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         Object expected = session == null ? null : session.getAttribute(CSRF_TOKEN);

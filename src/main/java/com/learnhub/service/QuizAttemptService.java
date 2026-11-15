@@ -23,6 +23,9 @@ public class QuizAttemptService {
     private final QuestionDAO questionDAO;
     private final QuizDAO quizDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public QuizAttemptService() {
         this.quizAttemptDAO = new QuizAttemptDAO();
         this.answerDAO = new AnswerDAO();
@@ -30,12 +33,25 @@ public class QuizAttemptService {
         this.quizDAO = new QuizDAO();
     }
 
+    /**
+     * Checks whether module visible.
+     *
+     * @param quiz the quiz
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isModuleVisible(Quiz quiz) {
         if (quiz == null) return false;
         var module = new com.learnhub.dao.ModuleDAO().findById(quiz.getModuleId());
         return module != null && !module.isHidden();
     }
 
+    /**
+     * Start quiz attempt.
+     *
+     * @param userId the user id identifier
+     * @param quizId the quiz id identifier
+     * @return the result of start quiz attempt
+     */
     public QuizSubmission startQuizAttempt(UUID userId, UUID quizId) {
         Quiz quiz = quizDAO.findById(quizId);
         if (quiz == null || !quiz.isPublished()) throw new SecurityException("Quiz is not available.");
@@ -108,10 +124,23 @@ public class QuizAttemptService {
         return dto;
     }
 
+    /**
+     * Returns attempt.
+     *
+     * @param attemptId the attempt id identifier
+     * @return the attempt
+     */
     public QuizSubmission getAttempt(UUID attemptId) {
         return quizAttemptDAO.findById(attemptId);
     }
 
+    /**
+     * Returns attempt history.
+     *
+     * @param userId the user id identifier
+     * @param quizId the quiz id identifier
+     * @return the attempt history
+     */
     public List<QuizSubmission> getAttemptHistory(UUID userId, UUID quizId) {
         return quizAttemptDAO.findAttemptsByStudent(userId, quizId);
     }

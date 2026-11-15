@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserDAOExpertTest {
+    /**
+     * Verifies find instructors returns only active experts.
+     */
     @Test
     void testFindInstructorsReturnsOnlyActiveExperts() {
         UserDAO dao = new UserDAO();

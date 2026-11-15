@@ -21,6 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequiredPasswordChangeFilterTest {
+    /**
+     * Blocks other pages but allows password setup and sign out.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void blocksOtherPagesButAllowsPasswordSetupAndSignOut() throws Exception {
         User user = new User();
@@ -28,6 +33,12 @@ class RequiredPasswordChangeFilterTest {
         user.setStatus("active");
         user.setRequiresPasswordChange(true);
         UserDAO dao = new UserDAO() {
+            /**
+             * Finds by id.
+             *
+             * @param id the id identifier
+             * @return the matching by id, if present
+             */
             @Override public User findById(UUID id) { return user; }
         };
         RequiredPasswordChangeFilter filter = new RequiredPasswordChangeFilter(dao);
@@ -46,6 +57,11 @@ class RequiredPasswordChangeFilterTest {
         assertTrue(logout.chainCalled.get());
     }
 
+    /**
+     * Resumed session can continue after password was changed elsewhere.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void resumedSessionCanContinueAfterPasswordWasChangedElsewhere() throws Exception {
         User sessionUser = new User();
@@ -55,6 +71,12 @@ class RequiredPasswordChangeFilterTest {
         fresh.setId(sessionUser.getId());
         fresh.setStatus("active");
         UserDAO dao = new UserDAO() {
+            /**
+             * Finds by id.
+             *
+             * @param id the id identifier
+             * @return the matching by id, if present
+             */
             @Override public User findById(UUID id) { return fresh; }
         };
         Exchange exchange = new Exchange(sessionUser, "/home");
@@ -71,6 +93,12 @@ class RequiredPasswordChangeFilterTest {
         final HttpServletResponse response;
         final FilterChain chain = (req, resp) -> chainCalled.set(true);
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param user the user
+         * @param path the path
+         */
         Exchange(User user, String path) {
             attributes.put(AppConstants.SessionKey.CURRENT_USER, user);
             HttpSession session = (HttpSession) Proxy.newProxyInstance(getClass().getClassLoader(),

@@ -13,6 +13,12 @@ import java.util.logging.Logger;
 public class NotificationDAO {
     private static final Logger LOGGER = Logger.getLogger(NotificationDAO.class.getName());
 
+    /**
+     * Insert.
+     *
+     * @param notification the notification
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insert(Notification notification) {
         String sql = "INSERT INTO notification (id, user_id, type_id, content, status, sent_at, created_at) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, NOW(), NOW())";
@@ -30,6 +36,12 @@ public class NotificationDAO {
         }
     }
 
+    /**
+     * Finds by user id.
+     *
+     * @param userId the user id identifier
+     * @return the matching by user id, if present
+     */
     public List<Notification> findByUserId(UUID userId) {
         List<Notification> list = new ArrayList<>();
         String sql = "SELECT n.id, n.user_id, n.type_id, n.content, n.status, n.sent_at, n.created_at, " +
@@ -63,6 +75,14 @@ public class NotificationDAO {
         return list;
     }
 
+    /**
+     * Finds recent by user id.
+     *
+     * @param userId the user id identifier
+     * @param limit the limit
+     * @return the matching recent by user id, if present
+     * @throws SQLException if the operation cannot complete
+     */
     public List<Notification> findRecentByUserId(UUID userId, int limit) throws SQLException {
         String sql = "SELECT n.id, n.user_id, n.type_id, n.content, n.status, n.sent_at, n.created_at, " +
                      "s.name AS type_name FROM notification n " +
@@ -91,6 +111,13 @@ public class NotificationDAO {
         return notifications;
     }
 
+    /**
+     * Counts unread by user id.
+     *
+     * @param userId the user id identifier
+     * @return the number of unread by user id
+     * @throws SQLException if the operation cannot complete
+     */
     public int countUnreadByUserId(UUID userId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM notification WHERE user_id = ? AND status = 'unread'";
         try (Connection conn = DbConnection.getConnection();
@@ -103,6 +130,14 @@ public class NotificationDAO {
         }
     }
 
+    /**
+     * Mark as read.
+     *
+     * @param userId the user id identifier
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     public boolean markAsRead(UUID userId, UUID id) throws SQLException {
         String sql = "UPDATE notification SET status = 'read' WHERE id = ? AND user_id = ? " +
                      "AND status IN ('unread', 'read')";
@@ -114,6 +149,13 @@ public class NotificationDAO {
         }
     }
 
+    /**
+     * Mark all as read.
+     *
+     * @param userId the user id identifier
+     * @return the result of mark all as read
+     * @throws SQLException if the operation cannot complete
+     */
     public int markAllAsRead(UUID userId) throws SQLException {
         String sql = "UPDATE notification SET status = 'read' WHERE user_id = ? AND status = 'unread'";
         try (Connection conn = DbConnection.getConnection();

@@ -22,6 +22,14 @@ import java.security.MessageDigest;
 public class AvatarServlet extends HttpServlet {
     private final UserDAO users = new UserDAO();
     private final AvatarService avatars = new AvatarService();
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     * @throws ServletException if the operation cannot complete
+     */
     @Override protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         resp.setHeader("Cache-Control", "no-store");
         HttpSession session = req.getSession(false);
@@ -52,6 +60,16 @@ public class AvatarServlet extends HttpServlet {
             showError(req, resp, user, "Choose a valid JPEG or PNG image no larger than 5 MB.");
         }
     }
+    /**
+     * Show error.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @param error the error
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showError(HttpServletRequest req, HttpServletResponse resp, User user, String error) throws ServletException, IOException {
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         req.setAttribute("avatarError", error);

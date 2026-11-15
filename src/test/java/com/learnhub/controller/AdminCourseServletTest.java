@@ -13,6 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AdminCourseServletTest {
+    /**
+     * Servlet rejects admin and student even without filter.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void servletRejectsAdminAndStudentEvenWithoutFilter() throws Exception {
         for (String role : new String[]{AppConstants.Role.ADMIN,

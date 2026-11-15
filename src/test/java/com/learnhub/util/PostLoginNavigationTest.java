@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class PostLoginNavigationTest {
     private static final String CONTEXT = "/learnhub";
 
+    /**
+     * Generic entry goes to each roles own dashboard.
+     */
     @Test
     void genericEntryGoesToEachRolesOwnDashboard() {
         assertEquals("/learnhub/admin/dashboard", destination(AppConstants.Role.ADMIN, "/learnhub/home"));
@@ -18,6 +21,9 @@ class PostLoginNavigationTest {
         assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "/"));
     }
 
+    /**
+     * Preserves allowed deep links and query strings.
+     */
     @Test
     void preservesAllowedDeepLinksAndQueryStrings() {
         assertEquals("/learnhub/admin/users?page=2", destination(AppConstants.Role.ADMIN, "/admin/users?page=2"));
@@ -32,6 +38,9 @@ class PostLoginNavigationTest {
                 "/my-enrollments?registered=success"));
     }
 
+    /**
+     * Manager always starts at dashboard after login.
+     */
     @Test
     void managerAlwaysStartsAtDashboardAfterLogin() {
         assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER,
@@ -40,6 +49,9 @@ class PostLoginNavigationTest {
                 "/manager/dashboard?period=quarter"));
     }
 
+    /**
+     * Forbidden role links fall back to the users dashboard.
+     */
     @Test
     void forbiddenRoleLinksFallBackToTheUsersDashboard() {
         assertEquals("/learnhub/manager/dashboard", destination(AppConstants.Role.MANAGER, "/learnhub/admin/dashboard"));
@@ -50,6 +62,9 @@ class PostLoginNavigationTest {
         assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "/expert/lessons"));
     }
 
+    /**
+     * Course deep links allow expert but reject admin.
+     */
     @Test
     void courseDeepLinksAllowExpertButRejectAdmin() {
         for (String path : new String[]{"/manager/courses", "/manager/course-detail", "/manager/course-status"}) {
@@ -58,6 +73,9 @@ class PostLoginNavigationTest {
         }
     }
 
+    /**
+     * Rejects external and malformed redirects.
+     */
     @Test
     void rejectsExternalAndMalformedRedirects() {
         assertNull(PostLoginNavigation.safeLocalPath("https://example.com/", CONTEXT));
@@ -69,6 +87,13 @@ class PostLoginNavigationTest {
         assertEquals("/learnhub/my-enrollments", destination(AppConstants.Role.STUDENT, "//example.com/"));
     }
 
+    /**
+     * Destination.
+     *
+     * @param role the role
+     * @param requested the requested
+     * @return the result of destination
+     */
     private static String destination(String role, String requested) {
         User user = new User();
         user.setRoleCode(role);

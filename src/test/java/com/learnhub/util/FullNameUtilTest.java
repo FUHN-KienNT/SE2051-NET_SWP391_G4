@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class FullNameUtilTest {
+    /**
+     * Accepts names with unicode letters and common name punctuation.
+     */
     @Test
     void acceptsNamesWithUnicodeLettersAndCommonNamePunctuation() {
         assertEquals("Nguyễn Văn A", FullNameUtil.normalizeOrNull("  Nguyễn Văn A  "));
@@ -18,6 +21,9 @@ class FullNameUtilTest {
         assertEquals("An--", FullNameUtil.normalizeOrNull("An--"));
     }
 
+    /**
+     * Rejects missing names and non name characters.
+     */
     @Test
     void rejectsMissingNamesAndNonNameCharacters() {
         assertNull(FullNameUtil.normalizeOrNull(null));

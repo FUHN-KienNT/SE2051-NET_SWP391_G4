@@ -42,6 +42,9 @@ public class DashboardService {
     private final RegistrationDAO registrationDAO;
     private final SettingDAO settingDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public DashboardService() {
         this.dashboardDAO = new DashboardDAO();
         this.userDAO = new UserDAO();
@@ -51,6 +54,12 @@ public class DashboardService {
         this.settingDAO = new SettingDAO();
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param dashboardDAO the dashboard dao
+     * @param userDAO the user dao
+     */
     public DashboardService(DashboardDAO dashboardDAO, UserDAO userDAO) {
         this.dashboardDAO = dashboardDAO;
         this.userDAO = userDAO;

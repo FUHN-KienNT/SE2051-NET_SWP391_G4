@@ -23,12 +23,25 @@ class AuthorizationFilterAccountStatusTest {
     private static class StubUserDao extends UserDAO {
         final User dbUser = new User();
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param id the id identifier
+         * @param status the status
+         * @param statusNote the status note
+         */
         StubUserDao(UUID id, String status, String statusNote) {
             dbUser.setId(id);
             dbUser.setStatus(status);
             dbUser.setStatusNote(statusNote);
         }
 
+        /**
+         * Finds by id.
+         *
+         * @param id the id identifier
+         * @return the matching by id, if present
+         */
         @Override
         public User findById(UUID id) {
             return dbUser.getId().equals(id) ? dbUser : null;
@@ -44,6 +57,11 @@ class AuthorizationFilterAccountStatusTest {
         final HttpServletRequest request;
         final HttpServletResponse response;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param sessionUser the session user
+         */
         TestExchange(User sessionUser) {
             HttpSession session = (HttpSession) Proxy.newProxyInstance(
                     getClass().getClassLoader(),
@@ -92,6 +110,11 @@ class AuthorizationFilterAccountStatusTest {
         }
     }
 
+    /**
+     * Active user in session passes filter.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void activeUserInSessionPassesFilter() throws Exception {
         UUID userId = UUID.randomUUID();
@@ -111,6 +134,11 @@ class AuthorizationFilterAccountStatusTest {
         assertEquals(null, exchange.redirectedUrl.get(), "No redirection should occur for active user");
     }
 
+    /**
+     * Inactive user in session is terminated and redirected with reason.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void inactiveUserInSessionIsTerminatedAndRedirectedWithReason() throws Exception {
         UUID userId = UUID.randomUUID();
@@ -135,6 +163,11 @@ class AuthorizationFilterAccountStatusTest {
                 "Must include encoded reason in query string");
     }
 
+    /**
+     * Assert not null.
+     *
+     * @param obj the obj
+     */
     private static void assertNotNull(Object obj) {
         org.junit.jupiter.api.Assertions.assertNotNull(obj);
     }

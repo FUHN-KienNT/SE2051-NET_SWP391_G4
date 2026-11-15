@@ -22,6 +22,15 @@ import java.util.logging.Logger;
 public class QuizAttemptDAO {
     private static final Logger LOGGER = Logger.getLogger(QuizAttemptDAO.class.getName());
 
+    /**
+     * Checks whether this object has passed.
+     *
+     * @param conn the database connection
+     * @param userId the user id identifier
+     * @param quizId the quiz id identifier
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     public boolean hasPassed(Connection conn, UUID userId, UUID quizId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT EXISTS (SELECT 1 FROM quiz_submission qs JOIN quiz q ON q.id=qs.quiz_id "
@@ -32,6 +41,12 @@ public class QuizAttemptDAO {
         }
     }
 
+    /**
+     * Insert attempt.
+     *
+     * @param attempt the attempt
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insertAttempt(QuizSubmission attempt) {
         String sql = "INSERT INTO quiz_submission (id, quiz_id, user_id, score, submitted_at, pass_status) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, NOW(), ?)";
@@ -49,6 +64,13 @@ public class QuizAttemptDAO {
         }
     }
 
+    /**
+     * Finds attempts by student.
+     *
+     * @param userId the user id identifier
+     * @param quizId the quiz id identifier
+     * @return the matching attempts by student, if present
+     */
     public List<QuizSubmission> findAttemptsByStudent(UUID userId, UUID quizId) {
         List<QuizSubmission> list = new ArrayList<>();
         String sql = "SELECT qs.id, qs.quiz_id, qs.user_id, qs.score, qs.submitted_at, qs.pass_status, " +
@@ -74,6 +96,12 @@ public class QuizAttemptDAO {
         return list;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param submissionId the submission id identifier
+     * @return the matching by id, if present
+     */
     public QuizSubmission findById(UUID submissionId) {
         if (submissionId == null) return null;
         String sql = "SELECT qs.id, qs.quiz_id, qs.user_id, qs.score, qs.submitted_at, qs.pass_status, " +
@@ -97,6 +125,14 @@ public class QuizAttemptDAO {
         return null;
     }
 
+    /**
+     * Update score.
+     *
+     * @param attemptId the attempt id identifier
+     * @param score the score
+     * @param passStatus the pass status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateScore(UUID attemptId, BigDecimal score, boolean passStatus) {
         String sql = "UPDATE quiz_submission SET score = ?, pass_status = ?, submitted_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();

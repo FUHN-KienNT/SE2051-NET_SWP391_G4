@@ -11,22 +11,44 @@ import java.util.function.Function;
 
 /** Local OAuth/mail settings; process environment takes precedence over the external .env file. */
 public final class AppConfig {
+    /**
+     * Creates an instance with the supplied values.
+     */
     private AppConfig() {}
 
     private static final class LocalFile {
         private static final Map<String, String> VALUES = loadLocalFile();
     }
 
+    /**
+     * Get.
+     *
+     * @param name the name
+     * @return the result of get
+     */
     public static String get(String name) {
         return resolve(name, System::getenv, LocalFile.VALUES);
     }
 
+    /**
+     * Resolve.
+     *
+     * @param name the name
+     * @param environment the environment
+     * @param local the local
+     * @return the result of resolve
+     */
     static String resolve(String name, Function<String, String> environment, Map<String, String> local) {
         String value = environment.apply(name);
         if (value == null || value.isBlank()) value = local.get(name);
         return value == null || value.isBlank() ? null : value;
     }
 
+    /**
+     * Load local file.
+     *
+     * @return the result of load local file
+     */
     private static Map<String, String> loadLocalFile() {
         String configuredPath = System.getProperty("learnhub.envFile");
         boolean explicit = configuredPath != null && !configuredPath.isBlank();
@@ -66,6 +88,12 @@ public final class AppConfig {
         return Map.copyOf(values);
     }
 
+    /**
+     * Invalid line.
+     *
+     * @param lineNumber the line number
+     * @return the result of invalid line
+     */
     private static IllegalArgumentException invalidLine(int lineNumber) {
         // Never include the original line: it can contain a credential.
         return new IllegalArgumentException("Invalid .env entry at line " + lineNumber + ". Use KEY=VALUE.");

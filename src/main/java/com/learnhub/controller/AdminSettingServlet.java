@@ -41,6 +41,14 @@ public class AdminSettingServlet extends HttpServlet {
     private final CourseDAO courseDAO = new CourseDAO();
     private final DashboardService dashboardService = new DashboardService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -118,6 +126,12 @@ public class AdminSettingServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/setting-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Checks whether role setting.
+     *
+     * @param setting the setting
+     * @return true when the condition holds; false otherwise
+     */
     private boolean isRoleSetting(Setting setting) {
         if (setting == null) {
             return false;
@@ -125,6 +139,14 @@ public class AdminSettingServlet extends HttpServlet {
         return "role".equalsIgnoreCase(setting.getType());
     }
 
+    /**
+     * Handle show detail.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleShowDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         Setting setting = null;
@@ -154,6 +176,12 @@ public class AdminSettingServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/setting-detail.jsp").forward(req, resp);
     }
 // lay cac setting type cho vao dropdown
+    /**
+     * Returns setting types.
+     *
+     * @param setting the setting
+     * @return the setting types
+     */
     private List<String> getSettingTypes(Setting setting) {
         List<String> types = new java.util.ArrayList<>(settingDAO.findAllTypes());
         boolean isRole = isRoleSetting(setting);
@@ -180,6 +208,14 @@ public class AdminSettingServlet extends HttpServlet {
         return types;
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
@@ -209,6 +245,14 @@ public class AdminSettingServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle change status.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param actor the actor
+     * @throws IOException if the operation cannot complete
+     */
     private void handleChangeStatus(HttpServletRequest req, HttpServletResponse resp, User actor) throws IOException {
         String idStr = req.getParameter("id");
         String statusStr = req.getParameter("status");
@@ -242,6 +286,15 @@ public class AdminSettingServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/settings?error=status_failed");
     }
 
+    /**
+     * Handle save setting.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param actor the actor
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleSaveSetting(HttpServletRequest req, HttpServletResponse resp, User actor) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         String type = req.getParameter("type");
@@ -379,6 +432,12 @@ public class AdminSettingServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Generate setting code.
+     *
+     * @param name the name
+     * @return the result of generate setting code
+     */
     private String generateSettingCode(String name) {
         if (name == null || name.trim().isEmpty()) {
             return "STG_" + System.currentTimeMillis() % 10000;
@@ -401,6 +460,13 @@ public class AdminSettingServlet extends HttpServlet {
         return normalized;
     }
 
+    /**
+     * Handle get json.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     private void handleGetJson(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String idStr = req.getParameter("id");
         resp.setContentType("application/json;charset=UTF-8");
@@ -428,6 +494,12 @@ public class AdminSettingServlet extends HttpServlet {
         resp.getWriter().write("{\"error\":\"not_found\"}");
     }
 
+    /**
+     * Escape json.
+     *
+     * @param s the s
+     * @return the result of escape json
+     */
     private String escapeJson(String s) {
         if (s == null) {
             return "";
@@ -438,6 +510,13 @@ public class AdminSettingServlet extends HttpServlet {
                 .replace("\r", "\\r");
     }
 
+    /**
+     * Checks whether authorized admin.
+     *
+     * @param user the user
+     * @param role the role
+     * @return true when the condition holds; false otherwise
+     */
     private boolean isAuthorizedAdmin(User user, String role) {
         if (user == null) {
             return false;
@@ -453,6 +532,13 @@ public class AdminSettingServlet extends HttpServlet {
                 || "Admin".equalsIgnoreCase(rName);
     }
 
+    /**
+     * Handle reorder settings.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     private void handleReorderSettings(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
         try {

@@ -21,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceAccountTest {
+    /**
+     * Pending email requires verification only with correct password.
+     */
     @Test
     void pendingEmailRequiresVerificationOnlyWithCorrectPassword() {
         AccountDao dao = new AccountDao();
@@ -47,6 +50,9 @@ class UserServiceAccountTest {
         boolean updateCalled;
         boolean updatePasswordWithMustChangeCalled;
 
+        /**
+         * Creates an instance with the supplied values.
+         */
         AccountDao() {
             user.setId(UUID.randomUUID());
             user.setUsername("Alex");
@@ -56,25 +62,61 @@ class UserServiceAccountTest {
             user.setPassword(PasswordHashUtil.hashPassword("current-password"));
         }
 
+        /**
+         * Finds by id.
+         *
+         * @param id the id identifier
+         * @return the matching by id, if present
+         */
         @Override
         public User findById(UUID id) {
             return user.getId().equals(id) ? user : null;
         }
 
+        /**
+         * Checks whether identity taken by other.
+         *
+         * @param userId the user id identifier
+         * @param username the username
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean isIdentityTakenByOther(UUID userId, String username) {
             return taken;
         }
 
+        /**
+         * Checks whether phone taken by other.
+         *
+         * @param userId the user id identifier
+         * @param phone the phone
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean isPhoneTakenByOther(UUID userId, String phone) { return phoneTaken; }
 
+        /**
+         * Update own username.
+         *
+         * @param userId the user id identifier
+         * @param username the username
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean updateOwnUsername(UUID userId, String username) {
             savedUsername = username;
             return true;
         }
 
+        /**
+         * Update own profile.
+         *
+         * @param userId the user id identifier
+         * @param username the username
+         * @param fullName the full name
+         * @param phone the phone
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean updateOwnProfile(UUID userId, String username, String fullName, String phone) {
             savedUsername = username;
@@ -83,6 +125,14 @@ class UserServiceAccountTest {
             return true;
         }
 
+        /**
+         * Update password if current hash.
+         *
+         * @param userId the user id identifier
+         * @param currentHash the current hash
+         * @param newHash the new hash
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
             if (!currentHash.equals(user.getPassword())) return false;
@@ -90,6 +140,14 @@ class UserServiceAccountTest {
             return true;
         }
 
+        /**
+         * Sets initial password.
+         *
+         * @param userId the user id identifier
+         * @param currentHash the current hash
+         * @param newHash the new hash
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
             if (!user.isRequiresPasswordChange() || !java.util.Objects.equals(currentHash, user.getPassword())) return false;
@@ -99,12 +157,25 @@ class UserServiceAccountTest {
             return true;
         }
 
+        /**
+         * Update.
+         *
+         * @param u the u
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean update(User u) {
             updateCalled = true;
             return true;
         }
 
+        /**
+         * Update password with must change.
+         *
+         * @param userId the user id identifier
+         * @param newHashedPassword the new hashed password
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean updatePasswordWithMustChange(UUID userId, String newHashedPassword) {
             updatePasswordWithMustChangeCalled = true;
@@ -112,6 +183,12 @@ class UserServiceAccountTest {
             return true;
         }
 
+        /**
+         * Insert.
+         *
+         * @param u the u
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean insert(User u) {
             this.insertedUser = u;
@@ -119,6 +196,12 @@ class UserServiceAccountTest {
             return true;
         }
 
+        /**
+         * Finds by email.
+         *
+         * @param email the email
+         * @return the matching by email, if present
+         */
         @Override
         public User findByEmail(String email) {
             if (user != null && email != null &&
@@ -138,6 +221,15 @@ class UserServiceAccountTest {
         String loggedAction;
         String loggedDesc;
 
+        /**
+         * Insert audit log.
+         *
+         * @param actor the actor
+         * @param actionType the action type
+         * @param description the description
+         * @param status the status
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean insertAuditLog(String actor, String actionType, String description, String status) {
             this.loggedAction = actionType;
@@ -150,18 +242,33 @@ class UserServiceAccountTest {
         Notification insertedNotification;
         final List<Notification> returnedList = new ArrayList<>();
 
+        /**
+         * Insert.
+         *
+         * @param notification the notification
+         * @return true when the condition holds; false otherwise
+         */
         @Override
         public boolean insert(Notification notification) {
             this.insertedNotification = notification;
             return true;
         }
 
+        /**
+         * Finds by user id.
+         *
+         * @param userId the user id identifier
+         * @return the matching by user id, if present
+         */
         @Override
         public List<Notification> findByUserId(UUID userId) {
             return returnedList;
         }
     }
 
+    /**
+     * Own username is validated and cannot reuse another identity.
+     */
     @Test
     void ownUsernameIsValidatedAndCannotReuseAnotherIdentity() {
         AccountDao dao = new AccountDao();
@@ -179,6 +286,9 @@ class UserServiceAccountTest {
         assertEquals("New_Name", dao.savedUsername);
     }
 
+    /**
+     * Password change requires current password and hashes the replacement.
+     */
     @Test
     void passwordChangeRequiresCurrentPasswordAndHashesTheReplacement() {
         AccountDao dao = new AccountDao();
@@ -195,6 +305,9 @@ class UserServiceAccountTest {
         assertTrue(PasswordHashUtil.checkPassword("new-password", dao.savedHash));
     }
 
+    /**
+     * Own profile requires full name and keeps it separate from username.
+     */
     @Test
     void ownProfileRequiresFullNameAndKeepsItSeparateFromUsername() {
         AccountDao dao = new AccountDao();
@@ -230,6 +343,9 @@ class UserServiceAccountTest {
         assertNull(dao.savedPhone);
     }
 
+    /**
+     * Google account with null password must complete setup before password login.
+     */
     @Test
     void googleAccountWithNullPasswordMustCompleteSetupBeforePasswordLogin() {
         AccountDao dao = new AccountDao();
@@ -256,6 +372,9 @@ class UserServiceAccountTest {
                 service.setInitialPassword(dao.user.getId(), "another-password"));
     }
 
+    /**
+     * New google account can set password only while setup is required.
+     */
     @Test
     void newGoogleAccountCanSetPasswordOnlyWhileSetupIsRequired() {
         AccountDao dao = new AccountDao();
@@ -276,6 +395,9 @@ class UserServiceAccountTest {
                 service.setInitialPassword(userId, "another-password"));
     }
 
+    /**
+     * Update user profile updates phone and status with audit log and notification.
+     */
     @Test
     void updateUserProfileUpdatesPhoneAndStatusWithAuditLogAndNotification() {
         AccountDao dao = new AccountDao();
@@ -304,6 +426,9 @@ class UserServiceAccountTest {
         assertTrue(notificationDao.insertedNotification.getContent().contains("Vi phạm điều khoản dịch vụ"));
     }
 
+    /**
+     * Update user profile requires reason when setting inactive.
+     */
     @Test
     void updateUserProfileRequiresReasonWhenSettingInactive() {
         AccountDao dao = new AccountDao();
@@ -325,6 +450,9 @@ class UserServiceAccountTest {
         assertFalse(successEmpty);
     }
 
+    /**
+     * Update user profile rejects invalid full name.
+     */
     @Test
     void updateUserProfileRejectsInvalidFullName() {
         AccountDao dao = new AccountDao();
@@ -343,6 +471,9 @@ class UserServiceAccountTest {
         assertEquals(originalName, dao.user.getFullName());
     }
 
+    /**
+     * Authenticate active user success.
+     */
     @Test
     void authenticateActiveUserSuccess() {
         AccountDao dao = new AccountDao();
@@ -354,6 +485,9 @@ class UserServiceAccountTest {
         assertEquals("Alex", result.getUser().getUsername());
     }
 
+    /**
+     * Authenticate invalid password does not reveal inactive status.
+     */
     @Test
     void authenticateInvalidPasswordDoesNotRevealInactiveStatus() {
         AccountDao dao = new AccountDao();
@@ -368,6 +502,9 @@ class UserServiceAccountTest {
         assertNull(result.getStatusNote());
     }
 
+    /**
+     * Authenticate inactive account returns reason when password is correct.
+     */
     @Test
     void authenticateInactiveAccountReturnsReasonWhenPasswordIsCorrect() {
         AccountDao dao = new AccountDao();
@@ -381,6 +518,9 @@ class UserServiceAccountTest {
         assertEquals("Chưa đóng học phí Fall 2026", result.getStatusNote());
     }
 
+    /**
+     * Authenticate inactive account without note falls back to notification.
+     */
     @Test
     void authenticateInactiveAccountWithoutNoteFallsBackToNotification() {
         AccountDao dao = new AccountDao();
@@ -401,6 +541,9 @@ class UserServiceAccountTest {
         assertTrue(result.getStatusNote().contains("Bảo trì tài khoản định kỳ"));
     }
 
+    /**
+     * Checks whether sue temporary password generates password and sets flag.
+     */
     @Test
     void issueTemporaryPasswordGeneratesPasswordAndSetsFlag() {
         AccountDao dao = new AccountDao();
@@ -416,6 +559,9 @@ class UserServiceAccountTest {
         assertEquals("PASSWORD_RESET_ADMIN", dashboardDao.loggedAction);
     }
 
+    /**
+     * Create user by admin successfully creates user with temp password and requires password change.
+     */
     @Test
     void createUserByAdminSuccessfullyCreatesUserWithTempPasswordAndRequiresPasswordChange() {
         AccountDao dao = new AccountDao();
@@ -449,6 +595,9 @@ class UserServiceAccountTest {
         assertEquals("USER_CREATE", dashboardDao.loggedAction);
     }
 
+    /**
+     * Create user by admin validates inputs and rejects duplicates.
+     */
     @Test
     void createUserByAdminValidatesInputsAndRejectsDuplicates() {
         AccountDao dao = new AccountDao();

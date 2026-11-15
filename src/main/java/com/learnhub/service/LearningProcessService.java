@@ -27,12 +27,22 @@ public class LearningProcessService {
             List<ContinueLearningDTO> myCourses,
             String sort, String status, int totalCourses, long completedCourses, long ongoingCourses) {}
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public LearningProcessService() {
         this.learningProcessDAO = new LearningProcessDAO();
         this.registrationDAO = new RegistrationDAO();
         this.lessonDAO = new LessonDAO();
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param learningProcessDAO the learning process dao
+     * @param registrationDAO the registration dao
+     * @param lessonDAO the lesson dao
+     */
     public LearningProcessService(
             LearningProcessDAO learningProcessDAO,
             RegistrationDAO registrationDAO,
@@ -43,6 +53,12 @@ public class LearningProcessService {
         this.lessonDAO = lessonDAO;
     }
 
+    /**
+     * Returns continue learning.
+     *
+     * @param userId the user id identifier
+     * @return the continue learning
+     */
     public ContinueLearningDTO getContinueLearning(UUID userId) {
         ContinueLearningDTO suggestion = learningProcessDAO.findContinueLearning(userId);
         if (suggestion != null) {
@@ -56,10 +72,23 @@ public class LearningProcessService {
         return suggestion;
     }
 
+    /**
+     * Finds registration.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @return the matching registration, if present
+     */
     public Registration findRegistration(UUID userId, UUID courseId) {
         return registrationDAO.findByUserAndCourse(userId, courseId);
     }
 
+    /**
+     * Returns student courses.
+     *
+     * @param userId the user id identifier
+     * @return the student courses
+     */
     public List<ContinueLearningDTO> getStudentCourses(UUID userId) {
         List<ContinueLearningDTO> courses =
                 learningProcessDAO.findStudentCourses(userId);
@@ -70,26 +99,58 @@ public class LearningProcessService {
         return courses;
     }
 
+    /**
+     * Checks whether course completed.
+     *
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isCourseCompleted(ContinueLearningDTO course) {
         return course.getLessonCount() > 0
                 && course.getCompletedLessonCount() == course.getLessonCount();
     }
 
+    /**
+     * Calculate progress percent.
+     *
+     * @param completed the completed
+     * @param total the total
+     * @return the result of calculate progress percent
+     */
     private int calculateProgressPercent(int completed, int total) {
         return total <= 0 ? 0
                 : Math.min(100, (int) Math.round(100.0 * completed / total));
     }
 
+    /**
+     * Returns progress percent.
+     *
+     * @param registrationId the registration id identifier
+     * @return the progress percent
+     */
     public int getProgressPercent(UUID registrationId) {
         int completed = learningProcessDAO.countCompletedLessons(registrationId);
         int total = learningProcessDAO.countTotalLessons(registrationId);
         return calculateProgressPercent(completed, total);
     }
 
+    /**
+     * Returns lesson statuses.
+     *
+     * @param registrationId the registration id identifier
+     * @return the lesson statuses
+     */
     public Map<String, String> getLessonStatuses(UUID registrationId) {
         return learningProcessDAO.findLessonStatuses(registrationId);
     }
 
+    /**
+     * Returns completed count.
+     *
+     * @param registrationId the registration id identifier
+     * @param orderedLessons the ordered lessons
+     * @return the completed count
+     */
     public int getCompletedCount(UUID registrationId, List<Lesson> orderedLessons) {
         Map<String, String> statuses = getLessonStatuses(registrationId);
         return (int) orderedLessons.stream()
@@ -98,6 +159,16 @@ public class LearningProcessService {
                 .count();
     }
 
+    /**
+     * Build student dashboard.
+     *
+     * @param enrolled the enrolled
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param sort the sort
+     * @param status the status
+     * @return the result of build student dashboard
+     */
     public StudentDashboardData buildStudentDashboard(
             List<ContinueLearningDTO> enrolled, String search, UUID categoryId, String sort, String status) {
         String keyword = search == null ? "" : search.strip().toLowerCase(Locale.ROOT);
@@ -123,6 +194,14 @@ public class LearningProcessService {
                 completedCourses, enrolled.size() - completedCourses);
     }
 
+    /**
+     * Resolve continue lesson.
+     *
+     * @param enrolled the enrolled
+     * @param courseIdValue the course id value
+     * @param savedLessonValue the saved lesson value
+     * @return the result of resolve continue lesson
+     */
     public ContinueLearningDTO resolveContinueLesson(
             List<ContinueLearningDTO> enrolled, String courseIdValue, String savedLessonValue) {
         ContinueLearningDTO selected = enrolled.stream()
@@ -158,6 +237,13 @@ public class LearningProcessService {
         return selected;
     }
 
+    /**
+     * Finds enrolled course.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @return the matching enrolled course, if present
+     */
     public ContinueLearningDTO findEnrolledCourse(UUID userId, UUID courseId) {
         ContinueLearningDTO course = learningProcessDAO.findStudentCourse(userId, courseId);
         if (course != null) {
@@ -166,6 +252,13 @@ public class LearningProcessService {
         return course;
     }
 
+    /**
+     * Returns lesson for student.
+     *
+     * @param lessonId the lesson id identifier
+     * @param registrationId the registration id identifier
+     * @return the lesson for student
+     */
     public LessonDTO getLessonForStudent(UUID lessonId, UUID registrationId) {
         Lesson lesson = lessonDAO.findById(lessonId);
         if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) return null;
@@ -175,6 +268,14 @@ public class LearningProcessService {
         return lessonForStudent(lesson, registrationId, statuses);
     }
 
+    /**
+     * Lesson for student.
+     *
+     * @param lesson the lesson
+     * @param registrationId the registration id identifier
+     * @param statuses the statuses
+     * @return the result of lesson for student
+     */
     private LessonDTO lessonForStudent(Lesson lesson, UUID registrationId, Map<String, String> statuses) {
         String status = statuses.get(lesson.getId().toString());
         if (status == null) {
@@ -197,6 +298,14 @@ public class LearningProcessService {
                                    Map<String, String> statuses, Lesson previous, Lesson next,
                                    int completedCount, int totalCount, int progressPercent) {}
 
+    /**
+     * Returns lesson viewer.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @return the lesson viewer
+     */
     public LessonViewerData getLessonViewer(UUID userId, UUID courseId, UUID lessonId) {
         Registration registration = findRegistration(userId, courseId);
         Course course = courseService.getPublishedCourseCurriculum(courseId);
@@ -221,6 +330,13 @@ public class LearningProcessService {
                 completed, lessons.size(), calculateProgressPercent(completed, lessons.size()));
     }
 
+    /**
+     * Checks whether accessible registration.
+     *
+     * @param registration the registration
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isAccessibleRegistration(Registration registration, Course course) {
         if (registration == null || course == null) return false;
         boolean active =
@@ -235,6 +351,14 @@ public class LearningProcessService {
         return active && paymentAllowed;
     }
 
+    /**
+     * Checks whether study is allowed.
+     *
+     * @param registration the registration
+     * @param course the course
+     * @param lessonId the lesson id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean canStudy(Registration registration, Course course, UUID lessonId) {
         if (registration == null || course == null) return false;
         if (!isAccessibleRegistration(registration, course)) return false;
@@ -244,11 +368,25 @@ public class LearningProcessService {
                         && AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus()));
     }
 
+    /**
+     * Checks whether quiz lesson available.
+     *
+     * @param lesson the lesson
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isQuizLessonAvailable(LessonDTO lesson) {
         var quiz = new com.learnhub.dao.QuizDAO().findById(lesson.getQuizId());
         return quiz != null && quiz.isPublished() && lesson.getModuleId().equals(quiz.getModuleId());
     }
 
+    /**
+     * Complete lesson for student.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @param registrationId the registration id identifier
+     * @param lessonId the lesson id identifier
+     */
     public void completeLessonForStudent(UUID userId, UUID courseId, UUID registrationId, UUID lessonId) {
         Registration registration = findRegistration(userId, courseId);
         Course course = courseService.getCourseById(courseId);
@@ -259,6 +397,12 @@ public class LearningProcessService {
         markLessonComplete(registrationId, lessonId);
     }
 
+    /**
+     * Mark lesson complete.
+     *
+     * @param registrationId the registration id identifier
+     * @param lessonId the lesson id identifier
+     */
     public void markLessonComplete(UUID registrationId, UUID lessonId) {
         Lesson lesson = lessonDAO.findById(lessonId);
         if (lesson == null || !AppConstants.LessonStatus.PUBLISHED.equals(lesson.getPublicationStatus())) {

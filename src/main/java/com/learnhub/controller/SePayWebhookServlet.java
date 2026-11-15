@@ -23,6 +23,14 @@ public class SePayWebhookServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(SePayWebhookServlet.class.getName());
     private final PaymentService paymentService = new PaymentService();
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json;charset=UTF-8");

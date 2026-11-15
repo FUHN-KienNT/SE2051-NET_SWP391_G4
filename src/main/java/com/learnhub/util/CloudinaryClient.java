@@ -33,9 +33,19 @@ public class CloudinaryClient {
         }
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private CloudinaryClient() {
     }
 
+    /**
+     * Upload file.
+     *
+     * @param fileStream the file stream
+     * @param originalFilename the original filename
+     * @return the result of upload file
+     */
     public static String uploadFile(InputStream fileStream, String originalFilename) {
         try {
             String ext = "";
@@ -58,6 +68,12 @@ public class CloudinaryClient {
         }
     }
 
+    /**
+     * Upload file.
+     *
+     * @param file the file
+     * @return the result of upload file
+     */
     public static String uploadFile(File file) {
         try {
             return uploadFile(Files.newInputStream(file.toPath()), file.getName());
@@ -67,6 +83,12 @@ public class CloudinaryClient {
         }
     }
 
+    /**
+     * Returns secure url.
+     *
+     * @param publicId the public id identifier
+     * @return the secure url
+     */
     public static String getSecureUrl(String publicId) {
         if (publicId == null || publicId.isEmpty()) {
             return "https://res.cloudinary.com/" + cloudName + "/image/upload/v1/default.png";

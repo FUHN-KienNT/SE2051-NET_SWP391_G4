@@ -17,14 +17,46 @@ public class AvatarService {
     private static final Logger LOG = Logger.getLogger(AvatarService.class.getName());
     public enum Result { SUCCESS, INVALID_IMAGE, FAILED }
     public interface Storage {
+        /**
+         * Upload.
+         *
+         * @param bytes the bytes
+         * @param publicId the public id identifier
+         * @return the result of upload
+         * @throws IOException if the operation cannot complete
+         * @throws InterruptedException if the operation cannot complete
+         */
         String upload(byte[] bytes, String publicId) throws IOException, InterruptedException;
+        /**
+         * Delete.
+         *
+         * @param publicId the public id identifier
+         * @throws IOException if the operation cannot complete
+         * @throws InterruptedException if the operation cannot complete
+         */
         void delete(String publicId) throws IOException, InterruptedException;
     }
     private final Storage storage;
     private final UserDAO users;
+    /**
+     * Creates an instance with the supplied values.
+     */
     public AvatarService() { this(new AvatarCloudinary(), new UserDAO()); }
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param storage the storage
+     * @param users the users
+     */
     public AvatarService(Storage storage, UserDAO users) { this.storage = storage; this.users = users; }
 
+    /**
+     * Update.
+     *
+     * @param userId the user id identifier
+     * @param bytes the bytes
+     * @return the result of update
+     */
     public Result update(UUID userId, byte[] bytes) {
         if (userId == null || !validImage(bytes)) return Result.INVALID_IMAGE;
         String publicId = "learnhub/avatars/" + UUID.randomUUID();
@@ -50,7 +82,13 @@ public class AvatarService {
         }
     }
 
-    static boolean validImage(byte[] bytes) {
+    /**
+     * Valid image.
+     *
+     * @param bytes the bytes
+     * @return true when the condition holds; false otherwise
+     */
+    public static boolean validImage(byte[] bytes) {
         if (bytes == null || bytes.length == 0 || bytes.length > MAX_BYTES) return false;
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
             if (input == null) return false;

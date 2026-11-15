@@ -16,6 +16,9 @@ class QuizManagementServiceTest {
 
     private final QuizManagementService service = new QuizManagementService();
 
+    /**
+     * Rejects quiz title exceeding120 words.
+     */
     @Test
     void rejectsQuizTitleExceeding120Words() {
         StringBuilder longTitle = new StringBuilder();
@@ -36,6 +39,9 @@ class QuizManagementServiceTest {
         assertFalse(result, "Quiz with title exceeding 120 words should be rejected");
     }
 
+    /**
+     * Rejects null or empty quiz title.
+     */
     @Test
     void rejectsNullOrEmptyQuizTitle() {
         boolean resultNull = service.save(
@@ -61,10 +67,27 @@ class QuizManagementServiceTest {
         assertFalse(resultEmpty);
     }
 
+    /**
+     * Validates time limit range1 to600.
+     */
     @Test
     @DisplayName("Thời gian làm bài không được để trống (không giới hạn) và phải trong khoảng 1-600 phút")
     void validatesTimeLimitRange1To600() {
         QuizDAO stubDao = new QuizDAO() {
+            /**
+             * Save with questions.
+             *
+             * @param expertId the expert id identifier
+             * @param quizId the quiz id identifier
+             * @param moduleId the module id identifier
+             * @param title the title
+             * @param timeLimit the time limit
+             * @param passScore the pass score
+             * @param status the status
+             * @param imageUrl the image url
+             * @param questionIds the question ids
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean saveWithQuestions(
                     UUID expertId,
@@ -98,6 +121,9 @@ class QuizManagementServiceTest {
         assertTrue(svc.save(expertId, null, moduleId, "Quiz Test", 600, passScore, Collections.emptyList()));
     }
 
+    /**
+     * Checks whether not delete used quiz is allowed.
+     */
     @Test
     @DisplayName("Quiz đã được dùng trong course / module thì KHÔNG THỂ xóa vĩnh viễn")
     void cannotDeleteUsedQuiz() {
@@ -105,16 +131,35 @@ class QuizManagementServiceTest {
         UUID usedQuizId = UUID.randomUUID();
 
         QuizDAO stubDao = new QuizDAO() {
+            /**
+             * Belongs to expert.
+             *
+             * @param quizId the quiz id identifier
+             * @param expId the exp id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean belongsToExpert(UUID quizId, UUID expId) {
                 return usedQuizId.equals(quizId) && expertId.equals(expId);
             }
 
+            /**
+             * Checks whether used.
+             *
+             * @param quizId the quiz id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean isUsed(UUID quizId) {
                 return usedQuizId.equals(quizId);
             }
 
+            /**
+             * Delete.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean delete(UUID id) {
                 return !isUsed(id);
@@ -127,6 +172,9 @@ class QuizManagementServiceTest {
                 "Quiz đã được sử dụng trong course/module không được phép xóa vĩnh viễn");
     }
 
+    /**
+     * Checks whether delete unused quiz is allowed.
+     */
     @Test
     @DisplayName("Quiz chưa được dùng ở course hay module nào thì CÓ THỂ xóa vĩnh viễn")
     void canDeleteUnusedQuiz() {
@@ -134,16 +182,35 @@ class QuizManagementServiceTest {
         UUID unusedQuizId = UUID.randomUUID();
 
         QuizDAO stubDao = new QuizDAO() {
+            /**
+             * Belongs to expert.
+             *
+             * @param quizId the quiz id identifier
+             * @param expId the exp id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean belongsToExpert(UUID quizId, UUID expId) {
                 return unusedQuizId.equals(quizId) && expertId.equals(expId);
             }
 
+            /**
+             * Checks whether used.
+             *
+             * @param quizId the quiz id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean isUsed(UUID quizId) {
                 return false;
             }
 
+            /**
+             * Delete.
+             *
+             * @param id the id identifier
+             * @return true when the condition holds; false otherwise
+             */
             @Override
             public boolean delete(UUID id) {
                 return unusedQuizId.equals(id);

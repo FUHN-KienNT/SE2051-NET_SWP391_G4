@@ -21,21 +21,52 @@ import java.util.UUID;
 /** Signed Cloudinary image upload and deletion; credentials are read from the process environment. */
 public class AvatarCloudinary implements AvatarService.Storage {
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    /**
+     * Sets ting.
+     *
+     * @param key the key
+     * @return the result of setting
+     * @throws IOException if the operation cannot complete
+     */
     private String setting(String key) throws IOException {
         String value = System.getenv(key);
         if (value == null || value.isBlank()) throw new IOException("Cloudinary is not configured: " + key);
         return value;
     }
+    /**
+     * Endpoint.
+     *
+     * @param operation the operation
+     * @return the result of endpoint
+     * @throws IOException if the operation cannot complete
+     */
     private URI endpoint(String operation) throws IOException {
         String cloud = setting("CLOUDINARY_CLOUD_NAME");
         if (!cloud.matches("[A-Za-z0-9_-]+")) throw new IOException("Invalid Cloudinary cloud name");
         return URI.create("https://api.cloudinary.com/v1_1/" + cloud + "/image/" + operation);
     }
+    /**
+     * Signature.
+     *
+     * @param publicId the public id identifier
+     * @param timestamp the timestamp
+     * @return the result of signature
+     * @throws IOException if the operation cannot complete
+     */
     private String signature(String publicId, String timestamp) throws IOException {
         String text = "public_id=" + publicId + "&timestamp=" + timestamp + setting("CLOUDINARY_API_SECRET");
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(text.getBytes(StandardCharsets.UTF_8))); }
         catch (NoSuchAlgorithmException e) { throw new IOException(e); }
     }
+    /**
+     * Upload.
+     *
+     * @param bytes the bytes
+     * @param publicId the public id identifier
+     * @return the result of upload
+     * @throws IOException if the operation cannot complete
+     * @throws InterruptedException if the operation cannot complete
+     */
     @Override public String upload(byte[] bytes, String publicId) throws IOException, InterruptedException {
         String timestamp = Long.toString(Instant.now().getEpochSecond());
         String boundary = "learnhub" + UUID.randomUUID().toString().replace("-", "");
@@ -59,6 +90,13 @@ public class AvatarCloudinary implements AvatarService.Storage {
             return url;
         } catch (RuntimeException e) { throw new IOException("Invalid Cloudinary response", e); }
     }
+    /**
+     * Delete.
+     *
+     * @param publicId the public id identifier
+     * @throws IOException if the operation cannot complete
+     * @throws InterruptedException if the operation cannot complete
+     */
     @Override public void delete(String publicId) throws IOException, InterruptedException {
         String timestamp = Long.toString(Instant.now().getEpochSecond());
         String body = "public_id=" + enc(publicId) + "&timestamp=" + enc(timestamp) + "&api_key=" + enc(setting("CLOUDINARY_API_KEY")) + "&signature=" + enc(signature(publicId, timestamp));
@@ -68,13 +106,36 @@ public class AvatarCloudinary implements AvatarService.Storage {
         JsonObject response = send(req);
         if (!response.has("result") || !("ok".equals(response.get("result").getAsString()) || "not found".equals(response.get("result").getAsString()))) throw new IOException("Cloudinary deletion failed");
     }
+    /**
+     * Send.
+     *
+     * @param req the incoming request
+     * @return the result of send
+     * @throws IOException if the operation cannot complete
+     * @throws InterruptedException if the operation cannot complete
+     */
     private JsonObject send(HttpRequest req) throws IOException, InterruptedException {
         HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) throw new IOException("Cloudinary returned HTTP " + response.statusCode());
         try { return JsonParser.parseString(response.body()).getAsJsonObject(); }
         catch (RuntimeException e) { throw new IOException("Invalid Cloudinary response", e); }
     }
+    /**
+     * Enc.
+     *
+     * @param value the value
+     * @return the result of enc
+     */
     private static String enc(String value) { return URLEncoder.encode(value, StandardCharsets.UTF_8); }
+    /**
+     * Field.
+     *
+     * @param body the body
+     * @param boundary the boundary
+     * @param name the name
+     * @param value the value
+     * @throws IOException if the operation cannot complete
+     */
     private static void field(ByteArrayOutputStream body, String boundary, String name, String value) throws IOException {
         body.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" + value + "\r\n").getBytes(StandardCharsets.UTF_8));
     }

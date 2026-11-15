@@ -24,6 +24,12 @@ import java.util.logging.Logger;
 public class RegistrationDAO {
     private static final Logger LOGGER = Logger.getLogger(RegistrationDAO.class.getName());
 
+    /**
+     * Insert registration.
+     *
+     * @param reg the reg
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insertRegistration(Registration reg) {
         String sql = "INSERT INTO registration (id, user_id, course_id, enrolled_at, status, progress_percent, " +
                      "amount, payment_method_id, transaction_id, payment_status, paid_at) " +
@@ -47,10 +53,29 @@ public class RegistrationDAO {
         }
     }
 
+    /**
+     * Finds registrations.
+     *
+     * @param search the search
+     * @param status the status
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching registrations, if present
+     */
     public List<Registration> findRegistrations(String search, String status, int offset, int limit) {
         return findRegistrations(search, status, null, offset, limit);
     }
 
+    /**
+     * Finds registrations.
+     *
+     * @param search the search
+     * @param status the status
+     * @param paymentStatus the payment status
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching registrations, if present
+     */
     public List<Registration> findRegistrations(String search, String status, String paymentStatus, int offset, int limit) {
         List<Registration> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -151,10 +176,23 @@ public class RegistrationDAO {
         return 0;
     }
 
+    /**
+     * Returns registration stats.
+     *
+     * @return the registration stats
+     */
     public java.util.Map<String, Object> getRegistrationStats() {
         return getRegistrationStats(null, null, null);
     }
 
+    /**
+     * Returns registration stats.
+     *
+     * @param search the search
+     * @param status the status
+     * @param paymentStatus the payment status
+     * @return the registration stats
+     */
     public java.util.Map<String, Object> getRegistrationStats(String search, String status, String paymentStatus) {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("total", 0);
@@ -215,6 +253,12 @@ public class RegistrationDAO {
         return stats;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param id the id identifier
+     * @return the matching by id, if present
+     */
     public Registration findById(UUID id) {
         if (id == null) return null;
         String sql = "SELECT r.id, r.user_id, r.course_id, r.enrolled_at, r.status, r.progress_percent, " +
@@ -265,6 +309,12 @@ public class RegistrationDAO {
         return null;
     }
 
+    /**
+     * Finds by user id.
+     *
+     * @param userId the user id identifier
+     * @return the matching by user id, if present
+     */
     public List<Registration> findByUserId(UUID userId) {
         List<Registration> list = new ArrayList<>();
         String sql = "SELECT r.id, r.user_id, r.course_id, r.enrolled_at, r.status, r.progress_percent, " +
@@ -289,6 +339,14 @@ public class RegistrationDAO {
         return list;
     }
 
+    /**
+     * Update registration status.
+     *
+     * @param id the id identifier
+     * @param status the status
+     * @param paymentStatus the payment status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateRegistrationStatus(UUID id, String status, String paymentStatus) {
         String sql = "UPDATE registration SET status = ?::registration_status, payment_status = ?::payment_status, " +
                      "paid_at = CASE WHEN ? = 'paid' THEN COALESCE(paid_at, NOW()) ELSE paid_at END WHERE id = ?";
@@ -329,6 +387,13 @@ public class RegistrationDAO {
         return r;
     }
 
+    /**
+     * Lock registration.
+     *
+     * @param conn the database connection
+     * @param registrationId the registration id identifier
+     * @throws SQLException if the operation cannot complete
+     */
     public void lockRegistration(Connection conn, UUID registrationId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT id FROM registration WHERE id = ? FOR UPDATE")) {
@@ -339,6 +404,15 @@ public class RegistrationDAO {
         }
     }
 
+    /**
+     * Update learning progress.
+     *
+     * @param conn the database connection
+     * @param registrationId the registration id identifier
+     * @param percent the percent
+     * @param completed the completed
+     * @throws SQLException if the operation cannot complete
+     */
     public void updateLearningProgress(Connection conn, UUID registrationId, int percent, boolean completed)
             throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
@@ -354,6 +428,13 @@ public class RegistrationDAO {
         }
     }
 
+    /**
+     * Refresh course learning progress.
+     *
+     * @param conn the database connection
+     * @param courseId the course id identifier
+     * @throws SQLException if the operation cannot complete
+     */
     public void refreshCourseLearningProgress(Connection conn, UUID courseId) throws SQLException {
         try (PreparedStatement lock = conn.prepareStatement("""
                 SELECT id FROM registration WHERE course_id = ?

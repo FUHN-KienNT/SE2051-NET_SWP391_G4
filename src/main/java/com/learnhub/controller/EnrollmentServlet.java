@@ -53,6 +53,14 @@ public class EnrollmentServlet extends HttpServlet {
         handleEnrollmentPage(req, resp);
     }
 
+    /**
+     * Handle enrollment page.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleEnrollmentPage(
             HttpServletRequest req,
             HttpServletResponse resp
@@ -139,6 +147,14 @@ public class EnrollmentServlet extends HttpServlet {
         ).forward(req, resp);
     }
 
+    /**
+     * Handle my enrollments.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleMyEnrollments(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = ControllerSupport.currentUser(req);
         if (user == null) {
@@ -195,6 +211,14 @@ public class EnrollmentServlet extends HttpServlet {
         ).forward(req, resp);
     }
 
+    /**
+     * Handle continue.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param enrolled the enrolled
+     * @throws IOException if the operation cannot complete
+     */
     private void handleContinue(
             HttpServletRequest req,
             HttpServletResponse resp,
@@ -219,6 +243,14 @@ public class EnrollmentServlet extends HttpServlet {
                 + "&lessonId=" + selected.getLessonId());
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(
             HttpServletRequest req,

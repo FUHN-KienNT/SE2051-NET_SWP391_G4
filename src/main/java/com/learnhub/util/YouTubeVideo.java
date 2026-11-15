@@ -7,8 +7,17 @@ import java.util.Set;
 
 /** Parses YouTube links without accepting arbitrary iframe URLs or HTML. */
 public final class YouTubeVideo {
+    /**
+     * Creates an instance with the supplied values.
+     */
     private YouTubeVideo() {}
 
+    /**
+     * Video id.
+     *
+     * @param value the value
+     * @return the result of video id
+     */
     public static String videoId(String value) {
         if (value == null || value.isBlank()) return null;
         try {
@@ -38,6 +47,12 @@ public final class YouTubeVideo {
         }
     }
 
+    /**
+     * Embed url.
+     *
+     * @param value the value
+     * @return the result of embed url
+     */
     public static String embedUrl(String value) {
         String id = videoId(value);
         return id == null ? null : "https://www.youtube-nocookie.com/embed/" + id

@@ -27,6 +27,11 @@ public class RequiredPasswordChangeFilter implements Filter {
         this(new UserDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param userDAO the user dao
+     */
     RequiredPasswordChangeFilter(UserDAO userDAO) {
         this.userDAO = userDAO;
     }

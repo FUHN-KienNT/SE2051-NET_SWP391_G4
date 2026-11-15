@@ -27,6 +27,13 @@ public class NotificationServlet extends HttpServlet {
 
     private final NotificationService notificationService = new NotificationService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         prepareResponse(resp);
@@ -69,6 +76,13 @@ public class NotificationServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         prepareResponse(resp);
@@ -111,11 +125,24 @@ public class NotificationServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Prepare response.
+     *
+     * @param resp the outgoing response
+     */
     private void prepareResponse(HttpServletResponse resp) {
         resp.setContentType("application/json;charset=UTF-8");
         resp.setHeader("Cache-Control", "no-store");
     }
 
+    /**
+     * Error.
+     *
+     * @param resp the outgoing response
+     * @param status the status
+     * @param message the message
+     * @throws IOException if the operation cannot complete
+     */
     private void error(HttpServletResponse resp, int status, String message) throws IOException {
         resp.setStatus(status);
         JsonObject body = new JsonObject();
@@ -123,6 +150,13 @@ public class NotificationServlet extends HttpServlet {
         write(resp, body);
     }
 
+    /**
+     * Write.
+     *
+     * @param resp the outgoing response
+     * @param body the body
+     * @throws IOException if the operation cannot complete
+     */
     private void write(HttpServletResponse resp, JsonObject body) throws IOException {
         resp.getWriter().write(body.toString());
     }

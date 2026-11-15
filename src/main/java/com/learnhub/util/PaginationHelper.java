@@ -10,6 +10,9 @@ import java.util.List;
  */
 public final class PaginationHelper {
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private PaginationHelper() {
     }
 

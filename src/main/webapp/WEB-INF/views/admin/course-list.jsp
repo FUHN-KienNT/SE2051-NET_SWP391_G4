@@ -14,6 +14,7 @@
         <main class="w-full max-w-7xl flex-grow mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
             <!-- Success / Error Alert -->
+            <c:if test="${param.error eq 'thumbnail_failed'}"><p role="alert" class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-status-danger">Thumbnail upload failed. Choose a JPEG or PNG up to 5 MB and try again.</p></c:if>
             <c:if test="${not empty successMessage}">
                 <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between shadow-sm animate-fade-in">
                     <div class="flex items-center space-x-2.5">

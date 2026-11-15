@@ -83,6 +83,12 @@ public class QuestionDAO {
         return list;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param id the id identifier
+     * @return the matching by id, if present
+     */
     public Question findById(UUID id) {
         if (id == null) {
             return null;
@@ -117,6 +123,12 @@ public class QuestionDAO {
         return null;
     }
 
+    /**
+     * Finds questions by quiz id.
+     *
+     * @param quizId the quiz id identifier
+     * @return the matching questions by quiz id, if present
+     */
     public List<Question> findQuestionsByQuizId(UUID quizId) {
         List<Question> list = new ArrayList<>();
 
@@ -173,6 +185,12 @@ public class QuestionDAO {
         return list;
     }
 
+    /**
+     * Finds options by question id.
+     *
+     * @param questionId the question id identifier
+     * @return the matching options by question id, if present
+     */
     public List<QuestionOption> findOptionsByQuestionId(UUID questionId) {
         if (questionId == null) {
             return new ArrayList<>();
@@ -393,6 +411,12 @@ public class QuestionDAO {
         }
     }
 
+    /**
+     * Unhide.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean unhide(UUID id) {
         if (id == null) {
             return false;
@@ -715,6 +739,14 @@ public class QuestionDAO {
         }
     }
 
+    /**
+     * Finds options by question id.
+     *
+     * @param id the id identifier
+     * @param conn the database connection
+     * @return the matching options by question id, if present
+     * @throws SQLException if the operation cannot complete
+     */
     private List<QuestionOption> findOptionsByQuestionId(
             UUID id,
             Connection conn) throws SQLException {
@@ -763,6 +795,13 @@ public class QuestionDAO {
         return list;
     }
 
+    /**
+     * Map question.
+     *
+     * @param rs the current result set
+     * @return the result of map question
+     * @throws SQLException if the operation cannot complete
+     */
     private Question mapQuestion(ResultSet rs)
             throws SQLException {
 
@@ -793,6 +832,12 @@ public class QuestionDAO {
         return q;
     }
 
+    /**
+     * Normalize type.
+     *
+     * @param type the type
+     * @return the result of normalize type
+     */
     private static String normalizeType(String type) {
 
         if ("multiple_choice".equalsIgnoreCase(type)) {
@@ -806,6 +851,13 @@ public class QuestionDAO {
         return "single_choice";
     }
 
+    /**
+     * Bind.
+     *
+     * @param ps the prepared SQL statement
+     * @param params the params
+     * @throws SQLException if the operation cannot complete
+     */
     private static void bind(
             PreparedStatement ps,
             List<Object> params) throws SQLException {
@@ -815,6 +867,12 @@ public class QuestionDAO {
         }
     }
 
+    /**
+     * Rollback.
+     *
+     * @param conn the database connection
+     * @return true when the condition holds; false otherwise
+     */
     private boolean rollback(Connection conn) {
 
         try {
@@ -827,6 +885,11 @@ public class QuestionDAO {
         return false;
     }
 
+    /**
+     * Close.
+     *
+     * @param conn the database connection
+     */
     private void close(Connection conn) {
 
         try {

@@ -14,6 +14,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CategoryCourseVisibilityTest {
 
+    /**
+     * Course entity tracks category status.
+     */
     @Test
     void courseEntityTracksCategoryStatus() {
         Course course = new Course();
@@ -26,6 +29,9 @@ class CategoryCourseVisibilityTest {
         assertFalse(course.getCategoryStatus());
     }
 
+    /**
+     * Course dao counts by category accurately.
+     */
     @Test
     void courseDaoCountsByCategoryAccurately() {
         CourseDAO courseDAO = new CourseDAO();
@@ -40,6 +46,9 @@ class CategoryCourseVisibilityTest {
         assertEquals(0, nonExistentCount);
     }
 
+    /**
+     * Published courses exclude inactive categories.
+     */
     @Test
     void publishedCoursesExcludeInactiveCategories() {
         CourseDAO courseDAO = new CourseDAO();

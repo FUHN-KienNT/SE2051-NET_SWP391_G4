@@ -30,6 +30,14 @@ public class CourseServlet extends HttpServlet {
     private final CourseService courseService = new CourseService();
     private final LearningProcessService learningService = new LearningProcessService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
@@ -50,6 +58,14 @@ public class CourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
@@ -60,6 +76,14 @@ public class CourseServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle expert dashboard.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleExpertDashboard(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
@@ -79,6 +103,14 @@ public class CourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/dashboard.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle course list.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleCourseList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
         if ("detail".equals(action)) {
@@ -121,6 +153,14 @@ public class CourseServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/courses/list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle course detail.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleCourseDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String idStr = req.getParameter("id");
         if (idStr != null) {
@@ -164,6 +204,14 @@ public class CourseServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/courses");
     }
 
+    /**
+     * Handle course register.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleCourseRegister(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
@@ -194,6 +242,14 @@ public class CourseServlet extends HttpServlet {
         }
         resp.sendRedirect(req.getContextPath() + "/courses");
     }
+    /**
+     * Handle my course detail.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleMyCourseDetail(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         User user = ControllerSupport.currentUser(req);

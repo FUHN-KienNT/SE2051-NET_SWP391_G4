@@ -19,6 +19,9 @@ public class DbConnection {
     private static final Logger LOGGER = Logger.getLogger(DbConnection.class.getName());
     private static HikariDataSource dataSource;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private DbConnection() {
     }
 
@@ -63,6 +66,9 @@ public class DbConnection {
         }
     }
 
+    /**
+     * Ensure schema up to date.
+     */
     private static void ensureSchemaUpToDate() {
         String[] statements = {
             "ALTER TABLE module ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE",
@@ -92,6 +98,12 @@ public class DbConnection {
         }
     }
 
+    /**
+     * Returns connection.
+     *
+     * @return the connection
+     * @throws SQLException if the operation cannot complete
+     */
     public static Connection getConnection() throws SQLException {
         if (dataSource == null) {
             throw new SQLException("DataSource has not been initialized correctly.");
@@ -99,6 +111,9 @@ public class DbConnection {
         return dataSource.getConnection();
     }
 
+    /**
+     * Close pool.
+     */
     public static void closePool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();

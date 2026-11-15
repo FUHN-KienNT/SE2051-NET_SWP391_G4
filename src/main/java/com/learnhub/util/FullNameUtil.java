@@ -5,6 +5,9 @@ import java.util.regex.Pattern;
 public final class FullNameUtil {
     private static final Pattern ALLOWED_CHARACTERS = Pattern.compile("[\\p{L}\\p{M}\\p{Zs}.'’-]+");
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private FullNameUtil() {}
 
     /**

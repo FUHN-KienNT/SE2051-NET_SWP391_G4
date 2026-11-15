@@ -47,6 +47,14 @@ public class UserServlet extends HttpServlet {
 
     private final UserService userService = new UserService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
@@ -161,6 +169,14 @@ public class UserServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/user-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
@@ -353,6 +369,12 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Compute initials.
+     *
+     * @param name the name
+     * @return the result of compute initials
+     */
     private String computeInitials(String name) {
         if (name == null || name.isBlank()) {
             return "U";

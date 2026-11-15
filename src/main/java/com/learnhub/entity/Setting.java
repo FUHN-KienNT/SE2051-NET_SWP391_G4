@@ -144,6 +144,11 @@ public class Setting implements Serializable {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Returns a string representation of this object.
+     *
+     * @return a string representation of this object
+     */
     @Override
     public String toString() {
         return "Setting{"

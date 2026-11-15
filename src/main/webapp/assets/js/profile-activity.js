@@ -40,10 +40,12 @@
 
     days.forEach((day, index) => {
         day.addEventListener('pointerenter', (event) => {
-            if (event.pointerType === 'mouse' && !pinnedDay) show(day);
+            if (event.pointerType === 'touch') return;
+            pinnedDay = null;
+            show(day);
         });
         day.addEventListener('pointerleave', () => {
-            if (!pinnedDay && document.activeElement !== day) hide();
+            if (!pinnedDay && !day.matches(':focus-visible')) hide();
         });
         day.addEventListener('focus', () => {
             days.forEach((item) => { item.tabIndex = -1; });

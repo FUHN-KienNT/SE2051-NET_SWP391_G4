@@ -17,6 +17,12 @@ import java.util.logging.Logger;
 public class ModuleDAO {
     private static final Logger LOGGER = Logger.getLogger(ModuleDAO.class.getName());
 
+    /**
+     * Finds by course id.
+     *
+     * @param courseId the course id identifier
+     * @return the matching by course id, if present
+     */
     public List<Module> findByCourseId(UUID courseId) {
         List<Module> list = new ArrayList<>();
         if (courseId == null) {
@@ -54,6 +60,12 @@ public class ModuleDAO {
         return list;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param id the id identifier
+     * @return the matching by id, if present
+     */
     public Module findById(UUID id) {
         if (id == null) {
             return null;
@@ -89,6 +101,12 @@ public class ModuleDAO {
         return null;
     }
 
+    /**
+     * Insert.
+     *
+     * @param module the module
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insert(Module module) {
         if (module == null) {
             return false;
@@ -111,6 +129,15 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Append for expert.
+     *
+     * @param courseId the course id identifier
+     * @param expertId the expert id identifier
+     * @param title the title
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     public boolean appendForExpert(UUID courseId, UUID expertId, String title) throws SQLException {
         try (Connection conn = DbConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -149,6 +176,12 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Update.
+     *
+     * @param module the module
+     * @return true when the condition holds; false otherwise
+     */
     public boolean update(Module module) {
         if (module == null || module.getId() == null) {
             return false;
@@ -169,6 +202,12 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Delete.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean delete(UUID id) {
         if (id == null) {
             return false;
@@ -186,6 +225,13 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Update order index.
+     *
+     * @param id the id identifier
+     * @param orderIndex the order index
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateOrderIndex(UUID id, int orderIndex) {
         if (id == null) {
             return false;
@@ -204,6 +250,12 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Counts by course id.
+     *
+     * @param courseId the course id identifier
+     * @return the number of by course id
+     */
     public int countByCourseId(UUID courseId) {
         if (courseId == null) {
             return 0;
@@ -225,6 +277,12 @@ public class ModuleDAO {
         return 0;
     }
 
+    /**
+     * Finds by expert id.
+     *
+     * @param expertId the expert id identifier
+     * @return the matching by expert id, if present
+     */
     public List<Module> findByExpertId(UUID expertId) {
         List<Module> list = new ArrayList<>();
         if (expertId == null) return list;
@@ -260,6 +318,17 @@ public class ModuleDAO {
         return list;
     }
 
+    /**
+     * Update for expert.
+     *
+     * @param courseId the course id identifier
+     * @param moduleId the module id identifier
+     * @param expertId the expert id identifier
+     * @param title the title
+     * @param hidden the hidden
+     * @return true when the condition holds; false otherwise
+     * @throws SQLException if the operation cannot complete
+     */
     public boolean updateForExpert(UUID courseId, UUID moduleId, UUID expertId, String title, Boolean hidden) throws SQLException {
         String sql = """
                 UPDATE module m SET title = COALESCE(?, m.title),
@@ -288,6 +357,13 @@ public class ModuleDAO {
         }
     }
 
+    /**
+     * Map result set to module.
+     *
+     * @param rs the current result set
+     * @return the result of map result set to module
+     * @throws SQLException if the operation cannot complete
+     */
     private Module mapResultSetToModule(ResultSet rs) throws SQLException {
         Module m = new Module();
         m.setId((UUID) rs.getObject("id"));

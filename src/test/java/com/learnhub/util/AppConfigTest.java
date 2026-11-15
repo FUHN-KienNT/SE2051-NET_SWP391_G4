@@ -12,6 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class AppConfigTest {
     @TempDir Path directory;
 
+    /**
+     * Reads windows file without changing credential characters.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void readsWindowsFileWithoutChangingCredentialCharacters() throws Exception {
         Path file = directory.resolve(".env");
@@ -27,6 +32,9 @@ class AppConfigTest {
         assertNull(AppConfig.resolve("GITHUB_CLIENT_ID", key -> null, settings));
     }
 
+    /**
+     * Environment overrides file and missing or blank environment falls back.
+     */
     @Test
     void environmentOverridesFileAndMissingOrBlankEnvironmentFallsBack() {
         Map<String, String> settings = Map.of("GOOGLE_CLIENT_ID", "local-id");
@@ -36,6 +44,11 @@ class AppConfigTest {
         assertNull(AppConfig.resolve("GITHUB_CLIENT_ID", key -> null, settings));
     }
 
+    /**
+     * Malformed entries report line number without leaking secrets.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void malformedEntriesReportLineNumberWithoutLeakingSecrets() throws Exception {
         Path file = directory.resolve(".env");

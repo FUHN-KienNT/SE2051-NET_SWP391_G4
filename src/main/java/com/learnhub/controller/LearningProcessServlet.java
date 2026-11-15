@@ -20,6 +20,14 @@ public class LearningProcessServlet extends HttpServlet {
     private final LearningProcessService learningService =
             new LearningProcessService();
 
+    /**
+     * Require student.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @return the result of require student
+     * @throws IOException if the operation cannot complete
+     */
     private User requireStudent(
             HttpServletRequest req,
             HttpServletResponse resp
@@ -49,6 +57,14 @@ public class LearningProcessServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(
             HttpServletRequest req,
@@ -112,6 +128,14 @@ public class LearningProcessServlet extends HttpServlet {
         ).forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(
             HttpServletRequest req,

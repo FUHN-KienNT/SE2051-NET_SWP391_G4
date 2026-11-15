@@ -32,6 +32,9 @@ public class UserDAO {
         ensureColumns();
     }
 
+    /**
+     * Ensure columns.
+     */
     private static void ensureColumns() {
         try (Connection conn = DbConnection.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -43,6 +46,11 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Finds all.
+     *
+     * @return the matching all, if present
+     */
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
@@ -111,6 +119,16 @@ public class UserDAO {
         return null;
     }
 
+    /**
+     * Finds users.
+     *
+     * @param search the search
+     * @param roleId the role id identifier
+     * @param status the status
+     * @param offset the offset
+     * @param limit the limit
+     * @return the matching users, if present
+     */
     public List<User> findUsers(String search, UUID roleId, String status, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -156,6 +174,14 @@ public class UserDAO {
         return list;
     }
 
+    /**
+     * Counts users.
+     *
+     * @param search the search
+     * @param roleId the role id identifier
+     * @param status the status
+     * @return the number of users
+     */
     public int countUsers(String search, UUID roleId, String status) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM \"user\" u WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
@@ -235,6 +261,12 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Update.
+     *
+     * @param user the user
+     * @return true when the condition holds; false otherwise
+     */
     public boolean update(User user) {
         String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, phone = ?, role_id = ?, status = ?::user_status, status_note = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -254,6 +286,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Checks whether identity taken by other.
+     *
+     * @param userId the user id identifier
+     * @param username the username
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isIdentityTakenByOther(UUID userId, String username) {
         String sql = """
                 SELECT 1 FROM "user"
@@ -274,6 +313,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Checks whether phone taken by other.
+     *
+     * @param userId the user id identifier
+     * @param phone the phone
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isPhoneTakenByOther(UUID userId, String phone) {
         String sql = "SELECT 1 FROM \"user\" WHERE id <> ? AND phone IS NOT NULL "
                 + "AND regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace(?, '[^0-9]', '', 'g') LIMIT 1";
@@ -286,6 +332,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Update own username.
+     *
+     * @param userId the user id identifier
+     * @param username the username
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateOwnUsername(UUID userId, String username) {
         String sql = "UPDATE \"user\" SET username = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -299,6 +352,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Update own avatar.
+     *
+     * @param userId the user id identifier
+     * @param avatarUrl the avatar url
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateOwnAvatar(UUID userId, String avatarUrl) {
         String sql = "UPDATE \"user\" SET avatar_url = ?, updated_at = NOW() WHERE id = ? AND status = 'active'";
         try (Connection conn = DbConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -311,6 +371,15 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Update own profile.
+     *
+     * @param userId the user id identifier
+     * @param username the username
+     * @param fullName the full name
+     * @param phone the phone
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateOwnProfile(UUID userId, String username, String fullName, String phone) {
         String sql = "UPDATE \"user\" SET username = ?, full_name = ?, phone = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -326,10 +395,25 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Update status.
+     *
+     * @param userId the user id identifier
+     * @param status the status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateStatus(UUID userId, String status) {
         return updateStatus(userId, status, null);
     }
 
+    /**
+     * Update status.
+     *
+     * @param userId the user id identifier
+     * @param status the status
+     * @param statusNote the status note
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateStatus(UUID userId, String status, String statusNote) {
         String sql = "UPDATE \"user\" SET status = ?::user_status, status_note = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -419,6 +503,11 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Finds instructors.
+     *
+     * @return the matching instructors, if present
+     */
     public List<User> findInstructors() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
@@ -442,6 +531,12 @@ public class UserDAO {
         return list;
     }
 
+    /**
+     * Checks whether expert.
+     *
+     * @param userId the user id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isExpert(UUID userId) {
         if (userId == null) {
             return false;
@@ -464,6 +559,13 @@ public class UserDAO {
         return "ROLE_EXPERT".equals(rCode) || "EXPERT".equals(rCode) || "expert".equals(rName) || rName.startsWith("expert");
     }
 
+    /**
+     * Map result set to user.
+     *
+     * @param rs the current result set
+     * @return the result of map result set to user
+     * @throws SQLException if the operation cannot complete
+     */
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User u = new User();
         u.setId((UUID) rs.getObject("id"));

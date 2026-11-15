@@ -17,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceRegistrationTest {
+    /**
+     * Registration creates inactive account pending email verification.
+     */
     @Test
     void registrationCreatesInactiveAccountPendingEmailVerification() {
         RegistrationDao dao = new RegistrationDao();
@@ -35,12 +38,27 @@ class UserServiceRegistrationTest {
         User inserted;
         String takenIdentity;
 
+        /**
+         * Finds by email.
+         *
+         * @param email the email
+         * @return the matching by email, if present
+         */
         @Override public User findByEmail(String email) {
             return takenIdentity != null && takenIdentity.equalsIgnoreCase(email) ? new User() : null;
         }
+        /**
+         * Insert.
+         *
+         * @param user the user
+         * @return true when the condition holds; false otherwise
+         */
         @Override public boolean insert(User user) { inserted = user; return true; }
     }
 
+    /**
+     * Registration rechecks identity after verification.
+     */
     @Test
     void registrationRechecksIdentityAfterVerification() {
         RegistrationDao dao = new RegistrationDao();
@@ -60,11 +78,19 @@ class UserServiceRegistrationTest {
     }
 
     private static class RolesDao extends SettingDAO {
+        /**
+         * Finds all roles.
+         *
+         * @return the matching all roles, if present
+         */
         @Override public List<Setting> findAllRoles() {
             return List.of(new Setting(UUID.randomUUID(), "role", "ROLE_STUDENT", "Student", null, true, 1));
         }
     }
 
+    /**
+     * Verified registration requires and persists independent full name.
+     */
     @Test
     void verifiedRegistrationRequiresAndPersistsIndependentFullName() {
         RegistrationDao dao = new RegistrationDao();

@@ -12,8 +12,17 @@ public final class LessonHtml {
             .removeProtocols("a", "href", "ftp")
             .addEnforcedAttribute("a", "rel", "nofollow noopener noreferrer");
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private LessonHtml() {}
 
+    /**
+     * Sanitize.
+     *
+     * @param html the html
+     * @return the result of sanitize
+     */
     public static String sanitize(String html) {
         if (html == null || html.isEmpty()) return "";
         Document document = Jsoup.parseBodyFragment(html);
@@ -27,6 +36,12 @@ public final class LessonHtml {
                 new Document.OutputSettings().prettyPrint(false));
     }
 
+    /**
+     * Checks whether this object has text.
+     *
+     * @param html the html
+     * @return true when the condition holds; false otherwise
+     */
     public static boolean hasText(String html) {
         String text = Jsoup.parseBodyFragment(sanitize(html)).text();
         return text.codePoints().anyMatch(c -> !Character.isWhitespace(c)

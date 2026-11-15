@@ -17,9 +17,20 @@ import java.util.logging.Logger;
 public class EmailUtil {
     private static final Logger LOGGER = Logger.getLogger(EmailUtil.class.getName());
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private EmailUtil() {
     }
 
+    /**
+     * Send email.
+     *
+     * @param toEmail the to email
+     * @param subject the subject
+     * @param bodyHtml the body html
+     * @return true when the condition holds; false otherwise
+     */
     public static boolean sendEmail(String toEmail, String subject, String bodyHtml) {
         String host = AppConfig.get("SMTP_HOST");
         String username = AppConfig.get("SMTP_USERNAME");
@@ -52,6 +63,11 @@ public class EmailUtil {
         properties.put("mail.smtp.writetimeout", "10000");
 
         Session session = Session.getInstance(properties, new Authenticator() {
+            /**
+             * Returns password authentication.
+             *
+             * @return the password authentication
+             */
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(username.trim(), password);
@@ -75,10 +91,23 @@ public class EmailUtil {
         }
     }
 
+    /**
+     * Checks whether blank.
+     *
+     * @param value the value
+     * @return true when the condition holds; false otherwise
+     */
     private static boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
 
+    /**
+     * Send enrollment success.
+     *
+     * @param toEmail the to email
+     * @param studentName the student name
+     * @param courseTitle the course title
+     */
     public static void sendEnrollmentSuccess(String toEmail, String studentName, String courseTitle) {
         String subject = "LearnHub - Kích hoạt khóa học thành công: " + courseTitle;
         String body = "<h3>Xin chào " + escapeHtml(studentName) + ",</h3>" +
@@ -88,6 +117,12 @@ public class EmailUtil {
         sendEmail(toEmail, subject, body);
     }
 
+    /**
+     * Escape html.
+     *
+     * @param value the value
+     * @return the result of escape html
+     */
     private static String escapeHtml(String value) {
         if (value == null) return "";
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

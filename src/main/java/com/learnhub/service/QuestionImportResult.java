@@ -28,6 +28,11 @@ public class QuestionImportResult implements Serializable {
     private String fileName;
     private String moduleTitle;
 
+    /**
+     * Add error.
+     *
+     * @param message the message
+     */
     public void addError(String message) {
         errorCount++;
         if (errors.size() < MAX_ERRORS_SHOWN) {
@@ -35,6 +40,11 @@ public class QuestionImportResult implements Serializable {
         }
     }
 
+    /**
+     * Add question.
+     *
+     * @param question the question
+     */
     public void addQuestion(Question question) {
         questions.add(question);
         switch (question.getType()) {
@@ -69,19 +79,79 @@ public class QuestionImportResult implements Serializable {
         return isValid();
     }
 
+    /**
+     * Returns errors.
+     *
+     * @return the errors
+     */
     public List<String> getErrors() { return errors; }
+    /**
+     * Returns error count.
+     *
+     * @return the error count
+     */
     public int getErrorCount() { return errorCount; }
+    /**
+     * Returns hidden error count.
+     *
+     * @return the hidden error count
+     */
     public int getHiddenErrorCount() { return errorCount - errors.size(); }
 
+    /**
+     * Returns questions.
+     *
+     * @return the questions
+     */
     public List<Question> getQuestions() { return questions; }
+    /**
+     * Returns imported count.
+     *
+     * @return the imported count
+     */
     public int getImportedCount() { return importedCount > 0 ? importedCount : questions.size(); }
+    /**
+     * Returns single count.
+     *
+     * @return the single count
+     */
     public int getSingleCount() { return singleCount; }
+    /**
+     * Returns multiple count.
+     *
+     * @return the multiple count
+     */
     public int getMultipleCount() { return multipleCount; }
+    /**
+     * Returns fill count.
+     *
+     * @return the fill count
+     */
     public int getFillCount() { return fillCount; }
 
+    /**
+     * Returns file name.
+     *
+     * @return the file name
+     */
     public String getFileName() { return fileName; }
+    /**
+     * Sets file name.
+     *
+     * @param fileName the file name
+     */
     public void setFileName(String fileName) { this.fileName = fileName; }
 
+    /**
+     * Returns module title.
+     *
+     * @return the module title
+     */
     public String getModuleTitle() { return moduleTitle; }
+    /**
+     * Sets module title.
+     *
+     * @param moduleTitle the module title
+     */
     public void setModuleTitle(String moduleTitle) { this.moduleTitle = moduleTitle; }
 }

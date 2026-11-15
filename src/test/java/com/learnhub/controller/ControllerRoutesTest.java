@@ -9,6 +9,11 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ControllerRoutesTest {
+    /**
+     * Preserves existing urls without duplicate mappings.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void preservesExistingUrlsWithoutDuplicateMappings() throws Exception {
         Set<String> expected = Set.of(

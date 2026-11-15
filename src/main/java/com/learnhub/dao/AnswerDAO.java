@@ -17,6 +17,12 @@ import java.util.logging.Logger;
 public class AnswerDAO {
     private static final Logger LOGGER = Logger.getLogger(AnswerDAO.class.getName());
 
+    /**
+     * Save answers.
+     *
+     * @param submissionId the submission id identifier
+     * @param selectedAnswers the selected answers
+     */
     public void saveAnswers(UUID submissionId, Map<UUID, List<UUID>> selectedAnswers) {
         if (submissionId == null || selectedAnswers == null || selectedAnswers.isEmpty()) {
             return;

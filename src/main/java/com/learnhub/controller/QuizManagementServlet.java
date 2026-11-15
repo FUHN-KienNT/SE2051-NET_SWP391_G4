@@ -48,6 +48,14 @@ public class QuizManagementServlet extends HttpServlet {
 
     private final CourseDAO courseDAO = new CourseDAO();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(
             HttpServletRequest req,
@@ -70,6 +78,15 @@ public class QuizManagementServlet extends HttpServlet {
         handleListGet(req, resp, user);
     }
 
+    /**
+     * Handle detail get.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleDetailGet(
             HttpServletRequest req,
             HttpServletResponse resp,
@@ -143,6 +160,15 @@ public class QuizManagementServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-detail.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle list get.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param user the user
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleListGet(
             HttpServletRequest req,
             HttpServletResponse resp,
@@ -262,6 +288,14 @@ public class QuizManagementServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/quiz-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(
             HttpServletRequest req,
@@ -436,6 +470,13 @@ public class QuizManagementServlet extends HttpServlet {
         req.setAttribute("questions", filterHidden(questions, selectedQuestionIds));
     }
 
+    /**
+     * Load course options.
+     *
+     * @param req the incoming request
+     * @param user the user
+     * @param courseId the course id identifier
+     */
     private void loadCourseOptions(HttpServletRequest req, User user, UUID courseId) {
         req.setAttribute("courses", courseDAO.findByExpertId(user.getId()));
         req.setAttribute("courseId", courseId);
@@ -455,6 +496,14 @@ public class QuizManagementServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Redirect to list.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param result the result
+     * @throws IOException if the operation cannot complete
+     */
     private void redirectToList(
             HttpServletRequest req,
             HttpServletResponse resp,
@@ -463,6 +512,15 @@ public class QuizManagementServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/expert/quizzes?" + result);
     }
 
+    /**
+     * Redirect to list.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param courseId the course id identifier
+     * @param result the result
+     * @throws IOException if the operation cannot complete
+     */
     private void redirectToList(
             HttpServletRequest req,
             HttpServletResponse resp,
@@ -493,6 +551,12 @@ public class QuizManagementServlet extends HttpServlet {
         return result;
     }
 
+    /**
+     * Parse integer.
+     *
+     * @param value the value
+     * @return the result of parse integer
+     */
     private Integer parseInteger(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -506,6 +570,12 @@ public class QuizManagementServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Parse big decimal.
+     *
+     * @param value the value
+     * @return the result of parse big decimal
+     */
     private BigDecimal parseBigDecimal(String value) {
         if (value == null || value.isBlank()) {
             return new BigDecimal("5.0");

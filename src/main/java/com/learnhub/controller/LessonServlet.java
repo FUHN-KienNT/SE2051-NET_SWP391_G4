@@ -33,6 +33,14 @@ public class LessonServlet extends HttpServlet {
     private final CourseService courseService = new CourseService();
     private final QuizManagementService quizService = new QuizManagementService();
 
+    /**
+     * Require expert.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @return the result of require expert
+     * @throws IOException if the operation cannot complete
+     */
     private User requireExpert(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         User user = ControllerSupport.currentUser(req);
         if (user == null || !AppConstants.Role.EXPERT.equalsIgnoreCase(user.getRoleCode())) {
@@ -42,6 +50,14 @@ public class LessonServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = requireExpert(req, resp);
@@ -94,6 +110,16 @@ public class LessonServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Show list.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showList(HttpServletRequest req, HttpServletResponse resp, UUID expertId, UUID courseId)
             throws ServletException, IOException {
         var assignedCourses = courseService.getAssignedCourseOptions(expertId);
@@ -114,6 +140,17 @@ public class LessonServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/common/lesson-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Show form.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @param lesson the lesson
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void showForm(HttpServletRequest req, HttpServletResponse resp, UUID expertId,
                           UUID courseId, LessonDTO lesson) throws ServletException, IOException {
         Course course = courseId == null ? null : lessonService.getCourseForExpert(expertId, courseId);
@@ -131,6 +168,14 @@ public class LessonServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/lesson-detail.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = requireExpert(req, resp);
@@ -166,6 +211,15 @@ public class LessonServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle availability.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @param action the action
+     * @throws IOException if the operation cannot complete
+     */
     private void handleAvailability(HttpServletRequest req, HttpServletResponse resp, UUID expertId, String action)
             throws IOException {
         UUID lessonId = UUID.fromString(req.getParameter("id"));
@@ -180,6 +234,15 @@ public class LessonServlet extends HttpServlet {
                 + "&availability=" + (activate ? "active" : "inactive"));
     }
 
+    /**
+     * Handle module action.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @param action the action
+     * @throws IOException if the operation cannot complete
+     */
     private void handleModuleAction(HttpServletRequest req, HttpServletResponse resp, UUID expertId, String action)
             throws IOException {
         UUID courseId = UUID.fromString(req.getParameter("courseId"));
@@ -194,6 +257,15 @@ public class LessonServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/expert/lessons?courseId=" + courseId + "&moduleAction=" + action);
     }
 
+    /**
+     * Handle upload.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleUpload(HttpServletRequest req, HttpServletResponse resp, UUID expertId)
             throws ServletException, IOException {
         UUID lessonId = UUID.fromString(req.getParameter("lessonId"));
@@ -208,6 +280,12 @@ public class LessonServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/expert/lessons?id=" + lessonId + "&uploaded=true");
     }
 
+    /**
+     * Read integer.
+     *
+     * @param value the value
+     * @return the result of read integer
+     */
     private Integer readInteger(String value) {
         try {
             return value == null ? null : Integer.valueOf(value.strip());
@@ -216,6 +294,15 @@ public class LessonServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle save.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param expertId the expert id identifier
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleSave(HttpServletRequest req, HttpServletResponse resp, UUID expertId)
             throws ServletException, IOException {
         UUID courseId = UUID.fromString(req.getParameter("courseId"));

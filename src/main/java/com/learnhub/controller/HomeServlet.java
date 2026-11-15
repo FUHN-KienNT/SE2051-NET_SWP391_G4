@@ -23,6 +23,14 @@ public class HomeServlet extends HttpServlet {
     private final CourseService courseService = new CourseService();
     private final LearningProcessService learningService = new LearningProcessService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = ControllerSupport.currentUser(req);

@@ -17,6 +17,14 @@ import java.io.IOException;
 public class VNPayServlet extends HttpServlet {
     private final PaymentService paymentService = new PaymentService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if ("/api/payment/vnpay-ipn".equals(req.getServletPath())) {
@@ -26,6 +34,14 @@ public class VNPayServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handle return.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleReturn(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         PaymentService.VNPayReturnResult result = paymentService.processVNPayReturn(req.getParameterMap());
 
@@ -48,6 +64,13 @@ public class VNPayServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/courses/payment-result.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle ipn.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     private void handleIpn(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
         PaymentService.VNPayIpnResponse ipnResponse = paymentService.processVNPayIpn(req.getParameterMap());

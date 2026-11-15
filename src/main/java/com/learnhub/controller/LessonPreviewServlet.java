@@ -18,6 +18,14 @@ import java.util.UUID;
 public class LessonPreviewServlet extends HttpServlet {
     private final LessonService lessonService = new LessonService();
 
+    /**
+     * Require preview user.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @return the result of require preview user
+     * @throws IOException if the operation cannot complete
+     */
     private User requirePreviewUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Object account = req.getSession(false) == null ? null
                 : req.getSession(false).getAttribute(AppConstants.SessionKey.CURRENT_USER);
@@ -33,6 +41,14 @@ public class LessonPreviewServlet extends HttpServlet {
         return user;
     }
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -67,6 +83,14 @@ public class LessonPreviewServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {

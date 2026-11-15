@@ -96,11 +96,25 @@ public class LearningProcessDAO {
         return findStudentCourses(userId, null);
     }
 
+    /**
+     * Finds student course.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @return the matching student course, if present
+     */
     public ContinueLearningDTO findStudentCourse(UUID userId, UUID courseId) {
         List<ContinueLearningDTO> courses = findStudentCourses(userId, courseId);
         return courses.isEmpty() ? null : courses.get(0);
     }
 
+    /**
+     * Finds student courses.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @return the matching student courses, if present
+     */
     private List<ContinueLearningDTO> findStudentCourses(UUID userId, UUID courseId) {
         String sql = """
                 SELECT c.id,
@@ -185,6 +199,13 @@ public class LearningProcessDAO {
         return result;
     }
 
+    /**
+     * Finds by registration and lesson.
+     *
+     * @param registrationId the registration id identifier
+     * @param lessonId the lesson id identifier
+     * @return the matching by registration and lesson, if present
+     */
     public LearningProcess findByRegistrationAndLesson(
             UUID registrationId,
             UUID lessonId
@@ -225,6 +246,13 @@ public class LearningProcessDAO {
         return null;
     }
 
+    /**
+     * Start lesson if absent.
+     *
+     * @param registrationId the registration id identifier
+     * @param lessonId the lesson id identifier
+     * @return the result of start lesson if absent
+     */
     public String startLessonIfAbsent(UUID registrationId, UUID lessonId) {
         String sql = """
                 INSERT INTO learning_process (id, registration_id, lesson_id, status)
@@ -247,6 +275,11 @@ public class LearningProcessDAO {
         return existing.getStatus();
     }
 
+    /**
+     * Save.
+     *
+     * @param process the process
+     */
     public void save(LearningProcess process) {
         LearningProcess existing = findByRegistrationAndLesson(
                 process.getRegistrationId(),
@@ -297,6 +330,12 @@ public class LearningProcessDAO {
         }
     }
 
+    /**
+     * Update status.
+     *
+     * @param id the id identifier
+     * @param status the status
+     */
     public void updateStatus(UUID id, String status) {
         String sql = """
                 UPDATE learning_process
@@ -320,6 +359,12 @@ public class LearningProcessDAO {
         }
     }
 
+    /**
+     * Counts completed lessons.
+     *
+     * @param registrationId the registration id identifier
+     * @return the number of completed lessons
+     */
     public int countCompletedLessons(UUID registrationId) {
         String sql = """
                 SELECT COUNT(*)
@@ -345,6 +390,12 @@ public class LearningProcessDAO {
         return 0;
     }
 
+    /**
+     * Counts total lessons.
+     *
+     * @param registrationId the registration id identifier
+     * @return the number of total lessons
+     */
     public int countTotalLessons(UUID registrationId) {
         String sql = """
                 SELECT COUNT(l.id)
@@ -368,6 +419,12 @@ public class LearningProcessDAO {
 
         return 0;
     }
+    /**
+     * Finds lesson statuses.
+     *
+     * @param registrationId the registration id identifier
+     * @return the matching lesson statuses, if present
+     */
     public Map<String, String> findLessonStatuses(
             UUID registrationId
     ) {
@@ -400,6 +457,14 @@ public class LearningProcessDAO {
         return statuses;
     }
 
+    /**
+     * Complete lesson.
+     *
+     * @param conn the database connection
+     * @param registrationId the registration id identifier
+     * @param lessonId the lesson id identifier
+     * @throws SQLException if the operation cannot complete
+     */
     public void completeLesson(Connection conn, UUID registrationId, UUID lessonId)
             throws SQLException {
         String completeSql = """
@@ -420,6 +485,14 @@ public class LearningProcessDAO {
         }
     }
 
+    /**
+     * Read progress counts.
+     *
+     * @param conn the database connection
+     * @param registrationId the registration id identifier
+     * @return the result of read progress counts
+     * @throws SQLException if the operation cannot complete
+     */
     public LessonCounts readProgressCounts(Connection conn, UUID registrationId)
             throws SQLException {
         String countsSql = """

@@ -55,6 +55,14 @@ public class QuestionServlet extends HttpServlet {
     private final ModuleDAO moduleDAO =
             new ModuleDAO();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(
             HttpServletRequest req,
@@ -262,6 +270,14 @@ public class QuestionServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/expert/question-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handles an HTTP POST request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doPost(
             HttpServletRequest req,
@@ -429,12 +445,32 @@ public class QuestionServlet extends HttpServlet {
         resp.sendRedirect(redirectUrl.toString());
     }
 
+    /**
+     * Send import template.
+     *
+     * @param resp the outgoing response
+     * @throws IOException if the operation cannot complete
+     */
     private void sendImportTemplate(HttpServletResponse resp) throws IOException {
         resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         resp.setHeader("Content-Disposition", "attachment; filename=\"question-import-template.xlsx\"");
         QuestionExcelFile.writeTemplate(resp.getOutputStream());
     }
 
+    /**
+     * Forward with error.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param questionId the question id identifier
+     * @param moduleId the module id identifier
+     * @param content the content
+     * @param type the type
+     * @param status the status
+     * @param errorMsg the error msg
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void forwardWithError(
             HttpServletRequest req,
             HttpServletResponse resp,

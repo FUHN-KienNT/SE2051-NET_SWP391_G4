@@ -9,12 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PaginationHelperTest {
 
+    /**
+     * Handles zero or negative total pages.
+     */
     @Test
     void handlesZeroOrNegativeTotalPages() {
         assertTrue(PaginationHelper.getPageNumbers(1, 0).isEmpty());
         assertTrue(PaginationHelper.getPageNumbers(1, -5).isEmpty());
     }
 
+    /**
+     * Handles total pages less than or equal to seven.
+     */
     @Test
     void handlesTotalPagesLessThanOrEqualToSeven() {
         assertEquals(List.of("1"), PaginationHelper.getPageNumbers(1, 1));
@@ -22,6 +28,9 @@ class PaginationHelperTest {
         assertEquals(List.of("1", "2", "3", "4", "5", "6", "7"), PaginationHelper.getPageNumbers(4, 7));
     }
 
+    /**
+     * Handles current page near beginning.
+     */
     @Test
     void handlesCurrentPageNearBeginning() {
         // When currentPage <= 4 in 10 pages: 1, 2, 3, 4, 5, ..., 10
@@ -31,6 +40,9 @@ class PaginationHelperTest {
         assertEquals(List.of("1", "2", "3", "4", "5", "...", "10"), PaginationHelper.getPageNumbers(4, 10));
     }
 
+    /**
+     * Handles current page near end.
+     */
     @Test
     void handlesCurrentPageNearEnd() {
         // When currentPage >= 10 - 3 = 7 in 10 pages: 1, ..., 6, 7, 8, 9, 10
@@ -40,6 +52,9 @@ class PaginationHelperTest {
         assertEquals(List.of("1", "...", "6", "7", "8", "9", "10"), PaginationHelper.getPageNumbers(10, 10));
     }
 
+    /**
+     * Handles current page in middle.
+     */
     @Test
     void handlesCurrentPageInMiddle() {
         // When currentPage = 5 or 6 in 10 pages: 1, ..., cur-1, cur, cur+1, ..., 10
@@ -50,6 +65,9 @@ class PaginationHelperTest {
         assertEquals(List.of("1", "...", "9", "10", "11", "...", "20"), PaginationHelper.getPageNumbers(10, 20));
     }
 
+    /**
+     * Handles out of bounds current page gracefully.
+     */
     @Test
     void handlesOutOfBoundsCurrentPageGracefully() {
         // Underflow: cur = -1 -> treated as 1

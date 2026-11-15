@@ -27,6 +27,9 @@ public final class QuestionExcelFile {
 
     private static final int MAX_SCAN_ROWS = 2000;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private QuestionExcelFile() {
     }
 

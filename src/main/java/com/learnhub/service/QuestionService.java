@@ -19,14 +19,32 @@ public class QuestionService {
 
     public static final int MAX_CHARS_QUESTION_CONTENT = 120;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public QuestionService() {
         this(new QuestionDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param dao the dao
+     */
     public QuestionService(QuestionDAO dao) {
         this.dao = dao;
     }
 
+    /**
+     * Search.
+     *
+     * @param keyword the keyword
+     * @param type the type
+     * @param moduleId the module id identifier
+     * @param courseId the course id identifier
+     * @param status the status
+     * @return the result of search
+     */
     public List<Question> search(
             String keyword,
             String type,
@@ -37,6 +55,12 @@ public class QuestionService {
         return dao.search(keyword, type, moduleId, courseId, status);
     }
 
+    /**
+     * Get.
+     *
+     * @param id the id identifier
+     * @return the result of get
+     */
     public Question get(UUID id) {
         return dao.findById(id);
     }
@@ -160,16 +184,34 @@ public class QuestionService {
         return dao.delete(id);
     }
 
+    /**
+     * Hide.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean hide(UUID id) {
         if (id == null) return false;
         return dao.hide(id);
     }
 
+    /**
+     * Unhide.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean unhide(UUID id) {
         if (id == null) return false;
         return dao.unhide(id);
     }
 
+    /**
+     * Checks whether used in quiz.
+     *
+     * @param id the id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isUsedInQuiz(UUID id) {
         return dao.isUsedInQuiz(id);
     }

@@ -143,24 +143,26 @@
 
                         <!-- Thumbnail Media (Cloudinary) -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            <label for="thumbnailFile" class="mb-2 block text-sm font-semibold text-text-primary">
                                 Thumbnail Media (Cloudinary)
                             </label>
                             <input type="file"
+                                   id="thumbnailFile"
                                    name="thumbnailFile"
-                                   accept="image/*"
-                                   class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-slate-300 rounded-xl px-2 py-1.5 cursor-pointer bg-white">
+                                   accept="image/jpeg,image/png"
+                                   aria-describedby="thumbnailHelp"
+                                   class="w-full rounded-lg border border-border-default bg-surface-card px-2 py-2 text-sm text-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700 hover:file:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700">
                             
+                            <p id="thumbnailHelp" class="mt-2 text-xs text-text-secondary">JPEG or PNG, up to 5 MB. The image uploads when you save the course.</p>
                             <!-- Current Thumbnail Preview -->
                             <c:if test="${not empty course.thumbnailUrl}">
                                 <div class="mt-2 flex items-center space-x-3 text-xs text-slate-500 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                    <img src="${course.thumbnailUrl}" alt="Thumbnail" class="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0">
+                                    <img src="<c:out value='${course.thumbnailUrl}'/>" alt="Current course thumbnail" class="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0">
                                     <div class="min-w-0 flex-1">
                                         <p class="text-[11px] font-bold text-slate-700 truncate">Current Cloudinary Media</p>
-                                        <p class="text-[10px] font-mono text-slate-400 truncate">${course.thumbnailUrl}</p>
+                                        <p class="text-[10px] font-mono text-slate-400 truncate"><c:out value="${course.thumbnailUrl}" /></p>
                                     </div>
                                 </div>
-                                <input type="hidden" name="thumbnailUrl" value="${course.thumbnailUrl}">
                             </c:if>
                         </div>
                     </div>

@@ -33,6 +33,9 @@ public class CourseService {
     private final SettingDAO settingDAO;
     private final UserDAO userDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public CourseService() {
         this.courseDAO = new CourseDAO();
         this.registrationDAO = new RegistrationDAO();
@@ -40,6 +43,14 @@ public class CourseService {
         this.userDAO = new UserDAO();
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param courseDAO the course dao
+     * @param registrationDAO the registration dao
+     * @param settingDAO the setting dao
+     * @param userDAO the user dao
+     */
     public CourseService(CourseDAO courseDAO, RegistrationDAO registrationDAO, SettingDAO settingDAO, UserDAO userDAO) {
         this.courseDAO = courseDAO;
         this.registrationDAO = registrationDAO;
@@ -47,6 +58,15 @@ public class CourseService {
         this.userDAO = userDAO;
     }
 
+    /**
+     * Searches for public courses.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @return the result of search public courses
+     */
     public List<CourseDTO> searchPublicCourses(String search, UUID categoryId, int page, int pageSize) {
         if (page < 1) {
             page = 1;
@@ -65,6 +85,13 @@ public class CourseService {
         return dtos;
     }
 
+    /**
+     * Returns popular public courses.
+     *
+     * @param excludedCourseId the excluded course id identifier
+     * @param limit the limit
+     * @return the popular public courses
+     */
     public List<CourseDTO> getPopularPublicCourses(UUID excludedCourseId, int limit) {
         List<CourseDTO> dtos = new ArrayList<>();
         for (Course course : courseDAO.findPopularPublishedCourses(excludedCourseId, limit)) {
@@ -73,6 +100,12 @@ public class CourseService {
         return dtos;
     }
 
+    /**
+     * To course dto.
+     *
+     * @param course the course
+     * @return the result of to course dto
+     */
     private CourseDTO toCourseDTO(Course course) {
         CourseDTO dto = new CourseDTO(
                 course.getId(), course.getTitle(), course.getDescription(), course.getPrice(),
@@ -85,10 +118,23 @@ public class CourseService {
         return dto;
     }
 
+    /**
+     * Counts public courses.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @return the number of public courses
+     */
     public int countPublicCourses(String search, UUID categoryId) {
         return courseDAO.countPublishedCourses(search, categoryId);
     }
 
+    /**
+     * Returns course detail with curriculum.
+     *
+     * @param courseId the course id identifier
+     * @return the course detail with curriculum
+     */
     public Course getCourseDetailWithCurriculum(UUID courseId) {
         Course course = courseDAO.findCourseWithModulesAndLessons(courseId);
         if (course == null || course.getModules() == null) return course;
@@ -105,6 +151,12 @@ public class CourseService {
         return course;
     }
 
+    /**
+     * Returns published course curriculum.
+     *
+     * @param courseId the course id identifier
+     * @return the published course curriculum
+     */
     public Course getPublishedCourseCurriculum(UUID courseId) {
         Course course = getCourseDetailWithCurriculum(courseId);
         if (course != null && course.getModules() != null) {
@@ -122,6 +174,14 @@ public class CourseService {
         return course;
     }
 
+    /**
+     * Process course registration.
+     *
+     * @param userId the user id identifier
+     * @param courseId the course id identifier
+     * @param paymentMethodId the payment method id identifier
+     * @return the result of process course registration
+     */
     public Registration processCourseRegistration(UUID userId, UUID courseId, UUID paymentMethodId) {
         Course course = courseDAO.findById(courseId);
         if (course == null) {
@@ -154,6 +214,15 @@ public class CourseService {
         return null;
     }
 
+    /**
+     * Searches for registrations.
+     *
+     * @param search the search
+     * @param status the status
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @return the result of search registrations
+     */
     public List<RegistrationDTO> searchRegistrations(String search, String status, int page, int pageSize) {
         if (page < 1) {
             page = 1;
@@ -186,14 +255,33 @@ public class CourseService {
         return dtos;
     }
 
+    /**
+     * Returns registration detail by id.
+     *
+     * @param id the id identifier
+     * @return the registration detail by id
+     */
     public Registration getRegistrationDetailById(UUID id) {
         return registrationDAO.findById(id);
     }
 
+    /**
+     * Update registration status.
+     *
+     * @param id the id identifier
+     * @param status the status
+     * @param paymentStatus the payment status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateRegistrationStatus(UUID id, String status, String paymentStatus) {
         return registrationDAO.updateRegistrationStatus(id, status, paymentStatus);
     }
 
+    /**
+     * Returns active categories.
+     *
+     * @return the active categories
+     */
     public List<Setting> getActiveCategories() {
         return settingDAO.findActiveCategories();
     }
@@ -204,6 +292,15 @@ public class CourseService {
     public record ExpertDashboardData(List<Course> courses, int page, int totalPages,
                                      CourseStatusCounts counts, String search) {}
 
+    /**
+     * Returns expert dashboard.
+     *
+     * @param expertId the expert id identifier
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @param search the search
+     * @return the expert dashboard
+     */
     public ExpertDashboardData getExpertDashboard(UUID expertId, int page, int pageSize, String search) {
         String keyword = search == null ? "" : search.strip();
         pageSize = pageSize < 1 ? 8 : pageSize;
@@ -214,10 +311,24 @@ public class CourseService {
                 page, totalPages, counts, keyword);
     }
 
+    /**
+     * Returns assigned course options.
+     *
+     * @param expertId the expert id identifier
+     * @return the assigned course options
+     */
     public List<Course> getAssignedCourseOptions(UUID expertId) {
         return courseDAO.findAssignedCourseOptions(expertId);
     }
 
+    /**
+     * Returns assigned course navigation.
+     *
+     * @param expertId the expert id identifier
+     * @param search the search
+     * @param page the requested page number
+     * @return the assigned course navigation
+     */
     public AssignedCourseNavigation getAssignedCourseNavigation(UUID expertId, String search, int page) {
         String keyword = search == null ? "" : search.strip();
         if (expertId == null) return new AssignedCourseNavigation(List.of(), keyword, 1, 1, 0);
@@ -229,33 +340,82 @@ public class CourseService {
         return new AssignedCourseNavigation(courses, keyword, page, totalPages, total);
     }
 
+    /**
+     * Returns assigned courses.
+     *
+     * @param expertId the expert id identifier
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @return the assigned courses
+     */
     public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize) {
         return getAssignedCourses(expertId, page, pageSize, "");
     }
 
+    /**
+     * Returns assigned courses.
+     *
+     * @param expertId the expert id identifier
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @param search the search
+     * @return the assigned courses
+     */
     public List<Course> getAssignedCourses(UUID expertId, int page, int pageSize, String search) {
         page = Math.max(1, page);
         pageSize = pageSize < 1 ? 10 : pageSize;
         String keyword = search == null ? "" : search.strip();
         return courseDAO.findByExpertId(expertId, (page - 1) * pageSize, pageSize, keyword);
     }
+    /**
+     * Counts assigned courses.
+     *
+     * @param expertId the expert id identifier
+     * @param status the status
+     * @param search the search
+     * @return the number of assigned courses
+     */
     public int countAssignedCourses(UUID expertId, String status, String search) {
         String keyword = search == null ? "" : search.strip();
         return courseDAO.countByExpertId(expertId, status, keyword);
     }
 
+    /**
+     * Counts assigned courses.
+     *
+     * @param expertId the expert id identifier
+     * @return the number of assigned courses
+     */
     public int countAssignedCourses(UUID expertId) {
         return courseDAO.countByExpertId(expertId);
     }
 
+    /**
+     * Counts assigned courses.
+     *
+     * @param expertId the expert id identifier
+     * @param status the status
+     * @return the number of assigned courses
+     */
     public int countAssignedCourses(UUID expertId, String status) {
         return courseDAO.countByExpertId(expertId, status);
     }
 
+    /**
+     * Returns my enrollments.
+     *
+     * @param userId the user id identifier
+     * @return the my enrollments
+     */
     public List<Registration> getMyEnrollments(UUID userId) {
         return registrationDAO.findByUserId(userId);
     }
 
+    /**
+     * Returns payment methods.
+     *
+     * @return the payment methods
+     */
     public List<Setting> getPaymentMethods() {
         List<Setting> all = settingDAO.findByType("payment_method");
         List<Setting> result = new ArrayList<>();
@@ -300,6 +460,19 @@ public class CourseService {
         return result;
     }
 
+    /**
+     * Returns courses for management.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param status the status
+     * @param priceType the price type
+     * @param sortBy the sort by
+     * @param sortOrder the sort order
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @return the courses for management
+     */
     public List<Course> getCoursesForManagement(String search, UUID categoryId, String status, String priceType, String sortBy, String sortOrder, int page, int pageSize) {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
@@ -307,15 +480,37 @@ public class CourseService {
         return courseDAO.findAllCoursesForManagement(search, categoryId, status, priceType, sortBy, sortOrder, offset, pageSize);
     }
 
+    /**
+     * Counts courses for management.
+     *
+     * @param search the search
+     * @param categoryId the category id identifier
+     * @param status the status
+     * @param priceType the price type
+     * @return the number of courses for management
+     */
     public int countCoursesForManagement(String search, UUID categoryId, String status, String priceType) {
         return courseDAO.countAllCoursesForManagement(search, categoryId, status, priceType);
     }
 
+    /**
+     * Update course status.
+     *
+     * @param courseId the course id identifier
+     * @param status the status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateCourseStatus(UUID courseId, String status) {
         if (courseId == null || status == null) return false;
         return courseDAO.updateStatus(courseId, status);
     }
 
+    /**
+     * Create course.
+     *
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean createCourse(Course course) {
         if (course == null || course.getTitle() == null || course.getTitle().trim().isEmpty()) {
             return false;
@@ -326,16 +521,33 @@ public class CourseService {
         return courseDAO.insert(course);
     }
 
+    /**
+     * Update course.
+     *
+     * @param course the course
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateCourse(Course course) {
         if (course == null || course.getId() == null) return false;
         return courseDAO.update(course);
     }
 
+    /**
+     * Returns course by id.
+     *
+     * @param courseId the course id identifier
+     * @return the course by id
+     */
     public Course getCourseById(UUID courseId) {
         if (courseId == null) return null;
         return courseDAO.findById(courseId);
     }
 
+    /**
+     * Returns all instructors.
+     *
+     * @return the all instructors
+     */
     public List<User> getAllInstructors() {
         return userDAO.findInstructors();
     }

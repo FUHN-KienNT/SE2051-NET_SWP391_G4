@@ -25,6 +25,14 @@ public class RegistrationServlet extends HttpServlet {
 
     private final RegistrationService registrationService = new RegistrationService();
 
+    /**
+     * Handles an HTTP GET request.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User currentUser = ControllerSupport.currentUser(req);
@@ -51,6 +59,14 @@ public class RegistrationServlet extends HttpServlet {
         handleList(req, resp);
     }
 
+    /**
+     * Handle list.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleList(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String search = req.getParameter("search");
         String status = req.getParameter("status");
@@ -86,6 +102,15 @@ public class RegistrationServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/registration-list.jsp").forward(req, resp);
     }
 
+    /**
+     * Handle detail.
+     *
+     * @param req the incoming request
+     * @param resp the outgoing response
+     * @param idParam the id param
+     * @throws ServletException if the operation cannot complete
+     * @throws IOException if the operation cannot complete
+     */
     private void handleDetail(HttpServletRequest req, HttpServletResponse resp, String idParam) throws ServletException, IOException {
         try {
             UUID id = UUID.fromString(idParam.trim());

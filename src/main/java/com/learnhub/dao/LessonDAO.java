@@ -27,6 +27,9 @@ public class LessonDAO {
         ensureDeclineReasonColumn();
     }
 
+    /**
+     * Ensure decline reason column.
+     */
     private static void ensureDeclineReasonColumn() {
         try (Connection conn = DbConnection.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -36,6 +39,12 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Finds by module id.
+     *
+     * @param moduleId the module id identifier
+     * @return the matching by module id, if present
+     */
     public List<Lesson> findByModuleId(UUID moduleId) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
@@ -57,6 +66,12 @@ public class LessonDAO {
         return list;
     }
 
+    /**
+     * Finds by id.
+     *
+     * @param lessonId the lesson id identifier
+     * @return the matching by id, if present
+     */
     public Lesson findById(UUID lessonId) {
         if (lessonId == null) return null;
         String sql = "SELECT l.id, l.module_id, l.title, l.content, l.order_index, l.created_at, l.updated_at, " +
@@ -78,14 +93,33 @@ public class LessonDAO {
         return null;
     }
 
+    /**
+     * Finds by course id.
+     *
+     * @param courseId the course id identifier
+     * @return the matching by course id, if present
+     */
     public List<Lesson> findByCourseId(UUID courseId) {
         return findByCourseId(courseId, true);
     }
 
+    /**
+     * Finds summaries by course id.
+     *
+     * @param courseId the course id identifier
+     * @return the matching summaries by course id, if present
+     */
     public List<Lesson> findSummariesByCourseId(UUID courseId) {
         return findByCourseId(courseId, false);
     }
 
+    /**
+     * Finds by course id.
+     *
+     * @param courseId the course id identifier
+     * @param includeContent the include content
+     * @return the matching by course id, if present
+     */
     private List<Lesson> findByCourseId(UUID courseId, boolean includeContent) {
         List<Lesson> list = new ArrayList<>();
         String sql = "SELECT l.id, l.module_id, l.title, " +
@@ -108,6 +142,13 @@ public class LessonDAO {
         return list;
     }
 
+    /**
+     * Counts by module id.
+     *
+     * @param moduleId the module id identifier
+     * @param excludedLessonId the excluded lesson id identifier
+     * @return the number of by module id
+     */
     public int countByModuleId(UUID moduleId, UUID excludedLessonId) {
         String sql = "SELECT COUNT(*) FROM lesson WHERE module_id=? AND (?::uuid IS NULL OR id<>?)";
         try (Connection conn = DbConnection.getConnection();
@@ -124,6 +165,13 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Checks whether visible in course.
+     *
+     * @param lessonId the lesson id identifier
+     * @param courseId the course id identifier
+     * @return true when the condition holds; false otherwise
+     */
     public boolean isVisibleInCourse(UUID lessonId, UUID courseId) {
         String sql = """
                 SELECT EXISTS (
@@ -144,12 +192,24 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Save.
+     *
+     * @param lesson the lesson
+     * @return true when the condition holds; false otherwise
+     */
     public boolean save(Lesson lesson) {
         if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) return false;
         Lesson existing = findById(lesson.getId());
         return existing == null ? insert(lesson) : update(lesson, existing);
     }
 
+    /**
+     * Insert.
+     *
+     * @param lesson the lesson
+     * @return true when the condition holds; false otherwise
+     */
     public boolean insert(Lesson lesson) {
         if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) {
             return false;
@@ -218,12 +278,25 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Update.
+     *
+     * @param lesson the lesson
+     * @return true when the condition holds; false otherwise
+     */
     public boolean update(Lesson lesson) {
         if (lesson == null || lesson.getModuleId() == null || lesson.getOrderIndex() < 1) return false;
         Lesson existing = findById(lesson.getId());
         return existing != null && update(lesson, existing);
     }
 
+    /**
+     * Update.
+     *
+     * @param lesson the lesson
+     * @param existing the existing
+     * @return true when the condition holds; false otherwise
+     */
     private boolean update(Lesson lesson, Lesson existing) {
         UUID oldModule = existing.getModuleId(), newModule = lesson.getModuleId();
         try (Connection conn = DbConnection.getConnection()) {
@@ -281,6 +354,14 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Refresh progress for modules.
+     *
+     * @param conn the database connection
+     * @param firstModule the first module
+     * @param secondModule the second module
+     * @throws SQLException if the operation cannot complete
+     */
     private void refreshProgressForModules(Connection conn, UUID firstModule, UUID secondModule) throws SQLException {
         List<UUID> courseIds = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
@@ -297,6 +378,14 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Read lesson order.
+     *
+     * @param conn the database connection
+     * @param moduleId the module id identifier
+     * @return the result of read lesson order
+     * @throws SQLException if the operation cannot complete
+     */
     private List<UUID> readLessonOrder(Connection conn, UUID moduleId) throws SQLException {
         List<UUID> ids = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(
@@ -307,6 +396,14 @@ public class LessonDAO {
         return ids;
     }
 
+    /**
+     * Write lesson order.
+     *
+     * @param conn the database connection
+     * @param moduleId the module id identifier
+     * @param ids the ids
+     * @throws SQLException if the operation cannot complete
+     */
     private void writeLessonOrder(Connection conn, UUID moduleId, List<UUID> ids) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "UPDATE lesson SET order_index=?, updated_at=NOW() WHERE id=? AND module_id=?")) {
@@ -319,6 +416,17 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Change availability.
+     *
+     * @param expertId the expert id identifier
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param expectedStatus the expected status
+     * @param targetStatus the target status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean changeAvailability(UUID expertId, UUID courseId, UUID lessonId,
                                       Timestamp expectedUpdatedAt, String expectedStatus, String targetStatus) {
         String sql = "UPDATE lesson SET status=?, updated_at=NOW() "
@@ -349,6 +457,12 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Update order index.
+     *
+     * @param lessonId the lesson id identifier
+     * @param orderIndex the order index
+     */
     public void updateOrderIndex(UUID lessonId, int orderIndex) {
         String sql = "UPDATE lesson SET order_index = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -361,11 +475,30 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Review publication.
+     *
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param status the status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean reviewPublication(UUID courseId, UUID lessonId,
                                      Timestamp expectedUpdatedAt, String status) {
         return reviewPublication(courseId, lessonId, expectedUpdatedAt, status, null);
     }
 
+    /**
+     * Review publication.
+     *
+     * @param courseId the course id identifier
+     * @param lessonId the lesson id identifier
+     * @param expectedUpdatedAt the expected updated at
+     * @param status the status
+     * @param declineReason the decline reason
+     * @return true when the condition holds; false otherwise
+     */
     public boolean reviewPublication(UUID courseId, UUID lessonId,
                                      Timestamp expectedUpdatedAt, String status, String declineReason) {
         String sql = "UPDATE lesson SET status=?, decline_reason=?, updated_at=NOW() "
@@ -394,6 +527,13 @@ public class LessonDAO {
         }
     }
 
+    /**
+     * Map result set to lesson.
+     *
+     * @param rs the current result set
+     * @return the result of map result set to lesson
+     * @throws SQLException if the operation cannot complete
+     */
     private Lesson mapResultSetToLesson(ResultSet rs) throws SQLException {
         Lesson l = new Lesson();
         l.setId((UUID) rs.getObject("id"));
@@ -418,6 +558,11 @@ public class LessonDAO {
         return l;
     }
 
+    /**
+     * Counts courses awaiting review.
+     *
+     * @return the number of courses awaiting review
+     */
     public int countCoursesAwaitingReview() {
         String sql = "SELECT COUNT(DISTINCT m.course_id) FROM lesson l " +
                      "JOIN module m ON l.module_id = m.id " +
@@ -433,6 +578,12 @@ public class LessonDAO {
     }
 
     // A non-positive limit loads the complete review queue.
+    /**
+     * Finds courses awaiting review.
+     *
+     * @param limit the limit
+     * @return the matching courses awaiting review, if present
+     */
     public List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> findCoursesAwaitingReview(int limit) {
         List<com.learnhub.dto.ManagerDashboardDTO.PendingReviewItem> list = new ArrayList<>();
         String sql = "SELECT c.id as course_id, c.title as course_title, s.name as category_name, " +

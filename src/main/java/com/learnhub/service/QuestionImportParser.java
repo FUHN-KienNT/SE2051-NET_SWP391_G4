@@ -31,6 +31,9 @@ public final class QuestionImportParser {
 
     private static final String[] LETTERS = {"A", "B", "C", "D"};
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     private QuestionImportParser() {
     }
 
@@ -81,6 +84,12 @@ public final class QuestionImportParser {
     // 1. KIỂM TRA TIÊU ĐỀ HÀNG 1
     // =========================================================================
 
+    /**
+     * Check header.
+     *
+     * @param headerRow the header row
+     * @return the result of check header
+     */
     private static String checkHeader(String[] headerRow) {
         for (int i = 0; i < COLUMN_COUNT; i++) {
             String actual = getCell(headerRow, i).toLowerCase(Locale.ROOT);
@@ -101,6 +110,13 @@ public final class QuestionImportParser {
     // 2. PHÂN TÍCH TỪNG HÀNG DỮ LIỆU
     // =========================================================================
 
+    /**
+     * Parse row.
+     *
+     * @param rowNum the row num
+     * @param row the row
+     * @param result the result
+     */
     private static void parseRow(int rowNum, String[] row, QuestionImportResult result) {
         List<String> errors = new ArrayList<>();
         Question question = new Question();
@@ -294,6 +310,13 @@ public final class QuestionImportParser {
         return -1;
     }
 
+    /**
+     * Returns cell.
+     *
+     * @param row the row
+     * @param index the index
+     * @return the cell
+     */
     private static String getCell(String[] row, int index) {
         if (row == null || index >= row.length || row[index] == null) {
             return "";
@@ -301,6 +324,12 @@ public final class QuestionImportParser {
         return row[index].trim();
     }
 
+    /**
+     * Checks whether blank row.
+     *
+     * @param row the row
+     * @return true when the condition holds; false otherwise
+     */
     private static boolean isBlankRow(String[] row) {
         if (row == null) return true;
         for (String cell : row) {
@@ -311,12 +340,25 @@ public final class QuestionImportParser {
         return true;
     }
 
+    /**
+     * Flush errors.
+     *
+     * @param rowNum the row num
+     * @param errors the errors
+     * @param result the result
+     */
     private static void flushErrors(int rowNum, List<String> errors, QuestionImportResult result) {
         for (String err : errors) {
             result.addError("Dòng " + rowNum + ": " + err);
         }
     }
 
+    /**
+     * Remove diacritics.
+     *
+     * @param text the text
+     * @return the result of remove diacritics
+     */
     private static String removeDiacritics(String text) {
         if (text == null) return "";
         String nfd = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD);

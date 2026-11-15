@@ -19,6 +19,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ControllerRefactorTest {
+    /**
+     * Session lookup does not create anonymous sessions.
+     */
     @Test
     void sessionLookupDoesNotCreateAnonymousSessions() {
         Exchange exchange = new Exchange("/courses");
@@ -32,6 +35,9 @@ class ControllerRefactorTest {
         assertSame(user, ControllerSupport.currentUser(exchange.request));
     }
 
+    /**
+     * Optional filters keep their fallbacks.
+     */
     @Test
     void optionalFiltersKeepTheirFallbacks() {
         for (String value : new String[]{null, "", " ", "invalid", "2147483648", "0", "-3"}) {
@@ -44,6 +50,11 @@ class ControllerRefactorTest {
         assertEquals(id, ControllerSupport.optionalUuid(" " + id + " "));
     }
 
+    /**
+     * Login redirect preserves query and context path.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void loginRedirectPreservesQueryAndContextPath() throws Exception {
         Exchange exchange = new Exchange("/courses");
@@ -55,6 +66,11 @@ class ControllerRefactorTest {
                 + URLEncoder.encode(target, StandardCharsets.UTF_8), exchange.redirect);
     }
 
+    /**
+     * Sign in rotates session and preserves required password change.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void signInRotatesSessionAndPreservesRequiredPasswordChange() throws Exception {
         Exchange exchange = new Exchange("/auth/login");
@@ -71,6 +87,11 @@ class ControllerRefactorTest {
         assertEquals("/learnhub/account/set-password", exchange.redirect);
     }
 
+    /**
+     * Sign in rejects external redirect.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void signInRejectsExternalRedirect() throws Exception {
         Exchange exchange = new Exchange("/auth/login");
@@ -81,6 +102,11 @@ class ControllerRefactorTest {
         assertTrue(exchange.redirect.startsWith("/learnhub/"));
     }
 
+    /**
+     * Both history aliases still require login and reject post.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void bothHistoryAliasesStillRequireLoginAndRejectPost() throws Exception {
         for (String path : new String[]{"/my-payments", "/payment/history"}) {
@@ -96,6 +122,11 @@ class ControllerRefactorTest {
         }
     }
 
+    /**
+     * Checkout missing or invalid registration still redirects to courses.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void checkoutMissingOrInvalidRegistrationStillRedirectsToCourses() throws Exception {
         for (String value : new String[]{null, "", "invalid"}) {
@@ -106,6 +137,11 @@ class ControllerRefactorTest {
         }
     }
 
+    /**
+     * Vnpay ipn still rejects missing checksum before database access.
+     *
+     * @throws Exception if the operation cannot complete
+     */
     @Test
     void vnpayIpnStillRejectsMissingChecksumBeforeDatabaseAccess() throws Exception {
         Exchange exchange = new Exchange("/api/payment/vnpay-ipn");
@@ -127,6 +163,11 @@ class ControllerRefactorTest {
         String redirect;
         int error;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param path the path
+         */
         Exchange(String path) {
             HttpSession session = (HttpSession) Proxy.newProxyInstance(getClass().getClassLoader(),
                     new Class<?>[]{HttpSession.class}, (proxy, method, args) -> {

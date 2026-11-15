@@ -121,7 +121,7 @@
                         <input type="hidden" name="csrfToken" value="${sessionScope.lessonActionToken}">
                         <h2 id="createModuleHeading" class="text-lg font-bold">Create Module</h2>
                         <label for="moduleTitle" class="block text-sm font-semibold">Module Name</label>
-                        <input id="moduleTitle" name="moduleTitle" required maxlength="255" autofocus
+                        <input id="moduleTitle" name="moduleTitle" required maxlength="255" autofocus pattern=".*\S.*"
                                class="w-full rounded-lg border border-border-default bg-surface-card px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-700">
                         <div class="flex justify-end gap-2">
                             <button type="button" id="cancelCreateModule"
@@ -136,10 +136,18 @@
                         const dialog = document.getElementById('createModuleDialog');
                         const form = dialog.querySelector('form');
                         const heading = document.getElementById('createModuleHeading');
+                        const nameInput = document.getElementById('moduleTitle');
+                        nameInput.addEventListener('invalid', () => {
+                            if (nameInput.validity.patternMismatch) {
+                                nameInput.setCustomValidity('Enter a module name with at least one non-whitespace character.');
+                            }
+                        });
+                        nameInput.addEventListener('input', () => nameInput.setCustomValidity(''));
                         const open = (moduleId = '', title = '') => {
                             form.elements.namedItem('action').value = moduleId ? 'renameModule' : 'createModule';
                             form.elements.namedItem('moduleId').value = moduleId;
-                            form.elements.namedItem('moduleTitle').value = title;
+                            nameInput.value = title;
+                            nameInput.setCustomValidity('');
                             heading.textContent = moduleId ? 'Rename Module' : 'Create Module';
                             dialog.showModal();
                         };

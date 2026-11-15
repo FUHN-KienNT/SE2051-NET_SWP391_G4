@@ -55,24 +55,31 @@ public class UserService {
             this.statusNote = statusNote;
         }
 
+        /** Creates a successful login result for an active account. */
         public static LoginResult success(User user) {
             return new LoginResult(LoginStatus.SUCCESS, user, null);
         }
 
+        /** Creates a result for an unknown account or incorrect password. */
         public static LoginResult invalidCredentials() {
             return new LoginResult(LoginStatus.INVALID_CREDENTIALS, null, null);
         }
 
+        /** Creates a result for a suspended account with its status note. */
         public static LoginResult inactive(User user, String statusNote) {
             return new LoginResult(LoginStatus.ACCOUNT_INACTIVE, user, statusNote);
         }
 
+        /** Creates a result for an account awaiting email verification. */
         public static LoginResult verificationRequired(User user) {
             return new LoginResult(LoginStatus.EMAIL_VERIFICATION_REQUIRED, user, null);
         }
 
+        /** Returns the authentication outcome. */
         public LoginStatus getStatus() { return status; }
+        /** Returns the matched user when available. */
         public User getUser() { return user; }
+        /** Returns the reason for an inactive account when available. */
         public String getStatusNote() { return statusNote; }
     }
 
@@ -511,6 +518,8 @@ public class UserService {
         return userDAO.updateOwnProfile(userId, user.getUsername(), user.getFullName(), cleanPhone);
     }
 
+
+    /** Validates the current password and atomically replaces its hash with a new one. */
     public PasswordChangeResult changeOwnPassword(UUID userId, String currentPassword,
                                                    String newPassword) {
         if (userId == null || currentPassword == null || newPassword == null) {
@@ -534,6 +543,7 @@ public class UserService {
                 ? PasswordChangeResult.SUCCESS : PasswordChangeResult.FAILED;
     }
 
+    /** Sets a new password for an active account flagged for a required password change. */
     public PasswordChangeResult setInitialPassword(UUID userId, String newPassword) {
         if (userId == null || newPassword == null || newPassword.length() < 8
                 || newPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
@@ -564,6 +574,12 @@ public class UserService {
         return userDAO.updateStatus(userId, status, statusNote);
     }
 
+    /**
+     * Validates and hashes a new password before updating the account.
+     * @param userId the user ID
+     * @param newPlainPassword the new password
+     * @return true when the password was updated
+     */
     public boolean resetPassword(UUID userId, String newPlainPassword) {
         if (userId == null || newPlainPassword == null || newPlainPassword.isEmpty()) {
             return false;
@@ -576,6 +592,7 @@ public class UserService {
      * Authenticates user credentials with enhanced status validation:
      * - Returns SUCCESS if password is valid and status is 'active'.
      * - Returns ACCOUNT_INACTIVE with status note (or notification fallback) if password is valid and account is inactive.
+     * - Returns EMAIL_VERIFICATION_REQUIRED for an account awaiting email verification.
      * - Returns INVALID_CREDENTIALS if account is not found or password does NOT match (never reveals inactive status on wrong password).
      */
     public LoginResult authenticate(String email, String plainPassword) {
@@ -622,6 +639,7 @@ public class UserService {
         return LoginResult.inactive(user, note);
     }
 
+    /** Returns the user only when the submitted credentials are valid and the account is active. */
     public User login(String email, String plainPassword) {
         LoginResult result = authenticate(email, plainPassword);
         return result.getStatus() == LoginStatus.SUCCESS ? result.getUser() : null;
@@ -668,6 +686,14 @@ public class UserService {
         return null;
     }
 
+    /**
+     * Creates an inactive account awaiting email verification.
+     * @param username the requested username
+     * @param fullName the account full name
+     * @param email the account email address
+     * @param passwordHash the stored password hash
+     * @return the pending user, or null if creation failed
+     */
     public User registerPending(String username, String fullName, String email, String passwordHash) {
         if (isRegistrationIdentityTaken(username, email)) {
             return null;
@@ -691,6 +717,11 @@ public class UserService {
         return userDAO.insert(user) ? user : null;
     }
 
+    /**
+     * Activates an account after successful email verification.
+     * @param email the account email address
+     * @return true when the account was activated
+     */
     public boolean activateVerifiedEmail(String email) {
         return userDAO.activatePendingEmail(email, EMAIL_VERIFICATION_PENDING);
     }

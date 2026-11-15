@@ -30,30 +30,63 @@ public class OAuthService {
     public enum Provider { GOOGLE, GITHUB }
     public record Profile(String id, String email, String name) {}
     public static final class FullNameRequiredException extends SQLException {
+        /**
+         * Signals that a new OAuth account needs a full name.
+         */
         public FullNameRequiredException() { super("A full name is required to create an account"); }
     }
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
 
+    /**
+     * Reads an OAuth setting from the environment or application properties.
+     * @param name the setting or user name
+     * @return the configured value, or null when unset
+     */
     public static String setting(String name) {
         String value = AppConfig.get(name);
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    /**
+     * Returns the configured callback URL for a provider.
+     * @param p the OAuth provider
+     * @return the configured callback URL
+     */
     public static String callbackSetting(Provider p) {
         return setting(p == Provider.GOOGLE ? "GOOGLE_REDIRECT_URI" : "GITHUB_REDIRECT_URI");
     }
 
+    /**
+     * Returns the configured client ID for a provider.
+     * @param p the OAuth provider
+     * @return the client ID
+     */
     public static String clientId(Provider p) { return setting(p == Provider.GOOGLE ? "GOOGLE_CLIENT_ID" : "GITHUB_CLIENT_ID"); }
+    /**
+     * Returns the configured client secret for a provider.
+     * @param p the OAuth provider
+     * @return the client secret
+     */
     private static String clientSecret(Provider p) { return setting(p == Provider.GOOGLE ? "GOOGLE_CLIENT_SECRET" : "GITHUB_CLIENT_SECRET"); }
 
+    /**
+     * Generates a random OAuth state token.
+     * @return a random state token
+     */
     public static String newState() {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    /**
+     * Builds the provider authorization URL with a state token.
+     * @param provider the OAuth provider
+     * @param state the OAuth state token
+     * @return the provider authorization URL
+     */
     public String authorizationUrl(Provider provider, String state) {
         String clientId = clientId(provider);
         if (clientId == null || clientSecret(provider) == null || callbackSetting(provider) == null) return null;
@@ -64,6 +97,14 @@ public class OAuthService {
                 + (provider == Provider.GITHUB ? "&prompt=select_account" : "");
     }
 
+    /**
+     * Exchanges an authorization code and fetches the provider profile.
+     * @param provider the OAuth provider
+     * @param code the submitted or generated verification code
+     * @return the verified provider profile
+     * @throws IOException if sending or reading data fails
+     * @throws InterruptedException if the provider request is interrupted
+     */
     public Profile fetchProfile(Provider provider, String code) throws IOException, InterruptedException {
         String tokenUrl = provider == Provider.GOOGLE ? "https://oauth2.googleapis.com/token" : "https://github.com/login/oauth/access_token";
         String body = "client_id=" + enc(clientId(provider)) + "&client_secret=" + enc(clientSecret(provider))
@@ -100,6 +141,13 @@ public class OAuthService {
         return new Profile(required(user, "id"), email, optional(user, "name", null));
     }
 
+    /**
+     * Finds or creates the account associated with a provider profile.
+     * @param provider the OAuth provider
+     * @param profile the provider profile
+     * @return the associated user account
+     * @throws SQLException if a database operation fails
+     */
     public User resolveAccount(Provider provider, Profile profile) throws SQLException {
         String email = profile.email().trim().toLowerCase(Locale.ROOT);
         if (email.isBlank()) throw new SQLException("Verified email required");
@@ -152,6 +200,15 @@ public class OAuthService {
         }
     }
 
+    /**
+     * Inserts a user and provider identity within the current transaction.
+     * @param conn the database connection
+     * @param profile the provider profile
+     * @param fullName the account full name
+     * @param email the account email address
+     * @param provider the OAuth provider
+     * @return the created user
+     */
     private User createUser(Connection conn, Profile profile, String fullName, String email, Provider provider) throws Exception {
         String base = fullName.replaceAll("[^\\p{L}\\p{N}._-]", "_");
         if (base.isBlank()) base = "learner";
@@ -179,19 +236,57 @@ public class OAuthService {
         return user;
     }
 
+    /**
+     * Maps the current result set row to a user.
+     * @param rs the database result set
+     * @return the mapped user
+     * @throws SQLException if a database operation fails
+     */
     private static User readUser(ResultSet rs) throws SQLException {
         User u = new User(); u.setId((UUID)rs.getObject("id")); u.setUsername(rs.getString("username")); u.setFullName(rs.getString("full_name")); u.setEmail(rs.getString("email")); u.setPassword(rs.getString("password"));
         u.setAvatarUrl(rs.getString("avatar_url"));
         u.setRequiresPasswordChange(rs.getBoolean("requires_password_change"));
         u.setRoleId((UUID)rs.getObject("role_id")); u.setStatus(rs.getString("status")); u.setRoleName(rs.getString("role_name")); u.setRoleCode(rs.getString("role_code")); return u;
     }
+    /**
+     * Sends a provider request and returns its response body.
+     * @param request the HTTP request
+     * @return the response body
+     * @throws IOException if sending or reading data fails
+     * @throws InterruptedException if the provider request is interrupted
+     */
     private String send(HttpRequest request) throws IOException, InterruptedException {
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         if (response.statusCode() < 200 || response.statusCode() >= 300) throw new IOException("OAuth provider returned HTTP " + response.statusCode());
         return response.body();
     }
+    /**
+     * Parses a provider response as a JSON object.
+     * @param body the response body
+     * @return the parsed JSON object
+     * @throws IOException if sending or reading data fails
+     */
     private static JsonObject json(String body) throws IOException { try { return JsonParser.parseString(body).getAsJsonObject(); } catch (RuntimeException e) { throw new IOException("Invalid OAuth response",e); } }
+    /**
+     * Returns a required nonblank JSON string or reports a missing field.
+     * @param o the JSON object
+     * @param key the JSON property name
+     * @return the required property value
+     * @throws IOException if sending or reading data fails
+     */
     private static String required(JsonObject o,String key) throws IOException { String v=optional(o,key,null); if(v==null||v.isBlank()) throw new IOException("OAuth profile missing " + key); return v; }
+    /**
+     * Returns an optional JSON string or its fallback.
+     * @param o the JSON object
+     * @param key the JSON property name
+     * @param fallback the value used when the property is absent
+     * @return the property value or fallback
+     */
     private static String optional(JsonObject o,String key,String fallback) { return o.has(key)&&!o.get(key).isJsonNull()?o.get(key).getAsString():fallback; }
+    /**
+     * URL encodes a provider request value.
+     * @param s the value to encode
+     * @return the encoded value
+     */
     private static String enc(String s) { return URLEncoder.encode(s,StandardCharsets.UTF_8); }
 }

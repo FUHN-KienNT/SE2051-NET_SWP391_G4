@@ -8,8 +8,16 @@ import java.util.Locale;
 
 /** Chooses an in-app destination after authentication. */
 public final class PostLoginNavigation {
+    /**
+     * Prevents instantiation of this navigation utility.
+     */
     private PostLoginNavigation() {}
 
+    /**
+     * Returns the default dashboard path for the user role.
+     * @param user the account user
+     * @return the default dashboard path
+     */
     public static String dashboardPath(User user) {
         String role = user == null ? null : user.getRoleCode();
         if (AppConstants.Role.ADMIN.equalsIgnoreCase(role)) return "/admin/dashboard";
@@ -19,6 +27,13 @@ public final class PostLoginNavigation {
         return "/home";
     }
 
+    /**
+     * Chooses a safe authorized destination after sign in.
+     * @param user the account user
+     * @param requested the requested destination
+     * @param contextPath the application context path
+     * @return a safe destination path
+     */
     public static String destination(User user, String requested, String contextPath) {
         String fallback = contextPath + dashboardPath(user);
         if (user != null && AppConstants.Role.MANAGER.equalsIgnoreCase(user.getRoleCode())) return fallback;
@@ -31,6 +46,12 @@ public final class PostLoginNavigation {
         return safe;
     }
 
+    /**
+     * Validates a requested redirect as a local application path.
+     * @param requested the requested destination
+     * @param contextPath the application context path
+     * @return a safe local path, or null
+     */
     public static String safeLocalPath(String requested, String contextPath) {
         if (requested == null || requested.isBlank() || requested.indexOf('\\') >= 0
                 || requested.chars().anyMatch(Character::isISOControl)) return null;
@@ -50,6 +71,12 @@ public final class PostLoginNavigation {
         }
     }
 
+    /**
+     * Checks whether the user role permits a destination path.
+     * @param user the account user
+     * @param path the request path
+     * @return true when the user can visit the path
+     */
     private static boolean canVisit(User user, String path) {
         String role = user == null ? null : user.getRoleCode();
         boolean admin = AppConstants.Role.ADMIN.equalsIgnoreCase(role);
@@ -72,6 +99,12 @@ public final class PostLoginNavigation {
         return true;
     }
 
+    /**
+     * Checks whether a path is inside a path prefix.
+     * @param path the request path
+     * @param prefix the path prefix
+     * @return true when the path is within the prefix
+     */
     private static boolean isUnder(String path, String prefix) {
         return path.equals(prefix) || path.startsWith(prefix + "/");
     }

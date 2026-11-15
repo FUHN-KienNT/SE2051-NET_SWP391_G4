@@ -62,6 +62,7 @@ public class UserDAO {
         return list;
     }
 
+    /** Finds the user with the given ID for session and account status checks. */
     public User findById(UUID id) {
         if (id == null) {
             return null;
@@ -191,6 +192,7 @@ public class UserDAO {
         return 0;
     }
 
+    /** Inserts a user account, including accounts pending email verification. */
     public boolean insert(User user) {
         String sql = "INSERT INTO \"user\" (id, username, full_name, email, password, role_id, status, phone, requires_password_change, status_note, created_at, updated_at) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?::user_status, ?, ?, ?, NOW(), NOW())";
@@ -213,6 +215,12 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Activates an account only when its email verification status is pending.
+     * @param email the account email address
+     * @param pendingNote the pending status note
+     * @return true when the pending account was activated
+     */
     public boolean activatePendingEmail(String email, String pendingNote) {
         String sql = "UPDATE \"user\" SET status = 'active', status_note = NULL, updated_at = NOW() " +
                 "WHERE LOWER(email) = LOWER(?) AND status = 'inactive' AND status_note = ?";
@@ -336,6 +344,12 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Replaces the stored password hash for a user.
+     * @param userId the user ID
+     * @param newHashedPassword the new password hash
+     * @return true when the password was updated
+     */
     public boolean updatePassword(UUID userId, String newHashedPassword) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -349,6 +363,12 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Updates the password hash and required change flag.
+     * @param userId the user ID
+     * @param newHashedPassword the new password hash
+     * @return true when the password and required change flag were updated
+     */
     public boolean updatePasswordWithMustChange(UUID userId, String newHashedPassword) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = TRUE, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -362,6 +382,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Updates a password hash only if its stored value matches the expected hash.
+     * @param userId the user ID
+     * @param currentHash the expected current password hash
+     * @param newHash the replacement password hash
+     * @return true when the expected hash was replaced
+     */
     public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ? AND password = ?";
         try (Connection conn = DbConnection.getConnection();
@@ -376,6 +403,7 @@ public class UserDAO {
         }
     }
 
+    /** Replaces an initial password only when the current hash matches. */
     public boolean setInitialPassword(UUID userId, String currentHash, String newHash) {
         String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() " +
                 "WHERE id = ? AND password IS NOT DISTINCT FROM ? AND requires_password_change = TRUE AND status = 'active'";

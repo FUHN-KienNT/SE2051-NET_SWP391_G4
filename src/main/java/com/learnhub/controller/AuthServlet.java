@@ -32,15 +32,31 @@ public class AuthServlet extends HttpServlet {
     private static final String VERIFIED_RESET_EMAIL = "auth.verifiedResetEmail";
     private static final SecureRandom CODE_RANDOM = new SecureRandom();
     private final UserService userService;
-
+    /**
+     * Creates the authentication controller with its default user service.
+     */
     public AuthServlet() {
         this(new UserService());
     }
-
+    /**
+     * Creates the authentication controller with its default user service.
+     * @param userService the service used to manage user accounts
+     */
     public AuthServlet(UserService userService) {
         this.userService = userService;
     }
 
+    /**
+     * Handles GET requests for authentication pages and logout.
+     * Displays a one-time OAuth error from the session, forwards to the
+     * appropriate login, registration, verification, or password reset page,
+     * and redirects when the required session state is missing.
+     *
+     * @param req the client request
+     * @param resp the response sent to the client
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending the response fails
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
@@ -65,8 +81,8 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         if ("/auth/verify-email".equals(path)) {
-            PendingRegistration pending = authSession == null ? null :
-                    (PendingRegistration) authSession.getAttribute(PENDING_REGISTRATION);
+                PendingRegistration pending = authSession == null ? null :
+                        (PendingRegistration) authSession.getAttribute(PENDING_REGISTRATION);
             if (pending == null) {
                 resp.sendRedirect(req.getContextPath() + "/auth/register?expired=1");
                 return;
@@ -111,7 +127,13 @@ public class AuthServlet extends HttpServlet {
         }
         resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
-
+    /**
+     * Routes submitted authentication forms to login, registration, verification, or password reset handlers.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         switch (req.getServletPath()) {
@@ -126,6 +148,17 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Processes a login request using the submitted email and password.
+     * Directs users with unverified email to the verification flow, shows an
+     * error for inactive accounts or invalid credentials, and signs in users
+     * whose credentials are valid.
+     *
+     * @param req the request containing the submitted email and password
+     * @param resp the response used to show the login page or redirect after sign-in
+     * @throws ServletException if forwarding to the login page fails
+     * @throws IOException if sending the response fails
+     */
     private void login(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
         String password = req.getParameter("password");
@@ -171,6 +204,14 @@ public class AuthServlet extends HttpServlet {
         ControllerSupport.signIn(req, resp, user, req.getParameter("redirect_uri"));
     }
 
+    /**
+     * Validates registration details, creates a pending account, and starts email verification.
+     *
+     * @param req the request containing registration details
+     * @param resp the response used to show validation errors or redirect to verification
+     * @throws ServletException if forwarding to the registration page fails
+     * @throws IOException if sending the response fails
+     */
     private void register(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String username = trim(req.getParameter("username"));
         String enteredFullName = req.getParameter("fullName");
@@ -229,7 +270,13 @@ public class AuthServlet extends HttpServlet {
         }
         resp.sendRedirect(req.getContextPath() + "/auth/verify-email?sent=1");
     }
-
+    /**
+     * Checks the submitted email verification code and activates the pending account when valid.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void verify(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null) {
@@ -260,7 +307,13 @@ public class AuthServlet extends HttpServlet {
             showVerification(req, resp, pending);
         }
     }
-
+    /**
+     * Sends another verification code when the pending registration is eligible for a resend.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void resend(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null) {
@@ -287,24 +340,43 @@ public class AuthServlet extends HttpServlet {
         }
         resp.sendRedirect(req.getContextPath() + "/auth/verify-email?sent=1");
     }
-
+    /**
+     * Displays the email verification form for the pending registration.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param pending the pending session state
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void showVerification(HttpServletRequest req, HttpServletResponse resp, PendingRegistration pending)
             throws ServletException, IOException {
         req.setAttribute("pendingEmail", pending.getEmail());
         req.getRequestDispatcher("/WEB-INF/views/auth/verify-email.jsp").forward(req, resp);
     }
-
+    /**
+     * Emails a registration verification code to the specified address.
+     * @param email the account email address
+     * @param code the submitted or generated verification code
+     * @return true when the verification email was sent
+     */
     private boolean sendVerificationCode(String email, String code) {
         String body = "<p>Use this code to finish creating your LearnHub account:</p>"
                 + "<p style=\"font-size:24px;font-weight:bold;letter-spacing:4px\">" + code + "</p>"
                 + "<p>The code expires in 10 minutes. If you did not sign up, you can ignore this email.</p>";
         return EmailUtil.sendEmail(email, "LearnHub verification code", body);
     }
-
+    /**
+     * Generates a six digit verification code.
+     * @return a six digit code
+     */
     private static String newCode() {
         return String.format(Locale.ROOT, "%06d", CODE_RANDOM.nextInt(1_000_000));
     }
-
+    /**
+     * Removes surrounding whitespace, treating a null value as empty.
+     * @param value the value to process
+     * @return the trimmed value, or an empty string
+     */
     private static String trim(String value) {
         return value == null ? "" : value.trim();
     }
@@ -325,7 +397,15 @@ public class AuthServlet extends HttpServlet {
         private String codeHash;
         private Instant sentAt;
         private int failedAttempts;
-
+        /**
+         * Creates session state for an email verification attempt.
+         * @param username the requested username
+         * @param fullName the account full name
+         * @param email the account email address
+         * @param passwordHash the stored password hash
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         */
         private PendingRegistration(String username, String fullName, String email, String passwordHash, String code, Instant now) {
             this.username = username;
             this.fullName = fullName;
@@ -333,34 +413,71 @@ public class AuthServlet extends HttpServlet {
             this.passwordHash = passwordHash;
             replaceCode(code, now);
         }
-
+        /**
+         * Recreates pending verification state for an existing unverified account.
+         * @param user the account user
+         * @return pending verification state for the user
+         */
         private static PendingRegistration awaitingResend(User user) {
             PendingRegistration pending = new PendingRegistration(user.getUsername(), user.getFullName(),
                     user.getEmail(), user.getPassword(), newCode(), Instant.EPOCH);
             return pending;
         }
-
+        /**
+         * Returns the pending registration username.
+         * @return the pending username
+         */
         private String getUsername() { return username; }
+        /**
+         * Returns the pending registration full name.
+         * @return the pending full name
+         */
         private String getFullName() { return fullName; }
+        /**
+         * Returns the email associated with the pending operation.
+         * @return the pending email address
+         */
         private String getEmail() { return email; }
+        /**
+         * Returns the pending registration password hash.
+         * @return the password hash
+         */
         private String getPasswordHash() { return passwordHash; }
-
+        /**
+         * Updates registration details while preserving the current verification state.
+         * @param username the requested username
+         * @param fullName the account full name
+         * @param passwordHash the stored password hash
+         */
         private void updateDetails(String username, String fullName, String passwordHash) {
             this.username = username;
             this.fullName = fullName;
             this.passwordHash = passwordHash;
         }
-
+        /**
+         * Checks whether the resend delay has elapsed.
+         * @param now the current time
+         * @return true when another code may be sent
+         */
         private boolean canResend(Instant now) {
             return !now.isBefore(sentAt.plus(RESEND_DELAY));
         }
-
+        /**
+         * Replaces the verification code and resets its expiration and attempt count.
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         */
         private void replaceCode(String code, Instant now) {
             codeHash = BCrypt.hashpw(code, BCrypt.gensalt(10));
             sentAt = now;
             failedAttempts = 0;
         }
-
+        /**
+         * Validates a submitted code against its expiration and attempt limit.
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         * @return the code validation result
+         */
         private VerificationResult checkCode(String code, Instant now) {
             if (!now.isBefore(sentAt.plus(CODE_LIFETIME))) return VerificationResult.EXPIRED;
             if (failedAttempts >= MAX_ATTEMPTS) return VerificationResult.LOCKED;
@@ -371,7 +488,13 @@ public class AuthServlet extends HttpServlet {
             return failedAttempts >= MAX_ATTEMPTS ? VerificationResult.LOCKED : VerificationResult.INVALID;
         }
     }
-
+    /**
+     * Starts or resends the password reset process for an email address.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void handleForgotPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String email = req.getParameter("email");
         if (email != null) email = email.trim().toLowerCase(Locale.ROOT);
@@ -414,7 +537,13 @@ public class AuthServlet extends HttpServlet {
         }
         resp.sendRedirect(req.getContextPath() + "/auth/forgot-password/verify?sent=1");
     }
-
+    /**
+     * Checks a password reset code and records the verified email in the session.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void handleVerifyReset(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null) {
@@ -450,7 +579,13 @@ public class AuthServlet extends HttpServlet {
             req.getRequestDispatcher("/WEB-INF/views/auth/verify-reset.jsp").forward(req, resp);
         }
     }
-
+    /**
+     * Validates and stores a new password after reset verification.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void handleResetPassword(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute(VERIFIED_RESET_EMAIL) == null) {
@@ -487,7 +622,12 @@ public class AuthServlet extends HttpServlet {
         req.setAttribute("errorMessage", "Failed to reset password. Please try again or contact support.");
         req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
     }
-
+    /**
+     * Emails a password reset verification code to the specified address.
+     * @param email the account email address
+     * @param code the submitted or generated verification code
+     * @return true when the reset email was sent
+     */
     private boolean sendResetCode(String email, String code) {
         String body = "<p>You requested to reset your password for your LearnHub account.</p>"
                 + "<p>Use the following 6-digit code to reset your password:</p>"
@@ -506,24 +646,45 @@ public class AuthServlet extends HttpServlet {
         private String codeHash;
         private Instant sentAt;
         private int failedAttempts;
-
+        /**
+         * Creates session state for a password reset attempt.
+         * @param email the account email address
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         */
         private PendingReset(String email, String code, Instant now) {
             this.email = email;
             replaceCode(code, now);
         }
-
+        /**
+         * Returns the email associated with the pending operation.
+         * @return the pending email address
+         */
         private String getEmail() { return email; }
-
+        /**
+         * Checks whether the resend delay has elapsed.
+         * @param now the current time
+         * @return true when another code may be sent
+         */
         private boolean canResend(Instant now) {
             return !now.isBefore(sentAt.plus(RESEND_DELAY));
         }
-
+        /**
+         * Replaces the verification code and resets its expiration and attempt count.
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         */
         private void replaceCode(String code, Instant now) {
             this.codeHash = BCrypt.hashpw(code, BCrypt.gensalt(10));
             this.sentAt = now;
             this.failedAttempts = 0;
         }
-
+        /**
+         * Validates a submitted code against its expiration and attempt limit.
+         * @param code the submitted or generated verification code
+         * @param now the current time
+         * @return the code validation result
+         */
         private VerificationResult checkCode(String code, Instant now) {
             if (!now.isBefore(sentAt.plus(CODE_LIFETIME))) return VerificationResult.EXPIRED;
             if (failedAttempts >= MAX_ATTEMPTS) return VerificationResult.LOCKED;

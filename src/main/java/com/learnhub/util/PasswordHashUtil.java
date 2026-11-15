@@ -6,9 +6,17 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 public class PasswordHashUtil {
+    /**
+     * Prevents instantiation of this password utility.
+     */
     private PasswordHashUtil() {
     }
 
+    /**
+     * Hashes a plain text password using BCrypt.
+     * @param plainPassword the submitted password
+     * @return the BCrypt password hash
+     */
     public static String hashPassword(String plainPassword) {
         if (plainPassword == null || plainPassword.isEmpty()) {
             throw new IllegalArgumentException("Password cannot be empty.");
@@ -16,6 +24,12 @@ public class PasswordHashUtil {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt(10));
     }
 
+    /**
+     * Checks a plain text password against a stored BCrypt hash.
+     * @param plainPassword the submitted password
+     * @param hashedPassword the stored password hash
+     * @return true when the password matches the hash
+     */
     public static boolean checkPassword(String plainPassword, String hashedPassword) {
         if (plainPassword == null || hashedPassword == null) {
             return false;

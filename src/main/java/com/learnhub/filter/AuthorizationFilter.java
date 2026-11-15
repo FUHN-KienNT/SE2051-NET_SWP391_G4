@@ -33,14 +33,29 @@ public class AuthorizationFilter implements Filter {
 
     private final UserDAO userDAO;
 
+    /**
+     * Creates an authorization filter with the default user DAO.
+     */
     public AuthorizationFilter() {
         this(new UserDAO());
     }
 
+    /**
+     * Creates an authorization filter with the default user DAO.
+     * @param userDAO the data access object used to refresh user status
+     */
     public AuthorizationFilter(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
 
+    /**
+     * Checks session authentication and role access before passing a request along.
+     * @param request the HTTP request
+     * @param response the HTTP response
+     * @param chain the remaining filter chain
+     * @throws IOException if sending or reading data fails
+     * @throws ServletException if forwarding the request fails
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
                          FilterChain chain) throws IOException, ServletException {
@@ -148,18 +163,39 @@ public class AuthorizationFilter implements Filter {
         chain.doFilter(request, response);
     }
 
+    /**
+     * Checks whether a request path is inside a protected prefix.
+     * @param path the request path
+     * @param prefix the path prefix
+     * @return true when the path is within the prefix
+     */
     private boolean isUnder(String path, String prefix) {
         return path.equals(prefix) || path.startsWith(prefix + "/");
     }
 
+    /**
+     * Checks whether the request has an authenticated user.
+     * @param req the HTTP request
+     * @return true when the request has a signed in user
+     */
     public boolean isLoggedIn(HttpServletRequest req) {
         return getCurrentUser(req) != null;
     }
 
+    /**
+     * Checks whether the current user has the administrator role.
+     * @param req the HTTP request
+     * @return true when the user has the administrator role
+     */
     public boolean hasAdminRole(HttpServletRequest req) {
         return hasOnlyAdminRole(req) || hasManagerRole(req);
     }
 
+    /**
+     * Checks whether the current user has only the administrator role.
+     * @param req the HTTP request
+     * @return true when the user has only the administrator role
+     */
     public boolean hasOnlyAdminRole(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session != null) {
@@ -178,6 +214,11 @@ public class AuthorizationFilter implements Filter {
                 || "Admin".equalsIgnoreCase(name);
     }
 
+    /**
+     * Checks whether the current user has the manager role.
+     * @param req the HTTP request
+     * @return true when the user has the manager role
+     */
     public boolean hasManagerRole(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         if (session != null) {
@@ -195,6 +236,11 @@ public class AuthorizationFilter implements Filter {
                 || "Manager".equalsIgnoreCase(name);
     }
 
+    /**
+     * Checks whether the current user has the expert role.
+     * @param req the HTTP request
+     * @return true when the user has the expert role
+     */
     public boolean hasExpertRole(HttpServletRequest req) {
         User user = getCurrentUser(req);
 
@@ -204,6 +250,11 @@ public class AuthorizationFilter implements Filter {
         );
     }
 
+    /**
+     * Checks whether the current user has the student role.
+     * @param req the HTTP request
+     * @return true when the user has the student role
+     */
     public boolean hasStudentRole(HttpServletRequest req) {
         User user = getCurrentUser(req);
 
@@ -213,6 +264,11 @@ public class AuthorizationFilter implements Filter {
         );
     }
 
+    /**
+     * Returns the authenticated user from the session.
+     * @param req the HTTP request
+     * @return the signed in user, or null
+     */
     private User getCurrentUser(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
 

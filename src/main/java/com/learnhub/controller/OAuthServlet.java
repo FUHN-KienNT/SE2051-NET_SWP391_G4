@@ -27,6 +27,13 @@ public class OAuthServlet extends HttpServlet {
     private static final Duration PENDING_LIFETIME = Duration.ofMinutes(10);
     private final OAuthService oauth = new OAuthService();
 
+    /**
+     * Routes OAuth authorization, callback, and profile completion requests.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
         if ("/auth/oauth/complete-profile".equals(path)) { showCompletion(req, resp); return; }
@@ -35,6 +42,13 @@ public class OAuthServlet extends HttpServlet {
         start(req, resp, provider);
     }
 
+    /**
+     * Handles submission of a required OAuth profile name.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     @Override protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (!"/auth/oauth/complete-profile".equals(req.getServletPath())) {
             resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -43,6 +57,13 @@ public class OAuthServlet extends HttpServlet {
         completeProfile(req, resp);
     }
 
+    /**
+     * Starts provider authorization and saves the state token in the session.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param provider the OAuth provider
+     * @throws IOException if sending or reading data fails
+     */
     private void start(HttpServletRequest req, HttpServletResponse resp, Provider provider) throws IOException {
         String redirect = PostLoginNavigation.safeLocalPath(req.getParameter("redirect_uri"), req.getContextPath());
         if (redirect == null) redirect = "";
@@ -56,6 +77,13 @@ public class OAuthServlet extends HttpServlet {
         resp.sendRedirect(url);
     }
 
+    /**
+     * Validates the provider callback and signs in or prepares a profile for completion.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param provider the OAuth provider
+     * @throws IOException if sending or reading data fails
+     */
     private void callback(HttpServletRequest req, HttpServletResponse resp, Provider provider) throws IOException {
         HttpSession session = req.getSession(false);
         String expected = session == null ? null : (String) session.getAttribute("oauth.state." + provider.name());
@@ -92,12 +120,26 @@ public class OAuthServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Displays the profile completion form for a pending OAuth identity.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void showCompletion(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         PendingOAuthProfile pending = pendingProfile(req);
         if (pending == null) { fail(req, resp, "Login session is invalid or expired. Please try again."); return; }
         forwardCompletion(req, resp, pending);
     }
 
+    /**
+     * Validates the submitted name and resolves the pending OAuth account.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void completeProfile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         PendingOAuthProfile pending = pendingProfile(req);
         if (pending == null) { fail(req, resp, "Login session is invalid or expired. Please try again."); return; }
@@ -130,6 +172,11 @@ public class OAuthServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Returns a pending OAuth profile only while its session state is valid.
+     * @param req the HTTP request
+     * @return the valid pending profile, or null
+     */
     private PendingOAuthProfile pendingProfile(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         Object value = session == null ? null : session.getAttribute(PENDING_PROFILE);
@@ -141,6 +188,14 @@ public class OAuthServlet extends HttpServlet {
         return pending;
     }
 
+    /**
+     * Passes pending profile details to the completion view.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param pending the pending session state
+     * @throws ServletException if forwarding the request fails
+     * @throws IOException if sending or reading data fails
+     */
     private void forwardCompletion(HttpServletRequest req, HttpServletResponse resp, PendingOAuthProfile pending)
             throws ServletException, IOException {
         resp.setHeader("Cache-Control", "no-store");
@@ -149,11 +204,26 @@ public class OAuthServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/auth/complete-profile.jsp").forward(req, resp);
     }
 
+    /**
+     * Clears pending OAuth state and establishes the authenticated session.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param user the account user
+     * @param redirect the requested redirect path
+     * @throws IOException if sending or reading data fails
+     */
     private void signIn(HttpServletRequest req, HttpServletResponse resp, User user, String redirect) throws IOException {
         req.getSession(true).removeAttribute(PENDING_PROFILE);
         ControllerSupport.signIn(req, resp, user, redirect);
     }
 
+    /**
+     * Stores a one time OAuth error in the session and redirects to login.
+     * @param req the HTTP request
+     * @param resp the HTTP response
+     * @param message the error message
+     * @throws IOException if sending or reading data fails
+     */
     private void fail(HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
         HttpSession session = req.getSession(true);
         session.removeAttribute(PENDING_PROFILE);

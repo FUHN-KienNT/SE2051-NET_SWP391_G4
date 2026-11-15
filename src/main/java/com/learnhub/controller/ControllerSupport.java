@@ -17,6 +17,7 @@ import java.util.UUID;
 final class ControllerSupport {
     private ControllerSupport() {}
 
+    /** Returns the signed in user stored in the HTTP session, if present. */
     static User currentUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         Object value = session == null ? null : session.getAttribute(AppConstants.SessionKey.CURRENT_USER);
@@ -77,6 +78,7 @@ final class ControllerSupport {
         }
     }
 
+    /** Sends an unauthenticated user to login and preserves the requested destination. */
     static void redirectToLogin(HttpServletRequest request, HttpServletResponse response,
                                 String target, String error) throws IOException {
         String query = error == null ? "" : "error=" + URLEncoder.encode(error, StandardCharsets.UTF_8) + "&";
@@ -84,6 +86,7 @@ final class ControllerSupport {
                 + "redirect_uri=" + URLEncoder.encode(target, StandardCharsets.UTF_8));
     }
 
+    /** Returns the request URI with its query string for a post-login redirect. */
     static String requestUri(HttpServletRequest request) {
         String query = request.getQueryString();
         return request.getRequestURI() + (query == null ? "" : "?" + query);
@@ -99,6 +102,7 @@ final class ControllerSupport {
         req.setAttribute("lessonModuleId", data.moduleId());
     }
 
+    /** Rotates the session ID, records the user, and redirects to an authorized destination. */
     static void signIn(HttpServletRequest request, HttpServletResponse response,
                        User user, String redirect) throws IOException {
         HttpSession session = request.getSession(true);

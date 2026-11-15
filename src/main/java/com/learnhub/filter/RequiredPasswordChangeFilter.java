@@ -20,6 +20,9 @@ import java.io.IOException;
 public class RequiredPasswordChangeFilter implements Filter {
     private final UserDAO userDAO;
 
+    /**
+     * Creates the filter that enforces required password changes.
+     */
     public RequiredPasswordChangeFilter() {
         this(new UserDAO());
     }
@@ -28,6 +31,14 @@ public class RequiredPasswordChangeFilter implements Filter {
         this.userDAO = userDAO;
     }
 
+    /**
+     * Redirects users who must change their password before accessing other pages.
+     * @param request the HTTP request
+     * @param response the HTTP response
+     * @param chain the remaining filter chain
+     * @throws IOException if sending or reading data fails
+     * @throws ServletException if forwarding the request fails
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {

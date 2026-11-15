@@ -243,11 +243,6 @@
                             <i class="fa-solid fa-dice text-xs" aria-hidden="true"></i>
                             <span>Random câu hỏi</span>
                         </button>
-                        <button type="button" onclick="openRandomModal()"
-                                class="px-2 py-1.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition text-xs"
-                                title="Tùy chọn nâng cao">
-                            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                        </button>
                     </div>
 
                     <button type="button" onclick="toggleSelectAllVisible()" class="text-xs text-text-secondary font-semibold hover:text-brand-700 border border-border-default px-3 py-2 rounded-xl bg-surface hover:bg-slate-100 transition">
@@ -413,101 +408,6 @@
         </div>
     </form>
 </main>
-
-<!-- ========================================== -->
-<!-- MODAL: CẤU HÌNH RANDOM CÂU HỎI             -->
-<!-- ========================================== -->
-<div id="randomModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="relative w-full max-w-lg bg-surface-card rounded-2xl shadow-xl border border-border-default overflow-hidden animate-fade-in">
-        <div class="p-5 border-b border-border-default flex items-center justify-between bg-surface">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
-                    <i class="fa-solid fa-dice text-base" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <h3 class="text-sm sm:text-base font-bold text-text-primary">Tự động chọn ngẫu nhiên câu hỏi</h3>
-                    <p class="text-xs text-text-secondary">Chọn ngẫu nhiên câu hỏi thuộc chương / module đã chọn</p>
-                </div>
-            </div>
-            <button type="button" onclick="closeRandomModal()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-text-primary hover:bg-slate-200 flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <div class="p-6 space-y-4">
-            <!-- Thẻ thông tin module đang chọn -->
-            <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-3 text-xs text-indigo-900">
-                <i class="fa-solid fa-circle-info text-indigo-600 mt-0.5 text-sm" aria-hidden="true"></i>
-                <div>
-                    <span class="font-bold">Chương / Module áp dụng: </span>
-                    <span id="modalModuleScopeName" class="font-semibold text-indigo-800">Đang tải...</span>
-                    <div class="text-[11px] text-indigo-700/80 mt-0.5" id="modalPoolInfo">Đang tính toán số lượng câu hỏi khả dụng...</div>
-                </div>
-            </div>
-
-            <!-- Ô nhập số câu -->
-            <div>
-                <label class="block text-xs font-bold text-text-primary mb-1.5">
-                    Số lượng câu hỏi muốn chọn <span class="text-status-danger">*</span>
-                </label>
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center rounded-xl bg-surface border border-border-default overflow-hidden shadow-xs">
-                        <button type="button" onclick="stepRandomCount('modalRandomCount', -1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Giảm 1 câu">
-                            <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
-                        </button>
-                        <input type="text" id="modalRandomCount" value="10" readonly
-                               onkeydown="handleStepperKey(event, 'modalRandomCount')"
-                               class="w-16 text-center py-2.5 font-bold text-xs sm:text-sm text-text-primary outline-none bg-surface select-none cursor-default border-x border-border-default">
-                        <button type="button" onclick="stepRandomCount('modalRandomCount', 1)" class="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-slate-200 active:bg-slate-300 transition font-bold" title="Tăng 1 câu">
-                            <i class="fa-solid fa-chevron-up text-xs" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <span id="modalMaxHint" class="text-xs font-bold text-text-secondary">câu</span>
-                </div>
-                <!-- Chọn nhanh số lượng -->
-                <div class="flex flex-wrap items-center gap-1.5 mt-2">
-                    <span class="text-[11px] font-bold text-text-secondary mr-1">Chọn nhanh:</span>
-                    <button type="button" onclick="setModalCount(5)" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-text-secondary transition">5</button>
-                    <button type="button" onclick="setModalCount(10)" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-text-secondary transition">10</button>
-                    <button type="button" onclick="setModalCount(15)" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-text-secondary transition">15</button>
-                    <button type="button" onclick="setModalCount(20)" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-text-secondary transition">20</button>
-                    <button type="button" onclick="setModalCount('all')" class="px-2.5 py-1 rounded-lg bg-surface hover:bg-indigo-50 hover:text-indigo-700 text-xs font-bold text-text-secondary transition">Toàn bộ chương</button>
-                </div>
-            </div>
-
-            <!-- Chế độ chọn (chọn mới hay chọn thêm) -->
-            <div>
-                <label class="block text-xs font-bold text-text-primary mb-1.5">Chế độ chọn</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <label class="flex items-start gap-2.5 p-3 rounded-xl border border-border-default bg-surface hover:bg-indigo-50/40 cursor-pointer transition">
-                        <input type="radio" name="modalMode" value="replace" checked class="mt-0.5 accent-indigo-600">
-                        <div>
-                            <div class="font-bold text-text-primary">Chọn mới hoàn toàn</div>
-                            <div class="text-[11px] text-text-secondary">Bỏ chọn các câu cũ và chọn lại</div>
-                        </div>
-                    </label>
-                    <label class="flex items-start gap-2.5 p-3 rounded-xl border border-border-default bg-surface hover:bg-indigo-50/40 cursor-pointer transition">
-                        <input type="radio" name="modalMode" value="append" class="mt-0.5 accent-indigo-600">
-                        <div>
-                            <div class="font-bold text-text-primary">Chọn thêm câu hỏi mới</div>
-                            <div class="text-[11px] text-text-secondary">Giữ nguyên các câu đã chọn trước đó</div>
-                        </div>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-4 bg-surface border-t border-border-default flex items-center justify-end gap-2.5">
-            <button type="button" onclick="closeRandomModal()" class="px-4 py-2.5 rounded-xl border border-border-default bg-surface-card hover:bg-slate-100 text-text-secondary font-semibold text-xs transition">
-                Đóng
-            </button>
-            <button type="button" onclick="applyModalRandom()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5">
-                <i class="fa-solid fa-dice" aria-hidden="true"></i>
-                <span>Tạo ngẫu nhiên ngay</span>
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- ========================================== -->
 <!-- TOAST THÔNG BÁO NỔI                       -->
@@ -856,21 +756,10 @@
         const selectedMod = modSelect ? modSelect.value.trim() : '';
         const count = getAvailableQuestionsCountInModule(selectedMod);
         const quickInput = document.getElementById('quickRandomCount');
-        const modalInput = document.getElementById('modalRandomCount');
         const maxBadge = document.getElementById('quickRandomMaxHint');
 
         if (maxBadge) {
             maxBadge.textContent = selectedMod ? '(Tối đa: ' + count + ')' : '(Chưa chọn chương)';
-        }
-
-        const modalScopeElem = document.getElementById('modalModuleScopeName');
-        if (modalScopeElem) {
-            modalScopeElem.textContent = (modSelect && modSelect.selectedIndex > 0) ? modSelect.options[modSelect.selectedIndex].text : 'Chưa chọn chương';
-        }
-
-        const modalPoolInfo = document.getElementById('modalPoolInfo');
-        if (modalPoolInfo) {
-            modalPoolInfo.textContent = selectedMod ? 'Có ' + count + ' câu hỏi trong chương này.' : 'Vui lòng chọn chương.';
         }
 
         if (count > 0) {
@@ -879,14 +768,8 @@
                 if (isNaN(currentVal) || currentVal < 1) currentVal = Math.min(10, count);
                 quickInput.value = Math.min(currentVal, count);
             }
-            if (modalInput) {
-                let currentVal = parseInt(modalInput.value, 10);
-                if (isNaN(currentVal) || currentVal < 1) currentVal = Math.min(10, count);
-                modalInput.value = Math.min(currentVal, count);
-            }
         } else {
             if (quickInput) quickInput.value = 0;
-            if (modalInput) modalInput.value = 0;
         }
     }
 
@@ -935,10 +818,10 @@
 
         const input = document.getElementById('quickRandomCount');
         let count = parseInt(input?.value || maxCount, 10);
-        executeRandomSelection(Math.min(count, maxCount), true);
+        executeRandomSelection(Math.min(count, maxCount));
     }
 
-    function executeRandomSelection(requestedCount, replaceExisting) {
+    function executeRandomSelection(requestedCount) {
         const currentMod = document.getElementById('quizModuleSelect')?.value.trim() || '';
         const items = Array.from(document.querySelectorAll('.question-item'));
 
@@ -952,14 +835,12 @@
             return;
         }
 
-        if (replaceExisting) {
-            items.forEach(item => {
-                const cb = item.querySelector('.question-check');
-                if (cb && cb.checked) { cb.checked = false; onQuestionCheckChange(cb); }
-            });
-        }
+        items.forEach(item => {
+            const cb = item.querySelector('.question-check');
+            if (cb && cb.checked) { cb.checked = false; onQuestionCheckChange(cb); }
+        });
 
-        let pool = replaceExisting ? [...candidates] : candidates.filter(item => !item.querySelector('.question-check')?.checked);
+        let pool = [...candidates];
 
         // Thuật toán xáo trộn Fisher-Yates
         for (let i = pool.length - 1; i > 0; i--) {
@@ -976,37 +857,7 @@
         filterQuestions();
         updateSelectedCount();
         verifyQuiz();
-        closeRandomModal();
         showToast('Đã chọn ngẫu nhiên ' + pickCount + ' câu hỏi!', 'success');
-    }
-
-    function openRandomModal() {
-        syncRandomCountsWithModule();
-        document.getElementById('randomModal')?.classList.remove('hidden');
-    }
-
-    function closeRandomModal() {
-        document.getElementById('randomModal')?.classList.add('hidden');
-    }
-
-    function setModalCount(val) {
-        const modSelect = document.getElementById('quizModuleSelect');
-        const maxCount = getAvailableQuestionsCountInModule(modSelect ? modSelect.value.trim() : '');
-        const input = document.getElementById('modalRandomCount');
-        if (!input) return;
-        input.value = (val === 'all') ? maxCount : Math.min(parseInt(val, 10) || 1, maxCount);
-    }
-
-    function applyModalRandom() {
-        const modSelect = document.getElementById('quizModuleSelect');
-        if (!modSelect || !modSelect.value) {
-            alert('Vui lòng chọn Chương / Module trước.');
-            modSelect?.focus();
-            return;
-        }
-        const count = parseInt(document.getElementById('modalRandomCount')?.value || 10, 10);
-        const modeRadio = document.querySelector('input[name="modalMode"]:checked');
-        executeRandomSelection(count, modeRadio ? modeRadio.value === 'replace' : true);
     }
 
     function showToast(message, type = 'success') {

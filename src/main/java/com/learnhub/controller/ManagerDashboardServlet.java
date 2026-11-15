@@ -19,27 +19,35 @@ import java.util.logging.Logger;
  * Controller dedicated exclusively to the Manager Dashboard (/manager/dashboard).
  * Provides overall course monitoring, curriculum review queues, expert allocation,
  * publishing controls, and real-time student registration logs.
+ *
+ * @author NguyenLD - System Administration Module
  */
 @WebServlet(name = "ManagerDashboardServlet", urlPatterns = {"/manager/dashboard"})
 public class ManagerDashboardServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = Logger.getLogger(ManagerDashboardServlet.class.getName());
     private final DashboardService dashboardService = new DashboardService();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        // Bước 1: Kiểm tra phiên đăng nhập người dùng
         User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
             ControllerSupport.redirectToLogin(req, resp, ControllerSupport.requestUri(req), null);
             return;
         }
 
+        // Bước 2: Kiểm tra quyền Manager
         if (!isAuthorizedManager(req, currentUser)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied: Manager privileges required.");
             return;
         }
 
-        // Filters: Period (Date Range), Search, Category
+        // Bước 3: Đọc các tham số bộ lọc (Khoảng thời gian, Từ khóa, Danh mục)
         String period = req.getParameter("period");
         if (period == null || period.isBlank()) {
             period = req.getParameter("dateRange");
@@ -51,13 +59,13 @@ public class ManagerDashboardServlet extends HttpServlet {
         String search = req.getParameter("search");
         String categoryId = req.getParameter("categoryId");
 
-        // Build data
+        // Bước 4: Xây dựng dữ liệu thống kê cho Quản lý từ Service
         ManagerDashboardDTO dashboard = dashboardService.buildManagerDashboard(period, search, categoryId);
 
         req.setAttribute("dashboard", dashboard);
         req.setAttribute("pageTitle", "Manager Dashboard – LearnHub");
 
-        // Flash feedback parameters
+        // Bước 5: Đọc các thông báo Flash Message phản hồi thao tác
         if ("true".equals(req.getParameter("assign_success"))) {
             req.setAttribute("successMessage", "Domain expert has been assigned successfully!");
         } else if ("true".equals(req.getParameter("status_success"))) {
@@ -68,11 +76,15 @@ public class ManagerDashboardServlet extends HttpServlet {
             req.setAttribute("errorMessage", "Failed to update course status. Please try again.");
         }
 
+        // Bước 6: Chuyển tiếp sang giao diện manager/dashboard.jsp
         req.getRequestDispatcher("/WEB-INF/views/manager/dashboard.jsp").forward(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        // Bước 1: Kiểm tra phiên đăng nhập và quyền Manager
         User currentUser = ControllerSupport.currentUser(req);
         if (currentUser == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/login");
@@ -84,6 +96,7 @@ public class ManagerDashboardServlet extends HttpServlet {
             return;
         }
 
+        // Bước 2: Phân luồng xử lý theo hành động (Action Dispatching)
         String action = req.getParameter("action");
         String period = req.getParameter("period");
         String periodParam = (period != null && !period.isBlank()) ? "&period=" + period : "";
@@ -97,14 +110,16 @@ public class ManagerDashboardServlet extends HttpServlet {
         }
     }
 
-    private void handleAssignExpert(HttpServletRequest req, HttpServletResponse resp, User actor, String periodParam) throws IOException {
+    private void handleAssignExpert(HttpServletRequest req, HttpServletResponse resp,
+                                    User actor, String periodParam) throws IOException {
         String courseIdStr = req.getParameter("courseId");
         String expertIdStr = req.getParameter("expertId");
 
         if (courseIdStr != null && !courseIdStr.isBlank()) {
             try {
                 UUID courseId = UUID.fromString(courseIdStr.trim());
-                UUID expertId = (expertIdStr != null && !expertIdStr.isBlank()) ? UUID.fromString(expertIdStr.trim()) : null;
+                UUID expertId = (expertIdStr != null && !expertIdStr.isBlank())
+                        ? UUID.fromString(expertIdStr.trim()) : null;
 
                 boolean success = dashboardService.assignExpertToCourse(courseId, expertId, actor.getEmail());
                 if (success) {
@@ -118,14 +133,16 @@ public class ManagerDashboardServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/manager/dashboard?error=assign_failed" + periodParam);
     }
 
-    private void handleToggleStatus(HttpServletRequest req, HttpServletResponse resp, User actor, String periodParam) throws IOException {
+    private void handleToggleStatus(HttpServletRequest req, HttpServletResponse resp,
+                                    User actor, String periodParam) throws IOException {
         String courseIdStr = req.getParameter("courseId");
         String status = req.getParameter("status");
 
         if (courseIdStr != null && !courseIdStr.isBlank() && status != null && !status.isBlank()) {
             try {
                 UUID courseId = UUID.fromString(courseIdStr.trim());
-                boolean success = dashboardService.toggleCourseStatus(courseId, status.trim().toLowerCase(), actor.getEmail());
+                boolean success = dashboardService.toggleCourseStatus(
+                        courseId, status.trim().toLowerCase(), actor.getEmail());
                 if (success) {
                     resp.sendRedirect(req.getContextPath() + "/manager/dashboard?status_success=true" + periodParam);
                     return;
@@ -138,7 +155,9 @@ public class ManagerDashboardServlet extends HttpServlet {
     }
 
     private boolean isAuthorizedManager(HttpServletRequest req, User user) {
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
         String role = (String) req.getSession().getAttribute("userRole");
         String rCode = user.getRoleCode() != null ? user.getRoleCode() : "";
         String rName = user.getRoleName() != null ? user.getRoleName() : "";

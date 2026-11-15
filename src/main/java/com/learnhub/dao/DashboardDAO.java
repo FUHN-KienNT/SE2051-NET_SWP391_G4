@@ -4,7 +4,11 @@ import com.learnhub.entity.AuditLog;
 import com.learnhub.util.DbConnection;
 
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -12,25 +16,26 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Data Access Object for Admin Dashboard aggregation queries.
- * Implements methods specified in SDS Admin Dashboard (2.3):
- * - countTotalUsers()
- * - countActiveUsers()
- * - countActiveCourses()
- * - countEnrollments(from, to)
- * - getRevenue(from, to)
- * - countPendingRegistrations()
- * - getRecentAuditLogs(limit)
- * - insertAuditLog()
+ * Data Access Object for Admin Dashboard aggregation queries and system audit logging.
+ * Implements specifications in SDS Admin Dashboard (2.3).
+ *
+ * <p>Provides database operations for user metrics, course counts, enrollment statistics,
+ * revenue calculations, chart datasets, and audit trails.</p>
+ *
+ * @author NguyenLD - System Administration Module
  */
 public class DashboardDAO {
 
     private static final Logger LOGGER = Logger.getLogger(DashboardDAO.class.getName());
 
-    // ── User Metrics ──────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // User Metrics
+    // -------------------------------------------------------------------------
 
     /**
-     * Count total registered users (all statuses).
+     * Counts the total number of registered users across all statuses.
+     *
+     * @return Total user count in database
      */
     public int countTotalUsers() {
         String sql = "SELECT COUNT(*) FROM \"user\"";
@@ -38,7 +43,9 @@ public class DashboardDAO {
     }
 
     /**
-     * Count users with status = 'active'.
+     * Counts the total number of users with 'active' status.
+     *
+     * @return Active user count
      */
     public int countActiveUsers() {
         String sql = "SELECT COUNT(*) FROM \"user\" WHERE status = 'active'";
@@ -46,7 +53,11 @@ public class DashboardDAO {
     }
 
     /**
-     * Count users created within a date range (for growth calculation).
+     * Counts users created within a specific timestamp range (used for growth percentage).
+     *
+     * @param from Inclusive start timestamp
+     * @param to   Exclusive end timestamp
+     * @return Number of users created in this interval
      */
     public int countUsersCreatedBetween(Timestamp from, Timestamp to) {
         String sql = "SELECT COUNT(*) FROM \"user\" WHERE created_at >= ? AND created_at < ?";
@@ -55,7 +66,9 @@ public class DashboardDAO {
             ps.setTimestamp(1, from);
             ps.setTimestamp(2, to);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in countUsersCreatedBetween: " + e.getMessage(), e);
@@ -63,23 +76,30 @@ public class DashboardDAO {
         return 0;
     }
 
-    // ── Course Metrics ───────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // Course Metrics
+    // -------------------------------------------------------------------------
 
     /**
-     * Count published courses.
+     * Counts the total number of published courses available for enrollment.
+     *
+     * @return Count of published courses
      */
     public int countActiveCourses() {
         String sql = "SELECT COUNT(*) FROM course WHERE status = 'published'";
         return querySingleInt(sql);
     }
 
-    // ── Enrollment Metrics ───────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // Enrollment Metrics
+    // -------------------------------------------------------------------------
 
     /**
-     * Count enrollments (registrations) within a date range.
+     * Counts enrollments (registrations) created within a specific timestamp range.
      *
-     * @param from inclusive start timestamp
-     * @param to   exclusive end timestamp
+     * @param from Inclusive start timestamp
+     * @param to   Exclusive end timestamp
+     * @return Count of enrollments in the interval
      */
     public long countEnrollments(Timestamp from, Timestamp to) {
         String sql = "SELECT COUNT(*) FROM registration WHERE enrolled_at >= ? AND enrolled_at < ?";
@@ -88,7 +108,9 @@ public class DashboardDAO {
             ps.setTimestamp(1, from);
             ps.setTimestamp(2, to);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getLong(1);
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in countEnrollments: " + e.getMessage(), e);
@@ -97,37 +119,46 @@ public class DashboardDAO {
     }
 
     /**
-     * Count all time total enrollments.
+     * Counts all-time total course enrollments.
+     *
+     * @return Total count of all registrations
      */
     public long countTotalEnrollments() {
         String sql = "SELECT COUNT(*) FROM registration";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) return rs.getLong(1);
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in countTotalEnrollments: " + e.getMessage(), e);
         }
         return 0;
     }
 
-    // ── Revenue Metrics ──────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // Revenue Metrics
+    // -------------------------------------------------------------------------
 
     /**
-     * Sum of paid registration amounts within a date range.
+     * Computes total revenue from paid registrations within a given timestamp range.
      *
-     * @param from inclusive start timestamp
-     * @param to   exclusive end timestamp
+     * @param from Inclusive start timestamp
+     * @param to   Exclusive end timestamp
+     * @return Sum of paid amounts (VND)
      */
     public BigDecimal getRevenue(Timestamp from, Timestamp to) {
-        String sql = "SELECT COALESCE(SUM(amount), 0) FROM registration " +
-                     "WHERE payment_status = 'paid' AND paid_at >= ? AND paid_at < ?";
+        String sql = "SELECT COALESCE(SUM(amount), 0) FROM registration "
+                + "WHERE payment_status = 'paid' AND paid_at >= ? AND paid_at < ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setTimestamp(1, from);
             ps.setTimestamp(2, to);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getBigDecimal(1);
+                if (rs.next()) {
+                    return rs.getBigDecimal(1);
+                }
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in getRevenue: " + e.getMessage(), e);
@@ -135,37 +166,35 @@ public class DashboardDAO {
         return BigDecimal.ZERO;
     }
 
-    // ── Pending Registrations ─────────────────────────────────────────────────────
-
     /**
-     * Count registrations with payment_status = 'pending'.
+     * Counts registrations awaiting payment confirmation.
+     *
+     * @return Count of pending registrations
      */
     public int countPendingRegistrations() {
         String sql = "SELECT COUNT(*) FROM registration WHERE payment_status = 'pending'";
         return querySingleInt(sql);
     }
 
-    // ── Audit Logs ────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // Chart Analytics Datasets
+    // -------------------------------------------------------------------------
 
     /**
-     * Retrieve the most recent audit log entries.
+     * Retrieves aggregated monthly revenue for the last 6 calendar months.
      *
-     * @param limit maximum number of rows to return
-     */
-    
-    /**
-     * Get revenue grouped by month for the last 6 months.
-     * Returns a pair of lists: [0] = List<String> labels, [1] = List<BigDecimal> data
+     * @return Object array where [0] is List&lt;String&gt; (month labels) and [1] is List&lt;BigDecimal&gt; (revenue values)
      */
     public Object[] getRevenueLast6Months() {
         List<String> labels = new ArrayList<>();
         List<BigDecimal> data = new ArrayList<>();
-        String sql = "SELECT TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon') as month_label, SUM(amount) as revenue " +
-                     "FROM registration " +
-                     "WHERE payment_status = 'paid' " +
-                     "  AND COALESCE(paid_at, enrolled_at) >= date_trunc('month', CURRENT_DATE - INTERVAL '5 months') " +
-                     "GROUP BY TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon'), date_trunc('month', COALESCE(paid_at, enrolled_at)) " +
-                     "ORDER BY date_trunc('month', COALESCE(paid_at, enrolled_at))";
+        String sql = "SELECT TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon') AS month_label, SUM(amount) AS revenue "
+                + "FROM registration "
+                + "WHERE payment_status = 'paid' "
+                + "  AND COALESCE(paid_at, enrolled_at) >= date_trunc('month', CURRENT_DATE - INTERVAL '5 months') "
+                + "GROUP BY TO_CHAR(COALESCE(paid_at, enrolled_at), 'Mon'), date_trunc('month', COALESCE(paid_at, enrolled_at)) "
+                + "ORDER BY date_trunc('month', COALESCE(paid_at, enrolled_at))";
+
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -175,25 +204,27 @@ public class DashboardDAO {
                 data.add(rev != null ? rev : BigDecimal.ZERO);
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error fetching revenue chart data", e);
+            LOGGER.log(Level.SEVERE, "Error fetching revenue chart data: " + e.getMessage(), e);
         }
         return new Object[]{labels, data};
     }
 
     /**
-     * Get enrollments grouped by course category.
-     * Returns a pair of lists: [0] = List<String> labels, [1] = List<Long> data
+     * Retrieves top 5 course categories by total student enrollments.
+     *
+     * @return Object array where [0] is List&lt;String&gt; (category names) and [1] is List&lt;Long&gt; (enrollment counts)
      */
     public Object[] getEnrollmentsByCategory() {
         List<String> labels = new ArrayList<>();
         List<Long> data = new ArrayList<>();
-        String sql = "SELECT s.name as category_name, COUNT(r.id) as enrollments " +
-                     "FROM registration r " +
-                     "JOIN course c ON r.course_id = c.id " +
-                     "JOIN setting s ON c.category_id = s.id " +
-                     "GROUP BY s.name " +
-                     "ORDER BY enrollments DESC " +
-                     "LIMIT 5";
+        String sql = "SELECT s.name AS category_name, COUNT(r.id) AS enrollments "
+                + "FROM registration r "
+                + "JOIN course c ON r.course_id = c.id "
+                + "JOIN setting s ON c.category_id = s.id "
+                + "GROUP BY s.name "
+                + "ORDER BY enrollments DESC "
+                + "LIMIT 5";
+
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -202,15 +233,26 @@ public class DashboardDAO {
                 data.add(rs.getLong("enrollments"));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error fetching enrollment chart data", e);
+            LOGGER.log(Level.SEVERE, "Error fetching enrollment chart data: " + e.getMessage(), e);
         }
         return new Object[]{labels, data};
     }
 
+    // -------------------------------------------------------------------------
+    // Audit Logging
+    // -------------------------------------------------------------------------
+
+    /**
+     * Retrieves the most recent system audit log records ordered by timestamp descending.
+     *
+     * @param limit Maximum number of audit records to return
+     * @return List of AuditLog entities
+     */
     public List<AuditLog> getRecentAuditLogs(int limit) {
         List<AuditLog> list = new ArrayList<>();
-        String sql = "SELECT id, actor, action_type, description, status, created_at " +
-                     "FROM audit_log ORDER BY created_at DESC LIMIT ?";
+        String sql = "SELECT id, actor, action_type, description, status, created_at "
+                + "FROM audit_log ORDER BY created_at DESC LIMIT ?";
+
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, limit);
@@ -226,11 +268,18 @@ public class DashboardDAO {
     }
 
     /**
-     * Insert a new audit log entry (called by application code on significant events).
+     * Inserts a new audit log record into the database for administrative actions and security events.
+     *
+     * @param actor       User email or system service that initiated the event
+     * @param actionType  Action code (e.g. USER_CREATE, SETTING_UPDATE, COURSE_PUBLISH)
+     * @param description Narrative description of the event
+     * @param status      Execution outcome (SUCCESS, FAILED, WARNING)
+     * @return true if successfully inserted, false otherwise
      */
     public boolean insertAuditLog(String actor, String actionType, String description, String status) {
-        String sql = "INSERT INTO audit_log (id, actor, action_type, description, status, created_at) " +
-                     "VALUES (gen_random_uuid(), ?, ?, ?, ?, NOW())";
+        String sql = "INSERT INTO audit_log (id, actor, action_type, description, status, created_at) "
+                + "VALUES (gen_random_uuid(), ?, ?, ?, ?, NOW())";
+
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, actor);
@@ -244,13 +293,17 @@ public class DashboardDAO {
         }
     }
 
-    // ── Private Helpers ──────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
+    // Private Helpers
+    // -------------------------------------------------------------------------
 
     private int querySingleInt(String sql) {
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error in querySingleInt [" + sql + "]: " + e.getMessage(), e);
         }

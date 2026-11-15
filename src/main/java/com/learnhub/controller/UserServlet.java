@@ -26,19 +26,38 @@ import java.util.UUID;
  * - resetPassword()
  * - createUser()
  */
+/**
+ * Controller for User Management features (SDS 2.1).
+ *
+ * <p>Handles:
+ * <ul>
+ *   <li>/admin/users: View, search, filter, and paginate user list.</li>
+ *   <li>/admin/user-detail: View and edit existing user or create a new user.</li>
+ *   <li>/admin/user-status: Toggle account active/inactive status with administrative note.</li>
+ *   <li>/admin/reset-password: Issue temporary password to user.</li>
+ * </ul>
+ * </p>
+ *
+ * @author NguyenLD - System Administration Module
+ */
 @WebServlet(name = "UserServlet", urlPatterns = {"/admin/users", "/admin/user-detail", "/admin/user-status", "/admin/reset-password"})
 public class UserServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
+
     private final UserService userService = new UserService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
 
+        // Bước 1: Điều hướng tắt khi bấm "+ Add New User" từ trang danh sách
         if ("/admin/users".equals(path) && "new".equalsIgnoreCase(req.getParameter("action"))) {
             resp.sendRedirect(req.getContextPath() + "/admin/user-detail?action=new");
             return;
         }
 
+        // Bước 2: Xử lý hiển thị trang chi tiết hoặc tạo mới người dùng
         if ("/admin/user-detail".equals(path)) {
             String action = req.getParameter("action");
             if ("new".equalsIgnoreCase(action)) {
@@ -335,7 +354,9 @@ public class UserServlet extends HttpServlet {
     }
 
     private String computeInitials(String name) {
-        if (name == null || name.isBlank()) return "U";
+        if (name == null || name.isBlank()) {
+            return "U";
+        }
         String[] parts = name.trim().split("\\s+");
         if (parts.length == 1) {
             return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();

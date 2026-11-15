@@ -133,12 +133,19 @@ public class UserService {
     }
 
     public List<UserDTO> getUserList(String search, UUID roleId, String status, int page, int pageSize) {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 10;
+        // Bước 1: Chuẩn hóa phân trang
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 10;
+        }
         int offset = (page - 1) * pageSize;
 
+        // Bước 2: Truy vấn danh sách người dùng từ DAO
         List<User> users = userDAO.findUsers(search, roleId, status, offset, pageSize);
 
+        // Bước 3: Chuyển đổi Entity sang DTO để bảo vệ thông tin nhạy cảm
         List<UserDTO> dtos = new ArrayList<>();
         for (User u : users) {
             dtos.add(toDTO(u));
@@ -164,9 +171,15 @@ public class UserService {
     }
 
     public boolean updateUserProfile(UserDTO dto, String adminEmail, String statusNote) {
-        if (dto == null || dto.getId() == null) return false;
+        // Bước 1: Kiểm tra tham số DTO và ID người dùng
+        if (dto == null || dto.getId() == null) {
+            return false;
+        }
+
         User user = userDAO.findById(dto.getId());
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
 
         String oldStatus = user.getStatus();
         boolean statusChangingToInactive = false;
@@ -251,17 +264,34 @@ public class UserService {
         return updated;
     }
 
+    /**
+     * Cấp phát mật khẩu tạm thời cho tài khoản và gửi email thông báo.
+     *
+     * @param userId     ID tài khoản người dùng
+     * @param adminEmail Email của quản trị viên thực hiện
+     * @return Mật khẩu tạm thời ở dạng plain text để hiển thị flash notification
+     */
     public String issueTemporaryPassword(UUID userId, String adminEmail) {
-        if (userId == null) return null;
+        // Bước 1: Kiểm tra tài khoản tồn tại
+        if (userId == null) {
+            return null;
+        }
         User user = userDAO.findById(userId);
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
 
+        // Bước 2: Sinh mật khẩu ngẫu nhiên an toàn và mã hóa BCrypt
         String tempPassword = generateTemporaryPassword();
         String hashed = PasswordHashUtil.hashPassword(tempPassword);
-        boolean ok = userDAO.updatePasswordWithMustChange(userId, hashed);
-        if (!ok) return null;
 
-        // Send email to user
+        // Bước 3: Cập nhật mật khẩu và bật cờ bắt buộc đổi mật khẩu lần đầu
+        boolean ok = userDAO.updatePasswordWithMustChange(userId, hashed);
+        if (!ok) {
+            return null;
+        }
+
+        // Bước 4: Gửi thông tin mật khẩu tạm thời qua email
         try {
             String subject = "LearnHub - Mật khẩu tạm thời cho tài khoản của bạn";
             String body = "Xin chào " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + ",\n\n"
@@ -401,42 +431,83 @@ public class UserService {
     }
 
     public UsernameUpdateResult updateOwnUsername(UUID userId, String requestedUsername) {
-        if (userId == null || requestedUsername == null) return UsernameUpdateResult.INVALID;
+        if (userId == null || requestedUsername == null) {
+            return UsernameUpdateResult.INVALID;
+        }
         String username = requestedUsername.trim();
-        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) return UsernameUpdateResult.INVALID;
+        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) {
+            return UsernameUpdateResult.INVALID;
+        }
         User user = userDAO.findById(userId);
-        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return UsernameUpdateResult.FAILED;
-        if (userDAO.isIdentityTakenByOther(userId, username)) return UsernameUpdateResult.TAKEN;
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) {
+            return UsernameUpdateResult.FAILED;
+        }
+        if (userDAO.isIdentityTakenByOther(userId, username)) {
+            return UsernameUpdateResult.TAKEN;
+        }
         return userDAO.updateOwnUsername(userId, username)
                 ? UsernameUpdateResult.SUCCESS : UsernameUpdateResult.FAILED;
     }
 
-    public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername, String requestedFullName, String requestedPhone) {
-        if (userId == null || requestedUsername == null) return ProfileUpdateResult.INVALID_USERNAME;
+    public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername,
+                                               String requestedFullName, String requestedPhone) {
+        // Bước 1: Kiểm tra tính hợp lệ của tên đăng nhập
+        if (userId == null || requestedUsername == null) {
+            return ProfileUpdateResult.INVALID_USERNAME;
+        }
         String username = requestedUsername.trim();
-        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) return ProfileUpdateResult.INVALID_USERNAME;
+        if (!username.matches("^[\\p{L}\\p{N}._-]{3,255}$")) {
+            return ProfileUpdateResult.INVALID_USERNAME;
+        }
+
+        // Bước 2: Chuẩn hóa họ và tên
         String fullName = FullNameUtil.normalizeOrNull(requestedFullName);
-        if (fullName == null) return ProfileUpdateResult.INVALID_FULL_NAME;
-        String phone = requestedPhone == null || requestedPhone.isBlank() ? null : requestedPhone.trim();
+        if (fullName == null) {
+            return ProfileUpdateResult.INVALID_FULL_NAME;
+        }
+
+        // Bước 3: Kiểm tra định dạng số điện thoại
+        String phone = (requestedPhone == null || requestedPhone.isBlank()) ? null : requestedPhone.trim();
         if (phone != null && !phone.matches("0[0-9]{9}")) {
             return ProfileUpdateResult.INVALID_PHONE;
         }
+
+        // Bước 4: Kiểm tra trạng thái tài khoản
         User user = userDAO.findById(userId);
-        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return ProfileUpdateResult.FAILED;
-        if (userDAO.isIdentityTakenByOther(userId, username)) return ProfileUpdateResult.TAKEN;
-        if (phone != null && userDAO.isPhoneTakenByOther(userId, phone)) return ProfileUpdateResult.PHONE_TAKEN;
-        if (userDAO.updateOwnProfile(userId, username, fullName, phone)) return ProfileUpdateResult.SUCCESS;
-        if (phone != null && userDAO.isPhoneTakenByOther(userId, phone)) return ProfileUpdateResult.PHONE_TAKEN;
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) {
+            return ProfileUpdateResult.FAILED;
+        }
+
+        // Bước 5: Kiểm tra tính duy nhất của username và số điện thoại
+        if (userDAO.isIdentityTakenByOther(userId, username)) {
+            return ProfileUpdateResult.TAKEN;
+        }
+        if (phone != null && userDAO.isPhoneTakenByOther(userId, phone)) {
+            return ProfileUpdateResult.PHONE_TAKEN;
+        }
+
+        // Bước 6: Cập nhật thông tin vào cơ sở dữ liệu
+        if (userDAO.updateOwnProfile(userId, username, fullName, phone)) {
+            return ProfileUpdateResult.SUCCESS;
+        }
         return ProfileUpdateResult.FAILED;
     }
 
     public boolean updateUserPhone(UUID userId, String phone) {
-        if (userId == null || phone == null || phone.isBlank()) return false;
+        if (userId == null || phone == null || phone.isBlank()) {
+            return false;
+        }
         String cleanPhone = phone.trim();
-        if (!cleanPhone.matches("0[0-9]{9}")) return false;
+        if (!cleanPhone.matches("0[0-9]{9}")) {
+            return false;
+        }
         User user = userDAO.findById(userId);
-        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) return false;
-        if (userDAO.isPhoneTakenByOther(userId, cleanPhone)) return false;
+        if (user == null || !"active".equalsIgnoreCase(user.getStatus())) {
+            return false;
+        }
+        if (userDAO.isPhoneTakenByOther(userId, cleanPhone)) {
+            return false;
+        }
         return userDAO.updateOwnProfile(userId, user.getUsername(), user.getFullName(), cleanPhone);
     }
 
@@ -558,13 +629,19 @@ public class UserService {
 
     /** Called only after the email verification code has been accepted. */
     public User registerVerified(String username, String fullName, String email, String passwordHash) {
-        if (email == null || passwordHash == null || username == null || !passwordHash.startsWith("$2")) return null;
+        if (email == null || passwordHash == null || username == null || !passwordHash.startsWith("$2")) {
+            return null;
+        }
         String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         String normalizedName = username.trim();
         String normalizedFullName = FullNameUtil.normalizeOrNull(fullName);
-        if (normalizedEmail.isEmpty() || normalizedName.isEmpty() || normalizedFullName == null) return null;
+        if (normalizedEmail.isEmpty() || normalizedName.isEmpty() || normalizedFullName == null) {
+            return null;
+        }
         // Availability was checked before sending the code; check again after verification.
-        if (isRegistrationIdentityTaken(normalizedName, normalizedEmail)) return null;
+        if (isRegistrationIdentityTaken(normalizedName, normalizedEmail)) {
+            return null;
+        }
 
         Setting studentRole = null;
         List<Setting> roles = settingDAO.findAllRoles();
@@ -592,10 +669,15 @@ public class UserService {
     }
 
     public User registerPending(String username, String fullName, String email, String passwordHash) {
-        if (isRegistrationIdentityTaken(username, email)) return null;
+        if (isRegistrationIdentityTaken(username, email)) {
+            return null;
+        }
         Setting studentRole = null;
         for (Setting role : settingDAO.findAllRoles()) {
-            if ("ROLE_STUDENT".equalsIgnoreCase(role.getCode())) { studentRole = role; break; }
+            if ("ROLE_STUDENT".equalsIgnoreCase(role.getCode())) {
+                studentRole = role;
+                break;
+            }
         }
         User user = new User();
         user.setId(UUID.randomUUID());

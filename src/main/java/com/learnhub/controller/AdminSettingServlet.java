@@ -34,6 +34,8 @@ import java.util.logging.Logger;
 @WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-detail", "/admin/setting-status", "/admin/setting-reorder"})
 public class AdminSettingServlet extends HttpServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = Logger.getLogger(AdminSettingServlet.class.getName());
     private final SettingDAO settingDAO = new SettingDAO();
     private final CourseDAO courseDAO = new CourseDAO();
@@ -117,7 +119,9 @@ public class AdminSettingServlet extends HttpServlet {
     }
 
     private boolean isRoleSetting(Setting setting) {
-        if (setting == null) return false;
+        if (setting == null) {
+            return false;
+        }
         return "role".equalsIgnoreCase(setting.getType());
     }
 
@@ -425,7 +429,9 @@ public class AdminSettingServlet extends HttpServlet {
     }
 
     private String escapeJson(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
@@ -433,7 +439,9 @@ public class AdminSettingServlet extends HttpServlet {
     }
 
     private boolean isAuthorizedAdmin(User user, String role) {
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
         String rCode = user.getRoleCode() != null ? user.getRoleCode() : "";
         String rName = user.getRoleName() != null ? user.getRoleName() : "";
         String sRole = role != null ? role : "";

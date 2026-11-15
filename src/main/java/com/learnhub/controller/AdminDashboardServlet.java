@@ -14,17 +14,24 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Servlet for the Admin Dashboard screen (SDS 2.3).
+ * Controller for the Admin Dashboard screen (SDS 2.3).
  *
- * Implements:
- * - viewKeyMetricsSummary()     — loads aggregated system statistics
- * - filterMetricsByDateRange()  — accepts ?dateRange=today|week|month
- * - viewRecentSystemLogs()      — passes recent audit_log entries to view
+ * <p>Implements:
+ * <ul>
+ *   <li>viewKeyMetricsSummary() — loads aggregated system statistics</li>
+ *   <li>filterMetricsByDateRange() — accepts ?dateRange=today|week|month</li>
+ *   <li>viewRecentSystemLogs() — passes recent audit_log entries to view</li>
+ * </ul>
+ * </p>
  *
- * URLs: /admin/dashboard
+ * <p>Endpoint: /admin/dashboard</p>
+ *
+ * @author NguyenLD - System Administration Module
  */
 @WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
 
     private final DashboardService dashboardService = new DashboardService();
 
@@ -32,10 +39,11 @@ public class AdminDashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // ── Role guard ─────────────────────────────────────────────────────────
+        // Bước 1: Kiểm tra phiên đăng nhập và phân quyền truy cập (Role Guard)
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
-            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=" + req.getContextPath() + req.getServletPath());
+            String targetUri = req.getContextPath() + req.getServletPath();
+            resp.sendRedirect(req.getContextPath() + "/auth/login?redirect_uri=" + targetUri);
             return;
         }
 
@@ -44,6 +52,7 @@ public class AdminDashboardServlet extends HttpServlet {
         String userRole = (String) session.getAttribute("userRole");
         String roleName = currentUser != null ? currentUser.getRoleName() : "";
 
+        // Nếu là Manager thì tự động điều hướng sang Manager Dashboard
         boolean isManager = AppConstants.Role.MANAGER.equalsIgnoreCase(roleCode)
                 || "ROLE_MANAGER".equalsIgnoreCase(userRole)
                 || "manager".equalsIgnoreCase(userRole)
@@ -55,6 +64,7 @@ public class AdminDashboardServlet extends HttpServlet {
             return;
         }
 
+        // Kiểm tra quyền Administrator
         boolean isAuthorized = AppConstants.Role.ADMIN.equalsIgnoreCase(roleCode)
                 || "ROLE_ADMIN".equalsIgnoreCase(userRole)
                 || "admin".equalsIgnoreCase(userRole)
@@ -67,16 +77,16 @@ public class AdminDashboardServlet extends HttpServlet {
             return;
         }
 
-        // ── Date range filter ─────────────────────────────────────────────────
+        // Bước 2: Đọc tham số lọc thời gian (mặc định là 'month')
         String dateRange = req.getParameter("dateRange");
         if (dateRange == null || dateRange.isBlank()) {
             dateRange = "month";
         }
 
-        // ── Build dashboard data ──────────────────────────────────────────────
+        // Bước 3: Tổng hợp các chỉ số KPI và biểu đồ từ DashboardService
         DashboardDTO dashboard = dashboardService.buildDashboard(dateRange);
 
-        // ── Forward to JSP ────────────────────────────────────────────────────
+        // Bước 4: Chuyển tiếp dữ liệu sang giao diện admin/dashboard.jsp
         req.setAttribute("dashboard", dashboard);
         req.setAttribute("pageTitle", "Admin dashboard – LearnHub");
         req.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(req, resp);

@@ -42,6 +42,8 @@ import java.util.logging.Logger;
 )
 public class AdminCourseServlet extends HttpServlet {
 
+    private static final long serialVersionUID = 1L;
+
     private static final Logger LOGGER = Logger.getLogger(AdminCourseServlet.class.getName());
     private final CourseService courseService = new CourseService();
     private final DashboardService dashboardService = new DashboardService();
@@ -433,7 +435,9 @@ public class AdminCourseServlet extends HttpServlet {
     }
 
     private String escapeJson(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
@@ -441,7 +445,9 @@ public class AdminCourseServlet extends HttpServlet {
     }
 
     private boolean isAuthorizedRole(User user, String role) {
-        if (user == null) return false;
+        if (user == null) {
+            return false;
+        }
         String rCode = user.getRoleCode() != null ? user.getRoleCode() : "";
         String rName = user.getRoleName() != null ? user.getRoleName() : "";
         String sRole = role != null ? role : "";

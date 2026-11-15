@@ -3,7 +3,11 @@ package com.learnhub.dao;
 import com.learnhub.entity.User;
 import com.learnhub.util.DbConnection;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -59,7 +63,9 @@ public class UserDAO {
     }
 
     public User findById(UUID id) {
-        if (id == null) return null;
+        if (id == null) {
+            return null;
+        }
         String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
@@ -81,7 +87,9 @@ public class UserDAO {
 
     /** Legacy lookup used for login by either email or username. */
     public User findByEmail(String email) {
-        if (email == null) return null;
+        if (email == null) {
+            return null;
+        }
         String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
                      "s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
@@ -407,9 +415,13 @@ public class UserDAO {
     }
 
     public boolean isExpert(UUID userId) {
-        if (userId == null) return false;
+        if (userId == null) {
+            return false;
+        }
         User u = findById(userId);
-        if (u == null) return false;
+        if (u == null) {
+            return false;
+        }
         String status = u.getStatus() != null ? u.getStatus().trim().toLowerCase() : "";
         if (!"active".equals(status)) {
             return false;

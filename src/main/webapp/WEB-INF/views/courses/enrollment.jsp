@@ -48,6 +48,13 @@
                     <p class="text-text-secondary mt-1 text-sm sm:text-base">Kiểm tra thông tin tài khoản học viên và lựa chọn hình thức thanh toán thuận tiện nhất</p>
                 </div>
 
+                <c:if test="${not empty errorMessage}">
+                    <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-3 shadow-sm" role="alert">
+                        <i class="fa-solid fa-circle-exclamation text-rose-600 text-base flex-shrink-0" aria-hidden="true"></i>
+                        <span class="font-medium"><c:out value="${errorMessage}" /></span>
+                    </div>
+                </c:if>
+
                 <form id="paymentForm" action="${pageContext.request.contextPath}/enrollment" method="post">
                     <input type="hidden" name="courseId" value="${course.id}">
 
@@ -146,36 +153,51 @@
                                     </c:when>
 
                                     <c:otherwise>
-                                        <div class="space-y-3" id="paymentMethodList">
-                                            <c:forEach var="pm" items="${paymentMethods}" varStatus="pmStatus">
-                                                <label class="payment-method-card relative flex items-start gap-4 p-4 rounded-xl border border-border-default hover:border-brand-500 bg-surface hover:bg-brand-50/30 cursor-pointer transition">
-                                                    <div class="pt-0.5">
-                                                        <input type="radio" name="paymentMethodId" value="${pm.id}" class="w-4 h-4 text-brand-700 focus:ring-brand-700" <c:if test="${pmStatus.first}">checked</c:if>>
+                                        <c:choose>
+                                            <c:when test="${empty paymentMethods}">
+                                                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-start gap-3">
+                                                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5 shrink-0" aria-hidden="true"></i>
+                                                    <div>
+                                                        <p class="font-bold text-amber-950">Hệ thống thanh toán trực tuyến hiện đang tạm bảo trì</p>
+                                                        <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                                                            Các cổng thanh toán hiện đang tạm ngừng nhận giao dịch. Vui lòng quay lại sau hoặc liên hệ bộ phận hỗ trợ của LearnHub để được hỗ trợ đăng ký.
+                                                        </p>
                                                     </div>
-
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center justify-between">
-                                                            <span class="font-bold text-text-primary text-sm">${pm.name}</span>
-                                                            <div class="flex items-center gap-1.5 text-text-secondary text-base">
-                                                                <c:choose>
-                                                                    <c:when test="${pm.code eq 'vnpay'}">
-                                                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-100 text-blue-700 flex items-center gap-1">
-                                                                            <i class="fa-solid fa-qrcode"></i> VNPAY-QR
-                                                                        </span>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-brand-100 text-brand-800 flex items-center gap-1">
-                                                                            <i class="fa-solid fa-building-columns"></i> SEPAY / VIETQR
-                                                                        </span>
-                                                                    </c:otherwise>
-                                                                </c:choose>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="space-y-3" id="paymentMethodList">
+                                                    <c:forEach var="pm" items="${paymentMethods}" varStatus="pmStatus">
+                                                        <label class="payment-method-card relative flex items-start gap-4 p-4 rounded-xl border border-border-default hover:border-brand-500 bg-surface hover:bg-brand-50/30 cursor-pointer transition">
+                                                            <div class="pt-0.5">
+                                                                <input type="radio" name="paymentMethodId" value="${pm.id}" class="w-4 h-4 text-brand-700 focus:ring-brand-700" <c:if test="${pmStatus.first}">checked</c:if>>
                                                             </div>
-                                                        </div>
-                                                        <p class="text-xs text-text-secondary mt-1">${pm.description}</p>
-                                                    </div>
-                                                </label>
-                                            </c:forEach>
-                                        </div>
+
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center justify-between">
+                                                                    <span class="font-bold text-text-primary text-sm">${pm.name}</span>
+                                                                    <div class="flex items-center gap-1.5 text-text-secondary text-base">
+                                                                        <c:choose>
+                                                                            <c:when test="${pm.code eq 'vnpay'}">
+                                                                                <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-blue-100 text-blue-700 flex items-center gap-1">
+                                                                                    <i class="fa-solid fa-qrcode"></i> VNPAY-QR
+                                                                                </span>
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <span class="px-2.5 py-1 text-xs font-black rounded-lg bg-brand-100 text-brand-800 flex items-center gap-1">
+                                                                                    <i class="fa-solid fa-building-columns"></i> SEPAY / VIETQR
+                                                                                </span>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="text-xs text-text-secondary mt-1">${pm.description}</p>
+                                                            </div>
+                                                        </label>
+                                                    </c:forEach>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </c:otherwise>
                                 </c:choose>
                             </div>
@@ -260,11 +282,21 @@
                                     </div>
                                 </div>
 
-                                <%-- Nút Xác Nhận Thanh Toán --%>
-                                <button type="submit" class="w-full py-3.5 px-6 font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-base group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
-                                    <i class="fa-solid fa-lock group-hover:scale-110 transition-transform"></i>
-                                    <span>Xác Nhận Thanh Toán</span>
-                                </button>
+                                <%-- Nút Xác Nhận Thanh Toán / Đăng Ký --%>
+                                <c:choose>
+                                    <c:when test="${course.price > 0 and empty paymentMethods}">
+                                        <button type="button" disabled class="w-full py-3.5 px-6 font-bold text-slate-400 bg-slate-200 rounded-xl cursor-not-allowed flex items-center justify-center gap-2 text-base">
+                                            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                            <span>Tạm thời không thể thanh toán</span>
+                                        </button>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <button type="submit" class="w-full py-3.5 px-6 font-bold text-white bg-brand-700 hover:bg-brand-800 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 text-base group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
+                                            <i class="fa-solid fa-lock group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                                            <span><c:choose><c:when test="${course.price <= 0}">Xác Nhận Đăng Ký Học</c:when><c:otherwise>Xác Nhận Thanh Toán</c:otherwise></c:choose></span>
+                                        </button>
+                                    </c:otherwise>
+                                </c:choose>
 
                                 <a href="${pageContext.request.contextPath}/courses?action=detail&id=${course.id}" class="block text-center mt-3 text-xs text-text-secondary hover:text-brand-700 transition">
                                     <i class="fa-solid fa-arrow-left mr-1"></i> Quay lại chi tiết khóa học
@@ -381,6 +413,16 @@
                     e.preventDefault();
                     if (phoneInput) {
                         phoneInput.focus();
+                    }
+                    return;
+                }
+
+                const methodInputs = document.querySelectorAll('input[name="paymentMethodId"]');
+                if (methodInputs.length > 0) {
+                    const selectedMethod = document.querySelector('input[name="paymentMethodId"]:checked');
+                    if (!selectedMethod) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn một phương thức thanh toán.');
                     }
                 }
             });

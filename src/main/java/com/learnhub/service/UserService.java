@@ -363,7 +363,8 @@ public class UserService {
                     Notification notification = new Notification();
                     notification.setId(UUID.randomUUID());
                     notification.setUserId(user.getId());
-                    notification.setContent("Tài khoản của bạn đã được chuyển sang trạng thái tạm ngưng. Lý do: " + statusNote.trim());
+                    notification.setContent("Tài khoản của bạn đã được chuyển sang trạng thái tạm ngưng. "
+                            + "Lý do: " + statusNote.trim());
                     notification.setStatus("unread");
                     notificationDAO.insert(notification);
                 } catch (Exception e) {
@@ -425,13 +426,16 @@ public class UserService {
         try {
             String subject = "LearnHub - Mật khẩu tạm thời cho tài khoản của bạn";
             String body = "Xin chào " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + ",\n\n"
-                    + "Quản trị viên hệ thống đã cấp lại mật khẩu tạm thời cho tài khoản của bạn trên LearnHub.\n\n"
+                    + "Quản trị viên hệ thống đã cấp lại mật khẩu tạm thời cho tài khoản "
+                    + "của bạn trên LearnHub.\n\n"
                     + "Mật khẩu tạm thời: " + tempPassword + "\n\n"
-                    + "Vì lý do an toàn bảo mật, hệ thống sẽ yêu cầu bạn đổi mật khẩu mới ngay trong lần đăng nhập đầu tiên.\n\n"
+                    + "Vì lý do an toàn bảo mật, hệ thống sẽ yêu cầu bạn đổi mật khẩu mới "
+                    + "ngay trong lần đăng nhập đầu tiên.\n\n"
                     + "Trân trọng,\nĐội ngũ Quản trị LearnHub";
             EmailUtil.sendEmail(user.getEmail(), subject, body);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failed to send temp password email to " + user.getEmail() + ": " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Failed to send temp password email to " + user.getEmail()
+                    + ": " + e.getMessage());
         }
 
         // Audit log
@@ -495,7 +499,9 @@ public class UserService {
         }
         String normalizedUsername = username.trim();
         if (!normalizedUsername.matches("^[\\p{L}\\p{N}._-]{3,255}$")) {
-            return AdminCreateUserResult.failure("Tên đăng nhập từ 3 đến 255 ký tự, chỉ chứa chữ cái, số, dấu chấm, gạch dưới hoặc gạch ngang.");
+            return AdminCreateUserResult.failure(
+                    "Tên đăng nhập từ 3 đến 255 ký tự, "
+                    + "chỉ chứa chữ cái, số, dấu chấm, gạch dưới hoặc gạch ngang.");
         }
 
         if (email == null || email.isBlank()) {
@@ -515,7 +521,9 @@ public class UserService {
         if (phone != null && !phone.isBlank()) {
             normalizedPhone = phone.trim();
             if (!normalizedPhone.matches("^0[0-9]{9}$")) {
-                return AdminCreateUserResult.failure("Số điện thoại không hợp lệ (yêu cầu 10 chữ số bắt đầu bằng 0, ví dụ: 0987654321).");
+                return AdminCreateUserResult.failure(
+                        "Số điện thoại không hợp lệ (yêu cầu 10 chữ số bắt đầu bằng 0, "
+                        + "ví dụ: 0987654321).");
             }
         }
 
@@ -547,13 +555,15 @@ public class UserService {
 
         boolean inserted = userDAO.insert(newUser);
         if (!inserted) {
-            return AdminCreateUserResult.failure("Không thể lưu người dùng vào cơ sở dữ liệu. Vui lòng thử lại.");
+            return AdminCreateUserResult.failure(
+                    "Không thể lưu người dùng vào cơ sở dữ liệu. Vui lòng thử lại.");
         }
 
         try {
             String actor = (adminEmail != null && !adminEmail.isBlank()) ? adminEmail : "admin";
-            dashboardDAO.insertAuditLog(actor, "USER_CREATE",
-                    "Admin created user [" + newUser.getUsername() + " / " + newUser.getEmail() + "] with role ID: " + newUser.getRoleId(), "SUCCESS");
+            String logDesc = "Admin created user [" + newUser.getUsername() + " / " + newUser.getEmail()
+                    + "] with role ID: " + newUser.getRoleId();
+            dashboardDAO.insertAuditLog(actor, "USER_CREATE", logDesc, "SUCCESS");
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Failed to log user creation audit: " + e.getMessage());
         }
@@ -567,11 +577,13 @@ public class UserService {
                     + "- Tên đăng nhập: " + newUser.getUsername() + "\n"
                     + "- Email: " + newUser.getEmail() + "\n"
                     + "- Mật khẩu tạm thời: " + tempPassword + "\n\n"
-                    + "Vì lý do an toàn bảo mật, hệ thống sẽ yêu cầu bạn đổi mật khẩu mới ngay trong lần đăng nhập đầu tiên.\n\n"
+                    + "Vì lý do an toàn bảo mật, hệ thống sẽ yêu cầu bạn đổi mật khẩu mới "
+                    + "ngay trong lần đăng nhập đầu tiên.\n\n"
                     + "Trân trọng,\nĐội ngũ Quản trị LearnHub";
             emailSent = EmailUtil.sendEmail(newUser.getEmail(), subject, body);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failed to send welcome email with temp password to " + newUser.getEmail() + ": " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Failed to send welcome email with temp password to "
+                    + newUser.getEmail() + ": " + e.getMessage());
         }
 
         return AdminCreateUserResult.success(tempPassword, emailSent, newUser);
@@ -745,7 +757,9 @@ public class UserService {
      * @return true when the condition holds; false otherwise
      */
     public boolean toggleStatus(UUID userId, String status, String statusNote) {
-        if (userId == null || status == null) return false;
+        if (userId == null || status == null) {
+            return false;
+        }
         if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
             return false;
         }
@@ -925,7 +939,9 @@ public class UserService {
      * @return the user by email
      */
     public UserDTO getUserByEmail(String email) {
-        if (email == null) return null;
+        if (email == null) {
+            return null;
+        }
         User u = userDAO.findByEmail(email.trim());
         return u != null ? toDTO(u) : null;
     }

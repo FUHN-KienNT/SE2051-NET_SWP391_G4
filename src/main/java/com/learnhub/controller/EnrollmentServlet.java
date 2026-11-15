@@ -319,10 +319,24 @@ public class EnrollmentServlet extends HttpServlet {
                 }
 
                 UUID paymentMethodId = null;
-                if (paymentMethodValue != null && !paymentMethodValue.isBlank()) {
-                    try {
-                        paymentMethodId = UUID.fromString(paymentMethodValue.trim());
-                    } catch (IllegalArgumentException ignored) {
+                Setting selectedPaymentMethod = null;
+                if (!isFree) {
+                    if (paymentMethodValue != null && !paymentMethodValue.isBlank()) {
+                        try {
+                            paymentMethodId = UUID.fromString(paymentMethodValue.trim());
+                        } catch (IllegalArgumentException ignored) {
+                        }
+                    }
+
+                    selectedPaymentMethod = courseService.getActivePaymentMethodById(paymentMethodId);
+                    if (selectedPaymentMethod == null) {
+                        req.setAttribute("course", course);
+                        req.setAttribute("student", user);
+                        req.setAttribute("paymentMethods", courseService.getPaymentMethods());
+                        req.setAttribute("errorMessage", "Phương thức thanh toán đã chọn không khả dụng hoặc đang tạm ngừng. Vui lòng chọn lại phương thức thanh toán.");
+                        req.setAttribute("pageTitle", "Thông tin thanh toán - " + course.getTitle());
+                        req.getRequestDispatcher("/WEB-INF/views/courses/enrollment.jsp").forward(req, resp);
+                        return;
                     }
                 }
 
@@ -340,15 +354,7 @@ public class EnrollmentServlet extends HttpServlet {
                     }
 
                     // Xác định cổng thanh toán đã chọn (VNPay hay SePay)
-                    String methodCode = "vnpay";
-                    if (paymentMethodId != null) {
-                        for (Setting s : courseService.getPaymentMethods()) {
-                            if (paymentMethodId.equals(s.getId())) {
-                                methodCode = s.getCode();
-                                break;
-                            }
-                        }
-                    }
+                    String methodCode = selectedPaymentMethod != null ? selectedPaymentMethod.getCode() : "vnpay";
 
                     if ("vnpay".equalsIgnoreCase(methodCode)) {
                         // Tạo VNPay Sandbox URL

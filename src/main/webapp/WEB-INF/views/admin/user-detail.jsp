@@ -237,8 +237,8 @@
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="userId" value="${user.id}">
 
-                        <!-- Row 1: Full Name & Email Address -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Row 1: Full Name, Username & Email Address -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label for="fullName" class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Full Name <span class="text-rose-500">*</span>
@@ -247,6 +247,14 @@
                                        value="<c:out value='${user.fullName}'/>"
                                        placeholder="Nhập họ và tên..."
                                        class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] transition shadow-sm">
+                            </div>
+                            <div>
+                                <label for="username" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Username (Tên đăng nhập)
+                                </label>
+                                <input type="text" id="username" name="username" readonly
+                                       value="<c:out value='${user.username}'/>"
+                                       class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-slate-600 bg-slate-100 font-mono text-sm cursor-not-allowed select-none shadow-sm">
                             </div>
                             <div>
                                 <label for="email" class="block text-xs font-semibold text-slate-700 mb-1.5">

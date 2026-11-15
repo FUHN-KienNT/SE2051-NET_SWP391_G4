@@ -53,8 +53,9 @@ public class UserDAO {
      */
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
-                     "s.name as role_name, s.code as role_code " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, " +
+                     "u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                     "u.phone, u.status_note, u.avatar_url, s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
                      "ORDER BY u.created_at DESC";
@@ -75,8 +76,9 @@ public class UserDAO {
         if (id == null) {
             return null;
         }
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
-                     "s.name as role_name, s.code as role_code " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, " +
+                     "u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                     "u.phone, u.status_note, u.avatar_url, s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
                      "WHERE u.id = ?";
@@ -99,8 +101,9 @@ public class UserDAO {
         if (email == null) {
             return null;
         }
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
-                     "s.name as role_name, s.code as role_code " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, " +
+                     "u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                     "u.phone, u.status_note, u.avatar_url, s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "LEFT JOIN setting s ON u.role_id = s.id " +
                      "WHERE LOWER(u.email) = LOWER(?) OR LOWER(u.username) = LOWER(?)";
@@ -132,8 +135,9 @@ public class UserDAO {
     public List<User> findUsers(String search, UUID roleId, String status, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
-                "s.name as role_name, s.code as role_code " +
+                "SELECT u.id, u.username, u.full_name, u.email, u.password, " +
+                "u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                "u.phone, u.status_note, u.avatar_url, s.name as role_name, s.code as role_code " +
                 "FROM \"user\" u " +
                 "LEFT JOIN setting s ON u.role_id = s.id WHERE 1=1 ");
 
@@ -220,7 +224,8 @@ public class UserDAO {
 
     /** Inserts a user account, including accounts pending email verification. */
     public boolean insert(User user) {
-        String sql = "INSERT INTO \"user\" (id, username, full_name, email, password, role_id, status, phone, requires_password_change, status_note, created_at, updated_at) " +
+        String sql = "INSERT INTO \"user\" (id, username, full_name, email, password, role_id, " +
+                     "status, phone, requires_password_change, status_note, created_at, updated_at) " +
                      "VALUES (COALESCE(?, gen_random_uuid()), ?, ?, ?, ?, ?, ?::user_status, ?, ?, ?, NOW(), NOW())";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -268,7 +273,8 @@ public class UserDAO {
      * @return true when the condition holds; false otherwise
      */
     public boolean update(User user) {
-        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, phone = ?, role_id = ?, status = ?::user_status, status_note = ?, updated_at = NOW() WHERE id = ?";
+        String sql = "UPDATE \"user\" SET username = ?, full_name = ?, email = ?, phone = ?, " +
+                     "role_id = ?, status = ?::user_status, status_note = ?, updated_at = NOW() WHERE id = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
@@ -474,7 +480,8 @@ public class UserDAO {
      * @return true when the expected hash was replaced
      */
     public boolean updatePasswordIfCurrentHash(UUID userId, String currentHash, String newHash) {
-        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() WHERE id = ? AND password = ?";
+        String sql = "UPDATE \"user\" SET password = ?, requires_password_change = FALSE, updated_at = NOW() " +
+                     "WHERE id = ? AND password = ?";
         try (Connection conn = DbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newHash);
@@ -510,12 +517,14 @@ public class UserDAO {
      */
     public List<User> findInstructors() {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, u.phone, u.status_note, u.avatar_url, " +
-                     "s.name as role_name, s.code as role_code " +
+        String sql = "SELECT u.id, u.username, u.full_name, u.email, u.password, " +
+                     "u.requires_password_change, u.role_id, u.status, u.created_at, u.updated_at, " +
+                     "u.phone, u.status_note, u.avatar_url, s.name as role_name, s.code as role_code " +
                      "FROM \"user\" u " +
                      "JOIN setting s ON u.role_id = s.id " +
                      "WHERE (s.type IS NULL OR s.type = 'role') " +
-                     "AND (UPPER(TRIM(s.code)) = 'ROLE_EXPERT' OR UPPER(TRIM(s.code)) = 'EXPERT' OR LOWER(TRIM(s.name)) = 'expert' OR LOWER(s.name) LIKE 'expert%') " +
+                     "AND (UPPER(TRIM(s.code)) = 'ROLE_EXPERT' OR UPPER(TRIM(s.code)) = 'EXPERT' " +
+                     "     OR LOWER(TRIM(s.name)) = 'expert' OR LOWER(s.name) LIKE 'expert%') " +
                      "AND NOT (UPPER(TRIM(s.code)) IN ('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_STUDENT')) " +
                      "AND LOWER(u.status::text) = 'active' " +
                      "ORDER BY COALESCE(u.full_name, u.username) ASC";

@@ -417,47 +417,60 @@ public class CourseService {
      * @return the payment methods
      */
     public List<Setting> getPaymentMethods() {
-        List<Setting> all = settingDAO.findByType("payment_method");
-        List<Setting> result = new ArrayList<>();
-        Setting vnpay = null;
-        Setting sepay = null;
+        List<Setting> activeList = settingDAO.findByType("payment_method");
+        int totalConfigured = settingDAO.countSettings(null, "payment_method", null);
 
-        for (Setting s : all) {
-            if ("vnpay".equalsIgnoreCase(s.getCode())) {
-                vnpay = s;
-            } else if ("sepay".equalsIgnoreCase(s.getCode()) || "banking".equalsIgnoreCase(s.getCode())) {
-                sepay = s;
+        // If payment methods are configured in the database, strictly respect their active/inactive status
+        if (totalConfigured > 0) {
+            List<Setting> result = new ArrayList<>();
+            for (Setting s : activeList) {
+                if ("banking".equalsIgnoreCase(s.getCode())) {
+                    s.setCode("sepay");
+                    if (s.getName() == null || s.getName().isBlank()) {
+                        s.setName("Cổng thanh toán SePay (VietQR)");
+                    }
+                    if (s.getDescription() == null || s.getDescription().isBlank()) {
+                        s.setDescription("Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay");
+                    }
+                }
+                result.add(s);
+            }
+            return result;
+        }
+
+        // Fallback default methods only when the database has zero configured payment methods (unseeded DB)
+        List<Setting> fallbackResult = new ArrayList<>();
+        fallbackResult.add(new Setting(
+                UUID.fromString("b0000000-0000-0000-0000-000000000011"),
+                "payment_method", "vnpay", "Cổng thanh toán VNPAY",
+                "Thanh toán qua quét mã VNPAY-QR, Thẻ ATM nội địa hoặc Internet Banking",
+                true, 1
+        ));
+        fallbackResult.add(new Setting(
+                UUID.fromString("b0000000-0000-0000-0000-000000000013"),
+                "payment_method", "sepay", "Cổng thanh toán SePay (VietQR)",
+                "Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay",
+                true, 2
+        ));
+        return fallbackResult;
+    }
+
+    /**
+     * Finds an active payment method by its UUID identifier.
+     *
+     * @param paymentMethodId UUID of the payment method
+     * @return Setting entity if active and available, or null if inactive or not found
+     */
+    public Setting getActivePaymentMethodById(UUID paymentMethodId) {
+        if (paymentMethodId == null) {
+            return null;
+        }
+        for (Setting method : getPaymentMethods()) {
+            if (paymentMethodId.equals(method.getId())) {
+                return method;
             }
         }
-
-        if (vnpay != null) {
-            result.add(vnpay);
-        } else {
-            result.add(new Setting(
-                    UUID.fromString("b0000000-0000-0000-0000-000000000011"),
-                    "payment_method", "vnpay", "Cổng thanh toán VNPAY",
-                    "Thanh toán qua quét mã VNPAY-QR, Thẻ ATM nội địa hoặc Internet Banking",
-                    true, 1
-            ));
-        }
-
-        if (sepay != null) {
-            if ("banking".equalsIgnoreCase(sepay.getCode())) {
-                sepay.setCode("sepay");
-                sepay.setName("Cổng thanh toán SePay (VietQR)");
-                sepay.setDescription("Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay");
-            }
-            result.add(sepay);
-        } else {
-            result.add(new Setting(
-                    UUID.fromString("b0000000-0000-0000-0000-000000000013"),
-                    "payment_method", "sepay", "Cổng thanh toán SePay (VietQR)",
-                    "Chuyển khoản ngân hàng tự động 24/7 qua mã VietQR SePay",
-                    true, 2
-            ));
-        }
-
-        return result;
+        return null;
     }
 
     /**

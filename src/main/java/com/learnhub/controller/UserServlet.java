@@ -40,7 +40,12 @@ import java.util.UUID;
  *
  * @author NguyenLD - System Administration Module
  */
-@WebServlet(name = "UserServlet", urlPatterns = {"/admin/users", "/admin/user-detail", "/admin/user-status", "/admin/reset-password"})
+@WebServlet(name = "UserServlet", urlPatterns = {
+        "/admin/users",
+        "/admin/user-detail",
+        "/admin/user-status",
+        "/admin/reset-password"
+})
 public class UserServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -189,7 +194,9 @@ public class UserServlet extends HttpServlet {
                 try {
                     UUID userId = UUID.fromString(idStr);
                     if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
-                        req.getSession().setAttribute("flashError", "Vui lòng nhập lý do tạm ngưng tài khoản để người dùng nắm được thông tin.");
+                        req.getSession().setAttribute("flashError",
+                                "Vui lòng nhập lý do tạm ngưng tài khoản "
+                                + "để người dùng nắm được thông tin.");
                         resp.sendRedirect(req.getContextPath() + "/admin/users");
                         return;
                     }
@@ -273,9 +280,11 @@ public class UserServlet extends HttpServlet {
                             UserDTO targetUser = userService.getUserById(userId);
                             String emailNotice = targetUser != null ? targetUser.getEmail() : "người dùng";
                             req.getSession().setAttribute("flashMessage",
-                                    "Đã cấp mật khẩu tạm thời thành công và gửi email đến " + emailNotice + "! Mật khẩu tạm: " + tempPass);
+                                    "Đã cấp mật khẩu tạm thời thành công và gửi email đến "
+                                    + emailNotice + "! Mật khẩu tạm: " + tempPass);
                         } else {
-                            req.getSession().setAttribute("flashError", "Không thể tạo mật khẩu tạm thời. Vui lòng kiểm tra lại.");
+                            req.getSession().setAttribute("flashError",
+                                    "Không thể tạo mật khẩu tạm thời. Vui lòng kiểm tra lại.");
                         }
                         resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
                         return;
@@ -298,7 +307,9 @@ public class UserServlet extends HttpServlet {
                     String statusNote = req.getParameter("statusNote");
 
                     if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
-                        req.getSession().setAttribute("flashError", "Vui lòng nhập lý do tạm ngưng tài khoản để người dùng nắm được thông tin.");
+                        req.getSession().setAttribute("flashError",
+                                "Vui lòng nhập lý do tạm ngưng tài khoản "
+                                + "để người dùng nắm được thông tin.");
                         resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
                         return;
                     }
@@ -320,7 +331,8 @@ public class UserServlet extends HttpServlet {
                         String p = phone.trim();
                         if (!p.matches("^0[0-9]{9}$")) {
                             req.getSession().setAttribute("flashError",
-                                    "Số điện thoại không hợp lệ (yêu cầu 10 chữ số bắt đầu bằng 0, ví dụ: 0987654321).");
+                                    "Số điện thoại không hợp lệ (yêu cầu 10 chữ số bắt đầu bằng 0, "
+                                    + "ví dụ: 0987654321).");
                             resp.sendRedirect(req.getContextPath() + "/admin/user-detail?id=" + userId);
                             return;
                         }

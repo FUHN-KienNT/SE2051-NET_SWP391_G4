@@ -31,7 +31,12 @@ import java.util.logging.Logger;
  *
  * URLs: /admin/settings, /admin/setting-detail, /admin/setting-status
  */
-@WebServlet(name = "AdminSettingServlet", urlPatterns = {"/admin/settings", "/admin/setting-detail", "/admin/setting-status", "/admin/setting-reorder"})
+@WebServlet(name = "AdminSettingServlet", urlPatterns = {
+        "/admin/settings",
+        "/admin/setting-detail",
+        "/admin/setting-status",
+        "/admin/setting-reorder"
+})
 public class AdminSettingServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -119,7 +124,8 @@ public class AdminSettingServlet extends HttpServlet {
             req.setAttribute("successMessage", "Trạng thái cấu hình đã được cập nhật thành công!");
         } else if ("true".equals(req.getParameter("save_success"))) {
             req.setAttribute("successMessage", "Thông tin cấu hình đã được lưu thành công!");
-        } else if ("core_role_protected".equals(req.getParameter("error")) || "role_deactivate_blocked".equals(req.getParameter("error"))) {
+        } else if ("core_role_protected".equals(req.getParameter("error"))
+                || "role_deactivate_blocked".equals(req.getParameter("error"))) {
             req.setAttribute("errorMessage", "Không thể vô hiệu hóa vai trò (Role luôn ở trạng thái Active)!");
         }
 
@@ -272,7 +278,8 @@ public class AdminSettingServlet extends HttpServlet {
                         dashboardService.logEvent(
                                 actor.getEmail(),
                                 "SETTING_STATUS_CHANGE",
-                                "Đổi trạng thái cấu hình '" + setting.getName() + "' sang: " + (newStatus ? "Active" : "Inactive"),
+                                "Đổi trạng thái cấu hình '" + setting.getName()
+                                + "' sang: " + (newStatus ? "Active" : "Inactive"),
                                 "SUCCESS"
                         );
                         resp.sendRedirect(req.getContextPath() + "/admin/settings?status_success=true");
@@ -339,7 +346,8 @@ public class AdminSettingServlet extends HttpServlet {
 
         // 2. Khóa cứng không cho phép đổi từ loại setting khác sang role
         if (isUpdate && !isExistingRole && "role".equalsIgnoreCase(type != null ? type.trim() : "")) {
-            req.setAttribute("errorMessage", "Không được phép chuyển đổi từ loại cấu hình khác sang vai trò (Role).");
+            req.setAttribute("errorMessage",
+                    "Không được phép chuyển đổi từ loại cấu hình khác sang vai trò (Role).");
             req.setAttribute("setting", existing);
             req.setAttribute("types", getSettingTypes(existing));
             req.setAttribute("isProtected", false);
@@ -351,7 +359,8 @@ public class AdminSettingServlet extends HttpServlet {
         if (isRole) {
             // Khi cập nhật Role:
             // - Cho phép chỉnh sửa tên (Setting Name)
-            // - Khóa cứng Setting Type (luôn là role), Value/Code (giữ code gốc), Status (luôn Active), Description (giữ nguyên)
+            // - Khóa cứng Setting Type (luôn là role), Value/Code (giữ code gốc),
+            //   Status (luôn Active), Description (giữ nguyên)
             type = "role";
             code = existing.getCode();
             status = true;
@@ -397,7 +406,8 @@ public class AdminSettingServlet extends HttpServlet {
             try {
                 result = settingDAO.update(s);
                 if (result) {
-                    dashboardService.logEvent(actor.getEmail(), "SETTING_UPDATE", "Cập nhật cấu hình: " + s.getName(), "SUCCESS");
+                    dashboardService.logEvent(actor.getEmail(), "SETTING_UPDATE",
+                            "Cập nhật cấu hình: " + s.getName(), "SUCCESS");
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Error updating setting: " + e.getMessage(), e);
@@ -409,9 +419,11 @@ public class AdminSettingServlet extends HttpServlet {
             if (result) {
                 String logDetail;
                 if ("payment_method".equalsIgnoreCase(s.getType())) {
-                    logDetail = "Thêm cấu hình cổng thanh toán mới: " + s.getName() + " (Lưu ý: Yêu cầu tích hợp mã nguồn API/Webhook tương ứng)";
+                    logDetail = "Thêm cấu hình cổng thanh toán mới: " + s.getName()
+                            + " (Lưu ý: Yêu cầu tích hợp mã nguồn API/Webhook tương ứng)";
                 } else if ("notification_type".equalsIgnoreCase(s.getType())) {
-                    logDetail = "Thêm loại thông báo mới: " + s.getName() + " (Lưu ý: Yêu cầu cấu hình Event Trigger trong mã nguồn)";
+                    logDetail = "Thêm loại thông báo mới: " + s.getName()
+                            + " (Lưu ý: Yêu cầu cấu hình Event Trigger trong mã nguồn)";
                 } else if ("category".equalsIgnoreCase(s.getType())) {
                     logDetail = "Thêm danh mục khóa học mới: " + s.getName();
                 } else {
@@ -476,7 +488,8 @@ public class AdminSettingServlet extends HttpServlet {
                 Setting s = settingDAO.findById(id);
                 if (s != null) {
                     String json = String.format(
-                            "{\"id\":\"%s\",\"type\":\"%s\",\"code\":\"%s\",\"name\":\"%s\",\"description\":\"%s\",\"status\":%b,\"sortOrder\":%d}",
+                            "{\"id\":\"%s\",\"type\":\"%s\",\"code\":\"%s\",\"name\":\"%s\","
+                            + "\"description\":\"%s\",\"status\":%b,\"sortOrder\":%d}",
                             s.getId(),
                             escapeJson(s.getType()),
                             escapeJson(s.getCode()),

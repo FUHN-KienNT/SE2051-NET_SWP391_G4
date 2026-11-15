@@ -114,8 +114,7 @@ public class DashboardService {
                 break;
         }
 
-        // ── User metrics ──────────────────────────────────────────────────────────
-
+        // User metrics
         int totalUsers  = dashboardDAO.countTotalUsers();
         int activeUsers = dashboardDAO.countActiveUsers();
         dto.setTotalUsers(totalUsers);
@@ -125,28 +124,23 @@ public class DashboardService {
         int previousNewUsers = dashboardDAO.countUsersCreatedBetween(previousFrom, previousTo);
         dto.setUserGrowthPct(growthPct(currentNewUsers, previousNewUsers));
 
-        // ── Course metrics ────────────────────────────────────────────────────────
-
+        // Course metrics
         dto.setActiveCourses(dashboardDAO.countActiveCourses());
 
-        // ── Enrollment metrics ────────────────────────────────────────────────────
-
+        // Enrollment metrics
         long currentEnrollments  = dashboardDAO.countEnrollments(currentFrom, currentTo);
         long previousEnrollments = dashboardDAO.countEnrollments(previousFrom, previousTo);
         dto.setTotalEnrollments(dashboardDAO.countTotalEnrollments());
         dto.setEnrollmentGrowthPct(growthPct(currentEnrollments, previousEnrollments));
 
-        // ── Revenue metrics ───────────────────────────────────────────────────────
-
+        // Revenue metrics
         BigDecimal revenue = dashboardDAO.getRevenue(currentFrom, currentTo);
         dto.setMonthlyRevenue(revenue);
 
-        // ── Pending registrations ─────────────────────────────────────────────────
-
+        // Pending registrations
         dto.setPendingRegistrations(dashboardDAO.countPendingRegistrations());
 
-        // ── Recent audit logs ─────────────────────────────────────────────────────
-
+        // Recent audit logs
         List<AuditLog> logs = dashboardDAO.getRecentAuditLogs(10);
         dto.setRecentLogs(logs);
 

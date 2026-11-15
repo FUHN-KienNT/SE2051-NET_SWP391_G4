@@ -190,7 +190,9 @@ public class AdminCourseServlet extends HttpServlet {
         } else if ("save_failed".equals(req.getParameter("error"))) {
             req.setAttribute("errorMessage", "Không thể lưu khóa học. Vui lòng kiểm tra lại thông tin.");
         } else if ("invalid_expert".equals(req.getParameter("error"))) {
-            req.setAttribute("errorMessage", "Khóa học chỉ được phép phân công (assign) cho người dùng có vai trò Chuyên gia (ROLE_EXPERT).");
+            req.setAttribute("errorMessage",
+                    "Khóa học chỉ được phép phân công (assign) cho người dùng "
+                    + "có vai trò Chuyên gia (ROLE_EXPERT).");
         }
 
         req.getRequestDispatcher("/WEB-INF/views/admin/course-detail.jsp").forward(req, resp);
@@ -258,7 +260,8 @@ public class AdminCourseServlet extends HttpServlet {
                                 (publish ? "Published" : "Unpublished") + " course: " + course.getTitle(),
                                 "SUCCESS"
                         );
-                        resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id=" + courseId + "&status_success=true");
+                        resp.sendRedirect(req.getContextPath() + "/manager/course-detail?id="
+                                + courseId + "&status_success=true");
                         return;
                     }
                 }
@@ -326,7 +329,8 @@ public class AdminCourseServlet extends HttpServlet {
         String expertIdStr = req.getParameter("expertId");
         String status = req.getParameter("status");
 
-        boolean isDetailRequest = "/manager/course-detail".equals(req.getServletPath()) || "detail".equalsIgnoreCase(req.getParameter("source"));
+        boolean isDetailRequest = "/manager/course-detail".equals(req.getServletPath())
+                || "detail".equalsIgnoreCase(req.getParameter("source"));
 
         if (title == null || title.trim().isEmpty()) {
             if (isDetailRequest && idStr != null && !idStr.isBlank()) {
@@ -336,6 +340,7 @@ public class AdminCourseServlet extends HttpServlet {
             }
             return;
         }
+
 
         BigDecimal price = BigDecimal.ZERO;
         if (priceStr != null && !priceStr.trim().isEmpty()) {
@@ -489,7 +494,8 @@ public class AdminCourseServlet extends HttpServlet {
                 Course course = courseService.getCourseById(courseId);
                 if (course != null) {
                     String json = String.format(
-                            "{\"id\":\"%s\",\"title\":\"%s\",\"description\":\"%s\",\"price\":%s,\"thumbnailUrl\":\"%s\",\"categoryId\":\"%s\",\"expertId\":\"%s\",\"status\":\"%s\"}",
+                            "{\"id\":\"%s\",\"title\":\"%s\",\"description\":\"%s\",\"price\":%s,"
+                            + "\"thumbnailUrl\":\"%s\",\"categoryId\":\"%s\",\"expertId\":\"%s\",\"status\":\"%s\"}",
                             course.getId(),
                             escapeJson(course.getTitle()),
                             escapeJson(course.getDescription() != null ? course.getDescription() : ""),

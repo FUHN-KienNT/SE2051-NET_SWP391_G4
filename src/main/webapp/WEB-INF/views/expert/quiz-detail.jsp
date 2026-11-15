@@ -33,9 +33,6 @@
             <a id="linkToQuestionBank" href="${pageContext.request.contextPath}/expert/questions" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-primary hover:bg-slate-100 shadow-xs transition">
                 <i class="fa-solid fa-list-check mr-2 text-brand-700" aria-hidden="true"></i>Ngân hàng câu hỏi
             </a>
-            <a id="linkToNewQuestion" href="${pageContext.request.contextPath}/expert/questions/detail" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold shadow-sm transition">
-                <i class="fa-solid fa-plus mr-2 text-xs" aria-hidden="true"></i>Tạo câu hỏi mới
-            </a>
             <a id="linkToQuizListTop" href="${pageContext.request.contextPath}/expert/quizzes" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-border-default bg-surface-card text-xs sm:text-sm font-semibold text-text-secondary hover:text-text-primary hover:bg-slate-100 transition">
                 <i class="fa-solid fa-arrow-left mr-2 text-xs" aria-hidden="true"></i>Danh sách Quiz
             </a>

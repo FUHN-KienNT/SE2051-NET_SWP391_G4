@@ -169,6 +169,10 @@ public class AdminSettingServlet extends HttpServlet {
                 types.add(currentType);
             }
         }
+        // Đưa 'category' lên đầu danh sách để ưu tiên lựa chọn mặc định
+        if (types.removeIf(t -> t != null && "category".equalsIgnoreCase(t.trim()))) {
+            types.add(0, "category");
+        }
         return types;
     }
 
@@ -346,7 +350,17 @@ public class AdminSettingServlet extends HttpServlet {
             s.setId(UUID.randomUUID());
             result = settingDAO.insert(s);
             if (result) {
-                dashboardService.logEvent(actor.getEmail(), "SETTING_CREATE", "Thêm cấu hình mới: " + s.getName(), "SUCCESS");
+                String logDetail;
+                if ("payment_method".equalsIgnoreCase(s.getType())) {
+                    logDetail = "Thêm cấu hình cổng thanh toán mới: " + s.getName() + " (Lưu ý: Yêu cầu tích hợp mã nguồn API/Webhook tương ứng)";
+                } else if ("notification_type".equalsIgnoreCase(s.getType())) {
+                    logDetail = "Thêm loại thông báo mới: " + s.getName() + " (Lưu ý: Yêu cầu cấu hình Event Trigger trong mã nguồn)";
+                } else if ("category".equalsIgnoreCase(s.getType())) {
+                    logDetail = "Thêm danh mục khóa học mới: " + s.getName();
+                } else {
+                    logDetail = "Thêm cấu hình mới [" + s.getType() + "]: " + s.getName();
+                }
+                dashboardService.logEvent(actor.getEmail(), "SETTING_CREATE", logDetail, "SUCCESS");
             }
         }
 

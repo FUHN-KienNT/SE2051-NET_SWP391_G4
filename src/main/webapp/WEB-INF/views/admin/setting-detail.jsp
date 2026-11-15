@@ -93,21 +93,31 @@
 
                     <!-- Setting Type -->
                     <div>
-                        <label for="settingType" class="block text-sm font-semibold text-slate-600 mb-2">
-                            Setting Type
-                        </label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="settingType" class="block text-sm font-semibold text-slate-600">
+                                Setting Type
+                            </label>
+                            <c:if test="${empty setting.id}">
+                                <span class="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-[10px] text-emerald-600"></i> Khuyến nghị: category
+                                </span>
+                            </c:if>
+                        </div>
                         <div class="relative">
                             <select id="settingType"
                                     name="type"
                                     required
                                     ${isRoleType ? 'disabled' : ''}
                                     class="w-full pl-3.5 pr-10 py-2.5 rounded-lg text-sm transition appearance-none ${isRoleType ? 'bg-slate-100 text-slate-600 cursor-not-allowed border border-slate-200' : 'bg-white text-slate-800 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#047857] focus:border-[#047857] cursor-pointer'}">
-                                <c:if test="${empty setting.type}">
-                                    <option value="" disabled selected>-- Select Setting Type --</option>
-                                </c:if>
+                                <c:set var="selectedType" value="${not empty setting.type ? setting.type : 'category'}" />
                                 <c:forEach var="t" items="${types}">
-                                    <option value="${fn:escapeXml(t)}" ${setting.type eq t ? 'selected' : ''}>
-                                        <c:out value="${t}" />
+                                    <option value="${fn:escapeXml(t)}" ${selectedType eq t ? 'selected' : ''}>
+                                        <c:choose>
+                                            <c:when test="${t eq 'category'}">category (Danh mục khóa học - Khuyến nghị)</c:when>
+                                            <c:when test="${t eq 'payment_method'}">payment_method (Cổng thanh toán)</c:when>
+                                            <c:when test="${t eq 'notification_type'}">notification_type (Loại thông báo)</c:when>
+                                            <c:otherwise><c:out value="${t}" /></c:otherwise>
+                                        </c:choose>
                                     </option>
                                 </c:forEach>
                             </select>
@@ -115,6 +125,17 @@
                                 <input type="hidden" name="type" value="${fn:escapeXml(setting.type)}">
                             </c:if>
                             <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        </div>
+
+                        <!-- Technical Warning Banner -->
+                        <div id="technicalTypeWarning" class="hidden mt-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs sm:text-sm flex items-start gap-3 shadow-xs transition-all duration-200">
+                            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                            </div>
+                            <div class="leading-relaxed">
+                                <p class="font-bold text-amber-950" id="techWarningTitle">Lưu ý nghiệp vụ kỹ thuật</p>
+                                <p class="text-amber-800 text-xs mt-0.5" id="techWarningDesc"></p>
+                            </div>
                         </div>
                     </div>
 
@@ -220,6 +241,25 @@
 </div>
 
 <script>
+    function checkTechnicalTypeWarning(typeVal) {
+        const warning = document.getElementById('technicalTypeWarning');
+        const titleEl = document.getElementById('techWarningTitle');
+        const descEl = document.getElementById('techWarningDesc');
+        if (!warning || !titleEl || !descEl) return;
+
+        if (typeVal === 'payment_method') {
+            titleEl.textContent = 'Lưu ý về Cổng thanh toán (Payment Method):';
+            descEl.textContent = 'Thêm mới cổng thanh toán vào cơ sở dữ liệu chỉ tạo định danh. Để học viên thực sự thanh toán được, hệ thống bắt buộc cần lập trình viên tích hợp mã nguồn API, Merchant Key và Webhook của cổng thanh toán đó.';
+            warning.classList.remove('hidden');
+        } else if (typeVal === 'notification_type') {
+            titleEl.textContent = 'Lưu ý về Loại thông báo (Notification Type):';
+            descEl.textContent = 'Thêm mới loại thông báo chỉ tạo nhóm dữ liệu. Để hệ thống tự động gửi thông báo loại này tới học viên, cần lập trình viên cấu hình thêm sự kiện mã nguồn (Event Trigger) tương ứng trong backend.';
+            warning.classList.remove('hidden');
+        } else {
+            warning.classList.add('hidden');
+        }
+    }
+
     function updateStatusBadge(isActive) {
         const badge = document.getElementById('statusBadge');
         if (badge) {
@@ -249,15 +289,32 @@
         const roleActiveNotice = document.getElementById('roleActiveNotice');
         const statusActiveRadio = document.getElementById('statusActiveRadio');
 
-        if (settingTypeSelect && inactiveRadioWrapper && roleActiveNotice && statusActiveRadio) {
+        if (settingTypeSelect) {
+            // Check initial warning on page load
+            checkTechnicalTypeWarning(settingTypeSelect.value);
+
             settingTypeSelect.addEventListener('change', function() {
+                // Update technical warning banner
+                checkTechnicalTypeWarning(this.value);
+
+                // Update category warning when status is inactive
+                const warning = document.getElementById('categoryInactiveWarning');
+                if (warning && statusActiveRadio) {
+                    if (!statusActiveRadio.checked && this.value === 'category') {
+                        warning.classList.remove('hidden');
+                    } else {
+                        warning.classList.add('hidden');
+                    }
+                }
+
+                // Protect role status
                 const isRole = this.value === 'role';
-                if (isRole) {
+                if (isRole && inactiveRadioWrapper && roleActiveNotice && statusActiveRadio) {
                     statusActiveRadio.checked = true;
                     updateStatusBadge(true);
                     inactiveRadioWrapper.classList.add('hidden');
                     roleActiveNotice.classList.remove('hidden');
-                } else {
+                } else if (inactiveRadioWrapper && roleActiveNotice) {
                     inactiveRadioWrapper.classList.remove('hidden');
                     roleActiveNotice.classList.add('hidden');
                 }

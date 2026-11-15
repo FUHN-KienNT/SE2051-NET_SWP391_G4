@@ -49,6 +49,13 @@ public class UserService {
         private final User user;
         private final String statusNote;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param status the status
+         * @param user the user
+         * @param statusNote the status note
+         */
         private LoginResult(LoginStatus status, User user, String statusNote) {
             this.status = status;
             this.user = user;
@@ -90,6 +97,15 @@ public class UserService {
         private final String errorMessage;
         private final User user;
 
+        /**
+         * Creates an instance with the supplied values.
+         *
+         * @param success the success
+         * @param temporaryPassword the temporary password
+         * @param emailSent the email sent
+         * @param errorMessage the error message
+         * @param user the user
+         */
         public AdminCreateUserResult(boolean success, String temporaryPassword, boolean emailSent, String errorMessage, User user) {
             this.success = success;
             this.temporaryPassword = temporaryPassword;
@@ -98,18 +114,57 @@ public class UserService {
             this.user = user;
         }
 
+        /**
+         * Success.
+         *
+         * @param temporaryPassword the temporary password
+         * @param emailSent the email sent
+         * @param user the user
+         * @return the result of success
+         */
         public static AdminCreateUserResult success(String temporaryPassword, boolean emailSent, User user) {
             return new AdminCreateUserResult(true, temporaryPassword, emailSent, null, user);
         }
 
+        /**
+         * Failure.
+         *
+         * @param errorMessage the error message
+         * @return the result of failure
+         */
         public static AdminCreateUserResult failure(String errorMessage) {
             return new AdminCreateUserResult(false, null, false, errorMessage, null);
         }
 
+        /**
+         * Checks whether success.
+         *
+         * @return true when the condition holds; false otherwise
+         */
         public boolean isSuccess() { return success; }
+        /**
+         * Returns temporary password.
+         *
+         * @return the temporary password
+         */
         public String getTemporaryPassword() { return temporaryPassword; }
+        /**
+         * Checks whether email sent.
+         *
+         * @return true when the condition holds; false otherwise
+         */
         public boolean isEmailSent() { return emailSent; }
+        /**
+         * Returns error message.
+         *
+         * @return the error message
+         */
         public String getErrorMessage() { return errorMessage; }
+        /**
+         * Returns user.
+         *
+         * @return the user
+         */
         public User getUser() { return user; }
     }
 
@@ -120,18 +175,42 @@ public class UserService {
     private final DashboardDAO dashboardDAO;
     private final NotificationDAO notificationDAO;
 
+    /**
+     * Creates an instance with the supplied values.
+     */
     public UserService() {
         this(new UserDAO(), new SettingDAO(), new DashboardDAO(), new NotificationDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param userDAO the user dao
+     * @param settingDAO the setting dao
+     */
     public UserService(UserDAO userDAO, SettingDAO settingDAO) {
         this(userDAO, settingDAO, new DashboardDAO(), new NotificationDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param userDAO the user dao
+     * @param settingDAO the setting dao
+     * @param dashboardDAO the dashboard dao
+     */
     public UserService(UserDAO userDAO, SettingDAO settingDAO, DashboardDAO dashboardDAO) {
         this(userDAO, settingDAO, dashboardDAO, new NotificationDAO());
     }
 
+    /**
+     * Creates an instance with the supplied values.
+     *
+     * @param userDAO the user dao
+     * @param settingDAO the setting dao
+     * @param dashboardDAO the dashboard dao
+     * @param notificationDAO the notification dao
+     */
     public UserService(UserDAO userDAO, SettingDAO settingDAO, DashboardDAO dashboardDAO, NotificationDAO notificationDAO) {
         this.userDAO = userDAO;
         this.settingDAO = settingDAO;
@@ -139,6 +218,16 @@ public class UserService {
         this.notificationDAO = notificationDAO;
     }
 
+    /**
+     * Returns user list.
+     *
+     * @param search the search
+     * @param roleId the role id identifier
+     * @param status the status
+     * @param page the requested page number
+     * @param pageSize the maximum number of items per page
+     * @return the user list
+     */
     public List<UserDTO> getUserList(String search, UUID roleId, String status, int page, int pageSize) {
         // Bước 1: Chuẩn hóa phân trang
         if (page < 1) {
@@ -160,23 +249,57 @@ public class UserService {
         return dtos;
     }
 
+    /**
+     * Counts users.
+     *
+     * @param search the search
+     * @param roleId the role id identifier
+     * @param status the status
+     * @return the number of users
+     */
     public int countUsers(String search, UUID roleId, String status) {
         return userDAO.countUsers(search, roleId, status);
     }
 
+    /**
+     * Returns user by id.
+     *
+     * @param id the id identifier
+     * @return the user by id
+     */
     public UserDTO getUserById(UUID id) {
         User u = userDAO.findById(id);
         return u != null ? toDTO(u) : null;
     }
 
+    /**
+     * Update user.
+     *
+     * @param dto the dto
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateUser(UserDTO dto) {
         return updateUserProfile(dto);
     }
 
+    /**
+     * Update user profile.
+     *
+     * @param dto the dto
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateUserProfile(UserDTO dto) {
         return updateUserProfile(dto, null, null);
     }
 
+    /**
+     * Update user profile.
+     *
+     * @param dto the dto
+     * @param adminEmail the admin email
+     * @param statusNote the status note
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateUserProfile(UserDTO dto, String adminEmail, String statusNote) {
         // Bước 1: Kiểm tra tham số DTO và ID người dùng
         if (dto == null || dto.getId() == null) {
@@ -323,6 +446,11 @@ public class UserService {
         return tempPassword;
     }
 
+    /**
+     * Generate temporary password.
+     *
+     * @return the result of generate temporary password
+     */
     private String generateTemporaryPassword() {
         String upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
         String lower = "abcdefghijkmnopqrstuvwxyz";
@@ -348,6 +476,18 @@ public class UserService {
         return new String(chars);
     }
 
+    /**
+     * Create user by admin.
+     *
+     * @param username the username
+     * @param fullName the full name
+     * @param email the email
+     * @param phone the phone
+     * @param roleId the role id identifier
+     * @param status the status
+     * @param adminEmail the admin email
+     * @return the result of create user by admin
+     */
     public AdminCreateUserResult createUserByAdmin(String username, String fullName, String email, String phone,
                                                   UUID roleId, String status, String adminEmail) {
         if (username == null || username.isBlank()) {
@@ -437,6 +577,13 @@ public class UserService {
         return AdminCreateUserResult.success(tempPassword, emailSent, newUser);
     }
 
+    /**
+     * Update own username.
+     *
+     * @param userId the user id identifier
+     * @param requestedUsername the requested username
+     * @return the result of update own username
+     */
     public UsernameUpdateResult updateOwnUsername(UUID userId, String requestedUsername) {
         if (userId == null || requestedUsername == null) {
             return UsernameUpdateResult.INVALID;
@@ -456,6 +603,15 @@ public class UserService {
                 ? UsernameUpdateResult.SUCCESS : UsernameUpdateResult.FAILED;
     }
 
+    /**
+     * Update own profile.
+     *
+     * @param userId the user id identifier
+     * @param requestedUsername the requested username
+     * @param requestedFullName the requested full name
+     * @param requestedPhone the requested phone
+     * @return the result of update own profile
+     */
     public ProfileUpdateResult updateOwnProfile(UUID userId, String requestedUsername,
                                                String requestedFullName, String requestedPhone) {
         // Bước 1: Kiểm tra tính hợp lệ của tên đăng nhập
@@ -500,6 +656,13 @@ public class UserService {
         return ProfileUpdateResult.FAILED;
     }
 
+    /**
+     * Update user phone.
+     *
+     * @param userId the user id identifier
+     * @param phone the phone
+     * @return true when the condition holds; false otherwise
+     */
     public boolean updateUserPhone(UUID userId, String phone) {
         if (userId == null || phone == null || phone.isBlank()) {
             return false;
@@ -562,10 +725,25 @@ public class UserService {
                 ? PasswordChangeResult.SUCCESS : PasswordChangeResult.FAILED;
     }
 
+    /**
+     * Toggle status.
+     *
+     * @param userId the user id identifier
+     * @param status the status
+     * @return true when the condition holds; false otherwise
+     */
     public boolean toggleStatus(UUID userId, String status) {
         return toggleStatus(userId, status, null);
     }
 
+    /**
+     * Toggle status.
+     *
+     * @param userId the user id identifier
+     * @param status the status
+     * @param statusNote the status note
+     * @return true when the condition holds; false otherwise
+     */
     public boolean toggleStatus(UUID userId, String status, String statusNote) {
         if (userId == null || status == null) return false;
         if ("inactive".equalsIgnoreCase(status) && (statusNote == null || statusNote.trim().isEmpty())) {
@@ -731,16 +909,33 @@ public class UserService {
         return userDAO.findByEmail(email) != null || userDAO.findByEmail(name) != null;
     }
 
+    /**
+     * Returns all roles.
+     *
+     * @return the all roles
+     */
     public List<Setting> getAllRoles() {
         return settingDAO.findAllRoles();
     }
 
+    /**
+     * Returns user by email.
+     *
+     * @param email the email
+     * @return the user by email
+     */
     public UserDTO getUserByEmail(String email) {
         if (email == null) return null;
         User u = userDAO.findByEmail(email.trim());
         return u != null ? toDTO(u) : null;
     }
 
+    /**
+     * To dto.
+     *
+     * @param u the u
+     * @return the result of to dto
+     */
     private UserDTO toDTO(User u) {
         UserDTO dto = new UserDTO();
         dto.setId(u.getId());

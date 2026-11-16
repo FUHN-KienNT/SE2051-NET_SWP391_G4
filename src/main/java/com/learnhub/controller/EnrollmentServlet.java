@@ -293,11 +293,11 @@ public class EnrollmentServlet extends HttpServlet {
                         phone = user.getPhone();
                     }
 
-                    String phoneRegex = "^(0[35789])[0-9]{8}$";
+                    String phoneRegex = "^0[0-9]{9}$";
                     if (phone == null || phone.trim().isEmpty() || !phone.trim().matches(phoneRegex)) {
                         String phoneErrorMsg = (phone == null || phone.trim().isEmpty())
                                 ? "Vui lòng nhập số điện thoại liên hệ."
-                                : "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).";
+                                : "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 0).";
                         req.setAttribute("course", course);
                         req.setAttribute("student", user);
                         req.setAttribute("paymentMethods", courseService.getPaymentMethods());

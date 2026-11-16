@@ -368,7 +368,7 @@
         function validatePhone(showMsg) {
             if (!phoneInput) return true;
             const val = phoneInput.value.trim();
-            const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
+            const vnPhoneRegex = /^0[0-9]{9}$/;
 
             if (val === '') {
                 if (showMsg) showPhoneError('Vui lòng nhập số điện thoại liên hệ.');
@@ -381,7 +381,7 @@
             }
 
             if (val.length !== 10 || !vnPhoneRegex.test(val)) {
-                if (showMsg) showPhoneError('Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08, 09).');
+                if (showMsg) showPhoneError('Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 0).');
                 return false;
             }
 
